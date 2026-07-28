@@ -71,4 +71,4 @@ jobs:
           gcloud builds submit \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --config=cloudbuild.yaml \
-            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_ANALYTICS_DATASET="${{ vars.GCP_ANALYTICS_DATASET }}",_ANALYTICS_TABLE="${{ vars.GCP_ANALYTICS_TABLE }}"
+            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_ANALYTICS_DATASET="${{ vars.GCP_ANALYTICS_DATASET }}",_ANALYTICS_TABLE="${{ vars.GCP_ANALYTICS_TABLE }}",_IMAGE_TAG="${{ github.sha }}"
