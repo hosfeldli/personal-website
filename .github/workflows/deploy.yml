@@ -1,0 +1,35 @@
+name: Build and deploy Stem portfolio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    name: Cloud Build → Cloud Run host
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --config=cloudbuild.yaml \
+            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_ANALYTICS_DATASET="${{ vars.GCP_ANALYTICS_DATASET }}",_ANALYTICS_TABLE="${{ vars.GCP_ANALYTICS_TABLE }}"

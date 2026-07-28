@@ -1,0 +1,1 @@
+/* Visual behavior is intentionally restrained. Interaction measurement lives in analytics.js. */

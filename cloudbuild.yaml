@@ -1,0 +1,37 @@
+substitutions:
+  _REGION: us-east1
+  _REPOSITORY: stem-portfolio
+  _SERVICE: stem-portfolio-host
+  _RUNTIME_SERVICE_ACCOUNT: portfolio-runtime@stem-471602.iam.gserviceaccount.com
+  _ANALYTICS_DATASET: portfolio_analytics
+  _ANALYTICS_TABLE: events
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
+      - --ingress=internal-and-cloud-load-balancing
+      - --allow-unauthenticated
+      - --set-env-vars=GCP_PROJECT_ID=$PROJECT_ID,ANALYTICS_DATASET=${_ANALYTICS_DATASET},ANALYTICS_TABLE=${_ANALYTICS_TABLE},BIGQUERY_LOCATION=US
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
