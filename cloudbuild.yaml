@@ -5,19 +5,20 @@ substitutions:
   _RUNTIME_SERVICE_ACCOUNT: portfolio-runtime@stem-471602.iam.gserviceaccount.com
   _ANALYTICS_DATASET: portfolio_analytics
   _ANALYTICS_TABLE: events
+  _IMAGE_TAG: latest
 
 steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - build
       - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}
       - .
 
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
@@ -25,7 +26,7 @@ steps:
       - run
       - deploy
       - ${_SERVICE}
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}
       - --region=${_REGION}
       - --platform=managed
       - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
@@ -34,4 +35,4 @@ steps:
       - --set-env-vars=GCP_PROJECT_ID=$PROJECT_ID,ANALYTICS_DATASET=${_ANALYTICS_DATASET},ANALYTICS_TABLE=${_ANALYTICS_TABLE},BIGQUERY_LOCATION=US
 
 images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}
