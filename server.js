@@ -72,7 +72,9 @@ function normalizeEvent(input) {
     timestamp: Number.isNaN(timestamp.getTime()) ? new Date().toISOString() : timestamp.toISOString(),
     session_id: safeString(input.session_id, 100), visitor_id: safeString(input.visitor_id, 100), path: safeString(input.path, 240),
     referrer: safeString(input.referrer, 160), viewport: safeString(input.viewport, 32), screen: safeString(input.screen, 32),
-    device: safeString(input.device, 24), language: safeString(input.language, 40), timezone: safeString(input.timezone, 80),
+    device: safeString(input.device, 24), browser: safeString(input.browser, 24), operating_system: safeString(input.operating_system, 24),
+    connection: input.connection && typeof input.connection === 'object' ? { type: safeString(input.connection.type, 16), save_data: Boolean(input.connection.save_data), downlink: clamp(input.connection.downlink, 0, 10000), rtt: clamp(input.connection.rtt, 0, 60000) } : null,
+    language: safeString(input.language, 40), timezone: safeString(input.timezone, 80),
     source: safeString(input.source, 80), campaign: safeString(input.campaign, 120), scroll_percent: clamp(input.scroll_percent, 0, 100),
   };
   for (const key of ['target', 'label', 'section', 'title', 'input']) if (input[key] !== undefined) event[key] = safeString(input[key], key === 'label' ? 160 : 120);
@@ -149,14 +151,45 @@ function aggregate(events, days) {
   const hotZones = [...targets.values()].map((row) => ({ ...row, score: Math.round(row.views + row.hovers * 2 + row.focuses * 3 + row.clicks * 5 + Math.min(row.dwell_ms / 1000, 120)) })).filter((row) => row.region).sort((a, b) => b.score - a.score).slice(0, 100);
   const avgSession = sessionsList.length ? Math.round(sessionsList.reduce((sum, row) => sum + (new Date(row.last) - new Date(row.first)), 0) / sessionsList.length) : 0;
   const avgScroll = scrolls.size ? Math.round([...scrolls.values()].reduce((sum, value) => sum + value, 0) / scrolls.size) : 0;
+  const trendMap = new Map();
+  for (let offset = days - 1; offset >= 0; offset -= 1) {
+    const date = new Date(Date.now() - offset * 86400000).toISOString().slice(0, 10);
+    trendMap.set(date, { date, events: 0, sessions: new Set(), visitors: new Set(), engaged: new Set(), scroll_total: 0, scroll_count: 0 });
+  }
+  for (const event of recent) {
+    const bucket = trendMap.get(new Date(event.timestamp).toISOString().slice(0, 10));
+    if (!bucket) continue;
+    bucket.events += 1;
+    if (event.session_id) bucket.sessions.add(event.session_id);
+    if (event.visitor_id) bucket.visitors.add(event.visitor_id);
+    if (event.session_id && ['click', 'hover_start', 'focus_start', 'scroll_depth'].includes(event.type)) bucket.engaged.add(event.session_id);
+    if (event.type === 'scroll_depth') { bucket.scroll_total += safeNumber(event.depth_percent); bucket.scroll_count += 1; }
+  }
+  const trend = [...trendMap.values()].map((bucket) => ({ date: bucket.date, events: bucket.events, sessions: bucket.sessions.size, visitors: bucket.visitors.size, engaged: bucket.engaged.size, average_scroll_percent: bucket.scroll_count ? Math.round(bucket.scroll_total / bucket.scroll_count) : 0 }));
   return {
-    generated_at: new Date().toISOString(), days,
+    generated_at: new Date().toISOString(), days, trend,
     totals: { events: recent.length, sessions: sessions.size, visitors: visitors.size, engaged_sessions: new Set(recent.filter((e) => ['click', 'hover_start', 'focus_start', 'scroll_depth'].includes(e.type)).map((e) => e.session_id)).size, average_session_ms: avgSession, average_scroll_percent: avgScroll },
     event_types: topMap(types).map((row) => ({ type: row.value, count: row.count })),
     sections: sectionList, targets: [...targets.values()].sort((a, b) => (b.dwell_ms + b.hovers * 1000 + b.clicks * 2000) - (a.dwell_ms + a.hovers * 1000 + a.clicks * 2000)).slice(0, 100), hot_zones: hotZones, scroll_heat: scrollList,
     navigation: { paths: topMap(paths), referrers: topMap(referrers), devices: topMap(devices), viewports: topMap(viewports), languages: topMap(languages), timezones: topMap(timezones), sources: topMap(sources), campaigns: topMap(campaigns) },
     sessions: sessionsList,
   };
+}
+function sessionDetail(events, sessionId) {
+  const sessionEvents = events.filter((event) => event.session_id === sessionId).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  if (!sessionEvents.length) return null;
+  const first = sessionEvents[0]; const last = sessionEvents[sessionEvents.length - 1];
+  const connection = sessionEvents.find((event) => event.connection || event.browser || event.operating_system) || first;
+  const sections = new Map();
+  for (const event of sessionEvents) {
+    if (!event.section) continue;
+    const row = sections.get(event.section) || { section: event.section, views: 0, dwell_ms: 0, milestones: 0 };
+    if (event.type === 'section_view') row.views += 1;
+    if (event.type === 'section_milestone') row.milestones += 1;
+    if (event.type === 'section_attention' || event.type === 'section_exit') row.dwell_ms += safeNumber(event.duration_ms);
+    sections.set(event.section, row);
+  }
+  return { session_id: sessionId, first: first.timestamp, last: last.timestamp, duration_ms: Math.max(0, new Date(last.timestamp) - new Date(first.timestamp)), events: sessionEvents, sections: [...sections.values()], context: { device: connection.device || '', browser: connection.browser || '', operating_system: connection.operating_system || '', connection: connection.connection || null, viewport: connection.viewport || '', language: connection.language || '', timezone: connection.timezone || '', referrer: connection.referrer || '' } };
 }
 function sendJson(res, status, payload) { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify(payload)); }
 function sendText(res, status, body) { res.writeHead(status, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(body); }
@@ -172,6 +205,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/health') return sendJson(res, 200, { ok: true, service: 'portfolio-analytics', time: new Date().toISOString() });
   if (req.method === 'GET' && url.pathname === '/api/analytics') return sendJson(res, 200, aggregate(await loadAnalyticsEvents(), Math.max(1, Math.min(365, Number(url.searchParams.get('days') || 30)))));
   if (req.method === 'GET' && url.pathname === '/api/events') return sendJson(res, 200, { events: (await loadAnalyticsEvents()).slice(-Math.max(1, Math.min(500, Number(url.searchParams.get('limit') || 100)))).reverse() });
+  if (req.method === 'GET' && url.pathname.startsWith('/api/sessions/')) { const sessionId = decodeURIComponent(url.pathname.slice('/api/sessions/'.length)); const detail = sessionDetail(await loadAnalyticsEvents(), sessionId); return detail ? sendJson(res, 200, detail) : sendJson(res, 404, { error: 'Session not found' }); }
   if (req.method === 'GET' && url.pathname === '/api/events.csv') {
     const events = readEvents();
     const keys = ['event_id', 'type', 'timestamp', 'session_id', 'visitor_id', 'path', 'referrer', 'viewport', 'screen', 'device', 'language', 'timezone', 'source', 'campaign', 'scroll_percent', 'target', 'section', 'duration_ms', 'visible_ratio', 'depth_percent', 'session_duration_ms', 'region'];

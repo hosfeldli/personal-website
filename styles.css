@@ -656,7 +656,7 @@ html.js .baking-note.is-popped { animation: bake-reveal .7s ease-out forwards; }
   --ink: #24362f;
   --muted: #6b746a;
   --line: rgba(36, 54, 47, .2);
-  --serif: 'Bodoni Moda', Georgia, serif;
+  --serif: var(--sans);
   --sans: 'DM Sans', Arial, sans-serif;
   --mono: 'DM Mono', monospace;
   --mcm-walnut: #59392d;
@@ -3538,4 +3538,517 @@ html.js .personal-section .personal-archive { opacity: 1 !important; transform: 
   .work-section .experience-content h3 { font-size: 16px; }
   .work-section .experience-content > p:not(.role) { font-size: 11px; }
   .work-section .experience-content ul { font-size: 10px; }
+}
+
+
+/* ============================================================================
+   Editorial clarity pass
+   The design should frame the information, not compete with it.
+   ============================================================================ */
+
+.section-kicker {
+  color: var(--mcm-rust);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: .015em;
+  text-transform: none;
+}
+.resume-identity span,
+.resume-facts span { text-transform: none; letter-spacing: .015em; }
+.resume-facts span:last-child { max-width: 290px; }
+.experience-content .role { text-transform: none; letter-spacing: .02em; }
+.experience-content h3,
+.skill-group h3,
+.role-metric .signal-copy h3,
+.interest-list h3 { text-transform: none; letter-spacing: -.015em; }
+
+.work-section .section-intro .section-description {
+  max-width: 335px;
+  color: var(--forest);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.role-metrics-board {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(220px, auto));
+  gap: 12px;
+}
+.role-metric { min-height: 220px; }
+.role-metric .signal-copy { max-width: 72%; }
+.role-metric .signal-copy strong { font-size: clamp(43px, 4.5vw, 64px); }
+.role-metric .signal-copy p { max-width: 260px; }
+.role-scope-note {
+  margin: 23px 0 0;
+  padding-top: 17px;
+  border-top: 1px solid rgba(36,54,47,.24);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.skills-section .skills-board { gap: 12px; }
+.skills-section .skills-board .skill-group {
+  min-height: 145px;
+  padding: 24px 22px;
+}
+.skills-section .skills-board .skill-label { display: none; }
+.skills-section .skills-board .skill-group h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+.skills-section .skills-board .skill-group p {
+  max-width: 280px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.personal-intro h2 { max-width: 410px; }
+.personal-intro .interest-list { border-top-color: rgba(239,228,208,.3); }
+.personal-intro .interest-list > div {
+  grid-template-columns: 1fr;
+  padding: 15px 0;
+}
+.personal-intro .interest-list span { display: none; }
+.personal-intro .interest-list h3 { font-size: 15px; }
+.personal-intro .interest-list p { margin-top: 3px; }
+.personal-section .hobby-card-index { display: none; }
+
+h1 em, h2 em, .personal-intro h2 em, .contact-section h2 em {
+  color: var(--mcm-rust);
+  font-family: var(--sans);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -.06em;
+}
+.personal-intro h2 em,
+.contact-section h2 em { color: var(--mcm-mustard); }
+.contact-section h2 { max-width: 560px; }
+.contact-bottom p { max-width: 360px; font-size: 14px; }
+.transition-index { display: none; }
+
+@media (max-width: 860px) {
+  .work-section .section-intro .section-description { font-size: 14px; }
+  .role-metrics-board { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(200px, auto)); }
+  .role-metric { min-height: 200px; }
+}
+@media (max-width: 560px) {
+  .work-section .section-intro .section-description { font-size: 13px; }
+  .role-metrics-board { grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(185px, auto)); }
+  .role-metric { min-height: 185px; }
+  .role-metric .signal-copy { max-width: 68%; }
+  .role-metric .signal-copy strong { font-size: 45px; }
+  .role-scope-note { font-size: 12px; }
+  .skills-section .skills-board .skill-group { min-height: auto; padding: 21px 18px; }
+  .skills-section .skills-board .skill-group h3 { font-size: 15px; }
+}
+
+
+/* ============================================================================
+   Readable resume header and planted room pass
+   ============================================================================ */
+
+/* Emphasis is expressed through color and weight, never a difficult display face. */
+:root { --serif: var(--sans); }
+h1 em,
+h2 em,
+.interlude em,
+.personal-intro h2 em,
+.contact-section h2 em {
+  color: var(--mcm-rust);
+  font-family: var(--sans) !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  letter-spacing: -.055em;
+}
+.personal-intro h2 em,
+.contact-section h2 em { color: var(--mcm-mustard); }
+
+/* A conventional résumé masthead: name, role, location, and contact. */
+.resume-topline {
+  align-items: baseline;
+  padding-bottom: 14px;
+}
+.resume-identity {
+  align-items: baseline;
+  gap: 15px;
+}
+.resume-identity strong {
+  font-size: 24px;
+  letter-spacing: -.05em;
+}
+.resume-identity span {
+  color: var(--mcm-walnut);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.resume-facts {
+  align-items: baseline;
+  gap: 18px;
+}
+.resume-facts span,
+.resume-email {
+  color: var(--mcm-walnut);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: .02em;
+  text-decoration: none;
+}
+.resume-email {
+  color: var(--forest);
+  border-bottom: 1px solid var(--mcm-rust);
+  padding-bottom: 2px;
+}
+.resume-facts span:last-child { color: var(--mcm-walnut); }
+
+/* Let the foliage read as a room, not a few isolated decorations. */
+.personal-section .beyond-jungle { opacity: .82; }
+.personal-section .beyond-jungle .leaf-beyond-a { opacity: .42; }
+.personal-section .beyond-jungle .leaf-beyond-b { opacity: .48; }
+.personal-section .beyond-jungle .leaf-beyond-c { opacity: .24; }
+.personal-section .beyond-jungle .leaf-beyond-d {
+  --leaf-color: #78946b;
+  --leaf-rotation: -32deg;
+  left: 22%;
+  top: 8%;
+  width: 35px;
+  height: 104px;
+  opacity: .28;
+}
+.personal-section .beyond-jungle .leaf-beyond-e {
+  --leaf-color: #d7a148;
+  --leaf-rotation: 52deg;
+  right: 23%;
+  bottom: 13%;
+  width: 27px;
+  height: 83px;
+  opacity: .2;
+}
+.personal-section .beyond-jungle .plant-beyond-second {
+  right: 15%;
+  top: 34%;
+  height: 285px;
+  transform: rotate(26deg);
+  border-color: rgba(120,148,107,.42);
+  opacity: .3;
+}
+
+/* A fuller plant drawing in the illustrated card. */
+.hobby-plants-art .hobby-stem-three {
+  z-index: 2;
+  left: 64%;
+  bottom: 68px;
+  width: 2px;
+  height: 82px;
+  background: var(--mcm-avocado);
+  transform: rotate(34deg);
+}
+.hobby-plants-art .hobby-leaf-four {
+  z-index: 3;
+  left: 62%;
+  bottom: 133px;
+  width: 22px;
+  height: 43px;
+  border-radius: 100% 0 100% 0;
+  background: var(--mcm-sage);
+  transform: rotate(65deg);
+}
+
+@media (max-width: 860px) {
+  .resume-topline {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .resume-facts {
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+@media (max-width: 560px) {
+  .resume-identity {
+    gap: 5px;
+  }
+  .resume-identity strong { font-size: 21px; }
+  .resume-facts {
+    gap: 4px;
+  }
+  .resume-facts span,
+  .resume-email { font-size: 9px; }
+  .personal-section .beyond-jungle .leaf-beyond-d,
+  .personal-section .beyond-jungle .leaf-beyond-e,
+  .personal-section .beyond-jungle .plant-beyond-second { opacity: .18; }
+}
+
+
+/* ============================================================================
+   Traditional masthead, technical popout, and five-image archive
+   ============================================================================ */
+
+/* Larger résumé identity details without turning the masthead into a slogan. */
+.resume-topline {
+  min-height: 68px;
+  align-items: center;
+  padding-top: 13px;
+  padding-bottom: 17px;
+}
+.resume-identity { gap: 17px; }
+.resume-identity strong {
+  font-size: clamp(29px, 3vw, 37px);
+  line-height: 1;
+}
+.resume-identity span,
+.resume-facts span,
+.resume-email {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.resume-email { white-space: nowrap; }
+.resume-facts { gap: 21px; }
+.site-build-trigger {
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid var(--mcm-rust);
+  border-radius: 0;
+  padding: 3px 0;
+  background: transparent;
+  color: var(--forest);
+  font: 600 12px/1.45 var(--sans);
+  cursor: pointer;
+}
+.site-build-trigger:hover,
+.site-build-trigger:focus-visible { color: var(--mcm-rust); }
+
+/* The work heading no longer repeats Experience or an explanatory sentence. */
+.work-section .section-intro {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'title action';
+  align-items: end;
+  padding-top: 5px;
+}
+.work-section .section-intro .section-kicker,
+.work-section .section-intro .section-description { display: none; }
+.work-section .section-intro h2 { grid-area: title; }
+.work-section .section-intro .download-link { grid-area: action; }
+
+/* The selected-results heading stands on its own. */
+.role-metrics-section .current-work-heading > div .section-kicker { display: none; }
+.role-metrics-section .current-work-heading h2 { margin-top: 0; }
+
+/* Site-build dialog: a small technical plate in the same printed language. */
+.site-build-dialog {
+  width: min(900px, calc(100% - 32px));
+  max-width: 900px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+}
+.site-build-dialog::backdrop {
+  background: rgba(18, 51, 45, .7);
+  backdrop-filter: blur(3px);
+}
+.site-build-window {
+  position: relative;
+  overflow: hidden;
+  padding: 31px 34px 28px;
+  border: 8px solid var(--mcm-walnut);
+  background: var(--forest);
+  box-shadow: 12px 14px 0 rgba(7,28,24,.3);
+  isolation: isolate;
+}
+.site-build-window::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -92px;
+  top: -105px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 5deg, rgba(215,161,72,.24) 0 9deg, transparent 9deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0 57%, transparent 58%);
+  mask-image: radial-gradient(circle, #000 0 57%, transparent 58%);
+}
+.site-build-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 21px;
+  border-bottom: 1px solid rgba(239,228,208,.27);
+}
+.site-build-kicker {
+  margin: 0 0 9px;
+  color: var(--mcm-mustard);
+  font: 600 11px/1.4 var(--sans);
+  letter-spacing: .03em;
+}
+.site-build-dialog h2 {
+  margin: 0;
+  color: var(--cream);
+  font-size: clamp(35px, 5vw, 56px);
+  line-height: .96;
+}
+.site-build-dialog h2 em {
+  color: var(--mcm-mustard);
+  font-family: var(--sans);
+  font-style: normal;
+  font-weight: 700;
+}
+.site-build-close {
+  appearance: none;
+  border: 1px solid rgba(239,228,208,.5);
+  border-radius: 2px 11px 2px 11px;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--cream);
+  font: 600 11px var(--sans);
+  cursor: pointer;
+}
+.site-build-close:hover,
+.site-build-close:focus-visible { border-color: var(--mcm-mustard); color: var(--mcm-mustard); }
+.site-build-intro {
+  max-width: 640px;
+  margin: 21px 0 25px;
+  color: rgba(239,228,208,.78);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.deployment-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.deployment-node {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 13px 12px;
+  border: 1px solid rgba(239,228,208,.35);
+  background: rgba(239,228,208,.1);
+}
+.deployment-node:nth-of-type(1) { border-top: 4px solid var(--mcm-mustard); }
+.deployment-node:nth-of-type(3) { border-top: 4px solid var(--mcm-rust); }
+.deployment-node:nth-of-type(5) { border-top: 4px solid var(--mcm-mustard); }
+.deployment-node:nth-of-type(7) { border-top: 4px solid var(--mcm-rust); }
+.deployment-node:nth-of-type(9) { border-top: 4px solid var(--mcm-mustard); }
+.deployment-node strong,
+.deployment-analytics strong {
+  color: var(--cream);
+  font-size: 13px;
+  line-height: 1.15;
+}
+.deployment-node span,
+.deployment-analytics span {
+  color: rgba(239,228,208,.66);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.deployment-arrow {
+  color: var(--mcm-mustard);
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+.deployment-analytics {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(239,228,208,.27);
+}
+.deployment-analytics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 13px;
+  border-left: 4px solid var(--mcm-avocado);
+  background: rgba(239,228,208,.08);
+}
+.deployment-analytics > div:last-child { border-left-color: var(--mcm-mustard); }
+.site-build-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.site-build-notes span {
+  padding: 6px 9px;
+  border: 1px solid rgba(239,228,208,.3);
+  color: var(--mcm-mustard);
+  font: 600 10px var(--sans);
+}
+
+/* Five images: three across, then two centered below. */
+.personal-section .archive-grid-five {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: auto;
+  gap: 12px;
+}
+.personal-section .archive-grid-five .archive-card { grid-column: span 2; }
+.personal-section .archive-grid-five .archive-card:nth-child(4) { grid-column: 2 / span 2; }
+.personal-section .archive-grid-five .archive-card:nth-child(5) { grid-column: 4 / span 2; }
+
+@media (max-width: 1020px) {
+  .resume-topline { min-height: 0; }
+  .personal-section .archive-grid-five { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .personal-section .archive-grid-five .archive-card { grid-column: auto; }
+  .personal-section .archive-grid-five .archive-card:nth-child(4) { grid-column: 1; }
+  .personal-section .archive-grid-five .archive-card:nth-child(5) { grid-column: 3; }
+}
+@media (max-width: 860px) {
+  .resume-topline { align-items: flex-start; }
+  .resume-facts { align-items: flex-start; flex-wrap: wrap; }
+  .deployment-flow { grid-template-columns: 1fr 24px 1fr 24px 1fr; }
+  .deployment-flow .deployment-node:nth-of-type(7),
+  .deployment-flow .deployment-node:nth-of-type(9),
+  .deployment-flow .deployment-node:nth-of-type(7) + .deployment-arrow { margin-top: 8px; }
+  .deployment-flow .deployment-node:nth-of-type(7) { grid-column: 2 / span 1; }
+  .deployment-flow .deployment-node:nth-of-type(9) { grid-column: 4 / span 1; }
+  .deployment-flow .deployment-node:nth-of-type(7) + .deployment-arrow { grid-column: 3; }
+  .deployment-flow .deployment-node:nth-of-type(9) + .deployment-arrow { display: none; }
+}
+@media (max-width: 560px) {
+  .resume-topline { gap: 12px; }
+  .resume-identity { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .resume-facts { flex-direction: column; gap: 6px; }
+  .resume-identity strong { font-size: 27px; }
+  .resume-identity span,
+  .resume-facts span,
+  .resume-email,
+  .site-build-trigger { font-size: 11px; }
+  .work-section .section-intro {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'title' 'action';
+    gap: 12px;
+  }
+  .work-section .section-intro .download-link { justify-self: start; }
+  .site-build-dialog { width: calc(100% - 20px); }
+  .site-build-window { padding: 22px 17px 20px; border-width: 5px; }
+  .site-build-header { gap: 10px; }
+  .site-build-dialog h2 { font-size: 35px; }
+  .site-build-intro { font-size: 12px; }
+  .deployment-flow { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+  .deployment-node { min-height: 0; gap: 8px; }
+  .deployment-arrow { transform: rotate(90deg); }
+  .deployment-analytics { grid-template-columns: 1fr; gap: 7px; }
+  .deployment-analytics .deployment-arrow { transform: rotate(90deg); }
+  .personal-section .archive-grid-five {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+  .personal-section .archive-grid-five .archive-card,
+  .personal-section .archive-grid-five .archive-card:nth-child(4),
+  .personal-section .archive-grid-five .archive-card:nth-child(5) { grid-column: auto; }
+  .personal-section .archive-grid-five .archive-card:first-child { grid-column: 1 / -1; }
 }

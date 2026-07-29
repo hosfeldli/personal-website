@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#173d34" />
-  <meta name="description" content="Liam Hosfeld — Project Analyst focused on operations analytics, process improvement, and technical delivery." />
+  <meta name="description" content="Liam Hosfeld — Project Analyst with experience in operations, data, and systems." />
   <title>Liam Hosfeld — Project Analyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,19 +40,39 @@
           <span class="crumb crumb-work-b"></span>
         </div>
         <div class="resume-topline">
-          <div class="resume-identity"><strong>Liam Hosfeld</strong><span>Project Analyst / Operations Analytics / Process Improvement</span></div>
-          <div class="resume-facts"><span>Atlanta, GA</span><span>ANALYTICS · OPERATIONS · PROCESS IMPROVEMENT</span></div>
+          <div class="resume-identity"><strong>Liam Hosfeld</strong><span>Project Analyst</span></div>
+          <div class="resume-facts"><span>Atlanta, GA</span><a class="resume-email" data-analytics-id="header-email" href="mailto:liamhosfeld@gmail.com">liamhosfeld@gmail.com</a><button class="site-build-trigger" id="site-build-trigger" data-analytics-id="site-build-open" type="button">Site build</button></div>
         </div>
+        <dialog class="site-build-dialog" id="site-build-dialog" aria-labelledby="site-build-title">
+          <div class="site-build-window">
+            <div class="site-build-header">
+              <div><p class="site-build-kicker">Technical notes</p><h2 id="site-build-title">How this site<br /><em>is built.</em></h2></div>
+              <form method="dialog"><button class="site-build-close" type="submit">Close</button></form>
+            </div>
+            <p class="site-build-intro">A small Node.js portfolio server delivers the page and collects first-party activity. The same project can run locally or as a container on Google Cloud.</p>
+            <div class="deployment-flow" role="img" aria-label="Source files flow through Cloud Build and Docker into Artifact Registry, then Cloud Run serves the site to a browser">
+              <div class="deployment-node"><strong>Source</strong><span>HTML · CSS · JavaScript<br />assets and data</span></div>
+              <span class="deployment-arrow" aria-hidden="true">→</span>
+              <div class="deployment-node"><strong>Cloud Build</strong><span>Builds the<br />container image</span></div>
+              <span class="deployment-arrow" aria-hidden="true">→</span>
+              <div class="deployment-node"><strong>Artifact Registry</strong><span>Stores the<br />Docker image</span></div>
+              <span class="deployment-arrow" aria-hidden="true">→</span>
+              <div class="deployment-node"><strong>Cloud Run</strong><span>Runs Node.js<br />behind HTTPS</span></div>
+              <span class="deployment-arrow" aria-hidden="true">→</span>
+              <div class="deployment-node"><strong>Browser</strong><span>Portfolio and<br />analytics console</span></div>
+            </div>
+            <div class="deployment-analytics"><div><strong>First-party events</strong><span>page views · section attention · clicks · session detail</span></div><span class="deployment-arrow" aria-hidden="true">→</span><div><strong>BigQuery</strong><span>anonymized analytics storage</span></div></div>
+            <div class="site-build-notes"><span>Node.js</span><span>Docker</span><span>Google Cloud</span><span>Cloud Run</span><span>BigQuery</span></div>
+          </div>
+        </dialog>
         <div class="section-intro">
-          <p class="section-kicker">01 / Resume</p>
-          <h2 id="work-title">Professional <em>experience.</em></h2>
-          <p class="section-description">Roles, scope, and measurable results.</p>
+          <h2 id="work-title">Professional<br /><em>experience.</em></h2>
           <a class="download-link" data-analytics-id="resume-download" href="assets/Liam_Hosfeld_Resume.pdf" download>Download resume <span aria-hidden="true">↓</span></a>
         </div>
         <div class="experience-list">
           <article class="experience-item featured" data-analytics-id="experience-manhattan-current">
             <div class="experience-meta"><span>05.25 — now</span><span>Atlanta, GA</span></div>
-            <div class="experience-content"><h3>Manhattan Associates</h3><p class="role">Consultant, Cloud · Analytics + Process Improvement</p><p>Cross-functional operations analytics, process improvement, and solution delivery across customer and internal teams.</p><ul><li>Manage <strong>5 strategic enterprise accounts</strong> representing roughly <strong>50%</strong> of the team’s managed contract value.</li><li>Led discovery sessions and troubleshooting reviews across operations, services, and R&amp;D, tracing issues across workflows, data, and business rules.</li><li>Led a cross-functional effort across Operations, Cloud Services, and R&amp;D to build a BigQuery analytics and billing platform across 15 months of history and more than <strong>1M monthly tracking messages</strong>.</li><li>Translated usage volume by customer, carrier, and billing period into billing logic and reporting views, enabling Finance to recover approximately <strong>$40K</strong> in annualized revenue.</li><li>Prepare product demonstrations, project updates, and solution recommendations that clarify tradeoffs and support implementation decisions.</li><li>Built a client-facing documentation hub for <strong>40+ customer endpoints</strong> and the team’s first Bitbucket-based CI/CD deployment pipeline, improving how integration guidance was published, maintained, and reused.</li></ul></div>
+            <div class="experience-content"><h3>Manhattan Associates</h3><p class="role">Consultant, Cloud systems and process improvement</p><p>I work across customer teams, Operations, Cloud Services, and R&amp;D to make data and workflows easier to trust.</p><ul><li>Support <strong>5 enterprise accounts</strong> representing roughly <strong>50%</strong> of the team’s managed contract value.</li><li>Built a BigQuery analytics and billing platform across 15 months of history and more than <strong>1M monthly tracking messages</strong>.</li><li>Turned usage by customer, carrier, and billing period into billing logic and reporting views, helping Finance recover approximately <strong>$40K</strong> in annualized revenue.</li><li>Built a client-facing hub for <strong>40+ customer endpoints</strong> and the team’s first Bitbucket CI/CD pipeline, making integration guidance easier to publish and reuse.</li></ul></div>
             <div class="experience-index">01</div>
           </article>
           <article class="experience-item" data-analytics-id="experience-manhattan-coop">
@@ -75,21 +95,19 @@
 
       <section class="current-work-section role-metrics-section" id="current-work" data-analytics-section="current-role-metrics" aria-labelledby="current-work-title">
         <div class="current-work-heading">
-          <div><p class="section-kicker">02 / Current role + metrics</p><h2 id="current-work-title">Current role<br /><em>by the numbers.</em></h2></div>
-          <p>Operations analytics, process improvement, cross-functional delivery, and measurable business outcomes.</p>
+          <div><h2 id="current-work-title">Selected<br /><em>results.</em></h2></div>
+          <p>A few measurable results from recent work.</p>
         </div>
         <div class="current-work-board role-metrics-board">
-          <article class="work-signal role-metric role-metric-accounts" data-analytics-id="metric-accounts"><div class="signal-copy"><strong>5</strong><h3>Strategic accounts</h3><p>Roughly 50% of managed contract value.</p></div><div class="signal-art signal-account-art" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div></article>
-          <article class="work-signal role-metric role-metric-volume" data-analytics-id="metric-billing-volume"><div class="signal-copy"><strong>1M<span>+</span></strong><h3>Billing volume analysis</h3><p>Led across Operations, Cloud Services, and R&amp;D to turn usage data into billing support.</p></div><div class="signal-art signal-volume-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></article>
-          <article class="work-signal role-metric role-metric-recovery" data-analytics-id="metric-revenue-recovery"><div class="signal-copy"><strong>$40K</strong><h3>Annualized revenue</h3><p>Usage data translated into billing logic and reporting views.</p></div><div class="signal-art signal-recovery-art" aria-hidden="true"><span></span><b></b></div></article>
-          <article class="work-signal role-metric role-metric-deployment" data-analytics-id="metric-documentation-deployment"><div class="signal-copy"><strong>40<span>+</span></strong><h3>Documentation deployment</h3><p>Client-facing hub plus the first Bitbucket CI/CD pipeline improved publishing and reuse.</p></div><div class="signal-art signal-deploy-art" aria-hidden="true"><span>DOCS</span><b>→</b><span>BUILD</span><b>→</b><span>SHIP</span><i></i><i></i></div></article>
-          <article class="work-signal role-metric role-metric-cloud" data-analytics-id="metric-cloud-savings"><div class="signal-copy"><strong>$40K</strong><h3>Cloud savings identified</h3><p>Power BI surfaced underused resources and estimated annual savings.</p></div><div class="signal-art signal-cloud-art" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div></article>
-          <article class="work-signal role-metric role-metric-cost" data-analytics-id="metric-cost-reduction"><div class="signal-copy"><strong>$36K</strong><h3>Annual costs reduced</h3><p>Licensing analysis identified duplicate and inactive accounts.</p></div><div class="signal-art signal-cost-art" aria-hidden="true"><i></i><i></i><i></i><b>↓</b></div></article>
+          <article class="work-signal role-metric role-metric-accounts" data-analytics-id="metric-accounts"><div class="signal-copy"><strong>5</strong><h3>Enterprise accounts</h3><p>Roughly 50% of managed contract value.</p></div><div class="signal-art signal-account-art" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div></article>
+          <article class="work-signal role-metric role-metric-volume" data-analytics-id="metric-billing-volume"><div class="signal-copy"><strong>1M<span>+</span></strong><h3>Monthly tracking messages</h3><p>Usage data from more than 1M monthly tracking messages.</p></div><div class="signal-art signal-volume-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="work-signal role-metric role-metric-recovery" data-analytics-id="metric-revenue-recovery"><div class="signal-copy"><strong>$40K</strong><h3>Revenue identified</h3><p>Billing views helped Finance recover approximately $40K.</p></div><div class="signal-art signal-recovery-art" aria-hidden="true"><span></span><b></b></div></article>
+          <article class="work-signal role-metric role-metric-deployment" data-analytics-id="metric-documentation-deployment"><div class="signal-copy"><strong>40<span>+</span></strong><h3>Customer endpoints</h3><p>A reusable hub and publishing pipeline for 40+ endpoints.</p></div><div class="signal-art signal-deploy-art" aria-hidden="true"><span>DOCS</span><b>→</b><span>BUILD</span><b>→</b><span>SHIP</span><i></i><i></i></div></article>
         </div>
-        <div class="role-scope" aria-label="Current role scope"><div><strong>3 hrs</strong><span>saved weekly through reporting automation</span></div><div><strong>CROSS-FUNCTIONAL</strong><span>Operations · Services · R&amp;D</span></div><div><strong>DEPLOYMENT</strong><span>Documentation hub · CI/CD</span></div><div><strong>DELIVERY</strong><span>Demos · troubleshooting · recommendations</span></div></div>
+        <p class="role-scope-note">The work moves between customer teams, Operations, Cloud Services, and R&amp;D.</p>
       </section>
 
-      <div class="section-transition transition-sage" aria-hidden="true"><span class="transition-index">02</span><span class="transition-rule"></span><span class="transition-form transition-form-step"></span><span class="transition-leaf"></span><span class="transition-rule"></span></div>
+      <div class="section-transition transition-sage" aria-hidden="true"><span class="transition-rule"></span><span class="transition-form transition-form-step"></span><span class="transition-leaf"></span><span class="transition-rule"></span></div>
 
       <section class="skills-section section-grid" id="analytics" data-analytics-section="analytics-skills" aria-labelledby="skills-title">
         <div class="jungle-decor skills-jungle" aria-hidden="true">
@@ -99,13 +117,13 @@
           <span class="plant-stem plant-skills"></span>
           <span class="crumb crumb-skills-a"></span>
         </div>
-        <div class="skills-heading"><p class="section-kicker">03 / Skills + analytics</p><h2 id="skills-title">Analytics, operations,<br /><em>and delivery.</em></h2><p class="skills-intro">A transferable toolkit for analysis, process improvement, project coordination, and technical communication.</p></div>
+        <div class="skills-heading"><p class="section-kicker">Skills and tools</p><h2 id="skills-title">Skills and<br /><em>tools.</em></h2><p class="skills-intro">Data analysis, systems work, automation, and documentation.</p></div>
         <div class="education-card" data-analytics-id="education-uga"><div class="education-mark">UGA</div><div><span class="skill-label">Education</span><h3>University of Georgia</h3><p>B.S. Computer Systems Engineering · GPA 3.83</p></div><span class="education-year">MAY 2025</span></div>
         <div class="skills-board">
-          <div class="skill-group" data-analytics-id="skill-analysis-reporting"><span class="skill-label">01</span><h3>Analysis + reporting</h3><p>Quantitative analysis · Financial analysis · Cost-benefit analysis · Trend analysis · Data modeling · SQL · Oracle SQL · BigQuery · Power BI · DAX · Excel</p></div>
-          <div class="skill-group" data-analytics-id="skill-projects-operations"><span class="skill-label">02</span><h3>Projects + operations</h3><p>Problem analysis · Requirements gathering · Process improvement · Project coordination · Workshop facilitation · Stakeholder presentations · Cross-functional collaboration</p></div>
-          <div class="skill-group" data-analytics-id="skill-platforms-data"><span class="skill-label">03</span><h3>Platforms + data exchange</h3><p>Microsoft Azure · Google Cloud Platform · Azure Active Directory · Git · Bitbucket · CI/CD · EDI and AS2 as integration context</p></div>
-          <div class="skill-group" data-analytics-id="skill-languages-tools"><span class="skill-label">04</span><h3>Languages + tools</h3><p>Python · Java · JavaScript · Bash · Django · PostgreSQL · Streamlit · Linux · Technical documentation</p></div>
+          <div class="skill-group" data-analytics-id="skill-analysis-reporting"><h3>Find the pattern</h3><p>Oracle SQL · BigQuery · Power BI · DAX · Excel</p></div>
+          <div class="skill-group" data-analytics-id="skill-projects-operations"><h3>Improve the workflow</h3><p>Requirements · process mapping · automation · reporting · documentation</p></div>
+          <div class="skill-group" data-analytics-id="skill-platforms-data"><h3>Connect the systems</h3><p>TMS · EDI · AS2 · SFTP · Google Cloud · Azure</p></div>
+          <div class="skill-group" data-analytics-id="skill-languages-tools"><h3>Build the useful part</h3><p>Python · JavaScript · Django · Bash · Git · CI/CD</p></div>
         </div>
       </section>
 
@@ -117,20 +135,23 @@
           <span class="leaf leaf-beyond-c"></span>
           <span class="vine vine-beyond"></span>
           <span class="plant-stem plant-beyond"></span>
+          <span class="plant-stem plant-beyond-second"></span>
+          <span class="leaf leaf-beyond-d"></span>
+          <span class="leaf leaf-beyond-e"></span>
           <span class="crumb crumb-beyond-a"></span>
           <span class="crumb crumb-beyond-b"></span>
         </div>
         <div class="personal-intro">
-          <div class="personal-intro-meta"><p class="section-kicker">04 / Outside work</p></div>
+          <div class="personal-intro-meta"><p class="section-kicker">Outside work</p></div>
           <h2 id="beyond-title">Baking and<br /><em>houseplants.</em></h2>
-          <p class="personal-lead">Two routines outside work: making food and keeping living systems healthy.</p>
-          <div class="interest-list"><div><span>01</span><h3>Slow process</h3><p>Fermentation, shaping, bake.</p></div><div><span>02</span><h3>Steady care</h3><p>Water, light, propagation.</p></div></div>
+          <p class="personal-lead">Bread baking and plant care.</p>
+          <div class="interest-list"><div><h3>Bread</h3><p>Fermentation, shaping, bake.</p></div><div><h3>Plants</h3><p>Water, light, propagation.</p></div></div>
           <figure class="personal-image-slip personal-image-slip-intro" data-analytics-id="image-bread-01"><img src="assets/bread-01.jpg" alt="Freshly baked bread" /></figure>
           <div class="personal-mark" aria-hidden="true"><span></span><span></span><span></span></div>
         </div>
         <div class="hobby-display">
           <article class="hobby-card hobby-card-baking" data-analytics-id="hobby-baking" tabindex="0" aria-label="Baking: country bread, bagels, and cookies">
-            <div class="hobby-card-head"><span class="hobby-card-index">01</span></div>
+            <div class="hobby-card-head"></div>
             <div class="hobby-art hobby-baking-art">
               <figure class="hobby-photo hobby-photo-baking" data-analytics-id="image-bread-02"><img src="assets/bread-02.jpg" alt="Freshly baked bread" /></figure>
               <figure class="hobby-photo hobby-photo-baking-secondary" data-analytics-id="image-bread-03"><img src="assets/bread-03.jpg" alt="Freshly baked bread" /></figure>
@@ -145,27 +166,26 @@
             <div class="hobby-card-foot"><strong>Country bread, bagels, cookies</strong></div>
           </article>
           <article class="hobby-card hobby-card-plants" data-analytics-id="hobby-plants" tabindex="0" aria-label="Houseplants: care and propagation">
-            <div class="hobby-card-head"><span class="hobby-card-index">02</span></div>
+            <div class="hobby-card-head"></div>
             <div class="hobby-art hobby-plants-art">
-              <span class="hobby-soil" aria-hidden="true"></span><span class="hobby-pot" aria-hidden="true"></span><span class="hobby-stem hobby-stem-one" aria-hidden="true"></span><span class="hobby-stem hobby-stem-two" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-one" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-two" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-three" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-new" aria-hidden="true"></span>
+              <span class="hobby-soil" aria-hidden="true"></span><span class="hobby-pot" aria-hidden="true"></span><span class="hobby-stem hobby-stem-one" aria-hidden="true"></span><span class="hobby-stem hobby-stem-two" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-one" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-two" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-three" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-new" aria-hidden="true"></span><span class="hobby-stem hobby-stem-three" aria-hidden="true"></span><span class="hobby-leaf hobby-leaf-four" aria-hidden="true"></span>
             </div>
             <div class="hobby-card-foot"><strong>Houseplants / propagation</strong></div>
           </article>
         </div>
         <div class="personal-archive">
-          <div class="archive-heading"><div><p class="section-kicker">Personal archive</p><h3>Outside work,<br /><em>in frames.</em></h3></div></div>
-          <div class="archive-grid">
+          <div class="archive-heading"><div><p class="section-kicker">Personal photographs</p><h3>Personal<br /><em>archive.</em></h3></div></div>
+          <div class="archive-grid archive-grid-five">
             <figure class="archive-card archive-card-06" data-analytics-id="image-06"><img src="assets/archive-06.jpg" alt="Personal image from the archive" /></figure>
             <figure class="archive-card archive-card-02" data-analytics-id="image-02"><img src="assets/archive-02.jpg" alt="Personal image from the archive" /></figure>
             <figure class="archive-card archive-card-03" data-analytics-id="image-03"><img src="assets/archive-03.jpg" alt="Personal image from the archive" /></figure>
             <figure class="archive-card archive-card-04" data-analytics-id="image-04"><img src="assets/archive-04.jpg" alt="Personal image from the archive" /></figure>
-            <figure class="archive-card archive-card-05" data-analytics-id="image-05"><img src="assets/archive-05.jpg" alt="Personal image from the archive" /></figure>
             <figure class="archive-card archive-card-01" data-analytics-id="image-01"><img src="assets/archive-01.jpg" alt="Personal image from the archive" /></figure>
           </div>
         </div>
       </section>
 
-      <div class="section-transition transition-forest" aria-hidden="true"><span class="transition-index">04</span><span class="transition-rule"></span><span class="transition-form transition-form-arc"></span><span class="transition-leaf"></span><span class="transition-rule"></span></div>
+      <div class="section-transition transition-forest" aria-hidden="true"><span class="transition-rule"></span><span class="transition-form transition-form-arc"></span><span class="transition-leaf"></span><span class="transition-rule"></span></div>
 
       <section class="contact-section" id="contact" data-analytics-section="contact" aria-labelledby="contact-title">
         <div class="jungle-decor contact-jungle" aria-hidden="true">
@@ -174,13 +194,13 @@
           <span class="vine vine-contact"></span>
           <span class="crumb crumb-contact-a"></span>
         </div>
-        <div class="contact-top"><p class="section-kicker">05 / Contact</p><span class="contact-marker">✦</span></div>
-        <h2 id="contact-title">Contact details<br /><em>for relevant work.</em></h2>
-        <div class="contact-bottom"><p>Project analysis, operations analytics, process improvement, and cross-functional technical delivery opportunities.</p><a class="contact-email" data-analytics-id="contact-email" href="mailto:liamhosfeld@gmail.com">liamhosfeld@gmail.com <span aria-hidden="true">↗</span></a></div>
+        <div class="contact-top"><p class="section-kicker">Contact</p><span class="contact-marker">✦</span></div>
+        <h2 id="contact-title">Contact<br /><em>information.</em></h2>
+        <div class="contact-bottom"><p>For work involving operations, data, systems, and process improvement.</p><a class="contact-email" data-analytics-id="contact-email" href="mailto:liamhosfeld@gmail.com">liamhosfeld@gmail.com <span aria-hidden="true">↗</span></a></div>
       </section>
     </main>
 
-    <footer class="site-footer"><span>© 2026 Liam Hosfeld</span><span>Operations analytics · Atlanta, GA</span><a href="#top">Back to top ↑</a></footer>
+    <footer class="site-footer"><span>© 2026 Liam Hosfeld</span><span>Data, systems, and operations · Atlanta, GA</span><a href="#top">Back to top ↑</a></footer>
   </div>
   <script src="script.js"></script>
   <script src="analytics.js"></script>

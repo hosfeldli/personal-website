@@ -6,6 +6,23 @@ const number = (value) => new Intl.NumberFormat('en-US').format(Number(value || 
 const table = (headers, rows, empty = 'No events recorded in this window.') => rows.length ? `<table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>` : `<p class="empty">${empty}</p>`;
 const rowTable = (rows) => table(['Category','Value','Count'], rows.map((row) => `<tr><td>${escapeHtml(row.category)}</td><td>${escapeHtml(row.value || '—')}</td><td class="num">${number(row.count)}</td></tr>`));
 
+let trendData = [];
+let trendMetric = 'events';
+function renderTrend() {
+  const chart = document.querySelector('#trend-chart');
+  if (!chart || !trendData.length) { if (chart) chart.innerHTML = '<p class="empty">No trend data in this window.</p>'; return; }
+  const values = trendData.map((row) => Number(row[trendMetric] || 0));
+  const max = Math.max(...values, 1); const width = 900; const height = 250; const pad = { top: 18, right: 18, bottom: 34, left: 42 };
+  const x = (i) => pad.left + (trendData.length === 1 ? 0 : i * (width - pad.left - pad.right) / (trendData.length - 1));
+  const y = (v) => height - pad.bottom - (v / max) * (height - pad.top - pad.bottom);
+  const points = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+  const labels = trendData.filter((_, i) => i === 0 || i === trendData.length - 1 || i % Math.max(1, Math.ceil(trendData.length / 5)) === 0).map((row, i, rows) => {
+    const index = trendData.indexOf(row); return `<text x="${x(index)}" y="${height - 10}" text-anchor="${i === 0 ? 'start' : i === rows.length - 1 ? 'end' : 'middle'}">${escapeHtml(row.date.slice(5))}</text>`;
+  }).join('');
+  const dots = values.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="${trendData.length > 45 ? 2 : 3.5}"><title>${escapeHtml(trendData[i].date)}: ${number(v)}</title></circle>`).join('');
+  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><line class="chart-axis" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${height-pad.bottom}" /><line class="chart-axis" x1="${pad.left}" x2="${width-pad.right}" y1="${height-pad.bottom}" y2="${height-pad.bottom}" /><polyline class="trend-line" points="${points}" /><g class="trend-dots">${dots}</g><text class="chart-max" x="${pad.left}" y="${pad.top - 5}">${number(max)}</text><g class="chart-labels">${labels}</g></svg>`;
+}
+
 function renderHotZone(data) {
   const sections = (data.sections || []).filter((row) => row.region);
   const zones = data.hot_zones || [];
@@ -61,6 +78,23 @@ function renderActions(data) {
   output.innerHTML = actions.slice(0, 4).map((action) => `<article class="action-item action-${action.tone}"><strong>${escapeHtml(action.title)}</strong><p>${escapeHtml(action.body)}</p></article>`).join('');
 }
 
+
+async function loadSession(sessionId) {
+  const detail = document.querySelector('#session-detail');
+  detail.hidden = false; detail.innerHTML = '<p class="empty">Loading session replay…</p>';
+  try {
+    const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Session unavailable');
+    const session = await response.json();
+    const context = session.context || {};
+    const connection = context.connection || {};
+    const sectionRows = (session.sections || []).sort((a, b) => b.dwell_ms - a.dwell_ms).map((row) => `<tr><td>${escapeHtml(row.section)}</td><td class="num">${number(row.views)}</td><td class="num">${duration(row.dwell_ms)}</td><td class="num">${number(row.milestones)}</td></tr>`).join('');
+    const timeline = (session.events || []).map((event, index) => `<li><time>${new Date(event.timestamp).toLocaleTimeString()}</time><strong>${escapeHtml(event.type.replaceAll('_', ' '))}</strong><span>${escapeHtml(event.section || event.target || event.path || '')}${event.duration_ms ? ` · ${duration(event.duration_ms)}` : ''}${event.depth_percent !== undefined ? ` · ${number(event.depth_percent)}% scroll` : ''}</span></li>`).join('');
+    detail.innerHTML = `<div class="session-detail-heading"><div><p class="eyebrow">Session replay</p><h3>${escapeHtml(session.session_id.slice(0, 12))}…</h3><p class="session-meta">${escapeHtml(new Date(session.first).toLocaleString())} · ${duration(session.duration_ms)} · ${number(session.events.length)} events</p></div><button type="button" class="session-close">Close</button></div><div class="session-context"><span><b>Device</b>${escapeHtml(context.operating_system || 'Unknown')} · ${escapeHtml(context.browser || 'Unknown')}</span><span><b>Connection</b>${escapeHtml(connection.type || 'Unavailable')}${connection.rtt ? ` · ${number(connection.rtt)} ms RTT` : ''}${connection.downlink ? ` · ${number(connection.downlink)} Mbps` : ''}</span><span><b>Viewport</b>${escapeHtml(context.viewport || 'Unknown')}</span><span><b>Referrer</b>${escapeHtml(context.referrer || 'Direct')}</span></div><div class="session-replay-grid"><div><h4>What happened</h4><ol class="event-timeline">${timeline || '<li>No events recorded.</li>'}</ol></div><div><h4>Where attention went</h4><table><thead><tr><th>Section</th><th>Views</th><th>Dwell</th><th>Milestones</th></tr></thead><tbody>${sectionRows || '<tr><td colspan="4">No section data.</td></tr>'}</tbody></table></div></div>`;
+    detail.querySelector('.session-close').addEventListener('click', () => { detail.hidden = true; });
+  } catch (error) { detail.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`; }
+}
+
 async function load() {
   refreshButton.textContent = 'Loading…';
   try {
@@ -74,6 +108,7 @@ async function load() {
       ['Avg. session', duration(t.average_session_ms), `${number(t.engaged_sessions)} engaged sessions`],
       ['Avg. scroll', `${number(t.average_scroll_percent)}%`, 'maximum depth per session'],
     ].map(([label, value, detail]) => `<article class="summary-card"><small>${label}</small><strong>${escapeHtml(value)}</strong><span>${escapeHtml(detail)}</span></article>`).join('');
+    trendData = data.trend || []; renderTrend();
     renderHotZone(data);
     renderActions(data);
     document.querySelector('#sections-table').innerHTML = table(['Section','Views','Dwell','Milestones'], (data.sections || []).map((row) => `<tr><td>${escapeHtml(row.section)}</td><td class="num">${number(row.views)}</td><td class="num">${duration(row.dwell_ms)}</td><td class="num">${number(row.milestones)}</td></tr>`));
@@ -83,7 +118,8 @@ async function load() {
     [['Path', nav.paths], ['Referrer', nav.referrers], ['Device', nav.devices], ['Viewport', nav.viewports], ['Language', nav.languages], ['Timezone', nav.timezones], ['Source', nav.sources], ['Campaign', nav.campaigns]].forEach(([category, rows]) => (rows || []).slice(0, 4).forEach((row) => contextRows.push({ category, value: row.value, count: row.count })));
     document.querySelector('#navigation-table').innerHTML = `<div class="context-table">${rowTable(contextRows)}</div>`;
     document.querySelector('#events-table').innerHTML = table(['Event','Count'], (data.event_types || []).map((row) => `<tr><td>${escapeHtml(row.type)}</td><td class="num">${number(row.count)}</td></tr>`));
-    document.querySelector('#sessions-table').innerHTML = table(['Session','Events','Max scroll','Started','Last activity'], (data.sessions || []).map((row) => `<tr><td>${escapeHtml(row.session_id.slice(0, 8))}…</td><td class="num">${number(row.events)}</td><td class="num">${number(row.max_scroll)}%</td><td>${new Date(row.first).toLocaleString()}</td><td>${new Date(row.last).toLocaleString()}</td></tr>`));
+    document.querySelector('#sessions-table').innerHTML = table(['Session','Events','Max scroll','Started','Last activity'], (data.sessions || []).map((row) => `<tr><td><button class="session-button" data-session-id="${escapeHtml(row.session_id)}">${escapeHtml(row.session_id.slice(0, 8))}…</button></td><td class="num">${number(row.events)}</td><td class="num">${number(row.max_scroll)}%</td><td>${new Date(row.first).toLocaleString()}</td><td>${new Date(row.last).toLocaleString()}</td></tr>`)).replace(/<table>/, '<table class="session-table">');
+    document.querySelectorAll('.session-button').forEach((button) => button.addEventListener('click', () => loadSession(button.dataset.sessionId)));
   } catch (error) {
     document.querySelector('#summary').innerHTML = `<article class="summary-card" style="grid-column:1/-1;background:#59392d;color:#efe4d0"><strong>Analytics unavailable</strong><span>${escapeHtml(error.message)}. Start the portfolio with <code>npm start</code>.</span></article>`;
   } finally { refreshButton.textContent = 'Refresh ↻'; }
@@ -91,3 +127,6 @@ async function load() {
 daysSelect.addEventListener('change', load);
 refreshButton.addEventListener('click', load);
 load();
+
+const trendMetricSelect = document.querySelector('#trend-metric');
+if (trendMetricSelect) trendMetricSelect.addEventListener('change', () => { trendMetric = trendMetricSelect.value; renderTrend(); });

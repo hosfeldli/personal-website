@@ -111,3 +111,35 @@ h1, h2, h1 em, h2 em { font-family:var(--sans); font-style:normal; font-weight:7
 h1 em, h2 em { color:var(--rust); }
 .panel-heading h2 { font-size:30px; line-height:1.02; }
 .panel-note, .privacy-note, .console-footer, th { letter-spacing:.03em; }
+
+/* Trend chart: one stable viewport, no misleading stacked geometry. */
+.trend-panel { margin-bottom:14px; min-height:0; }
+.trend-controls { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:end; }
+.trend-controls label { color:var(--muted); font:500 9px var(--mono); text-transform:uppercase; }
+.trend-chart { min-height:260px; padding:8px 0 0; }
+.trend-chart svg { display:block; width:100%; height:260px; overflow:visible; }
+.chart-axis { stroke:var(--line); stroke-width:1; }
+.trend-line { fill:none; stroke:var(--rust); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.trend-dots circle { fill:var(--mustard); stroke:var(--forest); stroke-width:1.5; }
+.chart-labels text,.chart-max { fill:var(--muted); font:500 10px var(--mono); }
+@media (max-width:760px){ .trend-controls{justify-content:start}.trend-chart,.trend-chart svg{min-height:220px;height:220px} }
+
+.session-button { min-height:0; padding:0; border:0; border-bottom:1px solid var(--rust); border-radius:0; background:transparent; color:var(--forest); font:700 11px var(--sans); cursor:pointer; }
+.session-detail { margin-top:18px; padding:18px; border:1px solid var(--line); background:rgba(243,234,217,.72); }
+.session-detail-heading { display:flex; justify-content:space-between; align-items:start; gap:16px; margin-bottom:16px; }
+.session-detail h3 { margin:0; font-size:24px; letter-spacing:-.04em; }
+.session-meta { margin:6px 0 0; color:var(--muted); font-size:11px; }
+.session-close { min-height:28px; }
+.session-context { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+.session-context span { padding:10px; background:rgba(255,255,255,.45); color:var(--muted); font-size:10px; line-height:1.4; }
+.session-context b { display:block; margin-bottom:4px; color:var(--forest); font:500 8px var(--mono); letter-spacing:.06em; text-transform:uppercase; }
+.session-replay-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.session-replay-grid h4 { margin:0 0 10px; font-size:15px; }
+.event-timeline { max-height:420px; overflow:auto; margin:0; padding:0 0 0 18px; border-left:2px solid var(--mustard); list-style:none; }
+.event-timeline li { position:relative; display:grid; grid-template-columns:70px 1fr; gap:7px; padding:7px 0 7px 10px; font-size:10px; }
+.event-timeline li::before { content:''; position:absolute; left:-24px; top:12px; width:8px; height:8px; border-radius:50%; background:var(--rust); }
+.event-timeline time { color:var(--muted); font:500 9px var(--mono); }
+.event-timeline strong { color:var(--forest); text-transform:capitalize; }
+.event-timeline span { grid-column:2; color:var(--muted); }
+@media (max-width:760px){ .session-context,.session-replay-grid{grid-template-columns:1fr 1fr}.event-timeline li{grid-template-columns:60px 1fr} }
+@media (max-width:480px){ .session-context,.session-replay-grid{grid-template-columns:1fr}.session-detail-heading{display:block}.session-close{margin-top:12px} }

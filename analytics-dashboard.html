@@ -18,6 +18,7 @@
     </header>
     <p class="privacy-note">Anonymous first-party events only: no names, email addresses, IP addresses, or raw cursor coordinates are stored. Hover and focus dwell are measured by labeled target.</p>
     <section class="summary-grid" id="summary" aria-live="polite"></section>
+    <section class="console-panel trend-panel"><div class="panel-heading"><div><p class="eyebrow">Over time</p><h2>Activity<br /><em>trend.</em></h2></div><div class="trend-controls"><label for="trend-metric">Metric</label><select id="trend-metric"><option value="events" selected>Events</option><option value="sessions">Sessions</option><option value="visitors">Visitors</option><option value="engaged">Engaged sessions</option><option value="average_scroll_percent">Avg. scroll</option></select><span class="panel-note">Daily totals · current window</span></div></div><div id="trend-chart" class="trend-chart" role="img" aria-label="Analytics activity over time"></div></section>
     <section class="action-panel console-panel"><div class="panel-heading"><div><p class="eyebrow">Decision support</p><h2>What to<br /><em>review.</em></h2></div><span class="panel-note">Generated from activity</span></div><div id="actions" class="action-list" aria-live="polite"></div></section>
     <section class="console-grid">
       <article class="console-panel panel-wide hot-zone-panel"><div class="panel-heading"><div><p class="eyebrow">Attention map</p><h2>Where the page<br /><em>gets hot.</em></h2></div><span class="panel-note">Views · hovers · clicks · dwell</span></div><div class="hot-zone-legend"><span><i class="legend-cool"></i>low activity</span><span><i class="legend-warm"></i>high activity</span><span>normalized page regions</span><span><i class="legend-scroll"></i>scroll attention</span></div><div id="hot-zone" class="hot-zone-wrap"></div></article>
@@ -25,7 +26,7 @@
       <article class="console-panel"><div class="panel-heading"><div><p class="eyebrow">Interaction</p><h2>Focus<br /><em>targets.</em></h2></div></div><div id="targets-table" class="table-wrap"></div></article>
       <article class="console-panel"><div class="panel-heading"><div><p class="eyebrow">Navigation</p><h2>Basic visitor<br /><em>context.</em></h2></div></div><div id="navigation-table" class="table-wrap"></div></article>
       <article class="console-panel"><div class="panel-heading"><div><p class="eyebrow">Behavior</p><h2>Event<br /><em>mix.</em></h2></div></div><div id="events-table" class="table-wrap"></div></article>
-      <article class="console-panel panel-wide"><div class="panel-heading"><div><p class="eyebrow">Sessions</p><h2>Recent<br /><em>journeys.</em></h2></div></div><div id="sessions-table" class="table-wrap"></div></article>
+      <article class="console-panel panel-wide"><div class="panel-heading"><div><p class="eyebrow">Sessions</p><h2>Recent<br /><em>journeys.</em></h2></div></div><div id="sessions-table" class="table-wrap"></div><div id="session-detail" class="session-detail" hidden></div></article>
     </section>
     <footer class="console-footer">Data source: <code>data/events.ndjson</code> · Same-origin endpoint: <code>/api/events</code></footer>
   </main>
