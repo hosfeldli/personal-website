@@ -68,7 +68,11 @@ jobs:
 
       - name: Submit Cloud Build
         run: |
+          # The GitHub OIDC principal can submit a build but cannot read the default
+          # Cloud Build log bucket. Submit asynchronously instead of failing after the
+          # build has already been accepted and is running.
           gcloud builds submit \
+            --async \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --config=cloudbuild.yaml \
             --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_ANALYTICS_DATASET="${{ vars.GCP_ANALYTICS_DATASET }}",_ANALYTICS_TABLE="${{ vars.GCP_ANALYTICS_TABLE }}",_IMAGE_TAG="${{ github.sha }}"
