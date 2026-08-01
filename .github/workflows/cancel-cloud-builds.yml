@@ -1,0 +1,82 @@
+name: Cancel Cloud Build deployments
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_ids:
+        description: "Comma- or space-separated Cloud Build IDs to cancel"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  cancel-builds:
+    name: Cancel submitted Cloud Builds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Cancel builds and verify terminal state
+        env:
+          BUILD_IDS: ${{ inputs.build_ids }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          build_ids="$(printf '%s' "$BUILD_IDS" | tr ',' ' ')"
+          terminal='SUCCESS FAILURE INTERNAL_ERROR TIMEOUT CANCELLED EXPIRED'
+
+          for build_id in $build_ids; do
+            status="$(gcloud builds describe "$build_id" \
+              --project="$GCP_PROJECT_ID" \
+              --region=global \
+              --format='value(status)' 2>/dev/null || true)"
+            echo "$build_id status before cancellation: ${status:-not-found}"
+
+            case " $terminal " in
+              *" $status "*)
+                continue
+                ;;
+            esac
+
+            gcloud builds cancel "$build_id" \
+              --project="$GCP_PROJECT_ID" \
+              --region=global \
+              --quiet
+          done
+
+          unresolved=0
+          for attempt in {1..12}; do
+            pending=0
+            for build_id in $build_ids; do
+              status="$(gcloud builds describe "$build_id" \
+                --project="$GCP_PROJECT_ID" \
+                --region=global \
+                --format='value(status)' 2>/dev/null || true)"
+              echo "$build_id status: ${status:-not-found}"
+              case " $terminal " in
+                *" $status "*)
+                  ;;
+                *)
+                  pending=1
+                  ;;
+              esac
+            done
+
+            if [[ "$pending" -eq 0 ]]; then
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "::error::One or more Cloud Builds did not reach a terminal state after cancellation."
+          exit 1
