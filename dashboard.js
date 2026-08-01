@@ -1,132 +1,307 @@
+'use strict';
+
 const daysSelect = document.querySelector('#days');
 const refreshButton = document.querySelector('#refresh');
-const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
-const duration = (ms) => { const seconds = Math.round(Number(ms || 0) / 1000); if (seconds < 60) return `${seconds}s`; const minutes = Math.floor(seconds / 60); return `${minutes}m ${seconds % 60}s`; };
-const number = (value) => new Intl.NumberFormat('en-US').format(Number(value || 0));
-const table = (headers, rows, empty = 'No events recorded in this window.') => rows.length ? `<table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>` : `<p class="empty">${empty}</p>`;
-const rowTable = (rows) => table(['Category','Value','Count'], rows.map((row) => `<tr><td>${escapeHtml(row.category)}</td><td>${escapeHtml(row.value || '—')}</td><td class="num">${number(row.count)}</td></tr>`));
-
+const trendMetricSelect = document.querySelector('#trend-metric');
 let trendData = [];
-let trendMetric = 'events';
+let trendMetric = 'sessions';
+
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+}[character]));
+const number = (value) => new Intl.NumberFormat('en-US').format(Number(value || 0));
+const duration = (ms) => {
+  const seconds = Math.max(0, Math.round(Number(ms || 0) / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m ${seconds % 60}s`;
+};
+const table = (headers, rows, empty = 'No data in this window.') => rows.length
+  ? `<table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`
+  : `<p class="empty">${escapeHtml(empty)}</p>`;
+
+function deltaMarkup(comparison, invert = false) {
+  if (!comparison || comparison.delta === null || comparison.delta === 0) return '';
+  const favorable = invert ? comparison.delta < 0 : comparison.delta > 0;
+  const arrow = comparison.delta > 0 ? '↑' : '↓';
+  return `<span class="delta ${favorable ? 'up' : 'down'}">${arrow}${Math.abs(comparison.delta)}%</span>`;
+}
+
+function renderSummary(data) {
+  const totals = data.totals || {};
+  const comparison = data.comparison || {};
+  const cards = [
+    { label: 'Sessions', value: number(totals.sessions), detail: `${number(totals.visitors)} unique visitors`, comparison: comparison.sessions, primary: true },
+    { label: 'Engagement rate', value: `${number(totals.engagement_rate)}%`, detail: `${number(totals.engaged_sessions)} engaged sessions`, comparison: comparison.engagement_rate },
+    { label: 'High-intent rate', value: `${number(totals.high_intent_rate)}%`, detail: `${number(totals.high_intent_sessions)} hiring-intent sessions`, comparison: comparison.high_intent_rate },
+    { label: 'Résumé sessions', value: number(totals.resume_sessions), detail: 'Unique sessions with a résumé click' },
+    { label: 'Median session', value: duration(totals.median_session_ms), detail: `Average ${duration(totals.average_session_ms)}`, comparison: comparison.average_session_ms },
+    { label: 'Average scroll', value: `${number(totals.average_scroll_percent)}%`, detail: `${number(totals.quick_exit_rate)}% quick-exit rate`, comparison: comparison.average_scroll_percent },
+    { label: 'Active reading time', value: duration(totals.median_active_ms), detail: `${number(totals.active_ratio)}% of session time is active`, comparison: comparison.average_active_ms },
+    { label: 'Returning sessions', value: `${number(totals.returning_rate)}%`, detail: `${number(totals.returning_sessions)} sessions from repeat visitors`, comparison: comparison.returning_rate },
+    { label: 'Friction rate', value: `${number(totals.frustrated_rate)}%`, detail: `${number(totals.frustrated_sessions)} sessions hit a rage click, dead click, or error`, comparison: comparison.frustrated_rate, invert: true },
+  ];
+  document.querySelector('#summary').innerHTML = cards.map((card) => `
+    <article class="kpi-card ${card.primary ? 'primary' : ''}">
+      <small>${escapeHtml(card.label)}</small>
+      <strong>${escapeHtml(card.value)}${deltaMarkup(card.comparison, card.invert)}</strong>
+      <span>${escapeHtml(card.detail)}</span>
+    </article>`).join('');
+}
+
+function renderFunnel(rows) {
+  const output = document.querySelector('#funnel');
+  output.innerHTML = (rows || []).map((row) => `
+    <div class="funnel-row">
+      <span class="funnel-label">${escapeHtml(row.label)}</span>
+      <span class="funnel-track"><span class="funnel-fill" style="width:${Math.max(row.rate, row.value ? 3 : 0)}%">${row.value ? number(row.value) : ''}</span></span>
+      <span class="funnel-value">${number(row.rate)}%</span>
+    </div>`).join('') || '<p class="empty">No funnel data in this window.</p>';
+}
+
+function renderRecommendations(rows) {
+  document.querySelector('#recommendations').innerHTML = (rows || []).map((row) => `
+    <article class="recommendation ${escapeHtml(row.tone)}">
+      <strong>${escapeHtml(row.title)}</strong>
+      <p>${escapeHtml(row.body)}</p>
+    </article>`).join('') || '<p class="empty">No recommendations yet.</p>';
+}
+
 function renderTrend() {
   const chart = document.querySelector('#trend-chart');
-  if (!chart || !trendData.length) { if (chart) chart.innerHTML = '<p class="empty">No trend data in this window.</p>'; return; }
+  if (!trendData.length) {
+    chart.innerHTML = '<p class="empty">No trend data in this window.</p>';
+    return;
+  }
   const values = trendData.map((row) => Number(row[trendMetric] || 0));
-  const max = Math.max(...values, 1); const width = 900; const height = 250; const pad = { top: 18, right: 18, bottom: 34, left: 42 };
-  const x = (i) => pad.left + (trendData.length === 1 ? 0 : i * (width - pad.left - pad.right) / (trendData.length - 1));
-  const y = (v) => height - pad.bottom - (v / max) * (height - pad.top - pad.bottom);
-  const points = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');
-  const labels = trendData.filter((_, i) => i === 0 || i === trendData.length - 1 || i % Math.max(1, Math.ceil(trendData.length / 5)) === 0).map((row, i, rows) => {
-    const index = trendData.indexOf(row); return `<text x="${x(index)}" y="${height - 10}" text-anchor="${i === 0 ? 'start' : i === rows.length - 1 ? 'end' : 'middle'}">${escapeHtml(row.date.slice(5))}</text>`;
-  }).join('');
-  const dots = values.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="${trendData.length > 45 ? 2 : 3.5}"><title>${escapeHtml(trendData[i].date)}: ${number(v)}</title></circle>`).join('');
-  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><line class="chart-axis" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${height-pad.bottom}" /><line class="chart-axis" x1="${pad.left}" x2="${width-pad.right}" y1="${height-pad.bottom}" y2="${height-pad.bottom}" /><polyline class="trend-line" points="${points}" /><g class="trend-dots">${dots}</g><text class="chart-max" x="${pad.left}" y="${pad.top - 5}">${number(max)}</text><g class="chart-labels">${labels}</g></svg>`;
+  const max = Math.max(...values, 1);
+  const width = 1000;
+  const height = 260;
+  const padding = { top: 22, right: 18, bottom: 35, left: 45 };
+  const x = (index) => padding.left + (trendData.length === 1 ? 0 : index * (width - padding.left - padding.right) / (trendData.length - 1));
+  const y = (value) => height - padding.bottom - (value / max) * (height - padding.top - padding.bottom);
+  const points = values.map((value, index) => `${x(index)},${y(value)}`).join(' ');
+  const area = `${padding.left},${height - padding.bottom} ${points} ${x(values.length - 1)},${height - padding.bottom}`;
+  const labelStep = Math.max(1, Math.ceil(trendData.length / 6));
+  const labels = trendData.map((row, index) => (index === 0 || index === trendData.length - 1 || index % labelStep === 0)
+    ? `<text class="chart-label" x="${x(index)}" y="${height - 12}" text-anchor="${index === 0 ? 'start' : index === trendData.length - 1 ? 'end' : 'middle'}">${escapeHtml(row.date.slice(5))}</text>`
+    : '').join('');
+  const dots = values.map((value, index) => `<circle class="trend-dot" cx="${x(index)}" cy="${y(value)}" r="3"><title>${escapeHtml(trendData[index].date)}: ${number(value)}</title></circle>`).join('');
+  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+    <line class="chart-axis" x1="${padding.left}" x2="${padding.left}" y1="${padding.top}" y2="${height - padding.bottom}" />
+    <line class="chart-axis" x1="${padding.left}" x2="${width - padding.right}" y1="${height - padding.bottom}" y2="${height - padding.bottom}" />
+    <polygon class="trend-area" points="${area}" />
+    <polyline class="trend-line" points="${points}" />
+    ${dots}${labels}
+    <text class="chart-label" x="${padding.left}" y="${padding.top - 5}">${number(max)}</text>
+  </svg>`;
 }
 
-function renderHotZone(data) {
-  const sections = (data.sections || []).filter((row) => row.region);
-  const zones = data.hot_zones || [];
-  const scrollHeat = data.scroll_heat || [];
-  const maxTarget = Math.max(...zones.map((zone) => zone.score || 0), 1);
-  const maxScroll = Math.max(...scrollHeat.map((row) => row.score || 0), 1);
-  const sectionMax = Math.max(...sections.map((section) => section.heat_score || 0), 1);
-  const sectionMarkup = sections.map((section) => {
-    const heat = Math.max(.05, Math.min(1, (section.heat_score || 0) / sectionMax));
-    return `<div class="real-section-overlay" data-section="${escapeHtml(section.section)}" style="left:${section.region.x}%;top:${section.region.y}%;width:${section.region.width}%;height:${section.region.height}%;--section-heat:${heat}"><span>${escapeHtml(section.section)}</span></div>`;
-  }).join('');
-  const scrollMarkup = scrollHeat.filter((row) => row.score > 0).map((row) => {
-    const heat = Math.max(.08, Math.min(1, (row.score || 0) / maxScroll));
-    return `<div class="real-scroll-band" style="top:${row.percent}%;--scroll-heat:${heat}"></div>`;
-  }).join('');
-  const zoneMarkup = zones.slice(0, 100).map((zone) => {
-    const heat = Math.max(.14, Math.min(1, (zone.score || 0) / maxTarget));
-    const region = zone.region;
-    return `<div class="real-hot-spot" data-label="${escapeHtml(zone.target)} · ${number(zone.views)} views · ${number(zone.hovers)} hovers · ${number(zone.clicks)} clicks · ${duration(zone.dwell_ms)} dwell" style="left:${region.x}%;top:${region.y}%;width:${Math.max(region.width, .8)}%;height:${Math.max(region.height, .8)}%;--heat:${heat}"></div>`;
-  }).join('');
-  const targetMarkup = `<div class="real-page-viewport"><div class="real-page-stage"><iframe class="real-page-frame" src="/?analytics=off&preview=1" title="Live portfolio page preview for heat overlay"></iframe><div class="real-scroll-layer">${scrollMarkup}</div><div class="real-section-layer">${sectionMarkup}</div><div class="real-target-layer">${zoneMarkup}</div></div></div>`;
-  document.querySelector('#hot-zone').innerHTML = targetMarkup;
-  const iframe = document.querySelector('.real-page-frame');
-  const stage = document.querySelector('.real-page-stage');
-  const layout = () => {
-    try {
-      const doc = iframe.contentDocument;
-      const height = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight || 0, 1200);
-      stage.style.height = `${height}px`;
-      iframe.style.height = `${height}px`;
-      document.querySelector('.real-scroll-layer').style.height = `${height}px`;
-      document.querySelector('.real-section-layer').style.height = `${height}px`;
-      document.querySelector('.real-target-layer').style.height = `${height}px`;
-    } catch { stage.style.height = '2400px'; }
-  };
-  iframe.addEventListener('load', layout, { once: true });
-  window.setTimeout(layout, 600);
+function renderSections(rows) {
+  document.querySelector('#sections').innerHTML = (rows || []).map((row) => `
+    <div class="performance-row">
+      <span class="performance-label">${escapeHtml(row.label)}</span>
+      <span class="performance-track"><span class="performance-fill" style="width:${row.reach_rate}%"></span></span>
+      <span class="performance-value">${number(row.reach_rate)}%</span>
+      <span class="performance-meta">${number(row.sessions)} sessions · ${duration(row.avg_dwell_ms)} average dwell</span>
+    </div>`).join('') || '<p class="empty">No section data in this window.</p>';
 }
 
-function renderActions(data) {
-  const output = document.querySelector('#actions');
-  const zones = data.hot_zones || [];
-  const sections = data.sections || [];
-  const actions = [];
-  const top = zones[0];
-  if (top) actions.push({ tone: 'warm', title: `Prioritize ${top.target}`, body: `${number(top.views)} views, ${number(top.hovers)} hovers, ${number(top.clicks)} clicks, and ${duration(top.dwell_ms)} of dwell make this the strongest observed interaction target.` });
-  const hoverGap = zones.find((zone) => zone.hovers >= 2 && zone.clicks === 0);
-  if (hoverGap) actions.push({ tone: 'rust', title: `Clarify ${hoverGap.target}`, body: `Visitors hover this target but have not clicked it. Review its label, affordance, or next action.` });
-  const dwell = [...sections].sort((a, b) => b.dwell_ms - a.dwell_ms)[0];
-  if (dwell) actions.push({ tone: 'sage', title: `Protect ${dwell.section}`, body: `${duration(dwell.dwell_ms)} of recorded section dwell indicates sustained attention. Keep its hierarchy and content density.` });
-  if (Number(data.totals?.average_scroll_percent || 0) < 60) actions.push({ tone: 'mustard', title: 'Move a key proof point upward', body: `Average scroll depth is ${number(data.totals.average_scroll_percent)}%. Put the next important result before the current drop-off.` });
-  if (!actions.length) actions.push({ tone: 'cool', title: 'Collecting baseline activity', body: 'Open the portfolio, interact with the tiles, and return here to generate recommendations.' });
-  output.innerHTML = actions.slice(0, 4).map((action) => `<article class="action-item action-${action.tone}"><strong>${escapeHtml(action.title)}</strong><p>${escapeHtml(action.body)}</p></article>`).join('');
+function renderCtas(rows) {
+  document.querySelector('#cta-performance').innerHTML = (rows || []).map((row) => `
+    <div class="performance-row">
+      <span class="performance-label">${escapeHtml(row.label)}</span>
+      <span class="performance-track"><span class="performance-fill" style="width:${Math.min(100, row.click_rate)}%"></span></span>
+      <span class="performance-value">${number(row.click_rate)}%</span>
+      <span class="performance-meta">${number(row.clicked_sessions)} clicked sessions from ${number(row.viewed_sessions)} viewed sessions</span>
+    </div>`).join('') || '<p class="empty">No CTA data in this window.</p>';
 }
 
+function renderWebVitals(data) {
+  const output = document.querySelector('#web-vitals');
+  if (!output) return;
+  const vitals = data || { metrics: [], samples: 0 };
+  if (!vitals.samples) {
+    output.innerHTML = '<p class="empty">No Core Web Vitals samples yet. They arrive once visitors load the updated page.</p>';
+    return;
+  }
+  output.innerHTML = vitals.metrics.map((metric) => {
+    const scale = metric.poor_threshold * 1.25;
+    const width = Math.max(2, Math.min(100, (metric.p75 / scale) * 100));
+    const value = metric.unit === 'ms' ? `${number(metric.p75)}ms` : metric.p75;
+    return `
+    <div class="performance-row">
+      <span class="performance-label">${escapeHtml(metric.label)} <small class="vital-${escapeHtml(metric.rating)}">${escapeHtml(metric.rating)}</small></span>
+      <span class="performance-track"><span class="performance-fill vital-fill-${escapeHtml(metric.rating)}" style="width:${width}%"></span></span>
+      <span class="performance-value">${escapeHtml(String(value))}</span>
+      <span class="performance-meta">${number(metric.samples)} samples · good under ${metric.good_threshold}${escapeHtml(metric.unit)} · median ${metric.p50}${escapeHtml(metric.unit)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderFriction(data) {
+  const output = document.querySelector('#friction');
+  if (!output) return;
+  const friction = data || {};
+  const rows = [
+    ['Rage clicks', friction.rage_clicks, `${number(friction.rage_sessions)} sessions`, friction.top_rage_targets?.[0]?.value || '—'],
+    ['Dead clicks', friction.dead_clicks, `${number(friction.dead_sessions)} sessions`, friction.top_dead_zones?.[0]?.value || '—'],
+    ['JavaScript errors', friction.js_errors, `${number(friction.error_sessions)} sessions`, friction.top_errors?.[0]?.value || '—'],
+    ['Delivery retries', friction.delivery_failure_events, 'events needing retry', '—'],
+  ].map(([label, count, detail, top]) => `
+    <tr>
+      <td>${escapeHtml(label)}</td>
+      <td class="num">${number(count)}</td>
+      <td>${escapeHtml(detail)}</td>
+      <td>${escapeHtml(String(top).slice(0, 60))}</td>
+    </tr>`);
+  output.innerHTML = table(['Signal', 'Count', 'Reach', 'Most common'], rows);
+}
+
+function renderIntent(data) {
+  const output = document.querySelector('#intent');
+  if (!output) return;
+  const intent = data || {};
+  const rows = [
+    ['Résumé downloads', intent.resume_downloads, intent.resume_download_sessions],
+    ['Email address copied', intent.email_copies, intent.email_copy_sessions],
+    ['Printed or saved as PDF', intent.prints, intent.print_sessions],
+    ['Outbound clicks (LinkedIn)', intent.outbound_clicks, intent.outbound_sessions],
+    ['Meaningful text selections', intent.text_selections, null],
+  ].map(([label, count, sessions]) => `
+    <tr>
+      <td>${escapeHtml(label)}</td>
+      <td class="num">${number(count)}</td>
+      <td class="num">${sessions === null ? '—' : number(sessions)}</td>
+    </tr>`);
+  output.innerHTML = table(['Signal', 'Events', 'Sessions'], rows);
+}
+
+function renderDataQuality(data) {
+  const output = document.querySelector('#data-quality');
+  if (!output) return;
+  const quality = data || {};
+  const rows = [
+    ['Bot events excluded', quality.bot_events_excluded],
+    ['Bot sessions excluded', quality.bot_sessions_excluded],
+    ['Events on schema v2', quality.schema_v2_events],
+    ['Total events in window', quality.total_events_in_window],
+  ].map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td class="num">${number(value)}</td></tr>`);
+  output.innerHTML = table(['Measure', 'Count'], rows);
+}
+
+function renderAcquisition(data) {
+  const rows = [];
+  for (const [category, values] of Object.entries(data || {})) {
+    for (const row of (values || []).slice(0, 5)) {
+      if (!row.value) continue;
+      rows.push(`<tr><td>${escapeHtml(category)}</td><td>${escapeHtml(row.value)}</td><td class="num">${number(row.count)}</td></tr>`);
+    }
+  }
+  document.querySelector('#acquisition').innerHTML = table(['Category', 'Value', 'Count'], rows);
+}
+
+function outcomeBadges(outcomes) {
+  return `<span class="intent-badges">${(outcomes || []).map((outcome) => `<span>${escapeHtml(outcome)}</span>`).join('')}</span>`;
+}
+
+function renderHighIntent(rows) {
+  document.querySelector('#high-intent').innerHTML = table(['Session', 'Outcomes', 'Duration', 'Scroll'], (rows || []).map((row) => `
+    <tr>
+      <td><button class="session-button" data-session-id="${escapeHtml(row.session_id)}">${escapeHtml(row.session_id.slice(0, 8))}…</button></td>
+      <td>${outcomeBadges(row.outcomes)}</td>
+      <td>${duration(row.duration_ms)}</td>
+      <td class="num">${number(row.max_scroll)}%</td>
+    </tr>`), 'No high-intent sessions in this window.');
+}
+
+function renderSessions(rows) {
+  document.querySelector('#sessions').innerHTML = table(['Session', 'Started', 'Duration', 'Scroll', 'Signals', 'Device'], (rows || []).map((row) => `
+    <tr>
+      <td><button class="session-button" data-session-id="${escapeHtml(row.session_id)}">${escapeHtml(row.session_id.slice(0, 8))}…</button></td>
+      <td>${escapeHtml(new Date(row.first).toLocaleString())}</td>
+      <td>${duration(row.duration_ms)}</td>
+      <td class="num">${number(row.max_scroll)}%</td>
+      <td>${row.outcomes?.length ? outcomeBadges(row.outcomes) : (row.engaged ? 'Engaged' : 'Passive')}</td>
+      <td>${escapeHtml(`${row.device || 'Unknown'} · ${row.browser || 'Unknown'}`)}</td>
+    </tr>`));
+}
+
+function renderDiagnostics(data) {
+  document.querySelector('#targets').innerHTML = table(['Target', 'Views', 'Clicks', 'Dwell'], (data.targets || []).slice(0, 15).map((row) => `
+    <tr><td>${escapeHtml(row.target)}</td><td class="num">${number(row.views)}</td><td class="num">${number(row.clicks)}</td><td class="num">${duration(row.dwell_ms)}</td></tr>`));
+  document.querySelector('#event-types').innerHTML = table(['Event', 'Count'], (data.event_types || []).map((row) => `
+    <tr><td>${escapeHtml(row.type)}</td><td class="num">${number(row.count)}</td></tr>`));
+}
 
 async function loadSession(sessionId) {
   const detail = document.querySelector('#session-detail');
-  detail.hidden = false; detail.innerHTML = '<p class="empty">Loading session replay…</p>';
+  detail.hidden = false;
+  detail.innerHTML = '<p class="empty">Loading session…</p>';
   try {
     const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, { cache: 'no-store' });
     if (!response.ok) throw new Error('Session unavailable');
     const session = await response.json();
     const context = session.context || {};
-    const connection = context.connection || {};
-    const sectionRows = (session.sections || []).sort((a, b) => b.dwell_ms - a.dwell_ms).map((row) => `<tr><td>${escapeHtml(row.section)}</td><td class="num">${number(row.views)}</td><td class="num">${duration(row.dwell_ms)}</td><td class="num">${number(row.milestones)}</td></tr>`).join('');
-    const timeline = (session.events || []).map((event, index) => `<li><time>${new Date(event.timestamp).toLocaleTimeString()}</time><strong>${escapeHtml(event.type.replaceAll('_', ' '))}</strong><span>${escapeHtml(event.section || event.target || event.path || '')}${event.duration_ms ? ` · ${duration(event.duration_ms)}` : ''}${event.depth_percent !== undefined ? ` · ${number(event.depth_percent)}% scroll` : ''}</span></li>`).join('');
-    detail.innerHTML = `<div class="session-detail-heading"><div><p class="eyebrow">Session replay</p><h3>${escapeHtml(session.session_id.slice(0, 12))}…</h3><p class="session-meta">${escapeHtml(new Date(session.first).toLocaleString())} · ${duration(session.duration_ms)} · ${number(session.events.length)} events</p></div><button type="button" class="session-close">Close</button></div><div class="session-context"><span><b>Device</b>${escapeHtml(context.operating_system || 'Unknown')} · ${escapeHtml(context.browser || 'Unknown')}</span><span><b>Connection</b>${escapeHtml(connection.type || 'Unavailable')}${connection.rtt ? ` · ${number(connection.rtt)} ms RTT` : ''}${connection.downlink ? ` · ${number(connection.downlink)} Mbps` : ''}</span><span><b>Viewport</b>${escapeHtml(context.viewport || 'Unknown')}</span><span><b>Referrer</b>${escapeHtml(context.referrer || 'Direct')}</span></div><div class="session-replay-grid"><div><h4>What happened</h4><ol class="event-timeline">${timeline || '<li>No events recorded.</li>'}</ol></div><div><h4>Where attention went</h4><table><thead><tr><th>Section</th><th>Views</th><th>Dwell</th><th>Milestones</th></tr></thead><tbody>${sectionRows || '<tr><td colspan="4">No section data.</td></tr>'}</tbody></table></div></div>`;
+    detail.innerHTML = `
+      <div class="session-detail-heading">
+        <div><p class="eyebrow">Session detail</p><h3>${escapeHtml(session.session_id.slice(0, 12))}…</h3><p class="session-meta">${escapeHtml(new Date(session.first).toLocaleString())} · ${duration(session.duration_ms)} · ${number(session.max_scroll)}% max scroll</p></div>
+        <button class="session-close" type="button">Close</button>
+      </div>
+      <div class="session-context">
+        <span><b>Device</b>${escapeHtml(context.operating_system || 'Unknown')} · ${escapeHtml(context.browser || 'Unknown')}</span>
+        <span><b>Viewport</b>${escapeHtml(context.viewport || 'Unknown')}</span>
+        <span><b>Source</b>${escapeHtml(context.source || context.referrer || 'Direct')}</span>
+        <span><b>Outcomes</b>${escapeHtml((session.outcomes || []).join(', ') || 'None')}</span>
+      </div>
+      <ol class="event-timeline">${(session.events || []).map((event) => `
+        <li><time>${escapeHtml(new Date(event.timestamp).toLocaleTimeString())}</time><strong>${escapeHtml(event.type.replaceAll('_', ' '))}</strong><span>${escapeHtml(event.section || event.target || event.path || '')}${event.duration_ms ? ` · ${duration(event.duration_ms)}` : ''}${event.depth_percent !== undefined ? ` · ${number(event.depth_percent)}% scroll` : ''}</span></li>`).join('')}</ol>`;
     detail.querySelector('.session-close').addEventListener('click', () => { detail.hidden = true; });
-  } catch (error) { detail.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`; }
+  } catch (error) {
+    detail.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+function bindSessionButtons() {
+  document.querySelectorAll('.session-button').forEach((button) => {
+    button.addEventListener('click', () => loadSession(button.dataset.sessionId));
+  });
 }
 
 async function load() {
   refreshButton.textContent = 'Loading…';
   try {
     const response = await fetch(`/api/analytics?days=${daysSelect.value}`, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Analytics endpoint unavailable');
+    if (!response.ok) throw new Error(response.status === 401 ? 'Authentication required' : 'Analytics endpoint unavailable');
     const data = await response.json();
-    const t = data.totals;
-    document.querySelector('#summary').innerHTML = [
-      ['Events', number(t.events), `${data.days}-day window`],
-      ['Sessions', number(t.sessions), `${number(t.visitors)} anonymous visitors`],
-      ['Avg. session', duration(t.average_session_ms), `${number(t.engaged_sessions)} engaged sessions`],
-      ['Avg. scroll', `${number(t.average_scroll_percent)}%`, 'maximum depth per session'],
-    ].map(([label, value, detail]) => `<article class="summary-card"><small>${label}</small><strong>${escapeHtml(value)}</strong><span>${escapeHtml(detail)}</span></article>`).join('');
-    trendData = data.trend || []; renderTrend();
-    renderHotZone(data);
-    renderActions(data);
-    document.querySelector('#sections-table').innerHTML = table(['Section','Views','Dwell','Milestones'], (data.sections || []).map((row) => `<tr><td>${escapeHtml(row.section)}</td><td class="num">${number(row.views)}</td><td class="num">${duration(row.dwell_ms)}</td><td class="num">${number(row.milestones)}</td></tr>`));
-    document.querySelector('#targets-table').innerHTML = table(['Target','Views','Hover','Click','Dwell'], (data.targets || []).slice(0, 14).map((row) => `<tr><td><strong>${escapeHtml(row.target)}</strong><br /><small>${escapeHtml(row.label)}</small></td><td class="num">${number(row.views)}</td><td class="num">${number(row.hovers)}</td><td class="num">${number(row.clicks)}</td><td class="num">${duration(row.dwell_ms)}</td></tr>`));
-    const nav = data.navigation || {};
-    const contextRows = [];
-    [['Path', nav.paths], ['Referrer', nav.referrers], ['Device', nav.devices], ['Viewport', nav.viewports], ['Language', nav.languages], ['Timezone', nav.timezones], ['Source', nav.sources], ['Campaign', nav.campaigns]].forEach(([category, rows]) => (rows || []).slice(0, 4).forEach((row) => contextRows.push({ category, value: row.value, count: row.count })));
-    document.querySelector('#navigation-table').innerHTML = `<div class="context-table">${rowTable(contextRows)}</div>`;
-    document.querySelector('#events-table').innerHTML = table(['Event','Count'], (data.event_types || []).map((row) => `<tr><td>${escapeHtml(row.type)}</td><td class="num">${number(row.count)}</td></tr>`));
-    document.querySelector('#sessions-table').innerHTML = table(['Session','Events','Max scroll','Started','Last activity'], (data.sessions || []).map((row) => `<tr><td><button class="session-button" data-session-id="${escapeHtml(row.session_id)}">${escapeHtml(row.session_id.slice(0, 8))}…</button></td><td class="num">${number(row.events)}</td><td class="num">${number(row.max_scroll)}%</td><td>${new Date(row.first).toLocaleString()}</td><td>${new Date(row.last).toLocaleString()}</td></tr>`)).replace(/<table>/, '<table class="session-table">');
-    document.querySelectorAll('.session-button').forEach((button) => button.addEventListener('click', () => loadSession(button.dataset.sessionId)));
+    document.querySelector('#generated-at').textContent = `Updated ${new Date(data.generated_at).toLocaleString()}`;
+    renderSummary(data);
+    renderFunnel(data.funnel);
+    renderRecommendations(data.recommendations);
+    trendData = data.trend || [];
+    renderTrend();
+    renderSections(data.sections);
+    renderCtas(data.cta_performance);
+    renderWebVitals(data.web_vitals);
+    renderFriction(data.friction);
+    renderIntent(data.intent);
+    renderDataQuality(data.data_quality);
+    renderAcquisition(data.acquisition);
+    renderHighIntent(data.high_intent_sessions);
+    renderSessions(data.sessions);
+    renderDiagnostics(data);
+    bindSessionButtons();
   } catch (error) {
-    document.querySelector('#summary').innerHTML = `<article class="summary-card" style="grid-column:1/-1;background:#59392d;color:#efe4d0"><strong>Analytics unavailable</strong><span>${escapeHtml(error.message)}. Start the portfolio with <code>npm start</code>.</span></article>`;
-  } finally { refreshButton.textContent = 'Refresh ↻'; }
+    document.querySelector('#summary').innerHTML = `<article class="error-state"><strong>Analytics unavailable</strong><p>${escapeHtml(error.message)}</p></article>`;
+  } finally {
+    refreshButton.textContent = 'Refresh';
+  }
 }
+
 daysSelect.addEventListener('change', load);
 refreshButton.addEventListener('click', load);
+trendMetricSelect.addEventListener('change', () => {
+  trendMetric = trendMetricSelect.value;
+  renderTrend();
+});
 load();
-
-const trendMetricSelect = document.querySelector('#trend-metric');
-if (trendMetricSelect) trendMetricSelect.addEventListener('change', () => { trendMetric = trendMetricSelect.value; renderTrend(); });

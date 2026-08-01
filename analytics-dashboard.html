@@ -3,32 +3,165 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex,nofollow" />
-  <title>Portfolio Analytics Console</title>
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <meta name="theme-color" content="#0b2a20" />
+  <title>Portfolio Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
-  <main class="console-shell">
-    <header class="console-header">
-      <div><p class="eyebrow">First-party measurement</p><h1>Portfolio<br /><em>analytics.</em></h1></div>
-      <div class="console-controls"><label for="days">Window</label><select id="days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="365">1 year</option></select><button id="refresh" type="button">Refresh ↻</button><a id="export" href="/api/events.csv" download>Export CSV ↓</a><a href="/">View portfolio ↗</a></div>
+  <main class="analytics-shell">
+    <header class="analytics-header">
+      <div>
+        <p class="eyebrow">Private portfolio intelligence</p>
+        <h1>Recruiter<br /><em>analytics.</em></h1>
+        <p class="header-copy">A decision-focused view of whether visitors understand the positioning, reach the proof, and take hiring-intent actions.</p>
+      </div>
+      <div class="analytics-controls">
+        <label for="days">Window</label>
+        <select id="days">
+          <option value="7">7 days</option>
+          <option value="30" selected>30 days</option>
+          <option value="90">90 days</option>
+          <option value="365">1 year</option>
+        </select>
+        <button id="refresh" type="button">Refresh</button>
+        <a href="/api/events.csv" download>Export CSV</a>
+        <a href="/">View portfolio ↗</a>
+      </div>
     </header>
-    <p class="privacy-note">Anonymous first-party events only: no names, email addresses, IP addresses, or raw cursor coordinates are stored. Hover and focus dwell are measured by labeled target.</p>
-    <section class="summary-grid" id="summary" aria-live="polite"></section>
-    <section class="console-panel trend-panel"><div class="panel-heading"><div><p class="eyebrow">Over time</p><h2>Activity<br /><em>trend.</em></h2></div><div class="trend-controls"><label for="trend-metric">Metric</label><select id="trend-metric"><option value="events" selected>Events</option><option value="sessions">Sessions</option><option value="visitors">Visitors</option><option value="engaged">Engaged sessions</option><option value="average_scroll_percent">Avg. scroll</option></select><span class="panel-note">Daily totals · current window</span></div></div><div id="trend-chart" class="trend-chart" role="img" aria-label="Analytics activity over time"></div></section>
-    <section class="action-panel console-panel"><div class="panel-heading"><div><p class="eyebrow">Decision support</p><h2>What to<br /><em>review.</em></h2></div><span class="panel-note">Generated from activity</span></div><div id="actions" class="action-list" aria-live="polite"></div></section>
-    <section class="console-grid">
-      <article class="console-panel panel-wide hot-zone-panel"><div class="panel-heading"><div><p class="eyebrow">Attention map</p><h2>Where the page<br /><em>gets hot.</em></h2></div><span class="panel-note">Views · hovers · clicks · dwell</span></div><div class="hot-zone-legend"><span><i class="legend-cool"></i>low activity</span><span><i class="legend-warm"></i>high activity</span><span>normalized page regions</span><span><i class="legend-scroll"></i>scroll attention</span></div><div id="hot-zone" class="hot-zone-wrap"></div></article>
-      <article class="console-panel panel-wide"><div class="panel-heading"><div><p class="eyebrow">Attention</p><h2>Where visitors<br /><em>spend time.</em></h2></div><span class="panel-note">Section dwell</span></div><div id="sections-table" class="table-wrap"></div></article>
-      <article class="console-panel"><div class="panel-heading"><div><p class="eyebrow">Interaction</p><h2>Focus<br /><em>targets.</em></h2></div></div><div id="targets-table" class="table-wrap"></div></article>
-      <article class="console-panel"><div class="panel-heading"><div><p class="eyebrow">Navigation</p><h2>Basic visitor<br /><em>context.</em></h2></div></div><div id="navigation-table" class="table-wrap"></div></article>
-      <article class="console-panel"><div class="panel-heading"><div><p class="eyebrow">Behavior</p><h2>Event<br /><em>mix.</em></h2></div></div><div id="events-table" class="table-wrap"></div></article>
-      <article class="console-panel panel-wide"><div class="panel-heading"><div><p class="eyebrow">Sessions</p><h2>Recent<br /><em>journeys.</em></h2></div></div><div id="sessions-table" class="table-wrap"></div><div id="session-detail" class="session-detail" hidden></div></article>
+
+    <div class="analytics-meta">
+      <span>Basic-auth protected</span>
+      <span>Pseudonymous first-party data</span>
+      <span id="generated-at">Waiting for data</span>
+    </div>
+
+    <section class="kpi-grid" id="summary" aria-live="polite"></section>
+
+    <section class="analytics-grid overview-grid">
+      <article class="panel funnel-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Recruiter journey</p><h2>Do visitors reach<br /><em>the proof?</em></h2></div>
+          <span class="panel-note">Session funnel</span>
+        </div>
+        <div id="funnel" class="funnel"></div>
+      </article>
+
+      <article class="panel recommendation-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Decision support</p><h2>What to<br /><em>change next.</em></h2></div>
+          <span class="panel-note">Evidence based</span>
+        </div>
+        <div id="recommendations" class="recommendations"></div>
+      </article>
     </section>
-    <footer class="console-footer">Data source: <code>data/events.ndjson</code> · Same-origin endpoint: <code>/api/events</code></footer>
+
+    <section class="panel trend-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Over time</p><h2>Traffic and<br /><em>intent.</em></h2></div>
+        <div class="trend-controls">
+          <label for="trend-metric">Metric</label>
+          <select id="trend-metric">
+            <option value="sessions" selected>Sessions</option>
+            <option value="engaged">Engaged sessions</option>
+            <option value="high_intent">High-intent sessions</option>
+            <option value="resume_actions">Résumé actions</option>
+            <option value="contact_actions">Contact actions</option>
+            <option value="average_scroll_percent">Average scroll</option>
+            <option value="active_seconds">Active seconds / session</option>
+          </select>
+        </div>
+      </div>
+      <div id="trend-chart" class="trend-chart" role="img" aria-label="Portfolio activity trend"></div>
+    </section>
+
+    <section class="analytics-grid performance-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Real-user performance</p><h2>Core Web<br /><em>Vitals.</em></h2></div>
+          <span class="panel-note">p75, field data</span>
+        </div>
+        <div id="web-vitals" class="section-performance"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Friction</p><h2>Where the page<br /><em>fights back.</em></h2></div>
+          <span class="panel-note">Rage · dead clicks · errors</span>
+        </div>
+        <div id="friction" class="table-wrap"></div>
+      </article>
+    </section>
+
+    <section class="analytics-grid performance-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Page comprehension</p><h2>Section<br /><em>reach.</em></h2></div>
+          <span class="panel-note">Reach and dwell</span>
+        </div>
+        <div id="sections" class="section-performance"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Hiring actions</p><h2>CTA<br /><em>performance.</em></h2></div>
+          <span class="panel-note">Unique sessions</span>
+        </div>
+        <div id="cta-performance" class="cta-performance"></div>
+      </article>
+    </section>
+
+    <section class="analytics-grid detail-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Hiring intent</p><h2>Signals that<br /><em>matter.</em></h2></div>
+          <span class="panel-note">Download · copy · print · outbound</span>
+        </div>
+        <div id="intent" class="table-wrap"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Acquisition</p><h2>Where visitors<br /><em>come from.</em></h2></div>
+          <span class="panel-note">Source context</span>
+        </div>
+        <div id="acquisition" class="table-wrap"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">Strongest signals</p><h2>High-intent<br /><em>journeys.</em></h2></div>
+          <span class="panel-note">Résumé · contact · case study</span>
+        </div>
+        <div id="high-intent" class="table-wrap"></div>
+      </article>
+    </section>
+
+    <section class="panel journey-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Session review</p><h2>Recent<br /><em>journeys.</em></h2></div>
+        <span class="panel-note">Open a session for event detail</span>
+      </div>
+      <div id="sessions" class="table-wrap"></div>
+      <div id="session-detail" class="session-detail" hidden></div>
+    </section>
+
+    <details class="diagnostics">
+      <summary>Technical diagnostics</summary>
+      <div class="diagnostic-grid">
+        <section><h3>Top targets</h3><div id="targets" class="table-wrap"></div></section>
+        <section><h3>Event mix</h3><div id="event-types" class="table-wrap"></div></section>
+        <section><h3>Data quality</h3><div id="data-quality" class="table-wrap"></div></section>
+      </div>
+    </details>
+
+    <footer class="analytics-footer">
+      <span>No names, email addresses, IP addresses, form contents, or raw cursor coordinates are collected.</span>
+      <span>Persistent visitor IDs support repeat-visit analysis.</span>
+    </footer>
   </main>
   <script src="dashboard.js"></script>
 </body>

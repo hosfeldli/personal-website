@@ -1,8 +1,12 @@
 .git
 .gitignore
+.github
 node_modules
 data
 *.before-*
 .DS_Store
 account.json
 *.log
+assets/*.jpg
+assets/*.jpeg
+README.md
