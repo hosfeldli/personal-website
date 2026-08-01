@@ -1,0 +1,433 @@
+/* --------------------------------------------------------------------------
+   Editorial greenhouse refinement
+   Loaded after styles.css to stabilize the final visual direction.
+   -------------------------------------------------------------------------- */
+:root {
+    --pine-deep: #071f17;
+    --pine: #0d3a2b;
+    --canopy: #174b39;
+    --fern: #1f6848;
+    --moss: #6f8f5c;
+    --lichen: #c9d9b8;
+    --sage: #e2ecd9;
+    --mist: #eef4ea;
+    --paper: #f5f2e8;
+    --surface: #fbfaf2;
+    --ink: #10291f;
+    --muted: #52665a;
+    --accent: #b96f43;
+    --content-pad: max(1.25rem, min(7vw, 7rem));
+}
+
+html {
+    scroll-snap-type: none !important;
+}
+
+body {
+    background: var(--mist);
+}
+
+/* Simpler header */
+.site-nav {
+    border-bottom: 1px solid rgba(201, 217, 184, 0.2);
+    background: rgba(7, 31, 23, 0.95);
+}
+
+.site-nav-inner {
+    min-height: 4.15rem;
+    gap: 0.8rem;
+}
+
+.site-nav-brand {
+    width: 2.15rem;
+    height: 2.15rem;
+}
+
+.site-nav-name {
+    margin-right: auto;
+    color: var(--paper);
+    font-family: var(--display);
+    font-size: clamp(1.08rem, 0.96rem + 0.5vw, 1.42rem);
+    line-height: 1;
+}
+
+.site-nav-links {
+    margin-left: 0;
+    gap: clamp(0.85rem, 2vw, 1.75rem);
+}
+
+.site-nav-links a,
+.site-nav-resume {
+    font-size: 0.76rem;
+    letter-spacing: 0.01em;
+}
+
+/* Hero: shorter, confident, and greener */
+.hero-section {
+    min-height: 35rem;
+    padding: 7.25rem 0 7rem;
+    background:
+        radial-gradient(circle at 82% 16%, rgba(111, 143, 92, 0.42), transparent 18rem),
+        radial-gradient(circle at 12% 82%, rgba(31, 104, 72, 0.32), transparent 22rem),
+        linear-gradient(118deg, #071f17 0%, #0d3a2b 54%, #174b39 100%);
+}
+
+.hero-content {
+    max-width: 48rem;
+    padding-left: 1.35rem;
+}
+
+.hero-name {
+    margin-bottom: 1rem;
+    color: var(--lichen);
+    font-size: clamp(1.7rem, 1.35rem + 1.4vw, 2.65rem);
+}
+
+.hero-section h1 {
+    max-width: 44rem;
+    margin-bottom: 1.35rem;
+}
+
+.hero-lede {
+    max-width: 33rem;
+    margin-bottom: 0;
+    color: rgba(245, 242, 232, 0.84);
+    font-size: clamp(1.12rem, 0.98rem + 0.62vw, 1.45rem);
+}
+
+.hero-scope,
+.hero-current-role,
+.section-scroll-cue {
+    display: none !important;
+}
+
+.hero-actions {
+    margin-top: 2rem;
+}
+
+/* Architectural foliage: stronger at edges, quieter behind text */
+.botanical-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.botanical-section > .content-wrap {
+    position: relative;
+    z-index: 4;
+}
+
+.botanical-scene {
+    z-index: 1;
+    opacity: 0.92;
+}
+
+.botanical-scene .botanical-vine {
+    opacity: 0.72;
+}
+
+.botanical-scene .botanical-leaf {
+    opacity: 0.46;
+}
+
+.botanical-scene .botanical-frond {
+    opacity: 0.38;
+}
+
+.jungle-leaf {
+    opacity: 0.52;
+}
+
+.botanical-section::before,
+.botanical-section::after {
+    z-index: 1;
+    opacity: 0.2;
+}
+
+.hero-section .botanical-scene,
+.contact-section .botanical-scene {
+    opacity: 1;
+}
+
+.hero-section .jungle-leaf,
+.contact-section .jungle-leaf {
+    opacity: 0.68;
+}
+
+/* Section rhythm */
+.results-section,
+.case-studies-section,
+.experience-section,
+.skills-section,
+.personal-section,
+.contact-section {
+    padding: clamp(5rem, 8vw, 7rem) 0;
+}
+
+.results-section {
+    background:
+        radial-gradient(circle at 10% 18%, rgba(111, 143, 92, 0.22), transparent 24rem),
+        linear-gradient(135deg, #e8f1e2 0%, #f5f2e8 100%);
+}
+
+.case-studies-section,
+.personal-section {
+    background:
+        radial-gradient(circle at 88% 8%, rgba(31, 104, 72, 0.13), transparent 24rem),
+        linear-gradient(135deg, #f3f6ed 0%, #f8f5eb 58%, #e8f1e2 100%);
+}
+
+/* Metrics as a proof band instead of heavy cards */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid rgba(16, 41, 31, 0.18);
+    border-radius: 0.2rem 1.1rem 0.2rem 1.1rem;
+    background: rgba(251, 250, 242, 0.78);
+    box-shadow: 0 0.85rem 2rem rgba(16, 41, 31, 0.08);
+}
+
+.metric {
+    min-height: 0;
+    padding: 1.35rem 1.4rem;
+    border-right: 1px solid rgba(16, 41, 31, 0.12);
+}
+
+.metric-value {
+    margin-bottom: 0.55rem;
+    color: var(--pine);
+    font-size: clamp(2rem, 1.5rem + 1.3vw, 3rem);
+}
+
+.metric h3 {
+    margin-bottom: 0.35rem;
+}
+
+.metric p {
+    max-width: 15rem;
+}
+
+/* Case studies: fewer internal borders, simpler editorial cards */
+.case-study-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    grid-auto-rows: auto;
+}
+
+.case-study {
+    overflow: hidden;
+    padding: clamp(1.35rem, 2.4vw, 1.85rem);
+    border: 1px solid rgba(16, 41, 31, 0.16);
+    border-top: 0;
+    border-radius: 0.22rem 1.1rem 0.22rem 1.1rem;
+    background: rgba(251, 250, 242, 0.82);
+    box-shadow: 0 0.85rem 1.85rem rgba(16, 41, 31, 0.08);
+}
+
+.case-study:hover {
+    transform: none;
+    box-shadow: 0 1rem 2rem rgba(16, 41, 31, 0.12);
+}
+
+.case-index {
+    width: auto;
+    height: auto;
+    margin-bottom: 0.8rem;
+    border: 0;
+    background: transparent;
+    color: var(--fern);
+    font: 500 0.72rem/1 var(--mono);
+    transform: none;
+}
+
+.case-kicker {
+    margin-bottom: 0.65rem;
+    color: var(--moss);
+    font-size: 0.62rem;
+}
+
+.case-study h3 {
+    min-height: 0;
+    max-width: 25rem;
+    margin-bottom: 1rem;
+    font-size: clamp(1.25rem, 1.05rem + 0.65vw, 1.65rem);
+}
+
+.case-problem {
+    min-height: 0;
+    margin-bottom: 1rem;
+    padding: 0.85rem 0.95rem;
+    border: 0;
+    border-left: 3px solid var(--fern);
+    background: rgba(232, 241, 226, 0.72);
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.case-results {
+    min-height: 0;
+    gap: 0.62rem;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.project-flow {
+    margin-top: 1.15rem;
+    padding-top: 0.9rem;
+    gap: 0.5rem;
+}
+
+.project-flow > div {
+    padding: 0.65rem;
+}
+
+.case-study details {
+    min-height: 0;
+}
+
+/* Outside work: calm vignette */
+.personal-section {
+    background:
+        radial-gradient(circle at 8% 15%, rgba(111, 143, 92, 0.28), transparent 22rem),
+        radial-gradient(circle at 88% 22%, rgba(13, 58, 43, 0.18), transparent 26rem),
+        linear-gradient(135deg, #edf4e8 0%, #f7f4ea 54%, #e4efdf 100%);
+}
+
+.personal-layout {
+    grid-template-columns: minmax(18rem, 0.78fr) minmax(24rem, 1.22fr);
+    gap: clamp(2rem, 4vw, 4rem);
+}
+
+.personal-copy {
+    max-width: 31rem;
+    padding: clamp(1.25rem, 2.4vw, 1.75rem);
+    background: rgba(251, 250, 242, 0.76);
+}
+
+.personal-copy h2 {
+    max-width: 28rem;
+    font-size: clamp(2.2rem, 1.65rem + 2vw, 3.55rem);
+}
+
+.personal-lede,
+.personal-copy > p:not(.eyebrow) {
+    max-width: 27rem;
+    font-size: 1rem;
+}
+
+.personal-interests li,
+.personal-interests li + li {
+    padding: 0.72rem 0.85rem 0.72rem 1.25rem;
+}
+
+.personal-gallery--chosen,
+.personal-gallery.personal-gallery--chosen {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(11.5rem, 15rem));
+    grid-template-areas:
+        "main main side"
+        "lower wide wide";
+    gap: 0.62rem;
+    width: min(100%, 46rem);
+    padding: 0.62rem;
+    border: 1px solid rgba(16, 41, 31, 0.18);
+    border-radius: 0.22rem 1.15rem 0.22rem 1.15rem;
+    background: rgba(251, 250, 242, 0.7);
+    box-shadow: 0 0.95rem 2.2rem rgba(16, 41, 31, 0.12);
+}
+
+.personal-gallery--chosen figure:nth-child(1) { grid-area: main; }
+.personal-gallery--chosen figure:nth-child(2) { grid-area: side; }
+.personal-gallery--chosen figure:nth-child(3) { grid-area: lower; }
+.personal-gallery--chosen figure:nth-child(4) { grid-area: wide; }
+
+.personal-gallery--chosen figure,
+.personal-gallery.personal-gallery--chosen figure {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(16, 41, 31, 0.1);
+    background: var(--sage);
+    box-shadow: none;
+}
+
+.personal-gallery--chosen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.02) contrast(1.02) brightness(0.99);
+}
+
+.personal-gallery--chosen figure:hover img {
+    transform: scale(1.025);
+}
+
+/* Footer */
+.site-footer {
+    gap: 0.65rem 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 70rem) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .case-study-grid,
+    .personal-layout,
+    .skills-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .personal-copy,
+    .personal-gallery--chosen {
+        max-width: none;
+    }
+}
+
+@media (max-width: 52rem) {
+    .site-nav-inner {
+        min-height: auto;
+    }
+
+    .site-nav-links {
+        order: 3;
+        width: 100%;
+        padding-top: 0.2rem;
+    }
+
+    .hero-section {
+        min-height: 31rem;
+        padding-top: 5.5rem;
+    }
+
+    .personal-gallery--chosen,
+    .personal-gallery.personal-gallery--chosen {
+        grid-template-rows: repeat(2, minmax(9rem, 12rem));
+    }
+}
+
+@media (max-width: 37rem) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .personal-gallery--chosen,
+    .personal-gallery.personal-gallery--chosen {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(3, minmax(8rem, 11rem));
+        grid-template-areas:
+            "main main"
+            "side lower"
+            "wide wide";
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js .botanical-section.is-in-view .botanical-scene {
+        animation: none !important;
+    }
+}

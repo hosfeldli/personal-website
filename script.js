@@ -6,6 +6,23 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   root.classList.add('js');
 
+  /* The server supplies the document's last-modified time from the built
+     artifact, which gives local previews and deployments a useful build cue. */
+  const buildTime = document.querySelector('#site-build-time');
+  if (buildTime) {
+    const source = root.dataset.buildTime || document.lastModified;
+    const date = new Date(source);
+    if (!Number.isNaN(date.getTime())) {
+      buildTime.dateTime = date.toISOString();
+      buildTime.textContent = new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date);
+    } else {
+      buildTime.textContent = 'local preview';
+    }
+  }
+
   /* Technical notes popout. */
   const trigger = document.querySelector('#site-build-trigger');
   const dialog = document.querySelector('#site-build-dialog');
