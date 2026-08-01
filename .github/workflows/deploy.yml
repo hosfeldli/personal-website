@@ -66,13 +66,42 @@ jobs:
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
 
-      - name: Submit Cloud Build
+      - name: Submit and verify Cloud Build
         run: |
-          # The GitHub OIDC principal can submit a build but cannot read the default
-          # Cloud Build log bucket. Submit asynchronously instead of failing after the
-          # build has already been accepted and is running.
-          gcloud builds submit \
+          # The GitHub OIDC principal can submit and inspect a build, but cannot
+          # stream the default Cloud Build log bucket. Submit asynchronously, then
+          # poll the build resource so this workflow reflects the real deployment.
+          build_id="$(gcloud builds submit \
             --async \
+            --region=global \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --config=cloudbuild.yaml \
-            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_ANALYTICS_DATASET="${{ vars.GCP_ANALYTICS_DATASET }}",_ANALYTICS_TABLE="${{ vars.GCP_ANALYTICS_TABLE }}",_IMAGE_TAG="${{ github.sha }}"
+            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_ANALYTICS_DATASET="${{ vars.GCP_ANALYTICS_DATASET }}",_ANALYTICS_TABLE="${{ vars.GCP_ANALYTICS_TABLE }}",_IMAGE_TAG="${{ github.sha }}" \
+            --format='value(id)')"
+
+          if [[ -z "$build_id" ]]; then
+            echo "::error::Cloud Build did not return a build ID"
+            exit 1
+          fi
+
+          echo "Waiting for Cloud Build $build_id"
+          for attempt in {1..80}; do
+            status="$(gcloud builds describe "$build_id" \
+              --project="${{ vars.GCP_PROJECT_ID }}" \
+              --region=global \
+              --format='value(status)')"
+            echo "Cloud Build status: $status"
+            case "$status" in
+              SUCCESS)
+                exit 0
+                ;;
+              FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED|EXPIRED)
+                echo "::error::Cloud Build $build_id ended with $status"
+                exit 1
+                ;;
+            esac
+            sleep 15
+          done
+
+          echo "::error::Timed out waiting for Cloud Build $build_id"
+          exit 1
