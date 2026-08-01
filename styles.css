@@ -1,26 +1,30 @@
 :root {
-    --forest: #174b39;
-    --forest-deep: #0b2a20;
-    --forest-soft: #2d6b51;
-    --leaf: #7fa27e;
-    --paper: #f8fbf7;
-    --surface: #ffffff;
-    --surface-soft: #edf5ed;
-    --surface-strong: #dcebdc;
-    --ink: #192b24;
-    --muted: #50645a;
-    --line: rgba(25, 43, 36, 0.16);
-    --line-strong: rgba(25, 43, 36, 0.28);
-    --inverse-line: rgba(248, 251, 247, 0.28);
-    --accent: #d17c47;
+    --pine-deep: #0b2a20;
+    --pine: #174b39;
+    --canopy: #245c44;
+    --fern: #4f7657;
+    --moss: #7f9a72;
+    --lichen: #c4d5b8;
+    --sage: #dfe9da;
+    --mist: #edf2e9;
+    --paper: #f7f7ef;
+    --surface: #fcfcf7;
+    --bark: #6b5b45;
+    --ink: #19352a;
+    --muted: #586a5d;
+    --line: rgba(25, 53, 42, 0.16);
+    --line-strong: rgba(25, 53, 42, 0.28);
+    --light-line: rgba(247, 247, 239, 0.26);
+    --accent: #cc7c47;
     --sans: "DM Sans", Arial, sans-serif;
+    --display: "DM Serif Display", Georgia, serif;
     --mono: "DM Mono", monospace;
-    --step-1: clamp(0.75rem, 0.72rem + 0.15vw, 0.875rem);
-    --step-2: clamp(0.94rem, 0.9rem + 0.25vw, 1.08rem);
-    --step-3: clamp(1.25rem, 1.08rem + 0.85vw, 1.75rem);
-    --step-4: clamp(2rem, 1.42rem + 2.6vw, 3.65rem);
-    --step-5: clamp(3rem, 2rem + 4.15vw, 5.4rem);
-    --content-pad: max(1.25rem, min(8vw, 8rem));
+    --step-1: clamp(0.74rem, 0.71rem + 0.16vw, 0.86rem);
+    --step-2: clamp(0.94rem, 0.89rem + 0.28vw, 1.08rem);
+    --step-3: clamp(1.24rem, 1.07rem + 0.84vw, 1.72rem);
+    --step-4: clamp(2.15rem, 1.62rem + 2.24vw, 3.55rem);
+    --step-5: clamp(3.35rem, 2.3rem + 4.35vw, 5.85rem);
+    --content-pad: max(1.25rem, min(8vw, 8.25rem));
 }
 
 * {
@@ -29,7 +33,7 @@
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 5.5rem;
+    scroll-padding-top: 5.1rem;
 }
 
 body {
@@ -65,15 +69,19 @@ summary {
     font: inherit;
 }
 
+main {
+    overflow: hidden;
+}
+
 .skip-link {
     position: fixed;
     z-index: 100;
     top: -5rem;
     left: 1rem;
     padding: 0.65rem 0.9rem;
-    background: var(--forest-deep);
-    color: var(--paper);
-    font-weight: 700;
+    background: var(--paper);
+    color: var(--pine-deep);
+    font-weight: 800;
     transition: top 0.18s ease;
 }
 
@@ -82,25 +90,40 @@ summary {
 }
 
 :where(a, button, summary, [tabindex]):focus-visible {
-    outline: 3px solid var(--forest-soft);
+    outline: 3px solid var(--lichen);
     outline-offset: 4px;
 }
 
 .content-wrap {
-    width: min(100%, 78rem);
+    width: min(100%, 80rem);
     margin: 0 auto;
     padding-right: var(--content-pad);
     padding-left: var(--content-pad);
 }
 
 .eyebrow {
-    margin: 0 0 0.65rem;
-    color: var(--forest-soft);
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.78rem;
+    color: var(--fern);
     font-family: var(--mono);
     font-size: var(--step-1);
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.045em;
+    line-height: 1.2;
     text-transform: uppercase;
+}
+
+.eyebrow::before {
+    width: 0.84rem;
+    height: 0.46rem;
+    content: "";
+    border: 1px solid currentColor;
+    border-radius: 100% 0 100% 0;
+    background: currentColor;
+    opacity: 0.72;
+    transform: rotate(-32deg);
 }
 
 h1,
@@ -113,47 +136,48 @@ p {
 h1,
 h2,
 h3 {
-    letter-spacing: -0.05em;
-}
-
-h1,
-h2 {
-    font-weight: 800;
-    line-height: 0.98;
+    letter-spacing: -0.045em;
 }
 
 h1 {
     margin-bottom: 1.65rem;
-    color: var(--forest);
+    color: var(--paper);
+    font-family: var(--display);
     font-size: var(--step-5);
+    font-weight: 400;
+    line-height: 0.92;
 }
 
 h1 em,
 .contact-section h2 em {
-    color: var(--forest-soft);
+    color: var(--lichen);
     font-style: italic;
 }
 
 h2 {
     margin-bottom: 0;
-    color: var(--forest);
+    color: var(--pine);
     font-size: var(--step-4);
+    font-weight: 800;
+    line-height: 0.98;
 }
 
 h3 {
-    color: var(--forest);
+    color: var(--pine);
     font-size: var(--step-3);
     font-weight: 800;
     line-height: 1.14;
 }
 
-/* One unified header holds identity, navigation, and the résumé action. */
+/* One composed, evergreen header for identity, navigation, and résumé. */
 .site-nav {
     position: sticky;
     z-index: 50;
     top: 0;
-    border-bottom: 1px solid var(--line);
-    background: rgba(248, 251, 247, 0.96);
+    border-bottom: 1px solid rgba(196, 213, 184, 0.2);
+    background: rgba(11, 42, 32, 0.96);
+    color: var(--paper);
+    box-shadow: 0 0.45rem 1.3rem rgba(7, 27, 20, 0.14);
     backdrop-filter: blur(12px);
 }
 
@@ -161,8 +185,8 @@ h3 {
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    width: min(100%, 90rem);
-    min-height: 4.6rem;
+    width: min(100%, 92rem);
+    min-height: 4.75rem;
     margin: 0 auto;
     padding: 0.65rem var(--content-pad);
 }
@@ -171,12 +195,12 @@ h3 {
     display: grid;
     flex: 0 0 auto;
     place-items: center;
-    width: 2.2rem;
-    height: 2.2rem;
-    border-radius: 0.45rem;
-    background: var(--forest);
-    color: var(--paper);
-    font: 700 0.72rem/1 var(--mono);
+    width: 2.22rem;
+    height: 2.22rem;
+    border: 1px solid rgba(196, 213, 184, 0.65);
+    border-radius: 0.18rem 0.78rem 0.18rem 0.78rem;
+    color: var(--lichen);
+    font: 500 0.72rem/1 var(--mono);
     letter-spacing: -0.08em;
 }
 
@@ -188,13 +212,13 @@ h3 {
 }
 
 .site-nav-identity strong {
-    color: var(--forest);
+    color: var(--paper);
     font-size: var(--step-1);
     letter-spacing: -0.025em;
 }
 
 .site-nav-identity span {
-    color: var(--muted);
+    color: rgba(247, 247, 239, 0.63);
     font-size: 0.68rem;
 }
 
@@ -202,14 +226,14 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: min(2.1vw, 1.65rem);
+    gap: min(2vw, 1.65rem);
     margin-left: auto;
 }
 
 .site-nav-links a,
 .site-nav-resume {
     position: relative;
-    color: var(--forest);
+    color: rgba(247, 247, 239, 0.75);
     font-size: var(--step-1);
     font-weight: 700;
     white-space: nowrap;
@@ -218,7 +242,7 @@ h3 {
 .site-nav-links a::after {
     position: absolute;
     right: 50%;
-    bottom: -0.54rem;
+    bottom: -0.72rem;
     left: 50%;
     height: 2px;
     content: "";
@@ -233,19 +257,20 @@ h3 {
 }
 
 .site-nav-links a:hover {
-    color: var(--forest-soft);
+    color: var(--paper);
 }
 
 .site-nav-resume {
     margin-left: 0.35rem;
-    padding: 0.52rem 0.72rem;
-    border: 1px solid var(--line-strong);
-    border-radius: 0.35rem;
+    padding: 0.5rem 0.72rem;
+    border: 1px solid rgba(196, 213, 184, 0.44);
+    border-radius: 0.2rem 0.72rem 0.2rem 0.72rem;
+    color: var(--paper);
 }
 
 .site-nav-resume:hover {
-    border-color: var(--forest);
-    background: var(--surface-soft);
+    border-color: var(--lichen);
+    color: var(--lichen);
 }
 
 .site-nav-resume span {
@@ -253,71 +278,117 @@ h3 {
     font-size: 1rem;
 }
 
-/* Hero */
+/* Hero: a single canopy rather than a disconnected standalone panel. */
 .hero-section {
-    padding: 8.3rem 0 7.5rem;
-    background: var(--paper);
+    position: relative;
+    isolation: isolate;
+    min-height: 39rem;
+    padding: 9rem 0 8rem;
+    overflow: hidden;
+    background:
+        linear-gradient(118deg, var(--pine-deep) 0%, #103d2d 52%, var(--canopy) 100%);
+    color: var(--paper);
+}
+
+.hero-section::before {
+    position: absolute;
+    z-index: -1;
+    top: -12rem;
+    right: -8rem;
+    width: 32rem;
+    height: 44rem;
+    content: "";
+    border: 1px solid rgba(196, 213, 184, 0.28);
+    border-radius: 100% 0 100% 0;
+    background:
+        linear-gradient(145deg, rgba(196, 213, 184, 0.15), rgba(127, 154, 114, 0.02));
+    box-shadow:
+        -3.2rem 8rem 0 -3.1rem rgba(196, 213, 184, 0.3),
+        -7rem 17rem 0 -6.9rem rgba(196, 213, 184, 0.2);
+    opacity: 0.95;
+    transform: rotate(25deg);
+}
+
+.hero-section::after {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 22%;
+    width: 1px;
+    height: 100%;
+    content: "";
+    background: linear-gradient(to bottom, transparent, rgba(196, 213, 184, 0.22) 26%, rgba(196, 213, 184, 0.08) 78%, transparent);
+    transform: rotate(19deg);
+    transform-origin: top;
 }
 
 .hero-content {
-    max-width: 65rem;
+    position: relative;
+    max-width: 62rem;
+    padding-left: 1.55rem;
+    border-left: 1px solid rgba(196, 213, 184, 0.34);
 }
 
 .hero-status {
-    display: flex;
-    align-items: center;
     gap: 0.55rem;
-    margin-bottom: 1.35rem;
+    color: rgba(247, 247, 239, 0.72);
+}
+
+.hero-status::before {
+    display: none;
 }
 
 .hero-status span {
     display: inline-block;
-    width: 0.55rem;
-    height: 0.55rem;
+    width: 0.48rem;
+    height: 0.48rem;
     border-radius: 50%;
-    background: var(--leaf);
-    box-shadow: 0 0 0 0.23rem rgba(127, 162, 126, 0.18);
+    background: var(--lichen);
+    box-shadow: 0 0 0 0.24rem rgba(196, 213, 184, 0.15);
 }
 
 .hero-lede {
-    max-width: 43rem;
+    max-width: 45rem;
     margin-bottom: 1rem;
-    color: var(--muted);
+    color: rgba(247, 247, 239, 0.82);
     font-size: var(--step-3);
     line-height: 1.48;
 }
 
 .hero-scope {
-    max-width: 46rem;
+    max-width: 48rem;
     margin-bottom: 0;
-    color: var(--forest);
+    color: var(--lichen);
     font-size: var(--step-2);
     font-weight: 700;
+    line-height: 1.55;
 }
 
 .hero-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.1rem 1.35rem;
-    margin-top: 2rem;
+    gap: 1rem 1.3rem;
+    margin-top: 2.1rem;
 }
 
 .primary-cta {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.85rem 1rem;
+    gap: 0.42rem;
+    padding: 0.88rem 1.05rem;
     border: 1px solid var(--accent);
-    border-radius: 0.35rem;
+    border-radius: 0.2rem 0.75rem 0.2rem 0.75rem;
     background: var(--accent);
     color: #ffffff;
     font-size: var(--step-1);
     font-weight: 800;
-    transition: transform 0.18s ease;
+    box-shadow: 0 0.55rem 1.25rem rgba(6, 27, 18, 0.22);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .primary-cta:hover {
+    box-shadow: 0 0.8rem 1.5rem rgba(6, 27, 18, 0.3);
     transform: translateY(-2px);
 }
 
@@ -325,76 +396,113 @@ h3 {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.73rem 0;
-    border-bottom: 1px solid var(--forest);
-    color: var(--forest);
+    padding: 0.68rem 0;
+    border-bottom: 1px solid rgba(247, 247, 239, 0.68);
+    color: var(--paper);
     font-size: var(--step-1);
     font-weight: 800;
 }
 
 .secondary-cta:hover {
-    color: var(--forest-soft);
-    border-bottom-color: var(--forest-soft);
+    border-bottom-color: var(--lichen);
+    color: var(--lichen);
 }
 
-/* Shared section rhythm */
+/* Shared editorial section rhythm. */
 .results-section,
 .case-studies-section,
 .experience-section,
 .skills-section,
 .personal-section,
 .contact-section {
-    padding: 6.3rem 0;
+    position: relative;
+    isolation: isolate;
+    padding: 6.9rem 0;
 }
 
 .section-heading {
-    margin-bottom: 2.65rem;
+    position: relative;
+    margin-bottom: 2.8rem;
 }
 
 .section-heading--split {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1.34fr) minmax(14rem, 0.66fr);
     align-items: end;
-    justify-content: space-between;
-    gap: 2rem;
+    gap: 2.5rem;
 }
 
 .section-heading--split > p {
-    max-width: 22rem;
+    max-width: 24rem;
     margin: 0 0 0.25rem;
     color: var(--muted);
     font-size: var(--step-2);
-    line-height: 1.55;
+    line-height: 1.56;
 }
 
-/* Impact */
+/* Results: one connected field of proof, not four isolated boxes. */
 .results-section {
+    overflow: hidden;
     border-top: 1px solid var(--line);
-    background: var(--surface-soft);
+    background: var(--sage);
+}
+
+.results-section::before {
+    position: absolute;
+    z-index: -1;
+    right: -6rem;
+    bottom: -13rem;
+    width: 22rem;
+    height: 34rem;
+    content: "";
+    border: 1px solid rgba(79, 118, 87, 0.22);
+    border-radius: 100% 0 100% 0;
+    background: rgba(196, 213, 184, 0.23);
+    transform: rotate(36deg);
 }
 
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid var(--line-strong);
-    border-left: 1px solid var(--line-strong);
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    border-radius: 0.25rem 1.25rem 0.25rem 1.25rem;
+    background: rgba(252, 252, 247, 0.45);
+    box-shadow: 0 1rem 2.75rem rgba(26, 55, 39, 0.08);
 }
 
 .metric {
-    min-height: 15rem;
-    padding: 1.55rem;
-    border-right: 1px solid var(--line-strong);
-    border-bottom: 1px solid var(--line-strong);
-    background: var(--surface);
+    position: relative;
+    min-height: 15.5rem;
+    padding: 1.65rem;
+    border-right: 1px solid var(--line);
+}
+
+.metric:last-child {
+    border-right: 0;
+}
+
+.metric::after {
+    position: absolute;
+    right: 1.15rem;
+    bottom: 1.1rem;
+    width: 1.7rem;
+    height: 0.8rem;
+    content: "";
+    border: 1px solid rgba(79, 118, 87, 0.24);
+    border-radius: 100% 0 100% 0;
+    opacity: 0.7;
+    transform: rotate(-28deg);
 }
 
 .metric-value {
     display: block;
-    margin-bottom: 1rem;
+    margin-bottom: 1.05rem;
     color: var(--accent);
     font-size: var(--step-4);
     font-weight: 800;
     letter-spacing: -0.075em;
-    line-height: 0.9;
+    line-height: 0.88;
 }
 
 .metric h3 {
@@ -404,13 +512,14 @@ h3 {
 }
 
 .metric p {
+    max-width: 16rem;
     margin: 0;
     color: var(--muted);
     font-size: var(--step-1);
-    line-height: 1.55;
+    line-height: 1.56;
 }
 
-/* Case studies */
+/* Case studies use one surface language: field notes with a clear trail. */
 .case-studies-section {
     background: var(--paper);
 }
@@ -418,26 +527,45 @@ h3 {
 .case-study-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem;
+    gap: 1.35rem;
 }
 
 .case-study {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: 2rem;
-    border-top: 3px solid var(--forest);
+    padding: 2.1rem;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    border-top: 4px solid var(--pine);
+    border-radius: 0.2rem 1.25rem 0.2rem 1.25rem;
     background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line);
+    box-shadow: 0 0.75rem 1.8rem rgba(26, 55, 39, 0.07);
+}
+
+.case-study::before {
+    position: absolute;
+    top: 1rem;
+    right: 1.1rem;
+    width: 1.9rem;
+    height: 0.9rem;
+    content: "";
+    border: 1px solid rgba(79, 118, 87, 0.28);
+    border-radius: 100% 0 100% 0;
+    opacity: 0.7;
+    transform: rotate(32deg);
 }
 
 .case-study h3 {
     max-width: 26rem;
-    margin-bottom: 1.15rem;
+    margin: 0 2.2rem 1.15rem 0;
 }
 
 .case-problem {
-    margin-bottom: 1.3rem;
+    margin-bottom: 1.35rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--fern);
     color: var(--muted);
     font-size: var(--step-2);
     line-height: 1.55;
@@ -445,18 +573,18 @@ h3 {
 
 .case-problem strong,
 .case-results strong {
-    color: var(--forest);
+    color: var(--pine);
     font-weight: 800;
 }
 
 .case-results {
     display: grid;
-    gap: 0.66rem;
+    gap: 0.68rem;
     margin: 0;
     padding: 0;
     color: var(--muted);
     font-size: var(--step-1);
-    line-height: 1.5;
+    line-height: 1.52;
     list-style: none;
 }
 
@@ -467,39 +595,39 @@ h3 {
 
 .case-results li::before {
     position: absolute;
-    top: 0.54rem;
+    top: 0.53rem;
     left: 0;
-    width: 0.35rem;
-    height: 0.35rem;
-    border-radius: 50%;
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 100% 0 100% 0;
     content: "";
-    background: var(--leaf);
+    background: var(--moss);
+    transform: rotate(-32deg);
 }
 
 .project-flow {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem 0.5rem;
-    margin-top: 1.5rem;
-    padding: 1rem 0;
+    gap: 0.42rem;
+    margin-top: 1.6rem;
+    padding: 0.9rem 0;
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    color: var(--forest);
-    font-family: var(--mono);
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    color: var(--pine);
+    font: 500 0.68rem/1.35 var(--mono);
+    letter-spacing: 0.015em;
 }
 
 .project-flow span {
-    padding: 0.38rem 0.46rem;
-    border: 1px solid var(--line-strong);
-    background: var(--surface-soft);
+    padding: 0.38rem 0.5rem;
+    border: 1px solid rgba(79, 118, 87, 0.3);
+    border-radius: 0.16rem 0.46rem 0.16rem 0.46rem;
+    background: var(--mist);
 }
 
 .project-flow b {
-    color: var(--forest-soft);
+    color: var(--fern);
     font-size: 1rem;
 }
 
@@ -512,7 +640,7 @@ h3 {
 
 .case-study summary {
     width: fit-content;
-    color: var(--forest);
+    color: var(--pine);
     font-weight: 800;
     cursor: pointer;
 }
@@ -521,10 +649,10 @@ h3 {
     margin: 0.7rem 0 0;
 }
 
-/* Experience */
+/* Experience: present role as the canopy, earlier roles as a clean understory. */
 .experience-section {
     border-top: 1px solid var(--line);
-    background: var(--surface);
+    background: var(--mist);
 }
 
 .experience-list {
@@ -533,62 +661,103 @@ h3 {
 
 .experience-item {
     display: grid;
-    grid-template-columns: 10.5rem minmax(0, 1fr);
-    gap: 2rem;
-    padding: 1.45rem 0;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 2.2rem;
+    padding: 1.5rem 0;
     border-bottom: 1px solid var(--line);
 }
 
 .experience-item--featured {
-    margin: 1.4rem 0;
-    padding: 2rem;
-    border: 1px solid var(--line-strong);
-    border-left: 5px solid var(--forest);
-    background: var(--surface-soft);
+    position: relative;
+    margin: 1.5rem 0;
+    padding: 2.15rem;
+    overflow: hidden;
+    border: 1px solid rgba(196, 213, 184, 0.26);
+    border-left: 5px solid var(--lichen);
+    border-radius: 0.18rem 1.3rem 0.18rem 1.3rem;
+    background: linear-gradient(120deg, var(--pine-deep), var(--pine));
+    color: var(--paper);
+    box-shadow: 0 1rem 2.2rem rgba(11, 42, 32, 0.18);
+}
+
+.experience-item--featured::after {
+    position: absolute;
+    right: -5rem;
+    bottom: -9rem;
+    width: 16rem;
+    height: 25rem;
+    content: "";
+    border: 1px solid rgba(196, 213, 184, 0.2);
+    border-radius: 100% 0 100% 0;
+    background: rgba(196, 213, 184, 0.06);
+    transform: rotate(28deg);
+}
+
+.experience-item--featured > * {
+    position: relative;
+    z-index: 1;
 }
 
 .experience-date {
     display: grid;
     align-content: start;
-    gap: 0.15rem;
+    gap: 0.18rem;
     color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.69rem;
-    line-height: 1.45;
+    font: 500 0.69rem/1.48 var(--mono);
 }
 
 .experience-date span:first-child {
-    color: var(--forest);
-    font-weight: 500;
+    color: var(--pine);
+}
+
+.experience-item--featured .experience-date {
+    color: rgba(247, 247, 239, 0.65);
+}
+
+.experience-item--featured .experience-date span:first-child {
+    color: var(--lichen);
 }
 
 .experience-body h3 {
-    margin-bottom: 0.28rem;
+    margin-bottom: 0.25rem;
     font-size: var(--step-3);
 }
 
 .experience-role {
     margin-bottom: 1rem;
-    color: var(--forest-soft);
+    color: var(--fern);
     font-size: var(--step-1);
     font-weight: 800;
 }
 
 .experience-body > p:not(.experience-role) {
-    max-width: 48rem;
+    max-width: 49rem;
     margin-bottom: 1rem;
     color: var(--muted);
     font-size: var(--step-2);
     line-height: 1.58;
 }
 
+.experience-item--featured .experience-body h3,
+.experience-item--featured .experience-body strong {
+    color: var(--paper);
+}
+
+.experience-item--featured .experience-role {
+    color: var(--lichen);
+}
+
+.experience-item--featured .experience-body > p:not(.experience-role),
+.experience-item--featured .experience-body ul {
+    color: rgba(247, 247, 239, 0.78);
+}
+
 .experience-item--featured ul {
     display: grid;
-    gap: 0.45rem;
-    max-width: 50rem;
+    gap: 0.47rem;
+    max-width: 51rem;
     margin: 0;
     padding: 0;
-    color: var(--muted);
     font-size: var(--step-1);
     line-height: 1.55;
     list-style: none;
@@ -603,29 +772,33 @@ h3 {
     position: absolute;
     top: 0.54rem;
     left: 0;
-    width: 0.35rem;
-    height: 0.35rem;
-    border-radius: 50%;
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 100% 0 100% 0;
     content: "";
-    background: var(--leaf);
-}
-
-.experience-item strong {
-    color: var(--forest);
+    background: var(--lichen);
+    transform: rotate(-32deg);
 }
 
 .experience-item--compact {
     align-items: start;
+    transition: padding 0.18s ease, background 0.18s ease;
+}
+
+.experience-item--compact:hover {
+    padding-right: 1rem;
+    padding-left: 1rem;
+    background: rgba(196, 213, 184, 0.25);
 }
 
 .experience-item--compact .experience-body h3 {
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.22rem;
     font-size: var(--step-2);
 }
 
 .experience-item--compact .experience-body p {
     display: -webkit-box;
-    max-width: 53rem;
+    max-width: 55rem;
     margin-bottom: 0;
     overflow: hidden;
     color: var(--muted);
@@ -635,19 +808,42 @@ h3 {
     -webkit-line-clamp: 2;
 }
 
-/* Skills */
+.experience-item--compact strong {
+    color: var(--pine);
+}
+
+/* Skills: structured like a planted grid, not a second card wall. */
 .skills-section {
-    background: var(--surface-strong);
+    overflow: hidden;
+    background: var(--sage);
+}
+
+.skills-section::before {
+    position: absolute;
+    z-index: -1;
+    top: -10rem;
+    left: -9rem;
+    width: 18rem;
+    height: 33rem;
+    content: "";
+    border: 1px solid rgba(79, 118, 87, 0.18);
+    border-radius: 100% 0 100% 0;
+    background: rgba(196, 213, 184, 0.18);
+    transform: rotate(-31deg);
 }
 
 .skills-layout {
     display: grid;
     grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
-    gap: 3.5rem;
+    gap: 4.3rem;
+}
+
+.skills-intro {
+    padding-top: 0.2rem;
 }
 
 .skills-intro > p:last-child {
-    max-width: 20rem;
+    max-width: 21rem;
     margin: 1.1rem 0 0;
     color: var(--muted);
     font-size: var(--step-2);
@@ -663,29 +859,31 @@ h3 {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: 1rem;
-    padding: 1.3rem;
-    border: 1px solid rgba(248, 251, 247, 0.4);
-    background: var(--forest);
+    padding: 1.35rem;
+    border: 1px solid rgba(196, 213, 184, 0.38);
+    border-radius: 0.2rem 1rem 0.2rem 1rem;
+    background: var(--pine);
     color: var(--paper);
+    box-shadow: 0 0.8rem 1.7rem rgba(26, 55, 39, 0.12);
 }
 
 .education-mark {
     display: grid;
     place-items: center;
-    width: 3.25rem;
-    height: 3.25rem;
-    border: 1px solid rgba(248, 251, 247, 0.55);
-    border-radius: 50%;
-    color: var(--paper);
-    font: 500 0.7rem/1 var(--mono);
+    width: 3.35rem;
+    height: 3.35rem;
+    border: 1px solid rgba(196, 213, 184, 0.75);
+    border-radius: 100% 0 100% 0;
+    color: var(--lichen);
+    font: 500 0.69rem/1 var(--mono);
+    transform: rotate(-7deg);
 }
 
 .education-label {
-    margin-bottom: 0.15rem;
-    color: rgba(248, 251, 247, 0.68);
-    font-family: var(--mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.04em;
+    margin-bottom: 0.14rem;
+    color: rgba(247, 247, 239, 0.65);
+    font: 500 0.65rem/1.3 var(--mono);
+    letter-spacing: 0.045em;
     text-transform: uppercase;
 }
 
@@ -698,7 +896,7 @@ h3 {
 
 .education-card p:last-child {
     margin: 0;
-    color: rgba(248, 251, 247, 0.76);
+    color: rgba(247, 247, 239, 0.76);
     font-size: var(--step-1);
 }
 
@@ -706,18 +904,20 @@ h3 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1px;
+    overflow: hidden;
     border: 1px solid var(--line-strong);
+    border-radius: 0.2rem 1rem 0.2rem 1rem;
     background: var(--line-strong);
 }
 
 .skill-group {
-    min-height: 9.8rem;
-    padding: 1.35rem;
-    background: var(--surface);
+    min-height: 10rem;
+    padding: 1.4rem;
+    background: rgba(252, 252, 247, 0.86);
 }
 
 .skill-group h3 {
-    margin-bottom: 0.65rem;
+    margin-bottom: 0.68rem;
     font-size: var(--step-2);
     letter-spacing: -0.025em;
 }
@@ -729,17 +929,32 @@ h3 {
     line-height: 1.58;
 }
 
-/* Personal content is intentionally compact and all page images live here. */
+/* Personal stays light, but the photography is curated as a single archive. */
 .personal-section {
+    overflow: hidden;
     border-top: 1px solid var(--line);
     background: var(--paper);
 }
 
+.personal-section::before {
+    position: absolute;
+    z-index: -1;
+    top: -15rem;
+    right: -10rem;
+    width: 25rem;
+    height: 39rem;
+    content: "";
+    border: 1px solid rgba(79, 118, 87, 0.18);
+    border-radius: 100% 0 100% 0;
+    background: rgba(223, 233, 218, 0.54);
+    transform: rotate(28deg);
+}
+
 .personal-layout {
     display: grid;
-    grid-template-columns: minmax(16rem, 0.82fr) minmax(0, 1.18fr);
+    grid-template-columns: minmax(15rem, 0.8fr) minmax(0, 1.2fr);
     align-items: center;
-    gap: 3.4rem;
+    gap: 4rem;
 }
 
 .personal-copy h2 {
@@ -747,82 +962,138 @@ h3 {
 }
 
 .personal-copy > p:not(.eyebrow) {
-    max-width: 26rem;
-    margin-bottom: 1.4rem;
+    max-width: 27rem;
+    margin-bottom: 1.45rem;
     color: var(--muted);
     font-size: var(--step-2);
-    line-height: 1.55;
+    line-height: 1.56;
 }
 
 .personal-interests {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem 1.1rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
     margin: 0;
     padding: 0;
+    border-top: 1px solid var(--line-strong);
     list-style: none;
 }
 
 .personal-interests li {
     display: grid;
-    gap: 0.05rem;
+    gap: 0.15rem;
+    padding: 0.8rem 0.8rem 0.8rem 0;
+    border-bottom: 1px solid var(--line);
     color: var(--muted);
     font-size: var(--step-1);
+    line-height: 1.4;
+}
+
+.personal-interests li + li {
+    padding-left: 0.8rem;
+    border-left: 1px solid var(--line);
 }
 
 .personal-interests strong {
-    color: var(--forest);
+    color: var(--pine);
     font-size: var(--step-1);
 }
 
 .personal-gallery {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 0.45rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(7.2rem, 10rem));
+    gap: 0.55rem;
+    padding: 0.62rem;
+    border: 1px solid rgba(196, 213, 184, 0.7);
+    border-radius: 0.2rem 1.25rem 0.2rem 1.25rem;
+    background: var(--pine);
+    box-shadow: 0 1rem 2.25rem rgba(26, 55, 39, 0.13);
 }
 
 .personal-gallery figure {
-    aspect-ratio: 4 / 5;
+    position: relative;
+    min-width: 0;
     margin: 0;
     overflow: hidden;
-    background: var(--surface-strong);
+    background: var(--canopy);
 }
 
-.personal-gallery figure:nth-child(2),
-.personal-gallery figure:nth-child(5) {
-    margin-top: 1.1rem;
+.personal-gallery figure:nth-child(1) {
+    border-radius: 0.1rem 0.72rem 0.1rem 0.1rem;
 }
 
-.personal-gallery figure:nth-child(3),
+.personal-gallery figure:nth-child(3) {
+    border-radius: 0.1rem 0.1rem 0.72rem 0.1rem;
+}
+
+.personal-gallery figure:nth-child(4) {
+    border-radius: 0.72rem 0.1rem 0.1rem 0.1rem;
+}
+
 .personal-gallery figure:nth-child(6) {
-    margin-bottom: 1.1rem;
+    border-radius: 0.1rem 0.1rem 0.1rem 0.72rem;
 }
 
 .personal-gallery img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.25s ease;
+    filter: saturate(0.88) contrast(1.04);
+    transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 .personal-gallery figure:hover img {
-    transform: scale(1.04);
+    filter: saturate(1) contrast(1.04);
+    transform: scale(1.045);
 }
 
-/* Contact is the only full-dark close. */
+/* Contact is the deliberate final canopy. */
 .contact-section {
-    background: var(--forest-deep);
+    min-height: 32rem;
+    overflow: hidden;
+    background: linear-gradient(123deg, var(--pine-deep), var(--pine));
     color: var(--paper);
 }
 
+.contact-section::before {
+    position: absolute;
+    z-index: -1;
+    top: -9rem;
+    right: -5rem;
+    width: 25rem;
+    height: 36rem;
+    content: "";
+    border: 1px solid rgba(196, 213, 184, 0.25);
+    border-radius: 100% 0 100% 0;
+    background: rgba(196, 213, 184, 0.06);
+    transform: rotate(29deg);
+}
+
+.contact-section::after {
+    position: absolute;
+    z-index: -1;
+    right: 20%;
+    bottom: -8rem;
+    width: 1px;
+    height: 26rem;
+    content: "";
+    background: rgba(196, 213, 184, 0.22);
+    transform: rotate(-25deg);
+}
+
 .contact-section .eyebrow {
-    color: rgba(248, 251, 247, 0.65);
+    color: rgba(247, 247, 239, 0.68);
 }
 
 .contact-section h2 {
     max-width: 40rem;
     margin-bottom: 2.4rem;
     color: var(--paper);
+    font-family: var(--display);
+    font-size: var(--step-5);
+    font-weight: 400;
+    line-height: 0.92;
 }
 
 .contact-content {
@@ -830,14 +1101,14 @@ h3 {
     align-items: end;
     justify-content: space-between;
     gap: 2rem;
-    padding-top: 1.4rem;
-    border-top: 1px solid var(--inverse-line);
+    padding-top: 1.45rem;
+    border-top: 1px solid var(--light-line);
 }
 
 .contact-content > p {
-    max-width: 27rem;
+    max-width: 28rem;
     margin: 0;
-    color: rgba(248, 251, 247, 0.72);
+    color: rgba(247, 247, 239, 0.74);
     font-size: var(--step-2);
     line-height: 1.58;
 }
@@ -846,20 +1117,20 @@ h3 {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 0.75rem 1.25rem;
+    gap: 0.8rem 1.3rem;
 }
 
 .contact-actions a {
-    padding-bottom: 0.2rem;
-    border-bottom: 1px solid rgba(248, 251, 247, 0.65);
+    padding-bottom: 0.22rem;
+    border-bottom: 1px solid rgba(247, 247, 239, 0.66);
     color: var(--paper);
     font-size: var(--step-1);
     font-weight: 800;
 }
 
 .contact-actions a:hover {
-    border-bottom-color: var(--leaf);
-    color: var(--leaf);
+    border-bottom-color: var(--lichen);
+    color: var(--lichen);
 }
 
 .contact-actions span {
@@ -873,8 +1144,8 @@ h3 {
     justify-content: space-between;
     gap: 0.65rem 1.25rem;
     padding: 1rem var(--content-pad);
-    background: #071c14;
-    color: rgba(248, 251, 247, 0.58);
+    background: #061b14;
+    color: rgba(247, 247, 239, 0.56);
     font: 500 0.65rem/1.4 var(--mono);
 }
 
@@ -886,13 +1157,13 @@ h3 {
 .footer-notes {
     padding: 0;
     border: 0;
-    border-bottom: 1px solid rgba(248, 251, 247, 0.5);
+    border-bottom: 1px solid rgba(247, 247, 239, 0.48);
     background: transparent;
     font: inherit;
     cursor: pointer;
 }
 
-/* Technical notes dialog */
+/* Technical notes retain the same formal forest language. */
 .site-build-dialog {
     width: min(44rem, calc(100% - 2rem));
     padding: 0;
@@ -902,15 +1173,38 @@ h3 {
 }
 
 .site-build-dialog::backdrop {
-    background: rgba(11, 42, 32, 0.72);
-    backdrop-filter: blur(3px);
+    background: rgba(6, 27, 20, 0.74);
+    backdrop-filter: blur(4px);
 }
 
 .site-build-window {
-    padding: 1.8rem;
-    border: 1px solid rgba(248, 251, 247, 0.3);
-    background: var(--forest);
-    box-shadow: 0 1rem 3rem rgba(11, 42, 32, 0.36);
+    position: relative;
+    padding: 1.85rem;
+    overflow: hidden;
+    border: 1px solid rgba(196, 213, 184, 0.4);
+    border-radius: 0.2rem 1.15rem 0.2rem 1.15rem;
+    background: var(--pine);
+    box-shadow: 0 1.2rem 3.4rem rgba(6, 27, 20, 0.45);
+}
+
+.site-build-window::before {
+    position: absolute;
+    top: -9rem;
+    right: -4rem;
+    width: 16rem;
+    height: 24rem;
+    content: "";
+    border: 1px solid rgba(196, 213, 184, 0.17);
+    border-radius: 100% 0 100% 0;
+    transform: rotate(30deg);
+}
+
+.site-build-header,
+.site-build-intro,
+.deployment-flow,
+.site-build-notes {
+    position: relative;
+    z-index: 1;
 }
 
 .site-build-header {
@@ -919,11 +1213,11 @@ h3 {
     justify-content: space-between;
     gap: 1.5rem;
     padding-bottom: 1.15rem;
-    border-bottom: 1px solid var(--inverse-line);
+    border-bottom: 1px solid var(--light-line);
 }
 
 .site-build-header .eyebrow {
-    color: rgba(248, 251, 247, 0.65);
+    color: rgba(247, 247, 239, 0.65);
 }
 
 .site-build-dialog h2 {
@@ -933,8 +1227,8 @@ h3 {
 
 .site-build-close {
     padding: 0.42rem 0.68rem;
-    border: 1px solid rgba(248, 251, 247, 0.56);
-    border-radius: 0.25rem;
+    border: 1px solid rgba(247, 247, 239, 0.56);
+    border-radius: 0.18rem 0.58rem 0.18rem 0.58rem;
     background: transparent;
     color: var(--paper);
     font-size: var(--step-1);
@@ -943,13 +1237,14 @@ h3 {
 }
 
 .site-build-close:hover {
-    border-color: var(--paper);
+    border-color: var(--lichen);
+    color: var(--lichen);
 }
 
 .site-build-intro {
     max-width: 38rem;
     margin: 1.25rem 0;
-    color: rgba(248, 251, 247, 0.78);
+    color: rgba(247, 247, 239, 0.78);
     font-size: var(--step-2);
 }
 
@@ -957,21 +1252,22 @@ h3 {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.42rem;
     padding: 1rem 0;
-    border-top: 1px solid var(--inverse-line);
-    border-bottom: 1px solid var(--inverse-line);
+    border-top: 1px solid var(--light-line);
+    border-bottom: 1px solid var(--light-line);
     color: var(--paper);
-    font: 500 0.68rem/1.4 var(--mono);
+    font: 500 0.68rem/1.35 var(--mono);
 }
 
 .deployment-flow span {
-    padding: 0.4rem 0.5rem;
-    border: 1px solid rgba(248, 251, 247, 0.34);
+    padding: 0.38rem 0.48rem;
+    border: 1px solid rgba(247, 247, 239, 0.34);
+    border-radius: 0.14rem 0.4rem 0.14rem 0.4rem;
 }
 
 .deployment-flow b {
-    color: var(--leaf);
+    color: var(--lichen);
 }
 
 .site-build-notes {
@@ -983,12 +1279,12 @@ h3 {
 
 .site-build-notes span {
     padding: 0.3rem 0.45rem;
-    border: 1px solid rgba(248, 251, 247, 0.3);
-    color: rgba(248, 251, 247, 0.76);
+    border: 1px solid rgba(247, 247, 239, 0.3);
+    color: rgba(247, 247, 239, 0.76);
     font: 500 0.63rem/1 var(--mono);
 }
 
-@media (max-width: 66rem) {
+@media (max-width: 70rem) {
     .site-nav-inner {
         flex-wrap: wrap;
         gap: 0.55rem 0.85rem;
@@ -1005,7 +1301,7 @@ h3 {
     }
 
     .site-nav-links a::after {
-        bottom: -0.3rem;
+        bottom: -0.31rem;
     }
 
     .site-nav-resume {
@@ -1013,21 +1309,33 @@ h3 {
     }
 
     html {
-        scroll-padding-top: 7rem;
+        scroll-padding-top: 7.1rem;
     }
 
     .metrics-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .metric:nth-child(2) {
+        border-right: 0;
+    }
+
+    .metric:nth-child(-n + 2) {
+        border-bottom: 1px solid var(--line);
+    }
+
     .skills-layout,
     .personal-layout {
         grid-template-columns: 1fr;
-        gap: 2.5rem;
+        gap: 2.7rem;
+    }
+
+    .personal-gallery {
+        max-width: 48rem;
     }
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 52rem) {
     .hero-section,
     .results-section,
     .case-studies-section,
@@ -1035,26 +1343,33 @@ h3 {
     .skills-section,
     .personal-section,
     .contact-section {
-        padding: 4.5rem 0;
+        padding: 5rem 0;
     }
 
     .hero-section {
-        padding-top: 5.4rem;
+        min-height: 0;
+        padding-top: 6.5rem;
+    }
+
+    .hero-section::before {
+        top: -15rem;
+        right: -14rem;
+        opacity: 0.75;
     }
 
     .section-heading--split,
     .contact-content {
+        grid-template-columns: 1fr;
         align-items: start;
-        flex-direction: column;
         gap: 1rem;
     }
 
     .section-heading {
-        margin-bottom: 2rem;
+        margin-bottom: 2.15rem;
     }
 
     .section-heading--split > p {
-        max-width: 32rem;
+        max-width: 34rem;
         margin: 0;
     }
 
@@ -1065,15 +1380,20 @@ h3 {
     .experience-item,
     .experience-item--featured {
         grid-template-columns: 1fr;
-        gap: 0.75rem;
+        gap: 0.8rem;
     }
 
     .experience-item--featured {
-        padding: 1.5rem;
+        padding: 1.65rem;
     }
 
     .skills-board {
         grid-template-columns: 1fr;
+    }
+
+    .contact-content {
+        display: flex;
+        flex-direction: column;
     }
 
     .contact-actions {
@@ -1081,7 +1401,7 @@ h3 {
     }
 }
 
-@media (max-width: 36rem) {
+@media (max-width: 37rem) {
     html {
         scroll-padding-top: 7.5rem;
     }
@@ -1103,6 +1423,10 @@ h3 {
         font-size: 0.7rem;
     }
 
+    .hero-content {
+        padding-left: 1rem;
+    }
+
     .hero-actions,
     .contact-actions {
         align-items: stretch;
@@ -1117,30 +1441,39 @@ h3 {
         grid-template-columns: 1fr;
     }
 
-    .metric {
+    .metric,
+    .metric:nth-child(2) {
         min-height: 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .metric:last-child {
+        border-bottom: 0;
     }
 
     .case-study {
-        padding: 1.45rem;
+        padding: 1.5rem;
     }
 
     .project-flow {
         gap: 0.35rem;
     }
 
+    .personal-interests {
+        grid-template-columns: 1fr;
+    }
+
+    .personal-interests li,
+    .personal-interests li + li {
+        padding: 0.7rem 0;
+        border-left: 0;
+    }
+
     .personal-gallery {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .personal-gallery figure:nth-child(2),
-    .personal-gallery figure:nth-child(5) {
-        margin-top: 0;
-    }
-
-    .personal-gallery figure:nth-child(3),
-    .personal-gallery figure:nth-child(6) {
-        margin-bottom: 0;
+        grid-template-rows: repeat(2, 7.5rem);
+        padding: 0.45rem;
+        gap: 0.4rem;
     }
 
     .site-footer {
@@ -1149,7 +1482,7 @@ h3 {
     }
 
     .site-build-window {
-        padding: 1.25rem;
+        padding: 1.3rem;
     }
 }
 
@@ -1165,5 +1498,892 @@ h3 {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Lush botanical atmosphere: the foliage lives in fixed scene layers, never
+   in the content flow. Each scene wakes as its section enters the viewport.
+   -------------------------------------------------------------------------- */
+.botanical-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.botanical-section > .content-wrap {
+    position: relative;
+    z-index: 2;
+}
+
+.botanical-scene {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.92;
+}
+
+.botanical-scene::before,
+.botanical-scene::after {
+    position: absolute;
+    content: "";
+    pointer-events: none;
+}
+
+.botanical-scene::before {
+    width: 18rem;
+    height: 36rem;
+    border: 1px solid currentColor;
+    border-radius: 100% 0 100% 0;
+    opacity: 0.18;
+}
+
+.botanical-scene::after {
+    width: 1px;
+    height: 25rem;
+    background: currentColor;
+    opacity: 0.18;
+}
+
+.botanical-vine {
+    position: absolute;
+    display: block;
+    width: min(25vw, 17rem);
+    height: min(54vw, 31rem);
+    border-left: 1px solid currentColor;
+    border-radius: 55% 0 0 0;
+    opacity: 0.55;
+    transform-origin: 0 0;
+}
+
+.botanical-vine::before,
+.botanical-vine::after {
+    position: absolute;
+    width: 1px;
+    height: 36%;
+    content: "";
+    background: currentColor;
+    opacity: 0.72;
+    transform-origin: bottom;
+}
+
+.botanical-vine::before {
+    top: 26%;
+    left: -1px;
+    transform: rotate(-42deg);
+}
+
+.botanical-vine::after {
+    top: 54%;
+    left: -1px;
+    transform: rotate(39deg);
+}
+
+.botanical-leaf {
+    position: absolute;
+    display: block;
+    width: clamp(2.9rem, 5.3vw, 5.8rem);
+    height: clamp(6.2rem, 11vw, 12rem);
+    border: 1px solid currentColor;
+    border-radius: 100% 0 100% 0;
+    background: linear-gradient(140deg, currentColor 0%, rgba(255, 255, 255, 0.03) 70%);
+    box-shadow: inset 0.9rem -0.9rem 1.4rem rgba(255, 255, 255, 0.08);
+    opacity: 0.42;
+    transform-origin: 50% 100%;
+    transition: transform 1.2s cubic-bezier(.2, .7, .2, 1), opacity 0.8s ease;
+}
+
+.botanical-leaf::before {
+    position: absolute;
+    top: 7%;
+    bottom: 6%;
+    left: 50%;
+    width: 1px;
+    content: "";
+    background: rgba(247, 247, 239, 0.6);
+    opacity: 0.66;
+    transform: rotate(13deg);
+    transform-origin: center;
+}
+
+.botanical-leaf::after {
+    position: absolute;
+    top: 32%;
+    left: 22%;
+    width: 48%;
+    height: 1px;
+    content: "";
+    background: rgba(247, 247, 239, 0.36);
+    box-shadow: 0 1.25rem 0 rgba(247, 247, 239, 0.3), 0 2.5rem 0 rgba(247, 247, 239, 0.22);
+    transform: rotate(-35deg);
+}
+
+.botanical-frond {
+    position: absolute;
+    display: block;
+    width: clamp(2.8rem, 4.8vw, 5.4rem);
+    height: clamp(9rem, 17vw, 18rem);
+    border-left: 1px solid currentColor;
+    opacity: 0.5;
+    transform-origin: bottom center;
+    transition: transform 1.25s cubic-bezier(.2, .7, .2, 1), opacity 0.8s ease;
+}
+
+.botanical-frond::before,
+.botanical-frond::after {
+    position: absolute;
+    width: 64%;
+    height: 22%;
+    content: "";
+    border: 1px solid currentColor;
+    border-radius: 100% 0 100% 0;
+    background: currentColor;
+    opacity: 0.6;
+}
+
+.botanical-frond::before {
+    top: 14%;
+    left: -4%;
+    box-shadow: 0 3.5rem 0 currentColor, 0 7rem 0 currentColor;
+    transform: rotate(-32deg);
+}
+
+.botanical-frond::after {
+    top: 31%;
+    right: -3%;
+    box-shadow: 0 3.5rem 0 currentColor;
+    transform: rotate(38deg) scaleX(-1);
+}
+
+/* The section palettes are all green, but their depth changes like a trail
+   from shaded canopy to mossy clearings and back into the forest. */
+.botanical-section--hero .botanical-scene,
+.botanical-section--contact .botanical-scene {
+    color: var(--lichen);
+}
+
+.botanical-section--results .botanical-scene {
+    color: var(--fern);
+}
+
+.botanical-section--cases .botanical-scene,
+.botanical-section--personal .botanical-scene {
+    color: var(--moss);
+}
+
+.botanical-section--experience .botanical-scene {
+    color: var(--canopy);
+}
+
+.botanical-section--skills .botanical-scene {
+    color: var(--fern);
+}
+
+/* Hero canopy: tall tropical leaves and a long vine lead into the page. */
+.botanical-scene--hero::before {
+    top: -18rem;
+    right: -3rem;
+    transform: rotate(28deg);
+}
+
+.botanical-scene--hero::after {
+    top: -4rem;
+    right: 22%;
+    transform: rotate(18deg);
+}
+
+.botanical-scene--hero .botanical-vine {
+    top: -4rem;
+    right: 9%;
+    transform: rotate(23deg);
+}
+
+.botanical-scene--hero .botanical-leaf--one {
+    top: -2.5rem;
+    right: 1rem;
+    transform: rotate(22deg) scale(.95);
+}
+
+.botanical-scene--hero .botanical-leaf--two {
+    top: 17%;
+    right: 10%;
+    opacity: 0.3;
+    transform: rotate(73deg) scale(.72);
+}
+
+.botanical-scene--hero .botanical-leaf--three {
+    right: 3%;
+    bottom: -6rem;
+    opacity: 0.27;
+    transform: rotate(145deg) scale(.9);
+}
+
+.botanical-scene--hero .botanical-frond--one {
+    right: 22%;
+    bottom: -7rem;
+    transform: rotate(18deg);
+}
+
+.botanical-scene--hero .botanical-frond--two {
+    top: -2rem;
+    right: 31%;
+    opacity: 0.32;
+    transform: rotate(-26deg) scale(.75);
+}
+
+/* A moss clearing where the proof grows. */
+.botanical-scene--results::before {
+    right: -5rem;
+    bottom: -16rem;
+    transform: rotate(35deg);
+}
+
+.botanical-scene--results::after {
+    top: -6rem;
+    left: 15%;
+    transform: rotate(-18deg);
+}
+
+.botanical-scene--results .botanical-vine {
+    right: 4%;
+    bottom: -11rem;
+    transform: rotate(-22deg);
+}
+
+.botanical-scene--results .botanical-leaf--one {
+    top: -4rem;
+    left: 3%;
+    transform: rotate(-42deg) scale(.85);
+}
+
+.botanical-scene--results .botanical-leaf--two {
+    right: 7%;
+    bottom: 20%;
+    transform: rotate(122deg) scale(.75);
+}
+
+.botanical-scene--results .botanical-leaf--three {
+    bottom: -5rem;
+    left: 25%;
+    opacity: 0.26;
+    transform: rotate(82deg) scale(.65);
+}
+
+.botanical-scene--results .botanical-frond--one {
+    top: 2rem;
+    right: 18%;
+    transform: rotate(28deg) scale(.8);
+}
+
+.botanical-scene--results .botanical-frond--two {
+    bottom: -4rem;
+    left: 3%;
+    transform: rotate(-22deg);
+}
+
+/* Case studies sit in a calmer field of fern leaves. */
+.botanical-scene--cases::before {
+    top: -17rem;
+    left: -9rem;
+    transform: rotate(-32deg);
+}
+
+.botanical-scene--cases::after {
+    right: 10%;
+    bottom: -6rem;
+    transform: rotate(24deg);
+}
+
+.botanical-scene--cases .botanical-vine {
+    top: -8rem;
+    left: 4%;
+    transform: rotate(-18deg);
+}
+
+.botanical-scene--cases .botanical-leaf--one {
+    top: 4%;
+    right: -1rem;
+    transform: rotate(50deg) scale(.75);
+}
+
+.botanical-scene--cases .botanical-leaf--two {
+    bottom: 8%;
+    left: -1rem;
+    opacity: 0.26;
+    transform: rotate(-54deg) scale(.9);
+}
+
+.botanical-scene--cases .botanical-leaf--three {
+    top: 56%;
+    right: 8%;
+    opacity: 0.24;
+    transform: rotate(126deg) scale(.55);
+}
+
+.botanical-scene--cases .botanical-frond--one {
+    top: -3rem;
+    right: 19%;
+    transform: rotate(18deg) scale(.7);
+}
+
+.botanical-scene--cases .botanical-frond--two {
+    bottom: -6rem;
+    left: 20%;
+    transform: rotate(-18deg) scale(.75);
+}
+
+/* Experience returns to dense evergreen, with foliage behind the full role. */
+.botanical-scene--experience::before {
+    top: -14rem;
+    right: -6rem;
+    transform: rotate(33deg);
+}
+
+.botanical-scene--experience::after {
+    top: -2rem;
+    left: 18%;
+    transform: rotate(-20deg);
+}
+
+.botanical-scene--experience .botanical-vine {
+    right: 3%;
+    bottom: -12rem;
+    transform: rotate(-20deg);
+}
+
+.botanical-scene--experience .botanical-leaf--one {
+    top: -4rem;
+    right: 12%;
+    transform: rotate(35deg) scale(.72);
+}
+
+.botanical-scene--experience .botanical-leaf--two {
+    left: -1rem;
+    bottom: 17%;
+    transform: rotate(-62deg) scale(.85);
+}
+
+.botanical-scene--experience .botanical-leaf--three {
+    right: 5%;
+    bottom: -6rem;
+    opacity: 0.27;
+    transform: rotate(131deg) scale(.7);
+}
+
+.botanical-scene--experience .botanical-frond--one {
+    top: 1rem;
+    left: 4%;
+    transform: rotate(-22deg) scale(.75);
+}
+
+.botanical-scene--experience .botanical-frond--two {
+    right: 19%;
+    bottom: -5rem;
+    transform: rotate(19deg);
+}
+
+/* Skills resemble a planted garden bed: more greenery, lighter surface. */
+.botanical-scene--skills::before {
+    bottom: -16rem;
+    left: -7rem;
+    transform: rotate(-36deg);
+}
+
+.botanical-scene--skills::after {
+    top: -4rem;
+    right: 19%;
+    transform: rotate(20deg);
+}
+
+.botanical-scene--skills .botanical-vine {
+    top: -9rem;
+    right: 6%;
+    transform: rotate(20deg);
+}
+
+.botanical-scene--skills .botanical-leaf--one {
+    top: -5rem;
+    left: 4%;
+    transform: rotate(-36deg) scale(.82);
+}
+
+.botanical-scene--skills .botanical-leaf--two {
+    right: -1rem;
+    bottom: 14%;
+    transform: rotate(77deg) scale(.85);
+}
+
+.botanical-scene--skills .botanical-leaf--three {
+    bottom: -5rem;
+    left: 29%;
+    opacity: 0.28;
+    transform: rotate(115deg) scale(.64);
+}
+
+.botanical-scene--skills .botanical-frond--one {
+    top: -3rem;
+    right: 26%;
+    transform: rotate(20deg) scale(.75);
+}
+
+.botanical-scene--skills .botanical-frond--two {
+    left: 8%;
+    bottom: -6rem;
+    transform: rotate(-20deg) scale(.85);
+}
+
+/* Personal archive gets the lushest foliage; photography remains the focus. */
+.botanical-scene--personal::before {
+    top: -16rem;
+    right: -7rem;
+    transform: rotate(33deg);
+}
+
+.botanical-scene--personal::after {
+    bottom: -7rem;
+    left: 17%;
+    transform: rotate(-20deg);
+}
+
+.botanical-scene--personal .botanical-vine {
+    top: -7rem;
+    left: 1%;
+    transform: rotate(-19deg);
+}
+
+.botanical-scene--personal .botanical-leaf--one {
+    top: -3rem;
+    right: 9%;
+    transform: rotate(37deg) scale(.77);
+}
+
+.botanical-scene--personal .botanical-leaf--two {
+    right: -2rem;
+    bottom: 9%;
+    opacity: 0.32;
+    transform: rotate(113deg) scale(.84);
+}
+
+.botanical-scene--personal .botanical-leaf--three {
+    bottom: -5rem;
+    left: 4%;
+    transform: rotate(-48deg) scale(.7);
+}
+
+.botanical-scene--personal .botanical-frond--one {
+    top: 1rem;
+    left: 20%;
+    transform: rotate(-23deg) scale(.7);
+}
+
+.botanical-scene--personal .botanical-frond--two {
+    right: 23%;
+    bottom: -5rem;
+    transform: rotate(24deg);
+}
+
+/* The final canopy closes the trail with the largest leaves. */
+.botanical-scene--contact::before {
+    top: -16rem;
+    right: -5rem;
+    transform: rotate(30deg);
+}
+
+.botanical-scene--contact::after {
+    bottom: -8rem;
+    left: 20%;
+    transform: rotate(-23deg);
+}
+
+.botanical-scene--contact .botanical-vine {
+    right: 5%;
+    bottom: -12rem;
+    transform: rotate(-21deg);
+}
+
+.botanical-scene--contact .botanical-leaf--one {
+    top: -3rem;
+    right: 13%;
+    transform: rotate(30deg) scale(.92);
+}
+
+.botanical-scene--contact .botanical-leaf--two {
+    right: -2rem;
+    bottom: 13%;
+    transform: rotate(112deg) scale(.9);
+}
+
+.botanical-scene--contact .botanical-leaf--three {
+    bottom: -6rem;
+    left: 6%;
+    opacity: 0.25;
+    transform: rotate(-42deg) scale(.76);
+}
+
+.botanical-scene--contact .botanical-frond--one {
+    top: -2rem;
+    left: 26%;
+    transform: rotate(-18deg) scale(.75);
+}
+
+.botanical-scene--contact .botanical-frond--two {
+    right: 26%;
+    bottom: -6rem;
+    transform: rotate(23deg);
+}
+
+/* The foliage visibly responds to progress through each section. */
+.js .botanical-section .botanical-leaf--one {
+    transform: translate3d(-1.6rem, 2rem, 0) rotate(-18deg) scale(.68);
+}
+
+.js .botanical-section .botanical-leaf--two {
+    transform: translate3d(1.7rem, -1.5rem, 0) rotate(118deg) scale(.58);
+}
+
+.js .botanical-section .botanical-leaf--three {
+    transform: translate3d(-1rem, 1.5rem, 0) rotate(84deg) scale(.55);
+}
+
+.js .botanical-section .botanical-frond--one {
+    transform: translate3d(-1rem, 2rem, 0) rotate(-29deg) scale(.62);
+}
+
+.js .botanical-section .botanical-frond--two {
+    transform: translate3d(1rem, -1rem, 0) rotate(36deg) scale(.58);
+}
+
+.js .botanical-section.is-in-view .botanical-leaf--one,
+.js .botanical-section.is-in-view .botanical-leaf--two,
+.js .botanical-section.is-in-view .botanical-leaf--three,
+.js .botanical-section.is-in-view .botanical-frond--one,
+.js .botanical-section.is-in-view .botanical-frond--two {
+    transform: var(--botanical-rest, rotate(0deg) scale(1));
+}
+
+/* Re-state deliberate resting positions after the reveal transform. */
+.js .botanical-section.is-in-view .botanical-leaf--one { --botanical-rest: rotate(28deg) scale(.95); }
+.js .botanical-section.is-in-view .botanical-leaf--two { --botanical-rest: rotate(76deg) scale(.76); }
+.js .botanical-section.is-in-view .botanical-leaf--three { --botanical-rest: rotate(126deg) scale(.76); }
+.js .botanical-section.is-in-view .botanical-frond--one { --botanical-rest: rotate(18deg) scale(.84); }
+.js .botanical-section.is-in-view .botanical-frond--two { --botanical-rest: rotate(-20deg) scale(.8); }
+
+/* Content emerges along the trail as opposed to abruptly appearing. */
+.js [data-scroll-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 1.25rem, 0);
+    transition:
+        opacity 0.66s ease var(--reveal-delay, 0ms),
+        transform 0.66s cubic-bezier(.2, .72, .24, 1) var(--reveal-delay, 0ms);
+}
+
+.js [data-scroll-reveal].is-revealed {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Make each section's reveal slightly staggered without content shifting. */
+.metrics-grid .metric:nth-child(1),
+.case-study:nth-child(1),
+.experience-item:nth-child(1),
+.skill-group:nth-child(1) { transition-delay: 90ms; }
+
+.metrics-grid .metric:nth-child(2),
+.case-study:nth-child(2),
+.experience-item:nth-child(2),
+.skill-group:nth-child(2) { transition-delay: 150ms; }
+
+.metrics-grid .metric:nth-child(3),
+.experience-item:nth-child(3),
+.skill-group:nth-child(3) { transition-delay: 210ms; }
+
+.metrics-grid .metric:nth-child(4),
+.experience-item:nth-child(4),
+.skill-group:nth-child(4) { transition-delay: 270ms; }
+
+/* Section trail controls are the deliberate handoff between scenes. */
+.section-scroll-cue {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: min(100%, 22rem);
+    margin: 3.25rem auto -1.5rem;
+    padding: 0.75rem 0.9rem 0.75rem 1rem;
+    border: 1px solid rgba(79, 118, 87, 0.32);
+    border-radius: 0.16rem 0.85rem 0.16rem 0.85rem;
+    background: rgba(252, 252, 247, 0.68);
+    box-shadow: 0 0.55rem 1.3rem rgba(26, 55, 39, 0.07);
+    color: var(--pine);
+    font: 500 0.68rem/1.25 var(--mono);
+    letter-spacing: 0.02em;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.section-scroll-cue::before {
+    width: 1rem;
+    height: 0.5rem;
+    margin-right: -0.35rem;
+    content: "";
+    border: 1px solid var(--fern);
+    border-radius: 100% 0 100% 0;
+    background: rgba(127, 154, 114, 0.25);
+    transform: rotate(-28deg);
+}
+
+.section-scroll-cue span {
+    flex: 1;
+}
+
+.section-scroll-cue i {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 50%;
+    background: var(--pine);
+    color: var(--lichen);
+    font: 500 1rem/1 var(--mono);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.section-scroll-cue:hover {
+    background: var(--surface);
+    box-shadow: 0 0.85rem 1.6rem rgba(26, 55, 39, 0.13);
+    transform: translateY(-3px);
+}
+
+.section-scroll-cue:hover i {
+    background: var(--canopy);
+    transform: translateY(2px);
+}
+
+.section-scroll-cue--hero {
+    margin: 3.2rem 0 -5.2rem;
+    border-color: rgba(196, 213, 184, 0.42);
+    background: rgba(11, 42, 32, 0.3);
+    color: var(--paper);
+    box-shadow: none;
+}
+
+.section-scroll-cue--hero::before {
+    border-color: var(--lichen);
+    background: rgba(196, 213, 184, 0.22);
+}
+
+.section-scroll-cue--hero i {
+    background: var(--lichen);
+    color: var(--pine-deep);
+}
+
+.section-scroll-cue--hero:hover {
+    background: rgba(247, 247, 239, 0.12);
+}
+
+.section-scroll-cue--hero:hover i {
+    background: var(--paper);
+}
+
+/* Go fully green: tinted paper, not beige, throughout every surface. */
+body {
+    background: var(--mist);
+}
+
+.case-studies-section {
+    background: linear-gradient(135deg, #f4f8f0 0%, var(--paper) 62%, #edf4e9 100%);
+}
+
+.personal-section {
+    background: linear-gradient(135deg, #f1f6ed 0%, var(--paper) 60%, #e7f0e3 100%);
+}
+
+.site-footer {
+    border-top: 1px solid rgba(196, 213, 184, 0.16);
+}
+
+@media (max-width: 70rem) {
+    .botanical-scene {
+        opacity: 0.76;
+    }
+
+    .botanical-leaf {
+        opacity: 0.3;
+    }
+
+    .botanical-section--results .botanical-leaf--two,
+    .botanical-section--skills .botanical-leaf--two,
+    .botanical-section--personal .botanical-leaf--two {
+        display: none;
+    }
+}
+
+@media (max-width: 52rem) {
+    .botanical-scene::before,
+    .botanical-scene::after,
+    .botanical-vine,
+    .botanical-frond--two {
+        opacity: 0.3;
+    }
+
+    .botanical-leaf {
+        width: 3.4rem;
+        height: 7.4rem;
+    }
+
+    .section-scroll-cue {
+        margin-top: 2.5rem;
+        margin-bottom: -1rem;
+    }
+
+    .section-scroll-cue--hero {
+        margin-top: 2.7rem;
+        margin-bottom: -4rem;
+    }
+}
+
+@media (max-width: 37rem) {
+    .botanical-scene {
+        opacity: 0.58;
+    }
+
+    .botanical-section .botanical-leaf--two,
+    .botanical-section .botanical-leaf--three,
+    .botanical-section .botanical-frond {
+        display: none;
+    }
+
+    .section-scroll-cue {
+        width: 100%;
+        margin-top: 2.1rem;
+    }
+
+    .section-scroll-cue--hero {
+        margin-bottom: -3.25rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .botanical-leaf,
+    .botanical-frond,
+    [data-scroll-reveal],
+    .section-scroll-cue,
+    .section-scroll-cue i {
+        transition: none !important;
+        transform: none !important;
+    }
+
+    .js [data-scroll-reveal] {
+        opacity: 1 !important;
+    }
+}
+
+/* Distinct resting poses keep every section's foliage composed, rather than
+   repeating the same leaf silhouette from scene to scene. */
+.botanical-scene--hero {
+    --leaf-one-rest: rotate(22deg) scale(.95);
+    --leaf-two-rest: rotate(73deg) scale(.72);
+    --leaf-three-rest: rotate(145deg) scale(.9);
+    --frond-one-rest: rotate(18deg) scale(1);
+    --frond-two-rest: rotate(-26deg) scale(.75);
+}
+
+.botanical-scene--results {
+    --leaf-one-rest: rotate(-42deg) scale(.85);
+    --leaf-two-rest: rotate(122deg) scale(.75);
+    --leaf-three-rest: rotate(82deg) scale(.65);
+    --frond-one-rest: rotate(28deg) scale(.8);
+    --frond-two-rest: rotate(-22deg) scale(1);
+}
+
+.botanical-scene--cases {
+    --leaf-one-rest: rotate(50deg) scale(.75);
+    --leaf-two-rest: rotate(-54deg) scale(.9);
+    --leaf-three-rest: rotate(126deg) scale(.55);
+    --frond-one-rest: rotate(18deg) scale(.7);
+    --frond-two-rest: rotate(-18deg) scale(.75);
+}
+
+.botanical-scene--experience {
+    --leaf-one-rest: rotate(35deg) scale(.72);
+    --leaf-two-rest: rotate(-62deg) scale(.85);
+    --leaf-three-rest: rotate(131deg) scale(.7);
+    --frond-one-rest: rotate(-22deg) scale(.75);
+    --frond-two-rest: rotate(19deg) scale(1);
+}
+
+.botanical-scene--skills {
+    --leaf-one-rest: rotate(-36deg) scale(.82);
+    --leaf-two-rest: rotate(77deg) scale(.85);
+    --leaf-three-rest: rotate(115deg) scale(.64);
+    --frond-one-rest: rotate(20deg) scale(.75);
+    --frond-two-rest: rotate(-20deg) scale(.85);
+}
+
+.botanical-scene--personal {
+    --leaf-one-rest: rotate(37deg) scale(.77);
+    --leaf-two-rest: rotate(113deg) scale(.84);
+    --leaf-three-rest: rotate(-48deg) scale(.7);
+    --frond-one-rest: rotate(-23deg) scale(.7);
+    --frond-two-rest: rotate(24deg) scale(1);
+}
+
+.botanical-scene--contact {
+    --leaf-one-rest: rotate(30deg) scale(.92);
+    --leaf-two-rest: rotate(112deg) scale(.9);
+    --leaf-three-rest: rotate(-42deg) scale(.76);
+    --frond-one-rest: rotate(-18deg) scale(.75);
+    --frond-two-rest: rotate(23deg) scale(1);
+}
+
+.js .botanical-section.is-in-view .botanical-scene .botanical-leaf--one {
+    --botanical-rest: var(--leaf-one-rest);
+}
+
+.js .botanical-section.is-in-view .botanical-scene .botanical-leaf--two {
+    --botanical-rest: var(--leaf-two-rest);
+}
+
+.js .botanical-section.is-in-view .botanical-scene .botanical-leaf--three {
+    --botanical-rest: var(--leaf-three-rest);
+}
+
+.js .botanical-section.is-in-view .botanical-scene .botanical-frond--one {
+    --botanical-rest: var(--frond-one-rest);
+}
+
+.js .botanical-section.is-in-view .botanical-scene .botanical-frond--two {
+    --botanical-rest: var(--frond-two-rest);
+}
+
+@keyframes botanical-canopy-drift {
+    0%, 100% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    50% {
+        transform: translate3d(0, -0.45rem, 0);
+    }
+}
+
+@media (min-width: 65rem) and (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-snap-type: y proximity;
+    }
+
+    .botanical-section {
+        scroll-snap-align: start;
+        scroll-snap-stop: normal;
+    }
+
+    .js .botanical-section.is-in-view .botanical-scene {
+        animation: botanical-canopy-drift 11s ease-in-out infinite;
+    }
+
+    .js .botanical-section:nth-of-type(even).is-in-view .botanical-scene {
+        animation-delay: -4.5s;
     }
 }
