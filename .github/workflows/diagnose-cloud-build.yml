@@ -1,0 +1,45 @@
+name: Diagnose Cloud Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: "Cloud Build ID to describe"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  diagnose:
+    name: Describe Cloud Build failure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Describe build
+        env:
+          BUILD_ID: ${{ inputs.build_id }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          echo "== Top-level status and failure info =="
+          gcloud builds describe "$BUILD_ID" \
+            --project="$GCP_PROJECT_ID" \
+            --region=global \
+            --format='yaml(status,statusDetail,failureInfo,logUrl,createTime,startTime,finishTime,timing)'
+          echo
+          echo "== Per-step status =="
+          gcloud builds describe "$BUILD_ID" \
+            --project="$GCP_PROJECT_ID" \
+            --region=global \
+            --format='table(steps[].id,steps[].name,steps[].status,steps[].timing.startTime,steps[].timing.endTime)'
