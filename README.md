@@ -6,7 +6,7 @@ Requires Node 18 or newer. Run `npm install` once to install the BigQuery client
 
 ```bash
 npm install
-ANALYTICS_PASSWORD='choose-a-strong-password' npm start
+ANALYTICS_PASSWORD='password1' npm start
 ```
 
 Open:
