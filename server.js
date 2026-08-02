@@ -33,6 +33,7 @@ const MAX_REASONABLE_SESSION_MS = 2 * 60 * 60 * 1000;
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 let bigqueryClient = null;
+let lastBigQueryWrite = { ok: false, at: null, error: null };
 if (USE_BIGQUERY) {
   try {
     const { BigQuery } = require('@google-cloud/bigquery');
@@ -241,7 +242,11 @@ async function loadAnalyticsEvents() {
   if (!bigqueryClient) return readEvents();
   try {
     const query = `SELECT * FROM \`${GCP_PROJECT_ID}.${ANALYTICS_DATASET}.${ANALYTICS_TABLE}\` WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL ${READ_WINDOW_DAYS} DAY) ORDER BY timestamp DESC LIMIT 150000`;
-    const [rows] = await bigqueryClient.query({ query, location: process.env.BIGQUERY_LOCATION || 'US' });
+    const [rows] = await bigqueryClient.query({
+      query,
+      location: process.env.BIGQUERY_LOCATION || 'US',
+      useLegacySql: false,
+    });
     return rows;
   } catch (error) {
     console.error('BigQuery read failed; using local fallback:', error.message);
@@ -254,12 +259,17 @@ async function storeAnalyticsEvents(events) {
   await appendEvents(`${events.map((event) => JSON.stringify(event)).join('\n')}\n`);
   if (!bigqueryClient) return;
   try {
-    const rows = events.map((event) => ({ ...event, region: event.region ? JSON.stringify(event.region) : null }));
+    // Keep nested values as objects. BigQuery maps these to RECORD/STRUCT
+    // columns; stringifying them makes inserts fail when the table uses the
+    // natural nested schema.
+    const rows = events.map((event) => ({ ...event }));
     await bigqueryClient.dataset(ANALYTICS_DATASET).table(ANALYTICS_TABLE).insert(rows, {
       skipInvalidRows: false,
       ignoreUnknownValues: true,
     });
+    lastBigQueryWrite = { ok: true, at: new Date().toISOString(), error: null };
   } catch (error) {
+    lastBigQueryWrite = { ok: false, at: new Date().toISOString(), error: error.message };
     console.error('BigQuery insert failed; event retained in local fallback:', error.message);
   }
 }
@@ -1093,6 +1103,8 @@ const server = http.createServer(async (req, res) => {
       ok: true,
       service: 'portfolio-analytics',
       analytics_protected: Boolean(ANALYTICS_PASSWORD),
+      bigquery_configured: Boolean(bigqueryClient),
+      bigquery_last_write: lastBigQueryWrite,
       time: new Date().toISOString(),
     });
   }
@@ -1146,7 +1158,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 202, {
         accepted: events.length,
         skipped: capped.length - events.length,
-        durable_store: Boolean(bigqueryClient),
+        durable_store: Boolean(bigqueryClient && lastBigQueryWrite.ok),
       });
     } catch (error) {
       return sendJson(res, 400, { error: error.message });

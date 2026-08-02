@@ -198,13 +198,23 @@
     }
     fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true })
       .then((response) => {
-        if (!response.ok && response.status !== 429) throw new Error(String(response.status));
-        deliveryFailures = 0;
+        if (response.ok) {
+          deliveryFailures = 0;
+          return;
+        }
+        const retryAfter = Number(response.headers.get('Retry-After'));
+        const delay = Number.isFinite(retryAfter) && retryAfter > 0
+          ? Math.min(retryAfter * 1000, 30000)
+          : 1000 * 2 ** attempt;
+        throw Object.assign(new Error(String(response.status)), { delay });
       })
-      .catch(() => {
+      .catch((error) => {
         deliveryFailures += 1;
-        if (attempt < 2) window.setTimeout(() => send(events, false, attempt + 1), 1000 * 2 ** attempt);
-        else persistPending(events);
+        if (attempt < 2) {
+          window.setTimeout(() => send(events, false, attempt + 1), error.delay || 1000 * 2 ** attempt);
+        } else {
+          persistPending(events);
+        }
       });
   }
 
