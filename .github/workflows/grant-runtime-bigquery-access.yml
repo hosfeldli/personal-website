@@ -1,0 +1,48 @@
+name: Grant runtime BigQuery access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  grant-bigquery-access:
+    name: Grant BigQuery write and query access to the runtime service account
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Grant BigQuery permissions
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_ANALYTICS_DATASET: ${{ vars.GCP_ANALYTICS_DATASET }}
+          GCP_RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          dataset="projects/${GCP_PROJECT_ID}/datasets/${GCP_ANALYTICS_DATASET}"
+          member="serviceAccount:${GCP_RUNTIME_SERVICE_ACCOUNT}"
+
+          gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+            --member="${member}" \
+            --role="roles/bigquery.jobUser" \
+            --condition=None \
+            --quiet
+
+          bq update --project_id="${GCP_PROJECT_ID}" \
+            --dataset_id="${dataset}" \
+            --add_iam_member="roles/bigquery.dataEditor:${member}"
+
+          echo "== Runtime BigQuery access =="
+          gcloud projects get-iam-policy "${GCP_PROJECT_ID}" \
+            --flatten='bindings[].members' \
+            --filter="bindings.members=${member} AND bindings.role=roles/bigquery.jobUser" \
+            --format='table(bindings.role, bindings.members)'
