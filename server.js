@@ -249,7 +249,16 @@ async function loadAnalyticsEvents() {
       location: process.env.BIGQUERY_LOCATION || 'US',
       useLegacySql: false,
     });
-    return rows;
+    // The BigQuery Node client returns TIMESTAMP values as objects such as
+    // { value: '2026-08-02T15:52:26.521Z' }. The dashboard aggregation and
+    // CSV/session code operate on ISO strings, so normalize query rows at the
+    // boundary instead of making every consumer handle both shapes.
+    return rows.map((row) => ({
+      ...row,
+      timestamp: row.timestamp && typeof row.timestamp === 'object'
+        ? row.timestamp.value
+        : row.timestamp,
+    }));
   } catch (error) {
     console.error('BigQuery read failed; using local fallback:', error.message);
     return readEvents();
