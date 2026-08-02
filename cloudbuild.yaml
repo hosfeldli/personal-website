@@ -10,6 +10,20 @@ substitutions:
   _IMAGE_TAG: latest
 
 steps:
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        dataset="${PROJECT_ID}:${_ANALYTICS_DATASET}"
+        table="${PROJECT_ID}:${_ANALYTICS_DATASET}.${_ANALYTICS_TABLE}"
+        if ! bq show --project_id="${PROJECT_ID}" "${dataset}" >/dev/null 2>&1; then
+          bq mk --project_id="${PROJECT_ID}" --location=US --dataset "${dataset}"
+        fi
+        if ! bq show --project_id="${PROJECT_ID}" "${table}" >/dev/null 2>&1; then
+          bq mk --project_id="${PROJECT_ID}" --table --schema=analytics-schema.json "${table}"
+        fi
+
   - name: gcr.io/cloud-builders/docker
     args:
       - build
