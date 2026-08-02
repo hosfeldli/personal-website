@@ -246,7 +246,10 @@
   }
 
   drainPending();
+  // Deliver the first page view immediately. Waiting for the normal 1.5s
+  // batching window loses visits when the user navigates away quickly.
   track('page_view', { title: document.title, region: pageRegion(document.querySelector('main')) });
+  flush();
 
   document.addEventListener('pointerover', (event) => {
     const target = targetFor(event.target);

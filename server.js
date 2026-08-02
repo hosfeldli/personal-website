@@ -34,6 +34,8 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 let bigqueryClient = null;
 let lastBigQueryWrite = { ok: false, at: null, error: null };
+let acceptedEventCount = 0;
+let lastAcceptedEvent = null;
 if (USE_BIGQUERY) {
   try {
     const { BigQuery } = require('@google-cloud/bigquery');
@@ -1105,6 +1107,8 @@ const server = http.createServer(async (req, res) => {
       analytics_protected: Boolean(ANALYTICS_PASSWORD),
       bigquery_configured: Boolean(bigqueryClient),
       bigquery_last_write: lastBigQueryWrite,
+      accepted_event_count: acceptedEventCount,
+      last_accepted_event: lastAcceptedEvent,
       time: new Date().toISOString(),
     });
   }
@@ -1155,6 +1159,11 @@ const server = http.createServer(async (req, res) => {
       }
       const events = capped.map(normalizeEvent).filter((event) => !isDuplicate(event.event_id));
       await storeAnalyticsEvents(events);
+      acceptedEventCount += events.length;
+      if (events.length) {
+        const latest = events[events.length - 1];
+        lastAcceptedEvent = { event_id: latest.event_id, type: latest.type, timestamp: latest.timestamp };
+      }
       return sendJson(res, 202, {
         accepted: events.length,
         skipped: capped.length - events.length,
