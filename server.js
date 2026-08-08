@@ -120,6 +120,7 @@ const MIME_TYPES = {
 
 const PUBLIC_FILES = new Set([
   '/styles.css',
+  '/game.js',
   '/script.js',
   '/analytics.js',
   '/dashboard.css',
