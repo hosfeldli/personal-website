@@ -1,4 +1,3 @@
-data/events.ndjson
 .DS_Store
 node_modules
 *.before-*

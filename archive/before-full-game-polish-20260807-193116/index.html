@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#17100b" />
+  <meta name="description" content="Liam Hosfeld's medieval first-person portfolio game." />
+  <title>LIAM HOSFELD // THE OPERATIONS DUNGEON</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell" aria-label="Liam Hosfeld portfolio game">
+    <canvas id="game-canvas" aria-label="First-person medieval portfolio dungeon"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <section class="main-menu" id="main-menu" aria-labelledby="menu-title">
+      <div class="menu-panel portfolio-menu">
+        <header class="resume-header">
+          <div class="resume-heading-copy">
+            <p class="eyebrow">PORTFOLIO / RÉSUMÉ</p>
+            <h2 id="menu-title">LIAM HOSFELD</h2>
+            <p class="resume-role">TECHNICAL CONSULTANT · OPERATIONS / DATA / DELIVERY</p>
+          </div>
+          <div class="resume-contact">
+            <span>Atlanta, GA</span>
+            <span>Manhattan Associates</span>
+            <a href="mailto:liam.hosfeld@gmail.com">liam.hosfeld@gmail.com</a>
+            <a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">linkedin.com/in/liam-hosfeld</a>
+          </div>
+        </header>
+
+        <div class="resume-grid">
+          <section class="resume-section resume-summary job-history" aria-labelledby="job-history-heading">
+            <div class="section-label"><p class="eyebrow">JOB HISTORY</p><span>01</span></div>
+            <h3 id="job-history-heading">Experience across consulting, systems, and operations.</h3>
+            <div class="job-history-list">
+              <article class="job-history-entry">
+                <div><strong>Manhattan Associates</strong><span>Consultant · May 2025 — Present</span></div>
+                <p>Customer-facing technical consulting across TMS workflows, integrations, data investigations, automation, and delivery.</p>
+              </article>
+              <article class="job-history-entry">
+                <div><strong>Manhattan Associates</strong><span>Cloud Services Intern / Co-op · May 2023 — May 2025</span></div>
+                <p>Built operational search and analysis tools, including a 50K+ shipper-record search experience and Azure savings analysis.</p>
+              </article>
+              <article class="job-history-entry">
+                <div><strong>Soliant Healthcare</strong><span>Systems Operations Intern · May — Aug 2022</span></div>
+                <p>Automated onboarding work and investigated duplicate accounts connected to operational savings.</p>
+              </article>
+              <article class="job-history-entry">
+                <div><strong>Georgia Tech Research Institute</strong><span>Research Intern, ATAS Lab · May — Aug 2020</span></div>
+                <p>Built C# integration components supporting robotic object-detection research.</p>
+              </article>
+            </div>
+          </section>
+
+          <aside class="launch-card game-launch-card" aria-labelledby="launch-heading">
+            <div class="launch-card-heading">
+              <div>
+                <p class="eyebrow">PLAYABLE PORTFOLIO GAME</p>
+                <h3 id="launch-heading">Explore the work in 3D.</h3>
+              </div>
+              <span class="loadout-note">GAME MODE</span>
+            </div>
+            <p class="game-launch-lede">Walk through a first-person portfolio dungeon, read selected work records, and see the systems behind the résumé.</p>
+            <div class="game-badge" aria-label="Interactive game features">
+              <span class="game-badge-icon" aria-hidden="true">▶</span>
+              <span><strong>INTERACTIVE DUNGEON</strong><small>Move · read · fight · discover</small></span>
+            </div>
+            <p class="game-choice-label">CHOOSE YOUR STARTING TOOL</p>
+            <div class="weapon-options" role="radiogroup" aria-label="Choose a starting game weapon">
+              <button type="button" class="weapon-option selected" data-weapon="spear" role="radio" aria-checked="true">
+                <span class="weapon-icon weapon-icon-spear" aria-hidden="true">↟</span>
+                <span><strong>Spear</strong><small>Reach / reinforced thrust</small></span>
+              </button>
+              <button type="button" class="weapon-option" data-weapon="crossbow" role="radio" aria-checked="false">
+                <span class="weapon-icon weapon-icon-crossbow" aria-hidden="true">⌁</span>
+                <span><strong>Crossbow</strong><small>Ranged / precise shot</small></span>
+              </button>
+              <button type="button" class="weapon-option" data-weapon="wand" role="radio" aria-checked="false">
+                <span class="weapon-icon weapon-icon-wand" aria-hidden="true">✦</span>
+                <span><strong>Ember Wand</strong><small>Fireballs / spell-color crystal</small></span>
+              </button>
+            </div>
+            <p class="loadout-description" id="loadout-description">A measured spear thrust with a clear wind-up and recovery.</p>
+            <button type="button" class="play-button" id="play-button">PLAY THE PORTFOLIO GAME <span>↗</span></button>
+            <p class="launch-note">WASD move · mouse look · click to attack · E read · Q spell</p>
+          </aside>
+        </div>
+
+        <div class="resume-columns">
+          <section class="resume-section" aria-labelledby="impact-heading">
+            <div class="section-label"><p class="eyebrow">SELECTED IMPACT</p><span>01</span></div>
+            <h3 id="impact-heading">Proof across operations and delivery.</h3>
+            <div class="impact-list">
+              <div><strong>5</strong><span>enterprise accounts supported</span></div>
+              <div><strong>1M+</strong><span>tracking messages handled monthly</span></div>
+              <div><strong>~$40K</strong><span>Azure savings identified</span></div>
+              <div><strong>40+</strong><span>customer endpoints mapped</span></div>
+            </div>
+          </section>
+
+          <section class="resume-section" aria-labelledby="focus-heading">
+            <div class="section-label"><p class="eyebrow">FOCUS AREAS</p><span>02</span></div>
+            <h3 id="focus-heading">Turning operational complexity into usable systems.</h3>
+            <div class="experience-list">
+              <p><strong>Transportation &amp; Logistics</strong><span>TMS workflows, shipment data, status investigation, and operational support.</span></p>
+              <p><strong>Integration Delivery</strong><span>EDI/X12, AS2, SFTP, message tracing, endpoint mapping, and documentation.</span></p>
+              <p><strong>Operations Analytics</strong><span>Oracle SQL, BigQuery, Power BI, DAX, reporting, and data modeling.</span></p>
+              <p><strong>Automation</strong><span>Python, PowerShell, Perl, Bash, JavaScript, reusable tools, and CI/CD.</span></p>
+            </div>
+          </section>
+
+          <section class="resume-section" aria-labelledby="capabilities-heading">
+            <div class="section-label"><p class="eyebrow">CAPABILITIES</p><span>03</span></div>
+            <h3 id="capabilities-heading">Tools that make the work repeatable.</h3>
+            <div class="capability-list">
+              <p><strong>Analytics</strong><span>Oracle SQL · BigQuery · Power BI · DAX · data modeling</span></p>
+              <p><strong>Integrations</strong><span>TMS · MIF · EDI/X12 · AS2 · SFTP · message troubleshooting</span></p>
+              <p><strong>Automation</strong><span>Python · PowerShell · Perl · Bash · JavaScript · C#</span></p>
+              <p><strong>Delivery</strong><span>Requirements · incident investigation · demos · process mapping · CI/CD</span></p>
+            </div>
+          </section>
+        </div>
+
+        <footer class="resume-footer">
+          <span>TECHNICAL CONSULTING · OPERATIONS · DATA</span>
+          <div>
+            <a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">DOWNLOAD RÉSUMÉ ↧</a>
+            <span class="menu-footer-note">OPTIONAL INTERACTIVE VIEW</span>
+          </div>
+        </footer>
+      </div>
+    </section>
+
+    <header class="game-hud">
+      <div class="identity-plaque">
+        <div class="crest" aria-hidden="true">LH</div>
+        <div>
+          <p class="eyebrow">THE OPERATIONS DUNGEON</p>
+          <h1>LIAM HOSFELD</h1>
+          <p class="subtle">Technical Consultant · Atlanta, GA</p>
+        </div>
+      </div>
+
+      <div class="room-plaque" aria-live="polite">
+        <p class="eyebrow"><span id="room-floor">FLOOR 01</span> · <span id="room-count">01 / 07</span></p>
+        <h2 id="room-title">THE ENTRANCE HALL</h2>
+      </div>
+
+      <div class="boss-plaque" id="boss-plaque" hidden aria-live="polite">
+        <div class="boss-heading"><span>FINAL ENCOUNTER</span><strong id="boss-name">THE OPERATIONS ARCHON</strong></div>
+        <div class="boss-health-track"><span id="boss-health-bar"></span></div>
+        <div class="boss-phase" id="boss-phase">PHASE I · THE BRIEF</div>
+      </div>
+
+      <div class="player-plaque" aria-label="Player status">
+        <div class="health-row"><span>VITALITY</span><strong id="hp-value">100 / 100</strong></div>
+        <div class="health-track"><span id="hp-bar"></span></div>
+        <div class="evidence-row"><span id="evidence-count">0 / 22 SCROLLS</span><span id="experience-value">LVL 0 · 0 XP</span><span id="skeleton-count">2 THREATS</span></div>
+      </div>
+    </header>
+
+    <div class="aim-reticle" aria-hidden="true">·</div>
+
+    <div class="interaction-prompt" id="interaction-prompt" hidden aria-live="polite">
+      <span class="prompt-key" id="prompt-key">E</span>
+      <span id="prompt-text">Read nearby scroll</span>
+    </div>
+
+    <div class="toast" id="toast" hidden aria-live="polite"></div>
+
+    <section class="reading-overlay" id="reading-overlay" hidden aria-live="assertive">
+      <div class="scroll-shell">
+        <div class="scroll-roller scroll-roller-top" aria-hidden="true"></div>
+        <article class="scroll-paper">
+          <div class="scroll-header">
+            <p class="eyebrow scroll-kicker">VERIFIED PORTFOLIO RECORD <span id="scroll-room-label"></span></p>
+            <span class="scroll-record-number" id="scroll-record-number">RECORD 01 / 22</span>
+          </div>
+          <div class="scroll-stamp" aria-hidden="true">LH<br /><small>FILED</small></div>
+          <h2 id="scroll-title">FIELD RECORD</h2>
+          <p class="scroll-summary" id="scroll-summary"></p>
+          <div class="scroll-divider" aria-hidden="true"><span>✦</span></div>
+          <div class="scroll-spell" id="scroll-spell" aria-live="polite">
+            <span class="scroll-spell-seal" id="scroll-spell-seal" aria-hidden="true">✦</span>
+            <span>
+              <small id="scroll-reward-kicker">XP RECOVERED</small>
+              <strong id="scroll-spell-name">+25 XP</strong>
+              <em id="scroll-spell-description">Recover scrolls to grow stronger and unlock spells.</em>
+            </span>
+          </div>
+          <div class="scroll-progress" aria-label="Progress toward the next spell">
+            <div class="scroll-progress-copy">
+              <small id="scroll-progress-label">PROGRESS TO NEXT SPELL</small>
+              <strong id="scroll-progress-value">0 / 50 XP</strong>
+            </div>
+            <div class="scroll-progress-track"><span id="scroll-progress-bar"></span></div>
+            <p id="scroll-progress-caption">Scope Sight unlocks at 50 XP.</p>
+          </div>
+          <ul class="scroll-details" id="scroll-details"></ul>
+          <div class="scroll-tags" id="scroll-tags"></div>
+          <div class="scroll-actions" id="scroll-actions"></div>
+          <button type="button" id="close-scroll" class="close-scroll">RETURN TO THE DUNGEON <span> E / ESC</span></button>
+        </article>
+        <div class="scroll-roller scroll-roller-bottom" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <div class="touch-controls" aria-label="Touch controls">
+      <button type="button" data-control="strafe-left" aria-label="Strafe left">↶</button>
+      <button type="button" data-control="forward" aria-label="Move forward">↑</button>
+      <button type="button" data-control="back" aria-label="Move backward">↓</button>
+      <button type="button" data-control="strafe-right" aria-label="Strafe right">↷</button>
+      <button type="button" data-control="attack" aria-label="Attack with equipped weapon">✦</button>
+    </div>
+
+    <footer class="control-ribbon">
+      <span><b>WASD</b> MOVE</span>
+      <span><b>MOUSE</b> LOOK</span>
+      <span><b>HOLD MOUSE</b> ATTACK</span>
+      <span><b>E</b> READ / ENTER LIGHT</span>
+      <span><b>Q</b> CAST LATEST SPELL</span>
+      <button type="button" id="music-button" class="music-button" aria-label="Mute generated chiptune music" aria-pressed="true" title="Mute generated chiptune music">♫</button>
+      <button type="button" id="menu-button" aria-label="Return to the loadout menu">⌂</button>
+      <button type="button" id="help-button" aria-label="Open controls">?</button>
+    </footer>
+  </main>
+
+  <dialog id="help-dialog" class="help-dialog">
+    <form method="dialog">
+      <button class="dialog-close" aria-label="Close controls">×</button>
+      <p class="eyebrow">THE FIELD MANUAL</p>
+      <h2>Move, fight, read</h2>
+      <ul>
+        <li><strong>WASD</strong> moves through one connected dungeon. <strong>A</strong> and <strong>D</strong> strafe.</li>
+        <li><strong>Move the mouse</strong> to look around. The game captures the pointer after you begin play; press <strong>Esc</strong> to return to the menu.</li>
+        <li><strong>Aim and click</strong> to make one readable attack at a time. The spear thrusts, the crossbow fires a measured bolt, and the Ember Wand casts color-shifting fireballs.</li>
+        <li><strong>E</strong> reads a nearby scroll and grants XP. New spells unlock automatically; <strong>Q</strong> casts the latest learned spell.</li>
+        <li>Defeat the final boss, then reach the <strong>door of light</strong> and press <strong>E</strong> to return to the portfolio menu.</li>
+      </ul>
+    </form>
+  </dialog>
+
+  <script src="game.js"></script>
+</body>
+</html>

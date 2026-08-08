@@ -6,11 +6,11 @@
  * One connected dungeon map. The browser renders the world with a small
  * software 3D pipeline: vertical camera pitch, perspective projection,
  * painter-sorted low-poly meshes, raycast walls, procedural materials, and
- * hand-built low-poly spear/crossbow meshes and several enemy archetypes.
+ * hand-built low-poly ninja-star/crossbow meshes and several enemy archetypes.
  */
 
 const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d', { alpha: false });
+const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
 const roomFloor = document.getElementById('room-floor');
 const roomCount = document.getElementById('room-count');
 const experienceValue = document.getElementById('experience-value');
@@ -19,25 +19,23 @@ const objectiveLabel = document.getElementById('objective-label');
 const objectiveDetail = document.getElementById('objective-detail');
 const weaponHudLabel = document.getElementById('weapon-hud-label');
 const weaponStatus = document.getElementById('weapon-status');
-const spellHudLabel = document.getElementById('spell-hud-label');
-const spellStatus = document.getElementById('spell-status');
-const spellSlots = document.getElementById('spell-slots');
 const hitMarker = document.getElementById('hit-marker');
 const hitMarkerSymbol = document.getElementById('hit-marker-symbol');
 const hitMarkerLabel = document.getElementById('hit-marker-label');
+const hoverTooltip = document.getElementById('hover-tooltip');
 const bossPlaque = document.getElementById('boss-plaque');
 const bossName = document.getElementById('boss-name');
 const bossHealthBar = document.getElementById('boss-health-bar');
 const bossPhase = document.getElementById('boss-phase');
+const bossBottomHud = document.getElementById('boss-bottom-hud');
+const bossBottomName = document.getElementById('boss-bottom-name');
+const bossBottomHealth = document.getElementById('boss-bottom-health');
+const bossBottomPhase = document.getElementById('boss-bottom-phase');
 const scrollRewardKicker = document.getElementById('scroll-reward-kicker');
 const hpValue = document.getElementById('hp-value');
 const hpBar = document.getElementById('hp-bar');
 const staminaValue = document.getElementById('stamina-value');
 const staminaBar = document.getElementById('stamina-bar');
-const minimap = document.getElementById('minimap');
-const minimapCtx = minimap?.getContext('2d');
-const minimapFloor = document.getElementById('minimap-floor');
-const minimapRoom = document.getElementById('minimap-room');
 const floorAnnouncement = document.getElementById('floor-announcement');
 const floorAnnouncementKicker = document.getElementById('floor-announcement-kicker');
 const floorAnnouncementNumber = document.getElementById('floor-announcement-number');
@@ -52,6 +50,9 @@ const scrollRoomLabel = document.getElementById('scroll-room-label');
 const scrollRecordNumber = document.getElementById('scroll-record-number');
 const scrollTitle = document.getElementById('scroll-title');
 const scrollSummary = document.getElementById('scroll-summary');
+const scrollAuthorLine = document.getElementById('scroll-author-line');
+const scrollRecordStatus = document.getElementById('scroll-record-status');
+const scrollPositioning = document.getElementById('scroll-positioning');
 const scrollIntroGrid = document.getElementById('scroll-intro-grid');
 const scrollProofLabel = document.getElementById('scroll-proof-label');
 const scrollProofGrid = document.getElementById('scroll-proof-grid');
@@ -59,7 +60,11 @@ const scrollProgressLabel = document.getElementById('scroll-progress-label');
 const scrollProgressValue = document.getElementById('scroll-progress-value');
 const scrollProgressBar = document.getElementById('scroll-progress-bar');
 const scrollProgressCaption = document.getElementById('scroll-progress-caption');
+const scrollDetailsLabel = document.getElementById('scroll-details-label');
+const scrollDetailCount = document.getElementById('scroll-detail-count');
 const scrollDetails = document.getElementById('scroll-details');
+const scrollCtaTitle = document.getElementById('scroll-cta-title');
+const scrollCtaCopy = document.getElementById('scroll-cta-copy');
 const scrollSpell = document.getElementById('scroll-spell');
 const scrollSpellSeal = document.getElementById('scroll-spell-seal');
 const scrollSpellName = document.getElementById('scroll-spell-name');
@@ -67,12 +72,9 @@ const scrollSpellDescription = document.getElementById('scroll-spell-description
 const scrollTags = document.getElementById('scroll-tags');
 const scrollActions = document.getElementById('scroll-actions');
 const closeScrollButton = document.getElementById('close-scroll');
-const traderOverlay = document.getElementById('trader-overlay');
-const traderKicker = document.getElementById('trader-kicker');
-const traderTitle = document.getElementById('trader-title');
-const traderDialogue = document.getElementById('trader-dialogue');
-const traderClose = document.getElementById('trader-close');
-const traderOptionButtons = [...document.querySelectorAll('[data-trader-weapon]')];
+const deathOverlay = document.getElementById('death-overlay');
+const deathCause = document.getElementById('death-cause');
+const deathRestart = document.getElementById('death-restart');
 const helpButton = document.getElementById('help-button');
 const musicButton = document.getElementById('music-button');
 const settingsButton = document.getElementById('settings-button');
@@ -83,10 +85,6 @@ const sfxVolumeInput = document.getElementById('sfx-volume');
 const reducedMotionInput = document.getElementById('reduced-motion');
 const pointerLockInput = document.getElementById('pointer-lock-setting');
 const gameShell = document.querySelector('.game-shell');
-const mainMenu = document.getElementById('main-menu');
-const playButton = document.getElementById('play-button');
-const resumeOnlyButton = document.getElementById('resume-only-button');
-const lobbyDock = document.getElementById('lobby-dock');
 const aimReticle = document.querySelector('.aim-reticle');
 const loadoutDescription = document.getElementById('loadout-description');
 const weaponOptionButtons = [...document.querySelectorAll('[data-weapon]')];
@@ -125,7 +123,7 @@ const lobbyPortfolioScroll = {
     'TOOLKIT — Oracle SQL, BigQuery, Power BI, DAX, Python, PowerShell, Perl, Bash, JavaScript, C#, Git, CI/CD, Transportation Management Systems, MIF, EDI/X12, AS2, SFTP, message troubleshooting, event troubleshooting, and integration evidence.',
     'FOUNDATION — University of Georgia, B.S. Computer Systems Engineering, GPA 3.83, May 2025. A systems foundation for moving comfortably between data, software, integrations, and delivery.',
     'OUTSIDE THE SYSTEM — Baking, plants, drums, and bass guitar. The same habits remain: observe closely, make the next step repeatable, and keep learning.',
-    'NEXT — Close this scroll, meet the Wayfarer, choose a weapon, and carry the evidence into the archive. Reading this record grants the tutorial spell: Archive Key.'
+    'NEXT — Approach a weapon keeper and press E to equip its weapon. Reading this record grants the tutorial spell: Archive Key. Use Q to cast it at the sealed archive gate.'
   ],
   tags: ['TECHNICAL CONSULTANT', 'TMS / LOGISTICS', 'OPERATIONS ANALYTICS', 'INTEGRATIONS', 'AUTOMATION', 'TUTORIAL SPELL: ARCHIVE KEY'],
   color: '#6ce0c2'
@@ -136,7 +134,7 @@ let shieldFeedbackAt = -Infinity;
 
 const rooms = [
   {
-    id: 'entrance', floor: 'FLOOR 01', title: 'THE ENTRANCE HALL', shortTitle: 'Entrance Hall', subtitle: 'Identity, scope, and the work behind the map.', fieldNote: 'Liam is a Technical Consultant at Manhattan Associates, translating complex transportation systems into work people can run.', color: '#6ce0c2', material: 'stone', levelType: 'grand hall', palette: ['#8fc7bd', '#cfe2c2', '#9ab991'],
+    id: 'entrance', level: 'LEVEL 01', title: 'THE ENTRANCE HALL', shortTitle: 'Entrance Hall', subtitle: 'Identity, scope, and the work behind the map.', fieldNote: 'Liam is a Technical Consultant at Manhattan Associates, translating complex transportation systems into work people can run.', color: '#6ce0c2', material: 'stone', levelType: 'grand hall', palette: ['#8fc7bd', '#cfe2c2', '#9ab991'],
     intro: 'Liam Hosfeld is a Technical Consultant in Atlanta, Georgia, translating operational complexity into systems people can actually run.',
     details: [
       'Current class: Technical Consultant at Manhattan Associates.',
@@ -154,7 +152,19 @@ const rooms = [
     enemies: []
   },
   {
-    id: 'trophy', floor: 'FLOOR 02', title: 'THE TROPHY ROOM', shortTitle: 'Trophy Room', subtitle: 'Proof gathered on the journey.', fieldNote: 'He supports five enterprise accounts and works with production data at more than one million tracking messages each month.', color: '#e7ad67', material: 'wood', levelType: 'vault gallery', palette: ['#0c0704', '#3b2112', '#120805'],
+    id: 'threshold', roof: true, level: 'LEVEL 02', title: 'THE THRESHOLD CHAMBER', shortTitle: 'Threshold Chamber', subtitle: 'The first room after the forest.', fieldNote: 'A narrow entry chamber. Something weak is waiting across the stone.', color: '#b9a57e', material: 'stone', levelType: 'threshold room', width: 16, height: 10, palette: ['#07080a', '#2b2924', '#0a0908'],
+    intro: 'The forest spits you into a small stone chamber. A threshold cockroach waits far across the stone.',
+    details: ['The gate route is not a clean walk into the archive.', 'Something struck from behind in the outer forest.', 'Cross the threshold, defeat the cockroach, and continue into the archive rooms.'],
+    tags: ['Forest ambush', 'Starting room', 'Weak enemy'],
+    map: ['1111111111', '1000000001', '1000000001', '1000000001', '1000000001', '1111111111'],
+    spawn: { x: 2.1, y: 3, angle: 0 },
+    items: [],
+    enemies: [
+      { id: 'threshold-cockroach', name: 'Threshold Cockroach', kind: 'cockroach', x: 8.2, y: 3, hp: 38, speed: .24, damage: 4, color: '#80634a' }
+    ]
+  },
+  {
+    id: 'trophy', roof: true, level: 'LEVEL 03', title: 'THE TROPHY ROOM', shortTitle: 'Trophy Room', subtitle: 'Proof gathered on the journey.', fieldNote: 'He supports five enterprise accounts and works with production data at more than one million tracking messages each month.', color: '#e7ad67', material: 'wood', levelType: 'vault gallery', palette: ['#0c0704', '#3b2112', '#120805'],
     intro: 'Customer-facing ownership at production scale, with measurable impact across data, billing, documentation, and cloud operations.',
     details: ['5 enterprise accounts supported, representing roughly 50% of the team’s managed contract value.', '1M+ tracking messages handled each month across production systems.', 'Approximately $40K in Azure savings identified through analysis and translated into a Finance-ready decision.', '40+ customer endpoints mapped through a reusable publishing and validation workflow.', 'Enterprise partners and ecosystems have included organizations such as Sysco, US Foods, BJ’s Wholesale Club, H&M Trucking, and Guest Supply.'],
     tags: ['5 accounts', '1M+ messages / month', '~$40K recovered', '40+ endpoints'],
@@ -173,7 +183,7 @@ const rooms = [
     ]
   },
   {
-    id: 'quests', floor: 'FLOOR 03', title: 'THE QUEST BOARD', shortTitle: 'Quest Board', subtitle: 'Selected problems, investigated and made repeatable.', fieldNote: 'His pattern is simple: investigate the evidence, clarify the requirement, automate the repeatable path, and measure the result.', color: '#c58de6', material: 'stone', levelType: 'crossroads', palette: ['#0a0508', '#2e1d2b', '#0b070b'],
+    id: 'quests', level: 'LEVEL 04', title: 'THE QUEST BOARD', shortTitle: 'Quest Board', subtitle: 'Selected problems, investigated and made repeatable.', fieldNote: 'His pattern is simple: investigate the evidence, clarify the requirement, automate the repeatable path, and measure the result.', color: '#c58de6', material: 'stone', levelType: 'crossroads', palette: ['#0a0508', '#2e1d2b', '#0b070b'],
     intro: 'Four representative quests show how Liam moves from ambiguity to an operating improvement.',
     details: ['Billing clarity: turned high-volume message data into a report that helped Finance understand usage and recover approximately $40K.', 'Integration guidance: built a publication and validation workflow that made documentation easier to ship across 40+ customer endpoints.', 'Shipment integrity: investigated message and status relationships to diagnose a shipment-status issue and produce a defensible recommendation.', 'Support search: built an SSO search tool for 50K+ shipper records so live support could find the right relationship faster.'],
     tags: ['Investigate', 'Clarify', 'Automate', 'Measure'],
@@ -192,7 +202,7 @@ const rooms = [
     ]
   },
   {
-    id: 'chronicle', floor: 'FLOOR 04', title: 'THE CHRONICLE', shortTitle: 'Chronicle', subtitle: 'Experience that supports the proof.', fieldNote: 'His route runs from Cloud Services and systems operations into customer-facing technical consulting.', color: '#77a9e8', material: 'stone', levelType: 'archive maze', palette: ['#05080c', '#1d2b3a', '#06090d'],
+    id: 'chronicle', roof: true, level: 'LEVEL 05', title: 'THE CHRONICLE', shortTitle: 'Chronicle', subtitle: 'Experience that supports the proof.', fieldNote: 'His route runs from Cloud Services and systems operations into customer-facing technical consulting.', color: '#77a9e8', material: 'stone', levelType: 'archive maze', palette: ['#05080c', '#1d2b3a', '#06090d'],
     intro: 'A progression from technical delivery to analytics, integrations, automation, and cross-functional ownership.',
     details: ['Manhattan Associates — Consultant, May 2025 to present: own customer-facing work and coordinate across Operations, Cloud Services, Finance, and R&D.', 'Manhattan Associates — Cloud Services Intern / Co-op, May 2023 to May 2025: built the 50K+ shipper-record SSO search tool and Azure savings analysis.', 'Soliant Healthcare — Systems Operations Intern, May to August 2022: automated account-setup work and found duplicate accounts tied to roughly $36K in annual savings.', 'Georgia Tech Research Institute — Research Intern, ATAS Lab, May to August 2020: built C# integration components for robotic object-detection research.'],
     tags: ['Manhattan Associates', 'Soliant Healthcare', 'GTRI', 'Customer delivery'],
@@ -211,7 +221,7 @@ const rooms = [
     ]
   },
   {
-    id: 'character', floor: 'FLOOR 05', title: 'THE CHARACTER SHEET', shortTitle: 'Character Sheet', subtitle: 'Tools carried into the dungeon.', fieldNote: 'His toolkit crosses Oracle SQL, BigQuery, Power BI, Python, PowerShell, integrations, and automation.', color: '#e3c66e', material: 'wood', levelType: 'craft workshop', palette: ['#0d0703', '#402613', '#120805'],
+    id: 'character', roof: true, level: 'LEVEL 06', title: 'THE CHARACTER SHEET', shortTitle: 'Character Sheet', subtitle: 'Tools carried into the dungeon.', fieldNote: 'His toolkit crosses Oracle SQL, BigQuery, Power BI, Python, PowerShell, integrations, and automation.', color: '#e3c66e', material: 'wood', levelType: 'craft workshop', palette: ['#0d0703', '#402613', '#120805'],
     intro: 'A systems-minded toolkit spanning operational data, integration evidence, automation, and stakeholder delivery.',
     details: ['Education: University of Georgia, B.S. Computer Systems Engineering, GPA 3.83, May 2025.', 'Operational analytics: Oracle SQL, BigQuery, Power BI, DAX, data modeling, billing, and reporting.', 'Functional delivery: requirements, incident investigation, technical demos, process mapping, stakeholder coordination, and documentation.', 'Systems and integration: TMS, MIF, EDI/X12, AS2, SFTP, message troubleshooting, and event troubleshooting.', 'Automation and delivery: Python, PowerShell, Perl, Bash, JavaScript, C#, Git, and CI/CD.'],
     tags: ['UGA · 3.83 GPA', 'Oracle SQL', 'Python / PowerShell / Perl', 'EDI · AS2 · SFTP'],
@@ -230,7 +240,7 @@ const rooms = [
     ]
   },
   {
-    id: 'campfire', floor: 'FLOOR 06', title: 'THE CAMPFIRE', shortTitle: 'Campfire', subtitle: 'Plants, bread, and rhythm.', fieldNote: 'Away from the screen, Liam bakes bread, keeps plants alive, and trades drums for bass guitar.', color: '#db8872', material: 'stone', levelType: 'garden hearth', palette: ['#120704', '#4a2418', '#100604'],
+    id: 'campfire', roof: true, level: 'LEVEL 07', title: 'THE CAMPFIRE', shortTitle: 'Campfire', subtitle: 'Plants, bread, and rhythm.', fieldNote: 'Away from the screen, Liam bakes bread, keeps plants alive, and trades drums for bass guitar.', color: '#db8872', material: 'stone', levelType: 'garden hearth', palette: ['#120704', '#4a2418', '#100604'],
     intro: 'Away from the screen, Liam likes slow, hands-on work: keeping plants alive, baking bread, and learning bass after years behind a drum kit.',
     details: ['Baking: long ferments, shaping, scoring, and the small improvements that show up in the next loaf.', 'Plants: light, propagation, watering routines, and building a greener home one cutting at a time.', 'Music: drums first, bass now — the same groove from a different seat.', 'Home base: Atlanta, Georgia.'],
     tags: ['Baking', 'Plants', 'Drums', 'Bass guitar', 'Atlanta'],
@@ -249,7 +259,7 @@ const rooms = [
     ]
   },
   {
-    id: 'gate', floor: 'FLOOR 07', title: 'THE LIGHTWELL SANCTUM', shortTitle: 'Lightwell Sanctum', subtitle: 'The final delivery is a fight.', color: '#e9e9e0', material: 'stone', levelType: 'boss arena', palette: ['#030a0d', '#102c31', '#020608'],
+    id: 'gate', level: 'LEVEL 08', title: 'THE LIGHTWELL SANCTUM', shortTitle: 'Lightwell Sanctum', subtitle: 'The final delivery is a fight.', color: '#e9e9e0', material: 'stone', levelType: 'boss arena', palette: ['#030a0d', '#102c31', '#020608'],
     intro: 'A final sanctum where every route, system, and decision is tested under pressure.',
     details: ['The Operations Archon protects the lightwell.', 'Break its phases, survive the system-wide patterns, and enter the door of light.', 'The portfolio waits beyond the encounter.'],
     tags: ['Final encounter', 'Multi-phase boss', 'Door of light', 'Return to menu'],
@@ -265,23 +275,73 @@ const rooms = [
   }
 ];
 
+// The boss remains the authored final combat room. Defeating it leads to a
+// separate celestial sanctuary instead of resetting the run into the lobby.
+const BOSS_ROOM_INDEX = rooms.length - 1;
+rooms.push({
+  id: 'sanctuary',
+  level: 'LEVEL 09',
+  title: 'THE CELESTIAL SANCTUARY',
+  shortTitle: 'Celestial Sanctuary',
+  subtitle: 'A quiet place beyond the final delivery.',
+  fieldNote: 'The archive is complete. Approach the résumé pedestal and let the next route arrive.',
+  color: '#f5f0c6',
+  material: 'stone',
+  levelType: 'heaven-like sanctuary',
+  palette: ['#d8f3ec', '#a8d9d0', '#f5f1cf'],
+  intro: 'A bright sanctuary beyond the dungeon, where the completed résumé waits on a pedestal.',
+  details: ['The Operations Archon has fallen.', 'The résumé is waiting on the illuminated pedestal.', 'Walk close to the pedestal to download the PDF automatically.'],
+  tags: ['Ascension complete', 'Résumé pedestal', 'Automatic download'],
+  map: ['111111111111111111111111111111', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '100000000000000000000000000001', '111111111111111111111111111111'],
+  spawn: { x: 4.2, y: 9, angle: 0 },
+  items: [],
+  enemies: [],
+});
+const SANCTUARY_ROOM_INDEX = rooms.length - 1;
+const STARTING_ROOM_INDEX = 1;
+const FINAL_ROOM_INDEX = BOSS_ROOM_INDEX;
+// Only the entrance, forest corridor, boss arena, and completed sanctuary are
+// open to the sky. Every other authored dungeon room receives a ceiling.
+const OPEN_AIR_ROOM_IDS = new Set(['entrance', 'gate', 'sanctuary']);
+for (const room of rooms) room.roof = !OPEN_AIR_ROOM_IDS.has(room.id);
+
 const ROOM_WIDTH = 22;
 const ROOM_HEIGHT = 12;
 const FINAL_ROOM_WIDTH = 30;
 const FINAL_ROOM_HEIGHT = 18;
 const ROOM_GAP = 4;
+const FOREST_HALL_GAP = 88;
+const FOREST_HALL_TREE_SPACING = 1.18;
 const ROOM_INSET_X = 3;
 const ROOM_INSET_Y = 2;
 const ROOM_DOOR_Y = Math.floor(ROOM_HEIGHT / 2) - 1;
-const roomWidths = rooms.map((_, index) => index === rooms.length - 1 ? FINAL_ROOM_WIDTH : ROOM_WIDTH);
-const roomHeights = rooms.map((_, index) => index === rooms.length - 1 ? FINAL_ROOM_HEIGHT : ROOM_HEIGHT);
-const roomOffsets = rooms.map((_, index) => rooms.slice(0, index).reduce((offset, __, roomIndex) => offset + roomWidths[roomIndex] + ROOM_GAP, 0));
+function gapAfterRoom(roomIndex) { return roomIndex === 0 ? FOREST_HALL_GAP : ROOM_GAP; }
+const roomWidths = rooms.map((room, index) => index === BOSS_ROOM_INDEX || index === SANCTUARY_ROOM_INDEX ? FINAL_ROOM_WIDTH : (room.width || ROOM_WIDTH));
+const roomHeights = rooms.map((room, index) => index === BOSS_ROOM_INDEX || index === SANCTUARY_ROOM_INDEX ? FINAL_ROOM_HEIGHT : (room.height || ROOM_HEIGHT));
+const roomOffsets = rooms.map((_, index) => rooms.slice(0, index).reduce((offset, __, roomIndex) => offset + roomWidths[roomIndex] + gapAfterRoom(roomIndex), 0));
 const WORLD_WIDTH = roomOffsets[roomOffsets.length - 1] + roomWidths[roomWidths.length - 1];
 const WORLD_HEIGHT = Math.max(...roomHeights);
 const worldMap = Array.from({ length: WORLD_HEIGHT }, () => Array(WORLD_WIDTH).fill('1'));
+const FOREST_HALL_START = roomOffsets[0] + roomWidths[0];
+const FOREST_HALL_END = roomOffsets[STARTING_ROOM_INDEX];
+const FOREST_HALL_CENTER_Y = ROOM_DOOR_Y + 1;
+const FOREST_HALL_GATE_HALF_WIDTH = 1.5;
+const FOREST_HALL_TRIGGER_X = FOREST_HALL_START + FOREST_HALL_GAP * .22;
+const FOREST_HALL_ROWS = [ROOM_DOOR_Y, ROOM_DOOR_Y + 1, ROOM_DOOR_Y + 2];
+const FINAL_ROOM_OFFSET = roomOffsets[FINAL_ROOM_INDEX];
+const BOSS_EXIT_POINT = { x: FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH - 3.2, y: 9 };
+const SANCTUARY_ROOM_OFFSET = roomOffsets[SANCTUARY_ROOM_INDEX];
+const SANCTUARY_RESUME_PEDESTAL = {
+  id: 'sanctuary-resume-pedestal',
+  roomIndex: SANCTUARY_ROOM_INDEX,
+  x: SANCTUARY_ROOM_OFFSET + 15,
+  y: 9,
+  z: .04,
+  title: 'LIAM HOSFELD / RÉSUMÉ',
+};
 
 function roomContentPoint(roomIndex, x, y) {
-  if (roomIndex === rooms.length - 1) return { x, y };
+  if (roomIndex === BOSS_ROOM_INDEX || roomIndex === SANCTUARY_ROOM_INDEX) return { x, y };
   return { x: x + ROOM_INSET_X, y: y + ROOM_INSET_Y };
 }
 
@@ -292,7 +352,7 @@ function expandedRoomMap(room, roomIndex) {
   const doorRows = [ROOM_DOOR_Y, ROOM_DOOR_Y + 1];
   const centerY = Math.floor(height / 2);
 
-  if (roomIndex !== rooms.length - 1) {
+  if (roomIndex !== BOSS_ROOM_INDEX && roomIndex !== SANCTUARY_ROOM_INDEX) {
     // Preserve each authored room while giving it a generous outer gallery and a
     // guaranteed two-cell east/west spine. The spine means no room can become a
     // dead-end simply because its showcase geometry blocks the exit.
@@ -305,6 +365,20 @@ function expandedRoomMap(room, roomIndex) {
     for (const y of [2, height - 3]) {
       for (let x = 8; x <= 12; x += 1) map[y][x] = '0';
       for (let x = width - 13; x <= width - 9; x += 1) map[y][x] = '0';
+    }
+    return map.map((row) => row.join(''));
+  }
+
+  if (roomIndex === SANCTUARY_ROOM_INDEX) {
+    // A wide, open room keeps the pedestal readable from the entrance. The
+    // celestial look comes from the renderer; this map only handles collision.
+    for (const y of [ROOM_DOOR_Y, ROOM_DOOR_Y + 1, centerY - 1, centerY]) {
+      for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
+    }
+    for (const x of [5, width - 6]) {
+      for (let y = 3; y < height - 3; y += 1) {
+        if (![ROOM_DOOR_Y - 1, ROOM_DOOR_Y, ROOM_DOOR_Y + 1, ROOM_DOOR_Y + 2, centerY - 1, centerY].includes(y)) map[y][x] = '1';
+      }
     }
     return map.map((row) => row.join(''));
   }
@@ -334,7 +408,7 @@ function expandedRoomMap(room, roomIndex) {
   return map.map((row) => row.join(''));
 }
 
-/* Copy each chamber into one world grid, then cut two-cell-wide doors through the corridors. */
+/* Copy each chamber into one world grid, then cut doors through the connected level corridors. */
 for (let roomIndex = 0; roomIndex < rooms.length; roomIndex += 1) {
   const room = rooms[roomIndex];
   const offset = roomOffsets[roomIndex];
@@ -344,36 +418,79 @@ for (let roomIndex = 0; roomIndex < rooms.length; roomIndex += 1) {
   }
 }
 for (let roomIndex = 0; roomIndex < rooms.length - 1; roomIndex += 1) {
+  if (roomIndex === BOSS_ROOM_INDEX) continue;
   const corridorStart = roomOffsets[roomIndex] + roomWidths[roomIndex];
-  const doorRows = [ROOM_DOOR_Y, ROOM_DOOR_Y + 1];
-  for (const y of doorRows) {
+  const corridorGap = gapAfterRoom(roomIndex);
+  const corridorRows = roomIndex === 0 ? FOREST_HALL_ROWS : [ROOM_DOOR_Y, ROOM_DOOR_Y + 1];
+  for (const y of corridorRows) {
     worldMap[y][roomOffsets[roomIndex] + roomWidths[roomIndex] - 1] = '0';
-    for (let x = corridorStart; x < corridorStart + ROOM_GAP; x += 1) worldMap[y][x] = '0';
+    for (let x = corridorStart; x < corridorStart + corridorGap; x += 1) worldMap[y][x] = '0';
     worldMap[y][roomOffsets[roomIndex + 1]] = '0';
   }
 }
-// The first chamber doubles as a physical field lobby. The Wayfarer handles
-// weapon selection, while one authored scroll carries the complete portfolio.
-// Put the tutorial scroll on the approach lane immediately before the gate,
-// rather than beside the starting spawn. The opening row is y = ROOM_DOOR_Y + 1.
+// Seal the forest side of the threshold chamber. This is a permanent world wall,
+// not a room-state check, so the player cannot walk back into the forest after
+// waking in the dungeon.
+const FOREST_EXIT_WALL_X = FOREST_HALL_END;
+for (const y of FOREST_HALL_ROWS) worldMap[y][FOREST_EXIT_WALL_X] = '1';
+
+// The first chamber doubles as a physical field lobby. The three weapons
+// flank the central path. Press E while standing at a pedestal to equip the
+// displayed weapon.
+// Each pedestal has an authored yaw, so its geometry remains fixed in world
+// space and never faces the player.
 lobbyPortfolioScroll.x = roomOffsets[0] + roomWidths[0] + .34 - 2.15;
 lobbyPortfolioScroll.y = ROOM_DOOR_Y + 1;
 lobbyPortfolioScroll.z = .7;
 lobbyPortfolioScroll.recovered = false;
-
-// The Wayfarer now lives in the safe first room. Approach him and press E;
-// W, A, S, and D are the weapon choices while his conversation is open.
-const traders = [{
-  id: 'wayfarer-lobby',
-  roomIndex: 0,
-  x: roomOffsets[0] + 10.5,
-  y: 3.7,
-  name: 'THE WAYFARER',
-  greeting: 'Welcome, traveler. The road is long — take the tool that fits your hand.',
-}];
+const LOBBY_WEAPON_PATH_Y = ROOM_DOOR_Y + 1;
+const LOBBY_WEAPON_SIDE_OFFSET = 1.35;
+const LOBBY_WEAPON_CREATURES = [
+  // Displays sit well outside the stone path while remaining within reach.
+  { id: 'creature-ninja-star', type: 'stars', name: 'NINJA STARS', x: roomOffsets[0] + 9.4, y: LOBBY_WEAPON_PATH_Y - LOBBY_WEAPON_SIDE_OFFSET, yaw: 0 },
+  { id: 'creature-crossbow', type: 'crossbow', name: 'CROSSBOW', x: roomOffsets[0] + 13.0, y: LOBBY_WEAPON_PATH_Y + LOBBY_WEAPON_SIDE_OFFSET, yaw: 0 },
+  { id: 'creature-ember-wand', type: 'wand', name: 'EMBER WAND', x: roomOffsets[0] + 16.6, y: LOBBY_WEAPON_PATH_Y - LOBBY_WEAPON_SIDE_OFFSET, yaw: 0 },
+];
 // The gate belongs on the two-cell-wide east corridor mouth, not in the room's
 // visual center. Its center is the midpoint of the actual opening rows.
 LOBBY_GATE = { id: 'archive-gate', x: roomOffsets[0] + roomWidths[0] + .34, y: ROOM_DOOR_Y + 1, z: 1.12, yaw: 0 };
+const LOBBY_TREES = [
+  { id: 'lobby-tree-northwest', roomIndex: 0, x: roomOffsets[0] + 5.2, y: 4.0, scale: .86, yaw: .12 },
+  { id: 'lobby-tree-north', roomIndex: 0, x: roomOffsets[0] + 7.8, y: 3.95, scale: .72, yaw: -.18 },
+  { id: 'lobby-tree-northeast', roomIndex: 0, x: roomOffsets[0] + 14.6, y: 4.0, scale: .9, yaw: .22 },
+  { id: 'lobby-tree-far-east', roomIndex: 0, x: roomOffsets[0] + 15.7, y: 5.45, scale: .76, yaw: -.14 },
+  { id: 'lobby-tree-west', roomIndex: 0, x: roomOffsets[0] + 5.0, y: 6.15, scale: 1.05, yaw: .16 },
+  { id: 'lobby-tree-southwest', roomIndex: 0, x: roomOffsets[0] + 6.2, y: 7.85, scale: .92, yaw: -.2 },
+  { id: 'lobby-tree-south', roomIndex: 0, x: roomOffsets[0] + 9.0, y: 7.8, scale: .8, yaw: .1 },
+  { id: 'lobby-tree-southeast', roomIndex: 0, x: roomOffsets[0] + 13.4, y: 7.85, scale: .96, yaw: -.16 },
+  { id: 'lobby-tree-east', roomIndex: 0, x: roomOffsets[0] + 15.8, y: 7.1, scale: .82, yaw: -.12 },
+];
+const FOREST_HALL_TREES = [];
+const FOREST_HALL_TREE_COUNT = Math.floor((FOREST_HALL_GAP - 2.4) / FOREST_HALL_TREE_SPACING);
+for (let index = 0; index < FOREST_HALL_TREE_COUNT; index += 1) {
+  const x = FOREST_HALL_START + 1.2 + index * FOREST_HALL_TREE_SPACING;
+  const scale = .7 + (index % 5) * .075;
+  const leftY = FOREST_HALL_CENTER_Y - .84 - (index % 2) * .07;
+  const rightY = FOREST_HALL_CENTER_Y + .84 + (index % 2) * .07;
+  FOREST_HALL_TREES.push(
+    { id: `forest-hall-left-${index}`, roomIndex: 0, x, y: leftY, scale, yaw: .12 + (index % 4) * .17 },
+    { id: `forest-hall-right-${index}`, roomIndex: 0, x: x + .3, y: rightY, scale: scale * (index % 3 ? .94 : 1.08), yaw: -.14 - (index % 5) * .12 },
+  );
+}
+
+const SANCTUARY_TREES = [
+  { id: 'final-tree-northwest', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 2.8, y: 2.25, scale: .9, yaw: .18 },
+  { id: 'final-tree-north', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 8.2, y: 2.0, scale: .78, yaw: -.16 },
+  { id: 'final-tree-north-center', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 15.2, y: 2.15, scale: .88, yaw: .11 },
+  { id: 'final-tree-northeast', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 22.8, y: 2.3, scale: .82, yaw: -.2 },
+  { id: 'final-tree-east', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 27.1, y: 6.4, scale: .94, yaw: .14 },
+  { id: 'final-tree-east-lower', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 27.0, y: 10.6, scale: .82, yaw: -.12 },
+  { id: 'final-tree-southeast', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 23.8, y: 15.4, scale: .96, yaw: .2 },
+  { id: 'final-tree-south-center', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 16.1, y: 15.35, scale: .8, yaw: -.1 },
+  { id: 'final-tree-southwest', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 10.2, y: 15.7, scale: .9, yaw: .16 },
+  { id: 'final-tree-west-lower', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 2.8, y: 10.6, scale: .84, yaw: -.18 },
+  { id: 'final-tree-west', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 2.7, y: 6.4, scale: .78, yaw: .12 },
+];
 
 const GATE_TUTORIAL_SPELL = {
   id: 'archive-key',
@@ -469,6 +586,44 @@ for (let index = worldEnemies.length; index < recordDropTemplates.length; index 
     dropTemplates: [],
   });
 }
+function isClearForSpawn(x, y, radius = .26) {
+  return !isWall(x - radius, y - radius) && !isWall(x + radius, y - radius) && !isWall(x - radius, y + radius) && !isWall(x + radius, y + radius);
+}
+function findWalkableSpawnPoint(x, y, roomIndex, occupied = []) {
+  const startX = roomOffsets[roomIndex];
+  const width = roomWidths[roomIndex];
+  const height = roomHeights[roomIndex];
+  const minX = startX + 1.3;
+  const maxX = startX + width - 1.3;
+  const minY = 1.3;
+  const maxY = height - 1.3;
+  const valid = (candidate) => isClearForSpawn(candidate.x, candidate.y) && occupied.every((point) => Math.hypot(candidate.x - point.x, candidate.y - point.y) >= .72);
+  const original = { x: clamp(x, minX, maxX), y: clamp(y, minY, maxY) };
+  if (valid(original)) return original;
+  for (let ring = 1; ring <= 24; ring += 1) {
+    const radius = ring * .25;
+    for (let segment = 0; segment < 16; segment += 1) {
+      const angle = segment * Math.PI * 2 / 16;
+      const candidate = { x: clamp(x + Math.cos(angle) * radius, minX, maxX), y: clamp(y + Math.sin(angle) * radius, minY, maxY) };
+      if (valid(candidate)) return candidate;
+    }
+  }
+  for (let gridY = minY; gridY <= maxY; gridY += .5) {
+    for (let gridX = minX; gridX <= maxX; gridX += .5) {
+      const candidate = { x: gridX, y: gridY };
+      if (valid(candidate)) return candidate;
+    }
+  }
+  return original;
+}
+const occupiedMonsterSpawns = [];
+for (const enemy of worldEnemies) {
+  const safePoint = findWalkableSpawnPoint(enemy.x, enemy.y, enemy.roomIndex, occupiedMonsterSpawns);
+  enemy.x = safePoint.x;
+  enemy.y = safePoint.y;
+  occupiedMonsterSpawns.push(safePoint);
+}
+
 /* Enriched archive text from the current portfolio site. Each record keeps the
    game-readable summary, then adds context, ownership, methods, and outcomes. */
 const scrollEnrichment = {
@@ -600,12 +755,16 @@ for (const item of recordDropTemplates) {
 }
 
 worldEnemies.forEach((enemy) => { enemy.dropTemplates = []; });
-recordDropTemplates.forEach((template, index) => {
-  if (worldEnemies[index]) worldEnemies[index].dropTemplates.push(template);
-});
+const recordOwnerIndexByRoom = new Map();
+for (const template of recordDropTemplates) {
+  if (template.roomIndex === 0) continue;
+  const owners = worldEnemies.filter((enemy) => enemy.roomIndex === template.roomIndex);
+  if (!owners.length) continue;
+  const ownerIndex = recordOwnerIndexByRoom.get(template.roomIndex) || 0;
+  owners[ownerIndex % owners.length].dropTemplates.push(template);
+  recordOwnerIndexByRoom.set(template.roomIndex, ownerIndex + 1);
+}
 const initialEnemyData = worldEnemies.map((enemy) => ({ ...enemy, dropTemplates: [...enemy.dropTemplates] }));
-const FINAL_ROOM_INDEX = rooms.length - 1;
-const FINAL_ROOM_OFFSET = roomOffsets[FINAL_ROOM_INDEX];
 const BOSS_MAX_HP = 720;
 const BOSS_PHASES = [
   { name: 'PHASE I · THE BRIEF', threshold: 1, color: '#d99762' },
@@ -652,14 +811,18 @@ const MOON_AZIMUTH = .35;
 const MOON_ELEVATION = .34;
 const MAX_DEPTH = 36;
 const BOSS_RENDER_DEPTH = 70;
-const RAY_COUNT = 224;
-const FLOOR_STEP = 10;
-const RENDER_INTERVAL = 1000 / 50;
+const RAY_COUNT = 160;
+const FLOOR_STEP = 6;
+const RENDER_INTERVAL = 1000 / 36;
+const MAX_PARTICLES = 260;
+const MAX_REDUCED_PARTICLES = 130;
+const MAX_PARTICLE_DRAW = 180;
+const MAX_REDUCED_PARTICLE_DRAW = 90;
 const STAMINA_MAX = 100;
 const COMBO_WINDOW = 1.15;
 const DODGE_COST = 24;
-const DODGE_DURATION = .52;
-const DODGE_SPEED = 5.25;
+const DODGE_DURATION = .68;
+const DODGE_SPEED = 10.8;
 const ENEMY_STOP_DISTANCE = 2.18;
 const ENEMY_ATTACK_DISTANCE = 2.34;
 const MOVE_SPEED = 2.2;
@@ -672,7 +835,7 @@ const TAU = Math.PI * 2;
 const spriteCache = new Map();
 const textures = {};
 const WEAPON_LOADOUTS = {
-  spear: { label: 'Spear', description: 'A deliberate melee reach weapon: wind up, drive through the target, and shove space open with a heavy recovery.', range: 4.7, damage: 34, staminaCost: 16, comboMultipliers: [1, 1.16, 1.42], aim: .2, pitch: .2, hitAt: .48, knockback: .28, duration: .72, cooldown: .2, impactColor: '#d8c18b' },
+  stars: { label: 'Ninja Stars', description: 'A quick ranged throw: send a spinning star down the lane, chain the combo, and keep moving before the next throw.', range: 9.2, damage: 34, staminaCost: 12, comboMultipliers: [1, 1.12, 1.3], aim: .15, pitch: .2, hitAt: .48, knockback: .08, duration: .62, cooldown: .28, impactColor: '#d8c18b', projectileType: 'ninja-star' },
   crossbow: { label: 'Crossbow', description: 'A patient precision tool: draw, release a fast bolt, then accept the longer reload before the next shot.', range: 8.5, damage: 48, staminaCost: 11, comboMultipliers: [1, 1.08, 1.2], aim: .12, pitch: .14, hitAt: .62, knockback: .06, duration: 1.02, cooldown: .42, impactColor: '#f0d38d' },
   wand: { label: 'Ember Wand', description: 'An arcane area weapon: slower cast, long reach, color-matched fireballs, and splash damage around the impact.', range: 10.5, damage: 44, staminaCost: 14, comboMultipliers: [1, 1.1, 1.28], aim: .2, pitch: .26, hitAt: .56, knockback: .07, duration: .86, cooldown: .44, impactColor: '#db8872', projectileType: 'wand-fireball' },
 };
@@ -688,13 +851,14 @@ const ENEMY_PROFILES = {
   seer: { scale: .5, height: 1.28, aimHeight: .94, speedMultiplier: .72, attackRate: .78, attackDistance: 10.5, preferredDistance: 6.8, attackStyle: 'ranged', opacity: .96, color: '#78b6d0', attackColor: '#78d9e8' },
   quake: { scale: .64, height: 1.18, aimHeight: .7, speedMultiplier: .62, attackRate: .86, attackDistance: 4.1, preferredDistance: 3.1, attackStyle: 'ground', opacity: 1, color: '#cf8b5e', attackColor: '#d76b49' },
   warden: { scale: .62, height: 1.34, aimHeight: 1.03, speedMultiplier: .68, attackRate: .82, attackDistance: 2.48, opacity: 1, color: '#b47469' },
+  cockroach: { scale: .42, height: .56, aimHeight: .3, speedMultiplier: .92, attackRate: .88, attackDistance: 2.02, opacity: 1, color: '#80634a' },
   archon: { scale: 1.08, height: 2.85, aimHeight: 1.92, speedMultiplier: .42, attackRate: .78, attackDistance: 2.7, opacity: 1, color: '#d7c79b' },
 };
 const EMPTY_ENEMY_PROFILE = { scale: .46, height: .98, aimHeight: .78, speedMultiplier: 1, attackRate: 1, attackDistance: ENEMY_ATTACK_DISTANCE, opacity: 0, color: '#000000' };
 function enemyProfile(enemy) { return ENEMY_PROFILES[enemy?.kind] || EMPTY_ENEMY_PROFILE; }
 
-const MAX_RENDER_WIDTH = 960;
-const MAX_RENDER_HEIGHT = 540;
+const MAX_RENDER_WIDTH = 1280;
+const MAX_RENDER_HEIGHT = 720;
 
 const state = {
   room: 0,
@@ -722,6 +886,7 @@ const state = {
   lobbyGateOpening: false,
   groundHazards: [],
   recoveredItems: new Set(),
+  collectedRecordIds: new Set(),
   lastTime: 0,
   dragging: false,
   pointerMoved: false,
@@ -733,7 +898,7 @@ const state = {
   pointerLocked: false,
   zBuffer: new Float32Array(RAY_COUNT),
   floorBase: new Float32Array(RAY_COUNT),
-  weapon: { type: 'spear', equipped: false, swing: 0, hit: false, cooldown: 0, bobPhase: 0, moving: false, projectile: 0, attackDamage: 0, comboStep: 0, attackHitAt: 0 },
+  weapon: { type: 'stars', equipped: false, swing: 0, hit: false, cooldown: 0, bobPhase: 0, moving: false, projectile: 0, attackDamage: 0, comboStep: 0, attackHitAt: 0 },
   xp: 0,
   level: 0,
   unlockedSpells: new Set(),
@@ -748,24 +913,26 @@ const state = {
   particles: [],
   damageNumbers: [],
   ambientParticleTimer: 0,
+  spellFocusParticleTimer: 0,
   footstepTimer: 0,
-  spellSlotsSignature: '',
   revealTimer: 0,
   wardTimer: 0,
   enemySlowTimer: 0,
   doorOfLight: null,
+  resumeDownloaded: false,
+  sanctuaryActive: false,
   gameComplete: false,
   endingFade: -1,
   finalArenaTime: 0,
   transition: null,
+  forestTransition: null,
   launchTransition: null,
   finalBoss: createFinalBoss(),
   damageFlash: 0,
   shakeTime: 0,
   reading: null,
   readingElapsed: 0,
-  trader: null,
-  availableWeapons: new Set(),
+  deathScreen: null,
   readingWorldTime: 0,
   now: 0,
   lastAttackInput: 0,
@@ -774,10 +941,30 @@ const state = {
   promptTimer: 0,
   promptSignature: '',
   lastRenderAt: 0,
-  menuActive: true,
+  lastCombatHudAt: -Infinity,
+  menuActive: false,
   visitedFloors: new Set(),
   floorAnnouncement: null,
+  aimTarget: null,
+  lastAimTargetAt: -Infinity,
+  lastAimTargetRoom: -1,
+  frameAverageMs: 0,
+  slowFrameStreak: 0,
+  stableFrameStreak: 0,
+  renderQuality: 1,
+  runtimeErrorCount: 0,
+  lastRuntimeError: '',
 };
+
+window.getPortfolioGameDiagnostics = () => ({
+  frameAverageMs: Number(state.frameAverageMs.toFixed(2)),
+  renderQuality: Number(state.renderQuality.toFixed(2)),
+  particles: state.particles.length,
+  projectiles: state.projectiles.length,
+  activeSpellEffects: state.activeSpellEffects.length,
+  runtimeErrorCount: state.runtimeErrorCount,
+  lastRuntimeError: state.lastRuntimeError,
+});
 
 const MEDIEVAL_COLORS = {
   '#6ce0c2': '#b18752', '#e7ad67': '#d5a150', '#c58de6': '#76566d', '#77a9e8': '#5d7582',
@@ -793,7 +980,16 @@ function fract(value) { return value - Math.floor(value); }
 function smoothstep(edge0, edge1, value) { const t = clamp((value - edge0) / (edge1 - edge0), 0, 1); return t * t * (3 - 2 * t); }
 function easeOutCubic(value) { return 1 - Math.pow(1 - clamp(value, 0, 1), 3); }
 function normalizeAngle(angle) { while (angle < -Math.PI) angle += TAU; while (angle > Math.PI) angle -= TAU; return angle; }
-function hexToRgb(hex) { const themed = MEDIEVAL_COLORS[String(hex).toLowerCase()] || hex; const value = Number.parseInt(themed.replace('#', ''), 16); return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 }; }
+const rgbCache = new Map();
+function hexToRgb(hex) {
+  const key = String(hex).toLowerCase();
+  if (rgbCache.has(key)) return rgbCache.get(key);
+  const themed = MEDIEVAL_COLORS[key] || hex;
+  const value = Number.parseInt(String(themed).replace('#', ''), 16);
+  const rgb = { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+  rgbCache.set(key, rgb);
+  return rgb;
+}
 function rgba(color, alpha = 1) { return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`; }
 function litColor(color, light) { const factor = clamp(.25 + light * .75, .12, 1.18); return { r: clamp(color.r * factor, 0, 255), g: clamp(color.g * factor, 0, 255), b: clamp(color.b * factor, 0, 255) }; }
 function currentRoomIndex() { return roomIndexAtX(state.player.x); }
@@ -801,7 +997,7 @@ function roomIndexAtX(x) {
   for (let index = 0; index < rooms.length; index += 1) {
     const start = roomOffsets[index];
     if (x >= start && x < start + roomWidths[index]) return index;
-    if (index < rooms.length - 1 && x >= start + roomWidths[index] && x < roomOffsets[index + 1]) return x < start + roomWidths[index] + ROOM_GAP / 2 ? index : index + 1;
+    if (index < rooms.length - 1 && x >= start + roomWidths[index] && x < roomOffsets[index + 1]) return x < start + roomWidths[index] + gapAfterRoom(index) / 2 ? index : index + 1;
   }
   return x < roomOffsets[0] ? 0 : rooms.length - 1;
 }
@@ -814,7 +1010,6 @@ function materialRoomAtX(x) {
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 }
-function populateMenuData() { /* Portfolio menu is authored in index.html. */ }
 
 /* Deterministic value noise drives the wood, wall stone, and floor stone formulas. */
 function hash2(x, y, seed = 0) { const value = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453123; return value - Math.floor(value); }
@@ -881,7 +1076,7 @@ function createLeatherTexture(size, seed) {
   texture.getContext('2d').putImageData(image, 0, 0); return texture;
 }
 
-const GROUND_CACHE_SCALE = 4;
+const GROUND_CACHE_SCALE = 8;
 const GROUND_CACHE_WIDTH = WORLD_WIDTH * GROUND_CACHE_SCALE;
 const GROUND_CACHE_HEIGHT = WORLD_HEIGHT * GROUND_CACHE_SCALE;
 const groundCache = new Array(GROUND_CACHE_WIDTH * GROUND_CACHE_HEIGHT);
@@ -894,6 +1089,19 @@ function computeGroundColor(x, y) {
   const n = valueNoise(x * .82, y * .82, seed) * .58
     + valueNoise(x * 1.7, y * 1.7, seed + 23) * .27
     + valueNoise(x * 3.5, y * 3.5, seed + 47) * .15;
+
+  if (roomIndex === SANCTUARY_ROOM_INDEX) {
+    const tileX = fract(x * .78);
+    const tileY = fract(y * .78);
+    const edge = Math.min(tileX, 1 - tileX, tileY, 1 - tileY);
+    const grout = 1 - smoothstep(.018, .08, edge);
+    const shimmer = valueNoise(x * .42, y * .42, seed + 83);
+    return {
+      r: 178 + shimmer * 42 - grout * 28,
+      g: 222 + shimmer * 28 - grout * 22,
+      b: 214 + shimmer * 35 - grout * 17,
+    };
+  }
 
   if (roomIndex === 0 && room.material !== 'wood') {
     const localX = fract(x * .92);
@@ -967,9 +1175,16 @@ function sampleGround(x, y) {
 }
 
 function isWall(x, y) { const cellX = Math.floor(x); const cellY = Math.floor(y); if (cellY < 0 || cellY >= WORLD_HEIGHT || cellX < 0 || cellX >= WORLD_WIDTH) return true; return worldMap[cellY][cellX] === '1'; }
+function lobbyGateBlocksPath(x, y) {
+  if (state.lobbyGateOpen || !LOBBY_GATE || state.room !== 0) return false;
+  const gateDepth = x > LOBBY_GATE.x - .72 && x < LOBBY_GATE.x + .7;
+  const gateWidth = Math.abs(y - LOBBY_GATE.y) < FOREST_HALL_GATE_HALF_WIDTH + .08;
+  return gateDepth && gateWidth;
+}
 function canStand(x, y) {
   const radius = .17;
-  if (!state.lobbyGateOpen && LOBBY_GATE && state.room === 0 && x > LOBBY_GATE.x - .62 && Math.abs(y - LOBBY_GATE.y) < 1.05) return false;
+  if (lobbyGateBlocksPath(x, y)) return false;
+  if (lobbyGateBlocksPath(x - radius, y - radius) || lobbyGateBlocksPath(x + radius, y - radius) || lobbyGateBlocksPath(x - radius, y + radius) || lobbyGateBlocksPath(x + radius, y + radius)) return false;
   return !isWall(x - radius, y - radius) && !isWall(x + radius, y - radius) && !isWall(x - radius, y + radius) && !isWall(x + radius, y + radius);
 }
 function hasLineOfSight(ax, ay, bx, by) { const distance = Math.hypot(bx - ax, by - ay); const steps = Math.ceil(distance / .12); for (let i = 1; i < steps; i += 1) { const t = i / steps; if (isWall(lerp(ax, bx, t), lerp(ay, by, t))) return false; } return true; }
@@ -991,9 +1206,9 @@ function distanceToAimLine(hostile, direction) {
 function resizeCanvas() {
   const cssWidth = Math.max(1, canvas.clientWidth);
   const cssHeight = Math.max(1, canvas.clientHeight);
-  const ratio = Math.min(window.devicePixelRatio || 1, 1.15);
+  const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
   const aspect = cssWidth / cssHeight;
-  let width = Math.max(320, Math.floor(cssWidth * ratio * .68));
+  let width = Math.max(320, Math.floor(cssWidth * ratio));
   width = Math.min(width, MAX_RENDER_WIDTH);
   let height = Math.round(width / aspect);
   if (height > MAX_RENDER_HEIGHT) { height = MAX_RENDER_HEIGHT; width = Math.round(height * aspect); }
@@ -1014,95 +1229,88 @@ function emitAmbientParticles(delta) {
 }
 
 function updateCombatHud() {
+  const hudNow = state.now || performance.now();
+  if (hudNow - state.lastCombatHudAt < 0.05) return;
+  state.lastCombatHudAt = hudNow;
   const definition = weaponDefinition();
   const spell = selectedSpellDefinition();
   const weaponBusy = state.weapon.equipped && state.weapon.swing > 0;
   const weaponCooling = state.weapon.equipped && state.weapon.cooldown > 0;
-  const weaponPhase = !state.weapon.equipped ? 'SPEAK WITH WAYFARER' : weaponBusy ? (state.weapon.type === 'spear' ? 'THRUSTING' : state.weapon.type === 'crossbow' ? 'LOADING' : 'CASTING') : weaponCooling ? 'RECOVERING' : 'READY';
+  const weaponPhase = !state.weapon.equipped ? 'NO WEAPON' : weaponBusy ? (state.weapon.type === 'stars' ? 'THROWING' : state.weapon.type === 'crossbow' ? 'LOADING' : 'CASTING') : weaponCooling ? 'RECOVERING' : 'READY';
   const weaponTimer = weaponBusy ? state.weapon.swing : state.weapon.cooldown;
   const weaponTotal = weaponBusy ? definition.duration : Math.max(definition.cooldown || .01, .01);
   const weaponProgress = clamp(1 - weaponTimer / weaponTotal, 0, 1);
-  if (weaponHudLabel) weaponHudLabel.textContent = state.weapon.equipped ? `${definition.label.toUpperCase()} · ${state.weapon.type === 'spear' ? 'MELEE' : state.weapon.type === 'crossbow' ? 'PRECISION' : 'ARCANE'}` : 'UNARMED · FIELD LOBBY';
+  if (weaponHudLabel) weaponHudLabel.textContent = state.weapon.equipped ? `${definition.label.toUpperCase()} · ${state.weapon.type === 'stars' ? 'RANGED' : state.weapon.type === 'crossbow' ? 'PRECISION' : 'ARCANE'}` : 'NO WEAPON';
   if (weaponStatus) weaponStatus.textContent = weaponPhase;
-  if (spellHudLabel) spellHudLabel.textContent = spell ? `SPELLBOOK · ${spell.name.toUpperCase()}` : 'SPELLBOOK · NONE LEARNED';
-  if (spellStatus) spellStatus.textContent = spell ? (state.spellCooldown > 0 ? `${state.spellCooldown.toFixed(1)}s · Q` : 'READY · Q') : 'READ FIELD RECORDS TO LEARN';
-  if (staminaValue) staminaValue.textContent = `${Math.ceil(state.stamina)} / ${state.maxStamina}`;
-  if (staminaBar) staminaBar.style.width = `${clamp(state.stamina / state.maxStamina * 100, 0, 100)}%`;
-  if (spellSlots) {
-    const learned = learnedSpellDefinitions();
-    const slotSignature = `${learned.map((entry) => entry.id).join('|')}::${state.selectedSpellId || ''}`;
-    if (slotSignature !== state.spellSlotsSignature) {
-      state.spellSlotsSignature = slotSignature;
-      spellSlots.replaceChildren();
-      if (!learned.length) {
-        const empty = document.createElement('span');
-        empty.className = 'spell-slot-empty';
-        empty.textContent = 'RECOVER FIELD RECORDS TO LEARN SPELLS';
-        spellSlots.append(empty);
-      } else {
-        learned.forEach((entry, index) => {
-          const slot = document.createElement('button');
-          slot.type = 'button';
-          slot.className = `spell-slot${entry.id === state.selectedSpellId ? ' selected' : ''}`;
-          slot.style.setProperty('--spell-color', entry.color);
-          slot.setAttribute('aria-label', `Select ${entry.name}`);
-          slot.setAttribute('aria-pressed', String(entry.id === state.selectedSpellId));
-          slot.innerHTML = `<b>${index + 1}</b><span>${entry.glyph}</span>`;
-          slot.addEventListener('click', () => selectSpell(entry.id));
-          spellSlots.append(slot);
-        });
-      }
-    }
+  const staminaPercent = clamp(state.stamina / state.maxStamina * 100, 0, 100);
+  const staminaNow = Math.ceil(state.stamina);
+  if (staminaValue) staminaValue.textContent = `${staminaNow} / ${state.maxStamina}`;
+  if (staminaBar) staminaBar.style.width = `${staminaPercent}%`;
+  staminaBar?.parentElement?.setAttribute('aria-valuenow', String(staminaNow));
+  const aimNow = state.now || performance.now();
+  const aimActive = !state.menuActive && !state.reading && !state.transition && !state.forestTransition && !state.launchTransition;
+  if (!aimActive) state.aimTarget = null;
+  else if (aimNow - state.lastAimTargetAt > 100 || state.lastAimTargetRoom !== state.room) {
+    state.lastAimTargetAt = aimNow;
+    state.lastAimTargetRoom = state.room;
+    state.aimTarget = findAimTarget();
   }
-  const target = !state.menuActive && !state.reading && !state.transition && !state.launchTransition ? findAimTarget() : null;
-  aimReticle?.classList.toggle('has-target', Boolean(target));
+  aimReticle?.classList.toggle('has-target', Boolean(state.aimTarget));
   aimReticle?.classList.toggle('has-spell', Boolean(spell));
 }
 
 function updateHud() {
   const active = worldEnemies.filter((enemy) => enemy.roomIndex !== 0 && enemy.roomIndex === state.room && !enemy.dead).length;
   const bossActive = state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead;
-  const recovered = worldItems.reduce((count, item) => count + (item.recovered ? 1 : 0), 0);
+  const recovered = worldItems.reduce((count, item) => count + (item.recovered && item.kind !== 'health-potion' ? 1 : 0), 0);
   const xpSignature = `${state.xp}|${state.level}|${[...state.unlockedSpells].join(',')}|${state.selectedSpellId || ''}`;
   const bossSignature = bossActive ? `${state.finalBoss.hp}|${state.finalBoss.phase}|${state.finalBoss.shield}` : 'none';
-  lobbyDock?.classList.toggle('is-active', !state.menuActive && state.room === 0 && !state.reading && !state.transition && !state.launchTransition);
   const signature = `${state.room}|${active}|${recovered}|${ITEM_TOTAL}|${Math.ceil(state.player.hp)}|${xpSignature}|${bossSignature}|${state.doorOfLight?.active ? 1 : 0}`;
   if (signature !== state.hudSignature) {
     state.hudSignature = signature;
     const room = rooms[state.room];
     const threatCount = active + (bossActive ? 1 : 0);
-    roomFloor.textContent = room.floor;
+    roomFloor.textContent = room.level;
     roomCount.textContent = `${String(state.room + 1).padStart(2, '0')} / ${String(rooms.length).padStart(2, '0')}`;
-    hpValue.textContent = `${Math.ceil(state.player.hp)} / 100`;
-    hpBar.style.width = `${clamp(state.player.hp, 0, 100)}%`;
+    const hpNow = Math.ceil(state.player.hp);
+    const hpPercent = clamp(state.player.hp, 0, 100);
+    hpValue.textContent = `${hpNow} / 100`;
+    hpBar.style.width = `${hpPercent}%`;
+    hpBar.parentElement?.setAttribute('aria-valuenow', String(hpNow));
     if (experienceValue) experienceValue.textContent = `LVL ${state.level} · ${state.xp} XP`;
-    if (minimapFloor) minimapFloor.textContent = `LEVEL ${String(state.room + 1).padStart(2, '0')} / ${String(rooms.length).padStart(2, '0')}`;
-    if (minimapRoom) minimapRoom.textContent = 'PLAYER POSITION';
     if (objectiveLabel && objectiveDetail) {
-      if (bossActive) {
+      if (state.room === SANCTUARY_ROOM_INDEX) {
+        objectiveLabel.textContent = state.resumeDownloaded ? 'RÉSUMÉ SECURED' : 'CLAIM THE RÉSUMÉ';
+        objectiveDetail.textContent = state.resumeDownloaded ? 'The PDF is downloading. The sanctuary is yours.' : 'Approach the illuminated pedestal. The résumé downloads automatically.';
+      } else if (bossActive) {
         objectiveLabel.textContent = `DEFEAT THE OPERATIONS ARCHON · PHASE ${state.finalBoss.phase}`;
         objectiveDetail.textContent = state.finalBoss.shield > 0 ? 'Break the active lattice shield, then keep pressure on the core.' : 'Read the attack rhythm and make the next delivery count.';
       } else if (state.doorOfLight?.active) {
         objectiveLabel.textContent = 'ENTER THE DOOR OF LIGHT';
-        objectiveDetail.textContent = 'The encounter is complete. Reach the lightwell and press E to return.';
+        objectiveDetail.textContent = 'The ascension gate is now active. Walk into its light to enter the celestial sanctuary.';
       } else {
         objectiveLabel.textContent = 'RECOVER FIELD RECORDS';
         objectiveDetail.textContent = recovered >= ITEM_TOTAL ? 'All records recovered. Continue toward the lightwell.' : room.subtitle;
       }
     }
-    if (bossPlaque) bossPlaque.hidden = !bossActive;
+    if (bossPlaque) bossPlaque.hidden = true;
+    if (bossBottomHud) bossBottomHud.hidden = !bossActive;
     if (bossActive) {
+      const phaseLabel = `${BOSS_PHASES[state.finalBoss.phase - 1].name}${state.finalBoss.shield > 0 ? ' · SHIELD ACTIVE' : ''}`;
+      const healthPercent = `${clamp(state.finalBoss.hp / state.finalBoss.maxHp * 100, 0, 100)}%`;
       if (bossName) bossName.textContent = state.finalBoss.name;
-      if (bossHealthBar) bossHealthBar.style.width = `${clamp(state.finalBoss.hp / state.finalBoss.maxHp * 100, 0, 100)}%`;
-      if (bossPhase) bossPhase.textContent = `${BOSS_PHASES[state.finalBoss.phase - 1].name}${state.finalBoss.shield > 0 ? ' · SHIELD ACTIVE' : ''}`;
-    } else if (state.doorOfLight?.active && bossPhase) {
-      if (bossName) bossName.textContent = 'THE WAY IS OPEN';
+      if (bossHealthBar) bossHealthBar.style.width = healthPercent;
+      if (bossPhase) bossPhase.textContent = phaseLabel;
+      if (bossBottomName) bossBottomName.textContent = state.finalBoss.name;
+      if (bossBottomHealth) bossBottomHealth.style.width = healthPercent;
+      if (bossBottomPhase) bossBottomPhase.textContent = phaseLabel;
+    } else {
+      if (bossBottomHud) bossBottomHud.hidden = true;
       if (bossHealthBar) bossHealthBar.style.width = '0%';
-      bossPhase.textContent = 'DOOR OF LIGHT · PRESS E TO RETURN';
+      if (bossBottomHealth) bossBottomHealth.style.width = '0%';
     }
   }
   updateCombatHud();
-  drawMinimap();
 }
 let toastTimeout = 0;
 function showToast(text, tone = '') { clearTimeout(toastTimeout); toast.textContent = text; toast.hidden = false; toast.className = `toast visible${tone ? ` ${tone}` : ''}`; toastTimeout = window.setTimeout(() => { toast.classList.remove('visible'); window.setTimeout(() => { toast.hidden = true; }, 220); }, 2500); }
@@ -1145,14 +1353,17 @@ function spawnScrollDropEffect(x, y, color) {
 }
 function spawnParticles(x, y, z, color = '#e7ad67', count = 8, options = {}) {
   if (settings.reducedMotion) count = Math.ceil(count * .32);
-  const maxParticles = settings.reducedMotion ? 220 : 520;
-  if (state.particles.length > maxParticles) state.particles.splice(0, state.particles.length - maxParticles);
+  const maxParticles = settings.reducedMotion ? MAX_REDUCED_PARTICLES : MAX_PARTICLES;
+  const requestedCount = Math.max(0, Math.floor(count));
+  const overflow = state.particles.length + requestedCount - maxParticles;
+  if (overflow > 0) state.particles.splice(0, overflow);
+  const spawnCount = Math.min(requestedCount, maxParticles - state.particles.length);
   const spread = options.spread ?? .35;
   const speed = options.speed ?? 1.8;
   const life = options.life ?? .55;
   const gravity = options.gravity ?? .65;
   const colorList = Array.isArray(color) ? color : [color];
-  for (let index = 0; index < Math.max(0, count); index += 1) {
+  for (let index = 0; index < spawnCount; index += 1) {
     const angle = options.angle !== undefined ? options.angle + (Math.random() - .5) * spread : Math.random() * TAU;
     const elevation = options.elevation !== undefined ? options.elevation + (Math.random() - .5) * spread : (Math.random() - .25) * spread;
     const burstSpeed = speed * (.45 + Math.random() * .8);
@@ -1171,10 +1382,89 @@ function spawnParticles(x, y, z, color = '#e7ad67', count = 8, options = {}) {
       gravity,
       drag: options.drag ?? .92,
       shape: options.shape || 'spark',
+      rotation: Math.random() * TAU,
+      spin: (Math.random() - .5) * 5.5,
       glow: options.glow ?? 12,
       trail: options.trail ?? false,
     });
   }
+}
+function spawnSpellParticles(spell, origin, direction = { x: 0, y: 0, z: 0 }) {
+  if (!spell || !origin) return;
+  const color = spell.color;
+  const angle = Math.atan2(direction.y || 0, direction.x || 1);
+  const reduced = settings.reducedMotion;
+  const profiles = {
+    gate:    { shape: 'rune',  speed: 1.15, life: .72, size: .34, spread: TAU, gravity: -.08 },
+    reveal:  { shape: 'ring',  speed: 1.35, life: .76, size: .3,  spread: TAU, gravity: -.04 },
+    homing:  { shape: 'star',  speed: 2.05, life: .58, size: .26, spread: .5, gravity: .03 },
+    ward:    { shape: 'rune',  speed: .9,  life: .9,  size: .3,  spread: TAU, gravity: -.09 },
+    chain:   { shape: 'thread',speed: 2.4,  life: .5,  size: .26, spread: .25, gravity: .04 },
+    echo:    { shape: 'ring',  speed: 1.05, life: .88, size: .3,  spread: TAU, gravity: -.06 },
+    fireball:{ shape: 'ember', speed: 1.8,  life: .66, size: .34, spread: .35, gravity: -.18 },
+    bloom:   { shape: 'petal', speed: 1.1,  life: .96, size: .32, spread: TAU, gravity: -.12 },
+    beam:    { shape: 'thread',speed: 2.8,  life: .42, size: .22, spread: .1, gravity: .02 },
+  };
+  const profile = profiles[spell.kind] || { shape: 'dot', speed: 1.2, life: .62, size: .28, spread: TAU, gravity: .02 };
+  const count = reduced ? 3 : 7;
+  spawnParticles(origin.x, origin.y, origin.z, color, count, {
+    speed: profile.speed,
+    life: profile.life,
+    size: profile.size,
+    upward: profile.shape === 'petal' || profile.shape === 'rune' ? .35 : .12,
+    angle,
+    spread: profile.spread,
+    gravity: profile.gravity,
+    drag: .96,
+    glow: 13,
+    shape: 'pixel',
+    trail: profile.shape === 'thread' || profile.shape === 'ember',
+  });
+  if (spell.kind === 'fireball' || spell.kind === 'chain' || spell.kind === 'homing') {
+    spawnParticles(origin.x, origin.y, origin.z, color, reduced ? 1 : 2, {
+      speed: .65,
+      life: .48,
+      size: .18,
+      spread: TAU,
+      gravity: -.04,
+      glow: 10,
+      shape: spell.kind === 'fireball' ? 'ember' : spell.kind === 'chain' ? 'thread' : 'star',
+    });
+  }
+}
+function spawnSpellImpactParticles(kind, x, y, z, color, scale = 1) {
+  if (!kind) return;
+  const reduced = settings.reducedMotion;
+  const profiles = {
+    reveal:  { shape: 'ring',  speed: 1.0, life: .56, size: .28, gravity: -.03 },
+    homing:  { shape: 'star',  speed: 1.45, life: .5, size: .25, gravity: .04 },
+    ward:    { shape: 'rune',  speed: .8, life: .7, size: .28, gravity: -.08 },
+    chain:   { shape: 'thread',speed: 1.7, life: .42, size: .24, gravity: .02 },
+    echo:    { shape: 'ring',  speed: 1.0, life: .76, size: .3, gravity: -.06 },
+    fireball:{ shape: 'ember', speed: 1.6, life: .62, size: .34, gravity: -.18 },
+    bloom:   { shape: 'petal', speed: 1.1, life: .8, size: .32, gravity: -.12 },
+    beam:    { shape: 'thread',speed: 2.1, life: .38, size: .22, gravity: .02 },
+    gate:    { shape: 'rune',  speed: 1.0, life: .62, size: .3, gravity: -.07 },
+  };
+  const profile = profiles[kind] || { shape: 'dot', speed: 1.1, life: .5, size: .26, gravity: .02 };
+  const count = reduced ? 3 : 7;
+  spawnParticles(x, y, z, color, count, {
+    speed: profile.speed * scale,
+    life: profile.life,
+    size: profile.size * scale,
+    upward: kind === 'bloom' || kind === 'ward' ? .35 : .12,
+    spread: TAU,
+    gravity: profile.gravity,
+    drag: .96,
+    glow: 14,
+    shape: profile.shape,
+    trail: kind === 'fireball' || kind === 'chain' || kind === 'beam',
+  });
+}
+function spawnSpellTrailParticle(projectile) {
+  if (!projectile?.spell || !projectile.spellKind) return;
+  const shape = projectile.spellKind === 'fireball' ? 'ember' : projectile.spellKind === 'chain' ? 'thread' : projectile.spellKind === 'homing' ? 'star' : 'dot';
+  spawnParticles(projectile.x, projectile.y, projectile.z, projectile.color, 1, { speed: .3, life: .28, size: .16, upward: .08, spread: projectile.spellKind === 'chain' ? .55 : TAU, angle: Math.atan2(projectile.vy, projectile.vx), gravity: .12, drag: .95, glow: 9, shape, trail: true });
 }
 function updateParticles(delta) {
   const active = [];
@@ -1185,6 +1475,7 @@ function updateParticles(delta) {
     particle.vx *= Math.pow(particle.drag, delta * 60);
     particle.vy *= Math.pow(particle.drag, delta * 60);
     particle.vz -= particle.gravity * delta;
+    particle.rotation += particle.spin * delta;
     particle.x += particle.vx * delta;
     particle.y += particle.vy * delta;
     particle.z += particle.vz * delta;
@@ -1194,7 +1485,10 @@ function updateParticles(delta) {
   state.particles = active;
 }
 function drawParticles() {
+  const drawLimit = settings.reducedMotion ? MAX_REDUCED_PARTICLE_DRAW : Math.round(MAX_PARTICLE_DRAW * state.renderQuality);
+  let drawn = 0;
   for (const particle of state.particles) {
+    if (drawn >= drawLimit) break;
     const camera = cameraPoint(particle.x, particle.y, particle.z);
     if (camera.forward <= .04 || Math.abs(Math.atan2(camera.side, camera.forward)) > FOV * .95) continue;
     const point = projectCameraPoint(camera);
@@ -1204,6 +1498,7 @@ function drawParticles() {
     const fade = clamp(particle.life / particle.maxLife, 0, 1);
     const radius = Math.max(.7, canvas.height * .008 * particle.size / Math.max(.7, camera.forward));
     const rgb = hexToRgb(particle.color);
+    drawn += 1;
     ctx.save();
     ctx.globalAlpha = fade * .9;
     ctx.fillStyle = rgba(rgb, fade);
@@ -1214,11 +1509,50 @@ function drawParticles() {
       const previous = projectCameraPoint(cameraPoint(particle.previousX, particle.previousY, particle.previousZ));
       if (previous) { ctx.lineWidth = Math.max(1, radius * .65); ctx.beginPath(); ctx.moveTo(previous.x, previous.y); ctx.lineTo(point.x, point.y); ctx.stroke(); }
     }
-    if (particle.shape === 'dot') {
+    if (particle.shape === 'pixel') {
+      ctx.shadowBlur = 0;
+      const pixelSize = Math.max(2, Math.round(radius * 1.35));
+      const pixelX = Math.round(point.x - pixelSize / 2);
+      const pixelY = Math.round(point.y - pixelSize / 2);
+      ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
+    } else if (particle.shape === 'dot') {
       ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, TAU); ctx.fill();
     } else if (particle.shape === 'ring') {
       ctx.lineWidth = Math.max(1, radius * .42);
       ctx.beginPath(); ctx.arc(point.x, point.y, Math.max(2, radius * 1.65), 0, TAU); ctx.stroke();
+    } else if (particle.shape === 'star') {
+      ctx.translate(point.x, point.y); ctx.rotate(particle.rotation);
+      ctx.beginPath();
+      for (let pointIndex = 0; pointIndex < 8; pointIndex += 1) {
+        const angle = pointIndex * Math.PI / 4;
+        const length = pointIndex % 2 ? radius * .52 : radius * 1.9;
+        const x = Math.cos(angle) * length;
+        const y = Math.sin(angle) * length;
+        if (pointIndex === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath(); ctx.fill();
+    } else if (particle.shape === 'rune') {
+      ctx.translate(point.x, point.y); ctx.rotate(particle.rotation * .45);
+      ctx.lineWidth = Math.max(1, radius * .34);
+      ctx.beginPath();
+      for (let pointIndex = 0; pointIndex < 6; pointIndex += 1) {
+        const angle = pointIndex * TAU / 6;
+        const x = Math.cos(angle) * radius * 1.35;
+        const y = Math.sin(angle) * radius * 1.35;
+        if (pointIndex === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-radius * .7, 0); ctx.lineTo(radius * .7, 0); ctx.moveTo(0, -radius * .7); ctx.lineTo(0, radius * .7); ctx.stroke();
+    } else if (particle.shape === 'petal') {
+      ctx.translate(point.x, point.y); ctx.rotate(particle.rotation);
+      ctx.beginPath(); ctx.ellipse(0, 0, radius * .6, radius * 1.9, 0, 0, TAU); ctx.fill();
+    } else if (particle.shape === 'ember') {
+      ctx.translate(point.x, point.y); ctx.rotate(Math.atan2(particle.vy, particle.vx) + Math.PI / 2);
+      ctx.beginPath(); ctx.moveTo(0, -radius * 2.1); ctx.quadraticCurveTo(radius * 1.35, -radius * .35, 0, radius * 1.35); ctx.quadraticCurveTo(-radius * 1.2, -radius * .3, 0, -radius * 2.1); ctx.closePath(); ctx.fill();
+    } else if (particle.shape === 'thread') {
+      ctx.translate(point.x, point.y); ctx.rotate(Math.atan2(particle.vy, particle.vx));
+      ctx.lineWidth = Math.max(1, radius * .45); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-radius * 2.2, 0); ctx.quadraticCurveTo(0, radius * 1.2, radius * 2.2, 0); ctx.stroke();
     } else {
       ctx.translate(point.x, point.y);
       ctx.rotate(Math.atan2(particle.vy, particle.vx));
@@ -1379,11 +1713,11 @@ function toggleMusic() {
   updateMusicButton();
 }
 
-function playTransitionSound() {
-  playTone(55, .72, 'sawtooth', .04);
-  playTone(110, .55, 'square', .025, .08);
-  playTone(220, .7, 'triangle', .022, .34);
-  playTone(440, .8, 'sine', .02, 1.1);
+function playTrapdoorSound() {
+  playTone(48, .42, 'square', .045);
+  playTone(73, .72, 'sawtooth', .035, .18);
+  playTone(29, 1.1, 'triangle', .04, .72);
+  playTone(118, .18, 'square', .025, 2.18);
 }
 function playLaunchSound() {
   playTone(98, .42, 'sine', .018);
@@ -1391,13 +1725,14 @@ function playLaunchSound() {
   playTone(196, .66, 'sine', .014, .34);
 }
 function beginLaunchTransition() {
-  state.launchTransition = { elapsed: 0, duration: 2.8 };
+  // The field opens directly now. Keep this compatibility hook because the
+  // menu flow still calls it, but never block input or replay the old veil.
+  state.launchTransition = null;
   state.keys.clear();
   state.mouseAttack = false;
   state.mouseLook = false;
-  state.promptSignature = 'launch-transition';
-  gameShell.classList.add('game-launching');
-  playLaunchSound();
+  state.promptSignature = '';
+  gameShell.classList.remove('game-launching');
 }
 function updateLaunchTransition(delta) {
   if (!state.launchTransition) return;
@@ -1405,7 +1740,7 @@ function updateLaunchTransition(delta) {
   if (state.launchTransition.elapsed >= state.launchTransition.duration) {
     state.launchTransition = null;
     gameShell.classList.remove('game-launching');
-    showFloorAnnouncement(0);
+    // The lobby is immediately playable after the entrance animation.
   }
 }
 function drawLaunchTransition(now) {
@@ -1498,16 +1833,108 @@ function drawLaunchTransition(now) {
   ctx.restore();
 }
 
+function beginForestTransition() {
+  if (state.forestTransition || state.transition || state.room !== 0 || !state.lobbyGateOpen) return;
+  state.forestTransition = { elapsed: 0, duration: 7.2, attacked: false, teleported: false };
+  state.keys.clear();
+  state.mouseAttack = false;
+  state.mouseLook = false;
+  state.promptSignature = 'forest-transition';
+  showToast('The forest hallway narrows around you.', 'danger');
+  playTone(110, .26, 'triangle', .022);
+}
+function finishForestTransition() {
+  const spawn = roomContentPoint(STARTING_ROOM_INDEX, rooms[STARTING_ROOM_INDEX].spawn.x, rooms[STARTING_ROOM_INDEX].spawn.y);
+  state.player.x = roomOffsets[STARTING_ROOM_INDEX] + spawn.x;
+  state.player.y = spawn.y;
+  state.player.angle = rooms[STARTING_ROOM_INDEX].spawn.angle;
+  state.player.pitch = 0;
+  state.room = STARTING_ROOM_INDEX;
+  state.player.hp = Math.max(1, state.player.hp - 8);
+  state.damageFlash = .76;
+  state.shakeTime = settings.reducedMotion ? .16 : .5;
+  setMusicMode('dungeon');
+  updateHud();
+  playTone(55, .42, 'sawtooth', .04);
+  playTone(110, .54, 'square', .026, .1);
+  playTone(220, .62, 'triangle', .018, .23);
+}
+function updateForestTransition(delta) {
+  const transition = state.forestTransition;
+  if (!transition) return;
+  transition.elapsed += delta;
+  if (!transition.attacked && transition.elapsed >= .24) {
+    transition.attacked = true;
+    state.damageFlash = .9;
+    state.shakeTime = settings.reducedMotion ? .22 : .95;
+    spawnParticles(state.player.x, state.player.y, .68, ['#b74d43', '#e7ad67', '#292017'], settings.reducedMotion ? 8 : 20, { speed: 1.4, life: .7, size: .72, upward: .45, spread: TAU, gravity: .16, glow: 12, trail: true });
+    showToast('Something attacks from behind.', 'danger');
+    playTone(42, .32, 'sawtooth', .05);
+    playTone(84, .45, 'square', .035, .12);
+  }
+  if (!transition.teleported && transition.elapsed >= 4.35) {
+    transition.teleported = true;
+    finishForestTransition();
+  }
+  if (transition.elapsed >= transition.duration) state.forestTransition = null;
+}
+function drawForestTransition(now) {
+  const transition = state.forestTransition;
+  if (!transition) return;
+  const elapsed = transition.elapsed;
+  const width = canvas.width;
+  const height = canvas.height;
+  const fadeIn = clamp((elapsed - .2) / 1.15, 0, 1);
+  const wake = clamp((elapsed - 5.25) / 1.55, 0, 1);
+  const blackout = elapsed < .2 ? 0 : elapsed < 1.35 ? fadeIn : elapsed < 5.25 ? 1 : 1 - wake;
+  ctx.save();
+  ctx.fillStyle = `rgba(2, 2, 2, ${clamp(blackout, 0, 1)})`;
+  ctx.fillRect(0, 0, width, height);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f0ddaf';
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = '#244936';
+  ctx.font = `bold ${Math.max(16, height * .038)}px Georgia`;
+  const message = elapsed < 1.35
+    ? 'THE FOREST HALL'
+    : elapsed < 2.15
+      ? 'SOMETHING ATTACKS FROM BEHIND'
+      : elapsed < 5.25
+        ? 'THE ROUTE GOES BLACK'
+        : 'YOU WAKE IN THE DUNGEON';
+  ctx.fillText(message, width / 2, height * .42);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = .82;
+  ctx.fillStyle = '#d3c08f';
+  ctx.font = `${Math.max(10, height * .016)}px Georgia`;
+  const submessage = elapsed < 1.35
+    ? 'The path continues through the living trees.'
+    : elapsed < 2.15
+      ? 'The strike comes from behind.'
+      : elapsed < 5.25
+        ? 'The archive route disappears into darkness.'
+        : 'Cold stone. A cockroach waits far across the threshold chamber.';
+  ctx.fillText(submessage, width / 2, height * .51);
+  if (elapsed >= 5.25) {
+    ctx.globalAlpha = .62;
+    ctx.fillStyle = '#b98542';
+    ctx.font = `${Math.max(9, height * .014)}px "DM Mono", monospace`;
+    ctx.fillText('LEVEL 02 · THE THRESHOLD CHAMBER', width / 2, height * .61);
+  }
+  ctx.restore();
+}
+
 function beginBossTransition() {
   if (state.transition || state.room === FINAL_ROOM_INDEX || state.gameComplete) return;
-  state.transition = { elapsed: 0, duration: 5.2, teleported: false };
+  state.transition = { elapsed: 0, duration: 5.4, teleported: false, impact: false };
   state.keys.clear();
   state.mouseAttack = false;
   state.mouseLook = false;
   state.promptSignature = 'transition';
   state.shakeTime = .3;
-  playTransitionSound();
-  showToast('DELIVERY COMPLETE. RETURNING TO THE PORTFOLIO…', 'good');
+  playTrapdoorSound();
+  showToast('The floor gives way beneath you.', 'danger');
 }
 function finishBossTransition() {
   const spawn = roomContentPoint(FINAL_ROOM_INDEX, rooms[FINAL_ROOM_INDEX].spawn.x, rooms[FINAL_ROOM_INDEX].spawn.y);
@@ -1518,9 +1945,12 @@ function finishBossTransition() {
   state.room = FINAL_ROOM_INDEX;
   state.finalArenaTime = .01;
   state.finalBoss.alerted = true;
+  state.player.hp = Math.max(1, state.player.hp - 12);
+  state.damageFlash = .7;
+  state.shakeTime = settings.reducedMotion ? .22 : .72;
   setMusicMode('boss');
   updateHud();
-  showToast('NO. THE SYSTEM IS NOT DONE. THE OPERATIONS ARCHON AWAKENS.', 'danger');
+  showToast('You hit the stone hard. Your shoulder is hurt, but the chamber is waiting.', 'danger');
   playTone(73, .5, 'sawtooth', .04);
   playTone(146, .65, 'square', .025, .12);
   playTone(292, .8, 'triangle', .025, .24);
@@ -1548,11 +1978,11 @@ function showFloorAnnouncement(roomIndex) {
   if (roomIndex === FINAL_ROOM_INDEX || state.visitedFloors.has(roomIndex) || !floorAnnouncement) return;
   state.visitedFloors.add(roomIndex);
   const room = rooms[roomIndex];
-  state.floorAnnouncement = { roomIndex, elapsed: 0, duration: 2.65 };
-  floorAnnouncementKicker.textContent = 'FIELD NOTE / ABOUT LIAM';
-  floorAnnouncementNumber.textContent = room.floor;
-  floorAnnouncementTitle.textContent = room.title;
-  floorAnnouncementSubtitle.textContent = room.fieldNote || room.subtitle;
+  state.floorAnnouncement = { roomIndex, elapsed: 0, duration: 1.35 };
+  if (floorAnnouncementKicker) floorAnnouncementKicker.textContent = '';
+  if (floorAnnouncementNumber) floorAnnouncementNumber.textContent = '';
+  if (floorAnnouncementTitle) floorAnnouncementTitle.textContent = room.title;
+  if (floorAnnouncementSubtitle) floorAnnouncementSubtitle.textContent = '';
   floorAnnouncement.hidden = false;
   floorAnnouncement.classList.remove('is-visible');
   void floorAnnouncement.offsetWidth;
@@ -1569,7 +1999,12 @@ function updateFloorAnnouncement(delta) {
 
 function updateRoomFromPlayer() {
   const next = currentRoomIndex();
-  if (next === FINAL_ROOM_INDEX && state.room !== FINAL_ROOM_INDEX) {
+  if (state.room === 0 && state.lobbyGateOpen && state.player.x >= FOREST_HALL_TRIGGER_X && state.player.x < FOREST_HALL_END) {
+    beginForestTransition();
+    return;
+  }
+  if (state.room === 0 && state.lobbyGateOpen && state.player.x >= FOREST_HALL_START && state.player.x < FOREST_HALL_TRIGGER_X) return;
+  if (next === FINAL_ROOM_INDEX && state.room !== FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead) {
     beginBossTransition();
     return;
   }
@@ -1577,7 +2012,6 @@ function updateRoomFromPlayer() {
     state.room = next;
     showFloorAnnouncement(next);
     updateHud();
-    showToast(`Entered ${rooms[next].title.toLowerCase()}.`, 'good');
     spawnParticles(state.player.x, state.player.y, .4, [rooms[next].color, '#d8c18b'], settings.reducedMotion ? 8 : 20, { speed: 1.4, life: .85, size: .78, upward: .7, glow: 14, trail: true });
     playTone(220, .1, 'triangle', .02);
   }
@@ -1601,83 +2035,58 @@ function playTone(frequency, duration, type = 'sine', volume = .035, offset = 0)
     oscillator.stop(audio.currentTime + offset + duration + .03);
   } catch { /* Optional browser audio. */ }
 }
-function playSpearSound() { playTone(82, .14, 'triangle', .026); playTone(164, .18, 'sine', .018, .045); }
+function playNinjaStarSound() { playTone(330, .06, 'triangle', .022); playTone(660, .1, 'sine', .016, .035); playTone(990, .08, 'square', .012, .07); }
 function playCrossbowSound() { playTone(72, .08, 'square', .018); playTone(260, .08, 'triangle', .018, .03); }
 function playWandSound() { playTone(116, .14, 'sine', .02); playTone(232, .24, 'triangle', .026, .07); playTone(464, .3, 'sine', .016, .16); }
-function playWeaponSound() { if (state.weapon.type === 'crossbow') playCrossbowSound(); else if (state.weapon.type === 'wand') playWandSound(); else playSpearSound(); }
+function playWeaponSound() { if (state.weapon.type === 'stars') playNinjaStarSound(); else if (state.weapon.type === 'crossbow') playCrossbowSound(); else playWandSound(); }
 function playRecoverySound() { playTone(294, .18, 'sine', .035); playTone(440, .24, 'triangle', .03, .11); playTone(587, .3, 'sine', .022, .21); }
 function playHitSound() { playTone(66, .18, 'square', .035); }
 function playBoneHitSound() { playTone(110, .12, 'triangle', .025); playTone(72, .13, 'square', .018, .05); }
 
-function getNearestItem(maxDistance = 1.35) { let nearest = null; let best = maxDistance; for (const item of worldItems) { if (item.recovered) continue; const distance = Math.hypot(item.x - state.player.x, item.y - state.player.y); if (distance < best && hasLineOfSight(state.player.x, state.player.y, item.x, item.y)) { best = distance; nearest = item; } } return nearest; }
-function getNearestLobbyScroll(maxDistance = 1.55) { if (state.room !== 0 || lobbyPortfolioScroll.recovered) return null; const distance = Math.hypot(lobbyPortfolioScroll.x - state.player.x, lobbyPortfolioScroll.y - state.player.y); return distance < maxDistance && hasLineOfSight(state.player.x, state.player.y, lobbyPortfolioScroll.x, lobbyPortfolioScroll.y) ? lobbyPortfolioScroll : null; }
-function getNearestTrader(maxDistance = 1.8) {
+function getNearestItem(maxDistance = 1.55) {
   let nearest = null;
   let best = maxDistance;
-  for (const trader of traders) {
-    const distance = Math.hypot(trader.x - state.player.x, trader.y - state.player.y);
-    if (distance < best && hasLineOfSight(state.player.x, state.player.y, trader.x, trader.y)) {
+  const activeRoom = currentRoomIndex();
+  for (const item of worldItems) {
+    if (item.recovered || item.kind === 'health-potion' || item.roomIndex !== activeRoom) continue;
+    const distance = Math.hypot(item.x - state.player.x, item.y - state.player.y);
+    if (distance < best) { best = distance; nearest = item; }
+  }
+  return nearest;
+}
+function getNearestLobbyScroll(maxDistance = 1.55) { if (state.room !== 0 || lobbyPortfolioScroll.recovered) return null; const distance = Math.hypot(lobbyPortfolioScroll.x - state.player.x, lobbyPortfolioScroll.y - state.player.y); return distance < maxDistance && hasLineOfSight(state.player.x, state.player.y, lobbyPortfolioScroll.x, lobbyPortfolioScroll.y) ? lobbyPortfolioScroll : null; }
+function getNearestPromptScroll(maxDistance = 1.55) {
+  if (state.room === 0 && !lobbyPortfolioScroll.recovered) {
+    const lobbyDistance = Math.hypot(lobbyPortfolioScroll.x - state.player.x, lobbyPortfolioScroll.y - state.player.y);
+    if (lobbyDistance < maxDistance && hasLineOfSight(state.player.x, state.player.y, lobbyPortfolioScroll.x, lobbyPortfolioScroll.y)) return lobbyPortfolioScroll;
+  }
+  let nearest = null;
+  let best = maxDistance;
+  for (const item of worldItems) {
+    if (item.recovered || item.roomIndex !== currentRoomIndex() || item.kind !== 'scroll') continue;
+    const distance = Math.hypot(item.x - state.player.x, item.y - state.player.y);
+    if (distance < best) {
       best = distance;
-      nearest = trader;
+      nearest = item;
     }
   }
   return nearest;
 }
-function updateTraderOptions() {
-  traderOptionButtons.forEach((button) => {
-    const selected = button.dataset.traderWeapon === state.weapon.type;
-    button.classList.toggle('is-equipped', selected);
-    button.setAttribute('aria-pressed', String(selected));
-  });
-}
-function openTrader(trader) {
-  if (!trader || !traderOverlay) return false;
-  state.trader = trader;
-  state.keys.clear();
-  state.mouseAttack = false;
-  state.mouseLook = false;
-  if (traderKicker) traderKicker.textContent = 'FIRST ROOM / WEAPON COUNTER · LEVEL 01';
-  if (traderTitle) traderTitle.textContent = trader.name;
-  if (traderDialogue) traderDialogue.textContent = trader.greeting;
-  updateTraderOptions();
-  traderOverlay.hidden = false;
-  state.promptSignature = 'trader';
-  window.setTimeout(() => traderOptionButtons[0]?.focus(), 0);
-  playTone(220, .12, 'triangle', .018);
-  return true;
-}
-function closeTrader() {
-  if (!state.trader && traderOverlay?.hidden !== false) return;
-  state.trader = null;
-  if (traderOverlay) traderOverlay.hidden = true;
-  state.promptSignature = '';
-}
-function interactWithTrader() {
-  const trader = getNearestTrader();
-  return trader ? openTrader(trader) : false;
-}
-function equipTraderWeapon(type) {
-  if (!WEAPON_LOADOUTS[type]) return false;
-  setWeapon(type, { allowTrader: true });
-  updateTraderOptions();
-  if (traderDialogue) traderDialogue.textContent = `${WEAPON_LOADOUTS[type].label} is yours. The road is ready.`;
-  return true;
-}
-function cycleTraderWeapon(direction = 1) {
-  const types = ['spear', 'crossbow', 'wand'];
-  const current = Math.max(0, types.indexOf(state.weapon.type));
-  equipTraderWeapon(types[(current + direction + types.length) % types.length]);
-}
-function handleTraderKey(key) {
-  if (!state.trader) return false;
-  if (key === 'w') return equipTraderWeapon('spear');
-  if (key === 'a') return equipTraderWeapon('crossbow');
-  if (key === 's') return equipTraderWeapon('wand');
-  if (key === 'd') { cycleTraderWeapon(1); return true; }
-  return false;
+function getNearestWeaponCreature(maxDistance = 1.9) {
+  if (state.room !== 0) return null;
+  let nearest = null;
+  let best = maxDistance;
+  for (const display of LOBBY_WEAPON_CREATURES) {
+    const distance = Math.hypot(display.x - state.player.x, display.y - state.player.y);
+    if (distance < best) {
+      best = distance;
+      nearest = display;
+    }
+  }
+  return nearest;
 }
 function lobbyGateDistance() { return state.room === 0 ? Math.hypot(LOBBY_GATE.x - state.player.x, LOBBY_GATE.y - state.player.y) : Infinity; }
-function weaponDefinition() { return WEAPON_LOADOUTS[state.weapon.type] || WEAPON_LOADOUTS.spear; }
+function weaponDefinition() { return WEAPON_LOADOUTS[state.weapon.type] || WEAPON_LOADOUTS.stars; }
 function learnedSpellDefinitions() { return [...(state.tutorialSpell ? [GATE_TUTORIAL_SPELL] : []), ...SPELL_FORMS.filter((spell) => state.unlockedSpells.has(spell.id))]; }
 function selectedSpellDefinition() {
   const learned = learnedSpellDefinitions();
@@ -1705,159 +2114,33 @@ function cycleSpell(direction = 1) {
 }
 function wandColorForSpell() { return selectedSpellDefinition()?.color || '#c76545'; }
 function wandSpellName() { return selectedSpellDefinition()?.name || 'unattuned ember'; }
-function setWeapon(type, options = {}) {
-  if (!WEAPON_LOADOUTS[type]) return;
-  const traderGranted = Boolean(options.allowTrader);
-  if (traderGranted) {
-    state.availableWeapons.add(type);
-    state.weapon.equipped = true;
-  }
-  if (!state.menuActive && !state.availableWeapons.has(type) && !traderGranted) {
-    showToast('Speak with the Wayfarer to choose another weapon.');
-    return;
-  }
-  const previousType = state.weapon.type;
+function updateWeaponSelection(type) {
+  if (!WEAPON_LOADOUTS[type]) return false;
   state.weapon.type = type;
-  state.weapon.swing = 0;
-  state.weapon.hit = false;
-  state.weapon.cooldown = 0;
-  state.weapon.projectile = 0;
   weaponOptionButtons.forEach((button) => {
     const selected = button.dataset.weapon === type;
     button.classList.toggle('selected', selected);
     button.setAttribute('aria-checked', String(selected));
   });
   if (loadoutDescription) loadoutDescription.textContent = WEAPON_LOADOUTS[type].description;
+  return true;
+}
+function setWeapon(type) {
+  if (!WEAPON_LOADOUTS[type]) return;
+  const previousType = state.weapon.type;
+  updateWeaponSelection(type);
+  state.weapon.equipped = true;
+  state.weapon.swing = 0;
+  state.weapon.hit = false;
+  state.weapon.cooldown = 0;
+  state.weapon.projectile = 0;
   state.promptSignature = '';
   if (!state.menuActive && previousType !== type) {
     const color = type === 'wand' ? wandColorForSpell() : type === 'crossbow' ? '#f0d38d' : '#d8c18b';
     state.impactBursts.push({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .24, color, radius: .22 });
     showToast(`${WEAPON_LOADOUTS[type].label} equipped.`, 'good');
-    playTone(type === 'spear' ? 164 : type === 'crossbow' ? 220 : 330, .12, 'triangle', .02);
+    playTone(type === 'stars' ? 330 : type === 'crossbow' ? 220 : 330, .12, 'triangle', .02);
   }
-}
-function resetRun() {
-  state.menuActive = true;
-  lobbyDock?.classList.remove('is-active');
-  state.visitedFloors.clear();
-  state.floorAnnouncement = null;
-  if (floorAnnouncement) { floorAnnouncement.hidden = true; floorAnnouncement.classList.remove('is-visible'); }
-  state.room = 0;
-  const initialSpawn = roomContentPoint(0, rooms[0].spawn.x, rooms[0].spawn.y);
-  state.player.x = roomOffsets[0] + initialSpawn.x;
-  state.player.y = initialSpawn.y;
-  state.player.angle = rooms[0].spawn.angle;
-  state.player.pitch = 0;
-  state.player.hp = 100;
-  state.stamina = STAMINA_MAX;
-  state.staminaRegenDelay = 0;
-  state.moonProgress = 0;
-  state.combo = 0;
-  state.comboTimer = 0;
-  state.dodgeTime = 0;
-  state.dodgeCooldown = 0;
-  state.dodgeInvulnerable = 0;
-  state.dodgeVx = 0;
-  state.dodgeVy = 0;
-  state.dodgeRoll = 0;
-  state.dodgeCameraDrop = 0;
-  state.dodgeDirection = { x: 1, y: 0 };
-  state.dodgeProgress = 0;
-  state.dodgeImpact = 0;
-  state.dodgeTrailTimer = 0;
-  state.lobbyGateOpen = false;
-  state.lobbyGateProgress = 0;
-  state.lobbyGateOpening = false;
-  state.availableWeapons.clear();
-  state.trader = null;
-  closeTrader();
-  state.groundHazards = [];
-  state.recoveredItems.clear();
-  droppedRecordIds.clear();
-  for (let index = worldItems.length - 1; index >= 0; index -= 1) {
-    if (worldItems[index].dropFromEnemy) worldItems.splice(index, 1);
-  }
-  ITEM_TOTAL = recordDropTemplates.length;
-  for (const item of worldItems) item.recovered = false;
-  worldEnemies.splice(0, worldEnemies.length, ...initialEnemyData.map((enemy) => ({ ...enemy, dropTemplates: [...(enemy.dropTemplates || [])] })));
-  state.xp = 0;
-  state.level = 0;
-  state.unlockedSpells.clear();
-  state.lastSpell = null;
-  state.selectedSpellId = null;
-  state.tutorialSpell = false;
-  lobbyPortfolioScroll.recovered = false;
-  state.spellCast = null;
-  state.spellCooldown = 0;
-  state.activeSpellEffects = [];
-  state.projectiles = [];
-  state.weapon.type = 'spear';
-  state.weapon.equipped = false;
-  state.weapon.swing = 0;
-  state.weapon.hit = false;
-  state.weapon.cooldown = 0;
-  state.weapon.attackDamage = 0;
-  state.weapon.comboStep = 0;
-  state.weapon.attackHitAt = 0;
-  state.impactBursts = [];
-  state.particles = [];
-  state.damageNumbers = [];
-  state.ambientParticleTimer = 0;
-  state.footstepTimer = 0;
-  state.spellSlotsSignature = '';
-  state.revealTimer = 0;
-  state.wardTimer = 0;
-  state.enemySlowTimer = 0;
-  state.finalBoss = createFinalBoss();
-  state.finalArenaTime = 0;
-  state.transition = null;
-  state.launchTransition = null;
-  setMusicMode('dungeon');
-  state.doorOfLight = null;
-  state.gameComplete = false;
-  state.endingFade = -1;
-  state.damageFlash = 0;
-  state.shakeTime = 0;
-  state.hudSignature = '';
-  state.promptSignature = '';
-  updateHud();
-}
-function setMenuVisible(visible) {
-  state.menuActive = visible;
-  if (visible) updateMenuSelection();
-  state.keys.clear();
-  state.mouseAttack = false;
-  state.mouseLook = false;
-  if (visible && document.pointerLockElement === canvas) document.exitPointerLock?.();
-  state.dragging = false;
-  canvas.classList.remove('dragging');
-  if (visible) {
-    lobbyDock?.classList.remove('is-active');
-    state.floorAnnouncement = null;
-    if (floorAnnouncement) { floorAnnouncement.hidden = true; floorAnnouncement.classList.remove('is-visible'); }
-    state.launchTransition = null;
-    gameShell.classList.remove('game-launching');
-    stopMusic();
-    if (state.reading) closeReading();
-    mainMenu.classList.remove('is-hidden');
-    gameShell.classList.add('menu-active');
-    interactionPrompt.hidden = true;
-    state.promptSignature = 'welcome';
-    return;
-  }
-  mainMenu.classList.add('is-hidden');
-  gameShell.classList.remove('menu-active');
-  lobbyDock?.classList.toggle('is-active', state.room === 0);
-  beginLaunchTransition();
-  state.promptSignature = '';
-  state.lastTime = performance.now();
-  state.lastRenderAt = 0;
-  startMusic();
-  showToast('The lobby is safe. Walk to the Wayfarer and choose a weapon.', 'good');
-}
-function updateMenuSelection() {
-  const definition = weaponDefinition();
-  if (loadoutDescription) loadoutDescription.textContent = definition.description;
 }
 
 function currentSpellDefinition() {
@@ -1914,9 +2197,16 @@ function updateSpellCard(gained, unlocked = null) {
   if (scrollSpellSeal) scrollSpellSeal.textContent = unlocked?.glyph || '✦';
   if (scrollRewardKicker) scrollRewardKicker.textContent = unlocked ? 'NEW SPELL UNLOCKED' : 'XP RECOVERED';
   if (scrollSpellName) scrollSpellName.textContent = unlocked ? unlocked.name : `+${gained} XP`;
-  if (scrollSpellDescription) scrollSpellDescription.textContent = unlocked ? `${unlocked.description} Press Q to cast.` : 'Bank XP from scrolls and defeat enemies to unlock spells at each threshold.';
+  if (scrollSpellDescription) scrollSpellDescription.textContent = unlocked ? `${unlocked.description} Use Q to cast it.` : 'Bank XP from scrolls and defeat enemies to unlock spells at each threshold.';
 }
 function grantScrollXP(item) {
+  const recordId = item.recordId || item.id;
+  if (state.collectedRecordIds.has(recordId)) {
+    updateSpellCard(0, null);
+    showToast('This field record is already in your archive.', 'good');
+    return;
+  }
+  state.collectedRecordIds.add(recordId);
   const unlocked = earnExperience(XP_PER_SCROLL, 'scroll');
   updateSpellCard(XP_PER_SCROLL, unlocked[0] || null);
   if (!unlocked.length) showToast(`+${XP_PER_SCROLL} XP banked. ${state.xp} XP total.`, 'good');
@@ -1925,16 +2215,36 @@ function chooseSpellTarget() {
   return findAimTarget(14, .32, .36) || worldEnemies.filter((enemy) => enemy.roomIndex !== 0 && !enemy.dead && enemy.roomIndex === state.room).sort((a, b) => Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y))[0] || (state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead ? state.finalBoss : null);
 }
 function makeProjectile(kind, origin, velocity, options = {}) {
-  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, spell: options.spell || false, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0 });
+  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, spell: options.spell || false, spellKind: options.spellKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0 });
 }
 function playerAimDirection() {
   return { x: Math.cos(state.player.angle) * Math.cos(state.player.pitch), y: Math.sin(state.player.angle) * Math.cos(state.player.pitch), z: Math.sin(state.player.pitch) };
 }
+function leftHandSpellOrigin(direction) {
+  const leftX = -Math.sin(state.player.angle);
+  const leftY = Math.cos(state.player.angle);
+  return {
+    x: state.player.x + leftX * .48 + direction.x * .3,
+    y: state.player.y + leftY * .48 + direction.y * .3,
+    z: EYE_HEIGHT - .3 + direction.z * .12,
+  };
+}
+function spellProjectileOrigin(direction) {
+  return {
+    x: state.player.x + direction.x * .34,
+    y: state.player.y + direction.y * .34,
+    z: EYE_HEIGHT + direction.z * .08,
+  };
+}
 function castSpell() {
   const spell = selectedSpellDefinition();
-  if (state.menuActive || state.reading || state.launchTransition || state.transition || state.floorAnnouncement || state.gameComplete) return;
+  if (state.menuActive || state.reading || state.launchTransition || state.transition || state.forestTransition || state.gameComplete) return;
   if (!spell) { showToast('Find and read the glowing portfolio scroll to learn the Archive Key.'); return; }
   if (spell.kind === 'gate') {
+    if (!state.weapon.equipped) {
+      showToast('Equip a weapon before opening the archive gate.');
+      return;
+    }
     if (state.room !== 0 || lobbyGateDistance() > 2.2) {
       showToast('Archive Key only works at the sealed archive gate.');
       return;
@@ -1943,9 +2253,9 @@ function castSpell() {
       showToast('The archive gate is already open.', 'good');
       return;
     }
-    state.spellCast = { spell, elapsed: 0, duration: .72 };
+    state.spellCast = { spell, elapsed: 0, duration: .72, source: 'spell-focus' };
     state.activeSpellEffects.push({ kind: 'gate-key', elapsed: 0, duration: 1.1, color: spell.color, rings: 4 });
-    spawnParticles(LOBBY_GATE.x, LOBBY_GATE.y, 1, [spell.color, '#fff1b0'], settings.reducedMotion ? 10 : 28, { speed: 1.4, life: .9, size: .9, upward: .7, glow: 19, trail: true });
+    spawnSpellParticles(spell, { x: LOBBY_GATE.x, y: LOBBY_GATE.y, z: 1 }, { x: 1, y: 0, z: 0 });
     openLobbyGate();
     playSpellSound();
     showToast('Archive Key cast. The gate is opening.', 'good');
@@ -1953,30 +2263,31 @@ function castSpell() {
   }
   if (state.spellCooldown > 0) { showToast(`${spell.name} is recharging.`); return; }
   state.spellCooldown = spell.cooldown;
-  state.spellCast = { spell, elapsed: 0, duration: .72 };
-  spawnParticles(state.player.x, state.player.y, EYE_HEIGHT, [spell.color, '#fff1b0'], settings.reducedMotion ? 5 : 12, { speed: 1.1, life: .55, size: .8, glow: 14, upward: .45, trail: true });
+  state.spellCast = { spell, elapsed: 0, duration: .72, source: 'spell-focus' };
+  spawnParticles(state.player.x, state.player.y, EYE_HEIGHT, spell.color, settings.reducedMotion ? 5 : 12, { speed: 1.1, life: .55, size: .8, glow: 14, upward: .45, trail: true });
   state.impactBursts.push({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .32, color: spell.color, radius: .28 });
   const direction = playerAimDirection();
-  const origin = { x: state.player.x + direction.x * .42, y: state.player.y + direction.y * .42, z: EYE_HEIGHT + direction.z * .18 };
+  const origin = spellProjectileOrigin(direction);
+  spawnSpellParticles(spell, origin, direction);
   const target = chooseSpellTarget();
   if (spell.kind === 'reveal') {
     state.revealTimer = 7;
     state.impactBursts.push({ x: state.player.x, y: state.player.y, z: .58, elapsed: 0, duration: 1.2, color: spell.color, radius: 3.4, style: 'radar' });
     state.activeSpellEffects.push({ kind: 'reveal', elapsed: 0, duration: 1.75, color: spell.color, rings: 4 });
   } else if (spell.kind === 'homing') {
-    makeProjectile('spell-orb', origin, { x: direction.x * 5.4, y: direction.y * 5.4, z: direction.z * 5.4 }, { color: spell.color, damage: 72, radius: .18, lifetime: 3, homing: 4.2, targetId: target?.id, trailSize: 1.65, orbit: 2, sparks: 5, spell: true });
+    makeProjectile('spell-orb', origin, { x: direction.x * 5.4, y: direction.y * 5.4, z: direction.z * 5.4 }, { color: spell.color, damage: 72, radius: .18, lifetime: 3, homing: 4.2, targetId: target?.id, trailSize: 1.65, orbit: 2, sparks: 5, spell: true, spellKind: spell.kind });
   } else if (spell.kind === 'ward') {
     state.wardTimer = 7;
     state.activeSpellEffects.push({ kind: 'ward', elapsed: 0, duration: 7, color: spell.color, rings: 6 });
   } else if (spell.kind === 'chain') {
-    makeProjectile('spell-chain', origin, { x: direction.x * 7.2, y: direction.y * 7.2, z: direction.z * 7.2 }, { color: spell.color, damage: 84, radius: .13, lifetime: 1.8, targetId: target?.id, aoe: 2.4, stun: .9, chainTargets: 3, trailSize: 2.05, orbit: 3, sparks: 7, spell: true });
+    makeProjectile('spell-chain', origin, { x: direction.x * 7.2, y: direction.y * 7.2, z: direction.z * 7.2 }, { color: spell.color, damage: 84, radius: .13, lifetime: 1.8, targetId: target?.id, aoe: 2.4, stun: .9, chainTargets: 3, trailSize: 2.05, orbit: 3, sparks: 7, spell: true, spellKind: spell.kind });
   } else if (spell.kind === 'echo') {
     state.player.hp = clamp(state.player.hp + 35, 0, 100);
     state.enemySlowTimer = 4;
     state.activeSpellEffects.push({ kind: 'echo', elapsed: 0, duration: 1.7, color: spell.color, rings: 5 });
     state.impactBursts.push({ x: state.player.x, y: state.player.y, z: .6, elapsed: 0, duration: 1.1, color: spell.color, radius: 2.2 });
   } else if (spell.kind === 'fireball') {
-    makeProjectile('spell-fireball', origin, { x: direction.x * 6.2, y: direction.y * 6.2, z: direction.z * 6.2 }, { color: spell.color, damage: 105, radius: .2, lifetime: 2.5, aoe: 1.65, trailSize: 2.35, orbit: 2, sparks: 9, spell: true });
+    makeProjectile('spell-fireball', origin, { x: direction.x * 6.2, y: direction.y * 6.2, z: direction.z * 6.2 }, { color: spell.color, damage: 105, radius: .2, lifetime: 2.5, aoe: 1.65, trailSize: 2.35, orbit: 2, sparks: 9, spell: true, spellKind: spell.kind });
   } else if (spell.kind === 'bloom') {
     state.player.hp = clamp(state.player.hp + 24, 0, 100);
     for (const enemy of allHostiles()) if (Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) < 3.2) damageHostile(enemy, 64, { stun: 1.1 });
@@ -1985,7 +2296,10 @@ function castSpell() {
     const beamEnd = { x: state.player.x + direction.x * 12, y: state.player.y + direction.y * 12, z: EYE_HEIGHT + direction.z * 12 };
     state.activeSpellEffects.push({ kind: 'beam', elapsed: 0, duration: .9, color: spell.color, start: origin, end: beamEnd, rings: 5 });
     for (const enemy of allHostiles()) {
-      if (distanceToAimLine(enemy, direction) < .68 && hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y)) damageHostile(enemy, 150, { stun: 1.6 });
+      if (distanceToAimLine(enemy, direction) < .68 && hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y)) {
+        spawnSpellImpactParticles(spell.kind, enemy.x, enemy.y, hostileAimHeight(enemy), spell.color, .9);
+        damageHostile(enemy, 150, { stun: 1.6 });
+      }
     }
   }
   playSpellSound();
@@ -1996,6 +2310,16 @@ function updateSpell(delta) {
   state.revealTimer = Math.max(0, state.revealTimer - delta);
   state.wardTimer = Math.max(0, state.wardTimer - delta);
   state.enemySlowTimer = Math.max(0, state.enemySlowTimer - delta);
+  const equippedSpell = selectedSpellDefinition();
+  if (equippedSpell && !state.menuActive && !state.reading) {
+    state.spellFocusParticleTimer -= delta;
+    if (state.spellFocusParticleTimer <= 0) {
+      state.spellFocusParticleTimer = settings.reducedMotion ? .52 : .2;
+      spawnSpellFocusParticles(equippedSpell);
+    }
+  } else {
+    state.spellFocusParticleTimer = 0;
+  }
   if (state.spellCast) {
     state.spellCast.elapsed += delta;
     if (state.spellCast.elapsed >= state.spellCast.duration) state.spellCast = null;
@@ -2003,31 +2327,406 @@ function updateSpell(delta) {
   state.activeSpellEffects = state.activeSpellEffects.filter((effect) => { effect.elapsed += delta; return effect.elapsed < effect.duration; });
   state.impactBursts = state.impactBursts.filter((burst) => { burst.elapsed += delta; return burst.elapsed < burst.duration; });
 }
+const SPELL_FOCUS_PROFILES = {
+  gate: { shape: 'rune', accent: '#e9e9e0', count: 10, speed: .5, life: .84, size: .38, spread: TAU, gravity: -.1, upward: .34, glow: 18 },
+  reveal: { shape: 'ring', accent: '#b8f0e2', count: 10, speed: .62, life: .82, size: .34, spread: TAU, gravity: -.08, upward: .24, glow: 18 },
+  homing: { shape: 'star', accent: '#fff1b0', count: 13, speed: 1.05, life: .64, size: .31, spread: .8, gravity: .02, upward: .1, glow: 18 },
+  ward: { shape: 'rune', accent: '#fff8d6', count: 11, speed: .46, life: 1.05, size: .34, spread: TAU, gravity: -.12, upward: .38, glow: 19 },
+  chain: { shape: 'thread', accent: '#b8f0e2', count: 14, speed: 1.18, life: .56, size: .29, spread: .7, gravity: .02, upward: .12, glow: 17 },
+  echo: { shape: 'ring', accent: '#e6c8ff', count: 11, speed: .56, life: 1.02, size: .36, spread: TAU, gravity: -.1, upward: .28, glow: 18 },
+  fireball: { shape: 'ember', accent: '#f3b34e', count: 17, speed: .86, life: .72, size: .43, spread: 1.05, gravity: -.34, upward: .62, glow: 23 },
+  bloom: { shape: 'petal', accent: '#b8f0e2', count: 13, speed: .62, life: 1.08, size: .38, spread: TAU, gravity: -.18, upward: .5, glow: 18 },
+  beam: { shape: 'thread', accent: '#fff8d6', count: 14, speed: 1.25, life: .48, size: .26, spread: .18, gravity: .02, upward: .08, glow: 19 },
+};
+const DEFAULT_SPELL_FOCUS_PROFILE = { shape: 'dot', accent: '#fff1b0', count: 9, speed: .55, life: .76, size: .32, spread: TAU, gravity: -.06, upward: .2, glow: 16 };
+function spellFocusProfile(kind) { return SPELL_FOCUS_PROFILES[kind] || DEFAULT_SPELL_FOCUS_PROFILE; }
+
+function spawnSpellFocusParticles(spell) {
+  if (!spell || state.menuActive || state.reading) return;
+  const direction = playerAimDirection();
+  const origin = leftHandSpellOrigin(direction);
+  const profile = spellFocusProfile(spell.kind);
+  const colors = [spell.color, profile.accent, '#fff1b0'];
+  spawnParticles(origin.x, origin.y, origin.z + .06, colors, settings.reducedMotion ? 5 : profile.count, {
+    speed: profile.speed,
+    life: settings.reducedMotion ? profile.life * .72 : profile.life,
+    size: profile.size,
+    upward: profile.upward,
+    spread: profile.spread,
+    gravity: profile.gravity,
+    drag: .97,
+    glow: profile.glow,
+    shape: profile.shape,
+    trail: spell.kind === 'fireball' || spell.kind === 'chain' || spell.kind === 'beam',
+  });
+  const accentShape = spell.kind === 'fireball' ? 'ember' : spell.kind === 'bloom' ? 'petal' : spell.kind === 'chain' || spell.kind === 'beam' ? 'thread' : spell.kind === 'homing' ? 'star' : 'dot';
+  spawnParticles(origin.x, origin.y, origin.z + .08, profile.accent, settings.reducedMotion ? 1 : 3, {
+    speed: spell.kind === 'fireball' ? .66 : .82,
+    life: settings.reducedMotion ? .36 : .58,
+    size: spell.kind === 'fireball' ? .3 : .22,
+    upward: spell.kind === 'fireball' || spell.kind === 'bloom' ? .56 : .18,
+    spread: spell.kind === 'chain' || spell.kind === 'beam' ? .35 : TAU,
+    gravity: spell.kind === 'fireball' ? -.28 : -.06,
+    drag: .96,
+    glow: 16,
+    shape: 'pixel',
+    trail: spell.kind === 'fireball' || spell.kind === 'chain' || spell.kind === 'beam',
+  });
+}
+function drawSpellScreenMotif(kind, x, y, radius, now, alpha = 1, phase = 0, direction = 0) {
+  const accent = spellFocusProfile(kind).accent;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(direction);
+  ctx.globalAlpha = alpha;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = Math.max(8, radius * .9);
+  ctx.shadowColor = accent;
+  if (kind === 'fireball') {
+    for (let flame = 0; flame < 5; flame += 1) {
+      const angle = phase + flame * TAU / 5;
+      const distance = radius * (1.08 + .16 * Math.sin(now / 120 + flame));
+      ctx.save();
+      ctx.translate(Math.cos(angle) * distance, Math.sin(angle) * distance);
+      ctx.rotate(angle + Math.PI / 2);
+      ctx.fillStyle = flame % 2 ? '#f3b34e' : accent;
+      ctx.beginPath();
+      ctx.moveTo(0, -radius * .95);
+      ctx.quadraticCurveTo(radius * .62, -radius * .18, 0, radius * .56);
+      ctx.quadraticCurveTo(-radius * .5, -radius * .18, 0, -radius * .95);
+      ctx.fill();
+      ctx.restore();
+    }
+  } else if (kind === 'bloom') {
+    ctx.fillStyle = accent;
+    for (let petal = 0; petal < 6; petal += 1) {
+      const angle = phase + petal * TAU / 6;
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath(); ctx.ellipse(0, -radius * 1.42, radius * .24, radius * .62, 0, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+  } else if (kind === 'chain' || kind === 'beam') {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = Math.max(1, radius * .12);
+    for (let spark = 0; spark < 4; spark += 1) {
+      const angle = phase + spark * Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * radius * 1.05, Math.sin(angle) * radius * 1.05);
+      ctx.lineTo(Math.cos(angle + .18) * radius * 1.7, Math.sin(angle + .18) * radius * 1.7);
+      ctx.stroke();
+    }
+  } else if (kind === 'ward' || kind === 'gate') {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = Math.max(1, radius * .09);
+    ctx.beginPath();
+    for (let point = 0; point <= 4; point += 1) {
+      const angle = phase + point * TAU / 4 - Math.PI / 4;
+      const distance = radius * 1.52;
+      const px = Math.cos(angle) * distance;
+      const py = Math.sin(angle) * distance;
+      if (point === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = Math.max(1, radius * .08);
+    ctx.beginPath(); ctx.arc(0, 0, radius * 1.52, phase, phase + Math.PI * 1.55); ctx.stroke();
+  }
+  ctx.restore();
+}
+const PIXEL_SPELL_GLYPHS = {
+  gate: ['000010000', '000111000', '001212100', '011111110', '112232211', '011111110', '001212100', '000111000', '000010000'],
+  reveal: ['001111100', '011212110', '110000011', '120333021', '120232021', '120333021', '110000011', '011212110', '001111100'],
+  homing: ['000010000', '001111100', '011232110', '111111111', '122232221', '111111111', '011232110', '001111100', '000010000'],
+  ward: ['011111110', '112323211', '120000021', '123232321', '120232021', '123232321', '120000021', '112323211', '011111110'],
+  chain: ['100000001', '010000010', '001000100', '000111000', '111232111', '000111000', '001000100', '010000010', '100000001'],
+  echo: ['001111100', '011212110', '110000011', '120111021', '120232021', '120111021', '110000011', '011212110', '001111100'],
+  fireball: ['000010000', '001111100', '011212110', '112232211', '123333321', '112232211', '011212110', '001111100', '000010000'],
+  bloom: ['000010000', '010111010', '101212101', '011333110', '112232211', '011333110', '101212101', '010111010', '000010000'],
+  beam: ['000010000', '000010000', '001010100', '000111000', '112232211', '000111000', '001010100', '000010000', '000010000'],
+};
+
+function drawPixelSpellGlyph(kind, x, y, size, color, alpha = 1, active = false) {
+  const profile = spellFocusProfile(kind);
+  const pattern = PIXEL_SPELL_GLYPHS[kind] || PIXEL_SPELL_GLYPHS.gate;
+  const cell = Math.max(3, Math.round(size / pattern.length));
+  const width = pattern[0].length * cell;
+  const height = pattern.length * cell;
+  const left = Math.round(x - width / 2);
+  const top = Math.round(y - height / 2);
+  const depth = Math.max(3, Math.round(cell * .72));
+  const baseRgb = hexToRgb(color);
+  const dark = `rgb(${Math.round(baseRgb.r * .34)}, ${Math.round(baseRgb.g * .34)}, ${Math.round(baseRgb.b * .34)})`;
+  const side = `rgb(${Math.round(baseRgb.r * .58)}, ${Math.round(baseRgb.g * .58)}, ${Math.round(baseRgb.b * .58)})`;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = false;
+  ctx.shadowBlur = 0;
+  const drawLayer = (offsetX, offsetY, fillMode) => {
+    for (let row = 0; row < pattern.length; row += 1) {
+      for (let column = 0; column < pattern[row].length; column += 1) {
+        const value = pattern[row][column];
+        if (value === '0') continue;
+        const px = left + column * cell + offsetX;
+        const py = top + row * cell + offsetY;
+        ctx.fillStyle = fillMode === 'dark' ? dark : fillMode === 'side' ? side : (value === '2' ? profile.accent : color);
+        ctx.fillRect(px, py, cell, cell);
+      }
+    }
+  };
+  for (let layer = depth; layer >= 1; layer -= 1) drawLayer(layer, layer, layer > depth * .52 ? 'dark' : 'side');
+  drawLayer(0, 0, 'front');
+  // Use the same procedural material language as the world meshes: a subtle
+  // repeating surface pattern, bevel highlights, and a second accent value.
+  const glyphPattern = textures.patterns?.steel || textures.patterns?.bone;
+  if (glyphPattern) {
+    ctx.save();
+    ctx.globalAlpha = .24;
+    ctx.beginPath();
+    for (let row = 0; row < pattern.length; row += 1) {
+      for (let column = 0; column < pattern[row].length; column += 1) {
+        if (pattern[row][column] === '0') continue;
+        ctx.rect(left + column * cell, top + row * cell, cell, cell);
+      }
+    }
+    ctx.clip();
+    ctx.fillStyle = glyphPattern;
+    ctx.fillRect(left, top, width, height);
+    ctx.restore();
+  }
+  ctx.fillStyle = profile.accent;
+  for (let row = 0; row < pattern.length; row += 1) {
+    for (let column = 0; column < pattern[row].length; column += 1) {
+      if (pattern[row][column] === '0') continue;
+      const px = left + column * cell;
+      const py = top + row * cell;
+      ctx.fillRect(px, py, Math.max(1, Math.round(cell * .22)), Math.max(1, Math.round(cell * .14)));
+      ctx.fillRect(px, py, Math.max(1, Math.round(cell * .14)), Math.max(1, Math.round(cell * .22)));
+    }
+  }
+  const orbitRadius = width * (active ? .9 : .72);
+  const orbitSize = Math.max(2, Math.round(cell * .62));
+  ctx.fillStyle = profile.accent;
+  for (let index = 0; index < 4; index += 1) {
+    const angle = (index * TAU / 4) + (active ? performance.now() / 900 : 0);
+    const orbitX = Math.round(x + Math.cos(angle) * orbitRadius - orbitSize / 2);
+    const orbitY = Math.round(y + Math.sin(angle) * orbitRadius - orbitSize / 2);
+    ctx.fillRect(orbitX, orbitY, orbitSize, orbitSize);
+  }
+  ctx.save();
+  ctx.globalAlpha = alpha * (active ? .72 : .38);
+  ctx.strokeStyle = profile.accent;
+  ctx.lineWidth = Math.max(1, Math.round(cell * .16));
+  ctx.setLineDash([Math.max(2, cell * .7), Math.max(2, cell * .45)]);
+  ctx.strokeRect(left - cell * .72, top - cell * .72, width + cell * 1.44, height + cell * 1.44);
+  ctx.setLineDash([]);
+  for (let corner = 0; corner < 4; corner += 1) {
+    const angle = corner * Math.PI / 2 + (active ? performance.now() / 2400 : 0);
+    const nodeX = x + Math.cos(angle) * (width * .72);
+    const nodeY = y + Math.sin(angle) * (height * .72);
+    ctx.fillStyle = corner % 2 ? profile.accent : '#fff1b0';
+    ctx.fillRect(Math.round(nodeX - cell * .16), Math.round(nodeY - cell * .16), Math.max(2, Math.round(cell * .32)), Math.max(2, Math.round(cell * .32)));
+  }
+  ctx.restore();
+  if (active) {
+    ctx.strokeStyle = profile.accent;
+    ctx.lineWidth = Math.max(2, Math.round(cell * .45));
+    ctx.strokeRect(left - cell, top - cell, width + cell * 2, height + cell * 2);
+  }
+  ctx.restore();
+}
+
+function addSpellCameraBox(faces, center, dimensions, color, shade = 1, material = 'steel') {
+  addBoxFaces(faces, makeBoxPoints(center, dimensions, 0, (point) => point), color, shade, material);
+}
+function vividSpellRgb(color) {
+  if (color && typeof color === 'object') return { r: color.r, g: color.g, b: color.b };
+  const value = String(color || '#fff1b0').replace('#', '');
+  const normalized = value.length === 3 ? value.split('').map((part) => part + part).join('') : value.padEnd(6, 'f').slice(0, 6);
+  const number = Number.parseInt(normalized, 16);
+  return { r: (number >> 16) & 255, g: (number >> 8) & 255, b: number & 255 };
+}
+function mixSpellRgb(first, second, amount) {
+  const t = clamp(amount, 0, 1);
+  return { r: Math.round(lerp(first.r, second.r, t)), g: Math.round(lerp(first.g, second.g, t)), b: Math.round(lerp(first.b, second.b, t)) };
+}
+function spellRgbCss(color, alpha = 1) { return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`; }
+function spellVisualPalette(spell) {
+  const profile = spellFocusProfile(spell?.kind);
+  const base = vividSpellRgb(spell?.color || '#6ce0c2');
+  const accent = vividSpellRgb(profile.accent);
+  const deep = mixSpellRgb(base, { r: 21, g: 12, b: 30 }, .48);
+  const light = mixSpellRgb(mixSpellRgb(base, accent, .42), { r: 255, g: 248, b: 214 }, .54);
+  const glow = mixSpellRgb(base, accent, .58);
+  return { base, accent, deep, light, glow };
+}
+function spellRoundRectPath(x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+function drawSpellGlyphSurface(blocks, palette, alpha, active) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = alpha * (active ? .18 : .1);
+  for (const block of blocks) {
+    const projected = projectCameraPoint({ side: block.side, forward: block.frontForward, z: block.z });
+    if (!projected) continue;
+    const width = block.cell * focalX() / block.frontForward * .98;
+    const height = block.cell * focalY() / block.frontForward * .98;
+    const radius = Math.max(1.5, Math.min(width, height) * .18);
+    const gradient = ctx.createLinearGradient(projected.x, projected.y - height / 2, projected.x, projected.y + height / 2);
+    gradient.addColorStop(0, spellRgbCss(palette.light, .95));
+    gradient.addColorStop(.38, spellRgbCss(block.highlight ? palette.accent : palette.base, .94));
+    gradient.addColorStop(1, spellRgbCss(palette.deep, .95));
+    ctx.fillStyle = gradient;
+    ctx.strokeStyle = spellRgbCss(palette.light, active ? .7 : .45);
+    ctx.lineWidth = Math.max(.7, Math.min(width, height) * .045);
+    spellRoundRectPath(projected.x - width / 2, projected.y - height / 2, width, height, radius);
+    ctx.fill();
+    ctx.stroke();
+    ctx.globalAlpha = alpha * (active ? .34 : .22);
+    ctx.strokeStyle = spellRgbCss(palette.light, .9);
+    ctx.lineWidth = Math.max(.6, Math.min(width, height) * .035);
+    ctx.beginPath();
+    ctx.moveTo(projected.x - width * .28, projected.y - height * .27);
+    ctx.lineTo(projected.x + width * .2, projected.y - height * .27);
+    ctx.stroke();
+    ctx.globalAlpha = alpha * (active ? .18 : .1);
+  }
+  ctx.restore();
+}
+function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false) {
+  if (!spell) return;
+  const pattern = PIXEL_SPELL_GLYPHS[spell.kind] || PIXEL_SPELL_GLYPHS.gate;
+  const palette = spellVisualPalette(spell);
+  const cell = Math.max(.006, size * center.forward / Math.max(1, focalY()) / pattern.length);
+  const glyphWidth = pattern[0].length * cell;
+  const glyphHeight = pattern.length * cell;
+  const depth = cell * (active ? 1.25 : .9);
+  const left = center.side - glyphWidth / 2 + cell / 2;
+  const top = center.z + glyphHeight / 2 - cell / 2;
+  const faces = [];
+  const surfaceBlocks = [];
+  for (let row = 0; row < pattern.length; row += 1) {
+    for (let column = 0; column < pattern[row].length; column += 1) {
+      const value = pattern[row][column];
+      if (value === '0') continue;
+      const block = { side: left + column * cell, forward: center.forward, z: top - row * cell };
+      const highlight = value === '2' || value === '3';
+      const frontColor = value === '3' ? palette.light : highlight ? palette.accent : palette.base;
+      const sideColor = value === '3' ? palette.accent : palette.deep;
+      addSpellCameraBox(faces, { ...block, forward: center.forward + depth * .12 }, [cell * .94, depth, cell * .94], sideColor, .86, 'steel');
+      addSpellCameraBox(faces, { ...block, forward: center.forward - depth * .46 }, [cell * .82, depth * .2, cell * .82], frontColor, active ? 1.18 : 1.08, null);
+      surfaceBlocks.push({ side: block.side, frontForward: center.forward - depth * .56, z: block.z, cell, highlight });
+    }
+  }
+  const orbitRadius = glyphWidth * (active ? 1.14 : .92);
+  const orbitDepth = Math.sin(now / 520) * depth * .8;
+  const orbitSize = Math.max(.008, cell * (active ? .52 : .4));
+  for (let index = 0; index < 4; index += 1) {
+    const angle = now / (active ? 900 : 1500) + index * TAU / 4;
+    addSpellCameraBox(faces, { side: center.side + Math.cos(angle) * orbitRadius, forward: center.forward + orbitDepth, z: center.z + Math.sin(angle) * orbitRadius }, [orbitSize, orbitSize * .9, orbitSize], index % 2 ? palette.accent : palette.light, active ? 1.08 : .86, null);
+  }
+  const projected = projectCameraPoint(center);
+  if (projected) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = alpha * (active ? .17 : .08);
+    ctx.shadowBlur = Math.max(9, size * .16);
+    ctx.shadowColor = spellRgbCss(palette.glow, .9);
+    const aura = ctx.createRadialGradient(projected.x, projected.y, 0, projected.x, projected.y, Math.max(12, glyphWidth * focalX() / center.forward * .86));
+    aura.addColorStop(0, spellRgbCss(palette.glow, .42));
+    aura.addColorStop(.5, spellRgbCss(palette.base, .14));
+    aura.addColorStop(1, spellRgbCss(palette.base, 0));
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.ellipse(projected.x, projected.y, glyphWidth * focalX() / center.forward * .78, glyphHeight * focalY() / center.forward * .78, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+  renderFaces(faces, alpha, true);
+  if (!projected) return;
+  drawSpellGlyphSurface(surfaceBlocks, palette, alpha, active);
+  ctx.save();
+  ctx.globalAlpha = alpha * (active ? .5 : .22);
+  ctx.strokeStyle = spellRgbCss(palette.accent, .95);
+  ctx.shadowBlur = Math.max(8, size * .12);
+  ctx.shadowColor = spellRgbCss(palette.glow, .9);
+  ctx.lineWidth = Math.max(1, size * .018);
+  ctx.lineJoin = 'round';
+  ctx.strokeRect(projected.x - glyphWidth * focalX() / center.forward * .58, projected.y - glyphHeight * focalY() / center.forward * .58, glyphWidth * focalX() / center.forward * 1.16, glyphHeight * focalY() / center.forward * 1.16);
+  ctx.restore();
+}
+
+function drawSpellFocusMesh(spell, now, active) {
+  if (!spell) return;
+  const pulse = .82 + Math.sin(now / 155) * .08 + (active ? .1 : 0);
+  const center = { side: -.38, forward: 1.06, z: .16 + Math.sin(now / 430) * .012 };
+  const projected = projectCameraPoint(center);
+  if (!projected) return;
+  const size = Math.max(26, canvas.height * .066);
+  drawSpellGlyph3D(spell, now, center, size, .78 + pulse * .12, active);
+}
+function drawPassiveSpellFocus(now) {
+  const spell = selectedSpellDefinition();
+  if (!spell || state.reading || state.menuActive) return;
+  drawSpellFocusMesh(spell, now, state.spellCast?.spell?.id === spell.id);
+}
+
 function drawSpellCast(now) {
   if (!state.spellCast) return;
   const spell = state.spellCast.spell;
   const progress = clamp(state.spellCast.elapsed / state.spellCast.duration, 0, 1);
   const fade = Math.sin(Math.PI * progress);
-  const color = hexToRgb(spell.color);
+  const size = canvas.height * (.09 + progress * .06);
+  drawSpellGlyph3D(spell, now, { side: 0, forward: 1.18, z: EYE_HEIGHT }, size, fade * .9, true);
+}
+function drawSpellSwitchControls(now) {
+  const spell = selectedSpellDefinition();
+  if (!spell || state.reading || state.menuActive || state.forestTransition) return;
+  // Use the exact same camera-space anchor as the in-hand spell glyph. This
+  // keeps the controls attached to the design instead of drifting to a HUD
+  // corner or appearing on the opposite side of the weapon.
+  const center = projectCameraPoint({ side: -.38, forward: 1.06, z: .16 + Math.sin(now / 430) * .012 });
+  if (!center) return;
+  const glyphSize = Math.max(26, canvas.height * .066);
+  const cell = Math.max(3, Math.round(glyphSize / 7));
+  const glyphHeight = 7 * cell;
+  const labelY = center.y + glyphHeight / 2 + Math.max(9, canvas.height * .014);
+  const fontSize = Math.max(10, Math.round(canvas.height * .016));
+  const keySpread = Math.max(fontSize * 2.55, glyphSize * .52);
+  const arrowSpread = Math.max(fontSize * 1.12, glyphSize * .18);
   ctx.save();
-  ctx.globalAlpha = fade * .72;
-  ctx.translate(canvas.width * .5, canvas.height * (.5 + Math.sin(now / 260) * .015));
-  ctx.rotate(progress * Math.PI * 1.5);
-  ctx.strokeStyle = rgba(color, .88);
-  ctx.fillStyle = rgba(color, .12);
-  ctx.shadowBlur = 18;
-  ctx.shadowColor = rgba(color, .8);
-  ctx.lineWidth = Math.max(1, canvas.height * .004);
-  const radius = canvas.height * (.035 + progress * .13);
-  ctx.beginPath(); ctx.arc(0, 0, radius, 0, TAU); ctx.stroke();
-  ctx.beginPath(); ctx.arc(0, 0, radius * .57, 0, TAU); ctx.fill();
-  ctx.font = `bold ${Math.max(16, canvas.height * .085)}px Georgia`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = rgba(color, 1); ctx.fillText(spell.glyph, 0, 0);
+  ctx.globalAlpha = .9;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${fontSize}px "DM Mono", monospace`;
+  ctx.shadowBlur = 3;
+  ctx.shadowColor = '#050302';
+  ctx.fillStyle = '#f0d38f';
+  ctx.fillText('Z', center.x - keySpread, labelY);
+  ctx.fillStyle = '#d6b56d';
+  ctx.fillText('◀', center.x - arrowSpread, labelY);
+  ctx.fillText('▶', center.x + arrowSpread, labelY);
+  ctx.fillStyle = '#f0d38f';
+  ctx.fillText('X', center.x + keySpread, labelY);
   ctx.restore();
 }
 function playSpellSound() { playTone(220, .16, 'sine', .022); playTone(440, .26, 'triangle', .024, .08); playTone(660, .32, 'sine', .018, .17); }
 
-function actionForItem(item) { if (item.id === 'contact-raven') return '<a href="mailto:liam.hosfeld@gmail.com">SEND A RAVEN ↗</a>'; if (item.id === 'resume-scroll') return '<a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">TAKE THE RÉSUMÉ ↧</a>'; if (item.id === 'linkedin-key') return '<a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">TURN THE LINKEDIN KEY ↗</a>'; return ''; }
+function actionForItem(item) { if (item.intro) return '<a href="mailto:liam.hosfeld@gmail.com">CONTACT LIAM ↗</a><a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">DOWNLOAD RÉSUMÉ ↧</a><a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">OPEN LINKEDIN ↗</a>'; if (item.id === 'contact-raven') return '<a href="mailto:liam.hosfeld@gmail.com">SEND A RAVEN ↗</a>'; if (item.id === 'resume-scroll') return '<a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">TAKE THE RÉSUMÉ ↧</a>'; if (item.id === 'linkedin-key') return '<a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">TURN THE LINKEDIN KEY ↗</a>'; return ''; }
 function openReading(item) {
   state.reading = item;
   state.readingElapsed = 0;
@@ -2053,14 +2752,27 @@ function openReading(item) {
   const itemY = Number.isFinite(item.y) ? item.y : state.player.y;
   const itemColor = item.color || '#6ce0c2';
   const room = rooms[item.roomIndex ?? 0];
+  const recordId = item.recordId || item.id;
   const tags = item.tags || [item.tag, room.shortTitle, `+${XP_PER_SCROLL} XP`];
   spawnParticles(itemX, itemY, .55, [itemColor, '#fff1b0'], settings.reducedMotion ? 12 : 30, { speed: 1.35, life: 1, size: .8, upward: .68, glow: 18, trail: true });
-  scrollRoomLabel.textContent = item.intro ? '· FIELD LOBBY' : `· ${room.floor}`;
+  scrollRoomLabel.textContent = item.intro ? '· FIELD LOBBY' : `· ${room.level}`;
   if (scrollRecordNumber) scrollRecordNumber.textContent = item.intro ? 'ENTRY SCROLL' : 'FIELD RECORD';
+  if (readingOverlay) readingOverlay.style.setProperty('--scroll-accent', itemColor);
+  if (scrollAuthorLine) scrollAuthorLine.textContent = item.intro ? 'LIAM HOSFELD · TECHNICAL CONSULTANT · ATLANTA, GA' : `LIAM HOSFELD · ${room.shortTitle.toUpperCase()}`;
+  if (scrollRecordStatus) scrollRecordStatus.textContent = `${state.collectedRecordIds.has(recordId) ? 'ARCHIVED SIGNAL' : 'NEW SIGNAL'} · ${(item.kind || 'FIELD NOTE').toUpperCase()}`;
+  if (scrollPositioning) scrollPositioning.textContent = item.intro
+    ? 'BEST FIT: OPERATIONS ANALYTICS · TMS DELIVERY · INTEGRATIONS · AUTOMATION · PROJECT ANALYSIS'
+    : `FIELD USE: ${item.tag || room.subtitle || 'SELECTED EVIDENCE'} · READ THE SIGNAL, THEN FOLLOW THE ROUTE`;
   scrollTitle.textContent = item.title;
   scrollSummary.textContent = item.summary;
   if (scrollIntroGrid) {
-    const metrics = item.featuredMetrics || [];
+    const metrics = item.featuredMetrics || [
+      { value: `+${XP_PER_SCROLL}`, label: 'archive experience' },
+      { value: room.level, label: 'field classification' },
+      { value: String(item.details?.length || 0), label: 'evidence points' },
+      { value: String(tags.length), label: 'signal tags' },
+      { value: (item.kind || 'record').toUpperCase(), label: 'record type' },
+    ];
     scrollIntroGrid.hidden = metrics.length === 0;
     scrollIntroGrid.innerHTML = metrics.map((metric, index) => `<div class="scroll-metric" style="--delay:${.12 + index * .06}s"><strong>${escapeHtml(metric.value)}</strong><span>${escapeHtml(metric.label)}</span></div>`).join('');
   }
@@ -2070,8 +2782,15 @@ function openReading(item) {
     scrollProofGrid.hidden = proof.length === 0;
     scrollProofGrid.innerHTML = proof.map((card, index) => `<article class="scroll-proof-card" style="--delay:${.2 + index * .07}s"><div class="scroll-proof-meta"><span>${escapeHtml(card.index)}</span><small>${escapeHtml(card.label)}</small></div><h3>${escapeHtml(card.title)}</h3><strong>${escapeHtml(card.result)}</strong><p>${escapeHtml(card.method)}</p><em>${escapeHtml(card.tools)}</em></article>`).join('');
   }
-  scrollDetails.innerHTML = item.details.map((detail, index) => `<li style="--delay:${.18 + index * .06}s">${escapeHtml(detail)}</li>`).join('');
+  const details = item.details || [];
+  if (scrollDetailsLabel) scrollDetailsLabel.textContent = item.intro ? 'FIELD NOTES / THE FULL ROUTE' : 'FIELD NOTES / EVIDENCE';
+  if (scrollDetailCount) scrollDetailCount.textContent = `${details.length} EVIDENCE POINT${details.length === 1 ? '' : 'S'}`;
+  scrollDetails.innerHTML = details.map((detail, index) => `<li style="--delay:${.18 + index * .06}s">${escapeHtml(detail)}</li>`).join('');
   scrollTags.innerHTML = tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
+  if (scrollCtaTitle) scrollCtaTitle.textContent = item.intro ? 'READY TO MAKE COMPLEX WORK CLEARER?' : 'THIS IS ONE PROOF POINT — SEE THE FULL ROUTE';
+  if (scrollCtaCopy) scrollCtaCopy.textContent = item.intro
+    ? 'Bring Liam a difficult operational system, a noisy data trail, or a process worth automating. He turns the signal into a route people can run.'
+    : 'Liam connects technical evidence to business action across TMS delivery, analytics, integrations, automation, and cross-functional work.';
   scrollActions.innerHTML = actionForItem(item);
   updateScrollProgress();
   readingOverlay.hidden = false;
@@ -2092,11 +2811,15 @@ function interactWithLightDoor() {
   state.keys.clear();
   state.mouseAttack = false;
   spawnParticles(state.doorOfLight.x, state.doorOfLight.y, .9, ['#b8f0e2', '#fff8db'], settings.reducedMotion ? 16 : 44, { speed: 2.3, life: 1.3, size: 1.1, upward: .9, glow: 21, trail: true });
-  showToast('The light accepts the delivery. Returning to the portfolio.', 'good');
+  showToast('The ascension gate opens. A sanctuary waits beyond the boss arena.', 'good');
   playTone(330, .28, 'sine', .03); playTone(660, .5, 'triangle', .03, .12);
   return true;
 }
 function openLobbyGate() {
+  if (!state.weapon.equipped) {
+    showToast('Equip a weapon before opening the archive gate.');
+    return false;
+  }
   if (state.lobbyGateOpen || state.lobbyGateOpening) return true;
   state.lobbyGateOpening = true;
   showToast('The archive gate opens. The world is waiting.', 'good');
@@ -2106,7 +2829,9 @@ function openLobbyGate() {
 function interactWithLobbyGate() {
   if (state.room !== 0 || lobbyGateDistance() > 1.65) return false;
   if (state.lobbyGateOpen) return true;
-  if (!state.tutorialSpell) {
+  if (!state.weapon.equipped) {
+    showToast('Equip a weapon before opening the archive gate.');
+  } else if (!state.tutorialSpell) {
     showToast('The archive gate is sealed. Find and read the glowing portfolio scroll first.');
   } else {
     showToast('Archive Key ready. Press Q to cast it at the gate.');
@@ -2118,17 +2843,55 @@ function updateLobbyGate(delta) {
   state.lobbyGateProgress = clamp(state.lobbyGateProgress + delta / 1.25, 0, 1);
   if (state.lobbyGateProgress >= 1) { state.lobbyGateOpening = false; state.lobbyGateOpen = true; showToast('ARCHIVE GATE OPEN · ENTER THE WORLD.', 'good'); }
 }
+function resumePedestalDistance() {
+  return state.room === SANCTUARY_ROOM_INDEX
+    ? Math.hypot(SANCTUARY_RESUME_PEDESTAL.x - state.player.x, SANCTUARY_RESUME_PEDESTAL.y - state.player.y)
+    : Infinity;
+}
+function downloadSanctuaryResume() {
+  if (state.room !== SANCTUARY_ROOM_INDEX || state.resumeDownloaded) return false;
+  state.resumeDownloaded = true;
+  const link = document.createElement('a');
+  link.href = 'assets/Liam_Hosfeld_Resume.pdf';
+  link.download = 'Liam-Hosfeld-Operations-Analytics-Resume.pdf';
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  spawnParticles(SANCTUARY_RESUME_PEDESTAL.x, SANCTUARY_RESUME_PEDESTAL.y, 1.15, ['#fff8d6', '#b8f0e2', '#f0d38f'], settings.reducedMotion ? 16 : 46, { speed: 1.5, life: 1.35, size: 1.05, upward: 1, spread: TAU, gravity: -.12, drag: .96, glow: 23, trail: true });
+  state.impactBursts.push({ x: SANCTUARY_RESUME_PEDESTAL.x, y: SANCTUARY_RESUME_PEDESTAL.y, z: 1.1, elapsed: 0, duration: 1.4, color: '#fff8d6', radius: 1.15, style: 'resume' });
+  showToast('RÉSUMÉ SECURED · YOUR PDF DOWNLOAD HAS STARTED.', 'good');
+  playTone(440, .2, 'sine', .03); playTone(660, .3, 'triangle', .03, .1); playTone(880, .42, 'sine', .022, .22);
+  updateHud();
+  return true;
+}
+function updateSanctuaryResume() {
+  if (state.room === SANCTUARY_ROOM_INDEX && !state.resumeDownloaded && resumePedestalDistance() <= 1.45) downloadSanctuaryResume();
+}
+
+function equipLobbyWeapon(creature) {
+  if (!creature || !WEAPON_LOADOUTS[creature.type]) return false;
+  // Equip by loadout type only. The static display remains in the lobby and is
+  // never reused as the player's original/held weapon object.
+  setWeapon(creature.type);
+  return true;
+}
+
 function recoverNearby() {
-  if (state.menuActive || state.launchTransition || state.transition || state.floorAnnouncement) return;
+  if (state.menuActive || state.launchTransition || state.transition || state.forestTransition) return;
   if (state.reading) { closeReading(); return; }
-  if (state.trader) { closeTrader(); return; }
   if (interactWithLightDoor()) return;
-  if (interactWithTrader()) return;
   if (interactWithLobbyGate()) return;
+  const weaponCreature = getNearestWeaponCreature();
+  if (weaponCreature) {
+    equipLobbyWeapon(weaponCreature);
+    return;
+  }
   const scroll = getNearestLobbyScroll();
   if (scroll) { scroll.recovered = true; openReading(scroll); updateHud(); return; }
   const item = getNearestItem();
-  if (!item) { showToast('Move closer to the glowing scroll, a field record, or the gate.'); return; }
+  if (!item) { showToast('Move closer to a weapon keeper, glowing scroll, health potion, field record, or the gate.'); return; }
+  if (item.kind === 'health-potion') return;
   item.recovered = true; state.recoveredItems.add(item.id); openReading(item); updateHud();
 }
 
@@ -2154,23 +2917,68 @@ function castRay(angle) {
   return { distance: MAX_DEPTH, hitX: state.player.x + rayDirX * MAX_DEPTH, hitY: state.player.y + rayDirY * MAX_DEPTH, wallX: 0, vertical: false };
 }
 function torchInfluence(x, y) { return 0; }
-function sampleLight(x, y) { if (state.room === 0) return clamp(.7 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 8, 0, 1) * .25, .56, 1.1); return clamp(.25 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 5.4, 0, 1) * .18, .12, 1.1); }
+function sampleLight(x, y) { if (state.room === SANCTUARY_ROOM_INDEX) return clamp(.92 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 12, 0, 1) * .18, .82, 1.18); if (state.room === 0) return clamp(.7 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 8, 0, 1) * .25, .56, 1.1); return clamp(.25 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 5.4, 0, 1) * .18, .12, 1.1); }
 function drawBackground(width, height) {
   const palette = rooms[state.room].palette || ['#090503', '#392719', '#0e0906'];
+  const forestProgress = state.room === 0
+    ? clamp((state.player.x - FOREST_HALL_START) / Math.max(.01, FOREST_HALL_TRIGGER_X - FOREST_HALL_START), 0, 1)
+    : 0;
+  const forestLight = 1 - forestProgress * .92;
   const horizon = height / 2 + Math.tan(state.player.pitch) * focalY();
+  const baseTop = hexToRgb(palette[0]);
+  const baseMid = hexToRgb(palette[1]);
+  const baseLow = hexToRgb(palette[2]);
+  const darkGrayTop = { r: 43, g: 45, b: 47 };
+  const darkGrayMid = { r: 57, g: 59, b: 61 };
+  const darkGrayLow = { r: 35, g: 38, b: 40 };
+  const skyTop = forestProgress > 0 ? rgba({ r: lerp(baseTop.r, darkGrayTop.r, forestProgress), g: lerp(baseTop.g, darkGrayTop.g, forestProgress), b: lerp(baseTop.b, darkGrayTop.b, forestProgress) }, 1) : palette[0];
+  const skyMid = forestProgress > 0 ? rgba({ r: lerp(baseMid.r, darkGrayMid.r, forestProgress), g: lerp(baseMid.g, darkGrayMid.g, forestProgress), b: lerp(baseMid.b, darkGrayMid.b, forestProgress) }, 1) : palette[1];
+  const skyLow = forestProgress > 0 ? rgba({ r: lerp(baseLow.r, darkGrayLow.r, forestProgress), g: lerp(baseLow.g, darkGrayLow.g, forestProgress), b: lerp(baseLow.b, darkGrayLow.b, forestProgress) }, 1) : palette[2];
   const ceiling = ctx.createLinearGradient(0, 0, 0, horizon);
-  ceiling.addColorStop(0, palette[0]); ceiling.addColorStop(.72, palette[1]); ceiling.addColorStop(1, palette[2]);
+  ceiling.addColorStop(0, skyTop); ceiling.addColorStop(.72, skyMid); ceiling.addColorStop(1, skyLow);
   ctx.fillStyle = ceiling; ctx.fillRect(0, 0, width, Math.max(0, horizon));
   if (state.room === 0) {
     const glow = ctx.createRadialGradient(width * .52, horizon * .66, 0, width * .52, horizon * .66, Math.max(width, height) * .62);
-    glow.addColorStop(0, 'rgba(238, 248, 207, .24)');
-    glow.addColorStop(.48, 'rgba(157, 222, 190, .1)');
+    glow.addColorStop(0, `rgba(238, 248, 207, ${.24 * forestLight})`);
+    glow.addColorStop(.48, `rgba(157, 222, 190, ${.1 * forestLight})`);
     glow.addColorStop(1, 'rgba(157, 222, 190, 0)');
     ctx.fillStyle = glow; ctx.fillRect(0, 0, width, Math.max(0, horizon));
-    ctx.save(); ctx.globalAlpha = .24; ctx.strokeStyle = '#dff1c2'; ctx.lineWidth = Math.max(1, height * .003);
+    ctx.save(); ctx.globalAlpha = .24 * forestLight; ctx.strokeStyle = '#dff1c2'; ctx.lineWidth = Math.max(1, height * .003);
     for (let leaf = 0; leaf < 5; leaf += 1) {
       const x = width * (.12 + leaf * .19); const y = horizon * (.3 + (leaf % 2) * .1);
       ctx.beginPath(); ctx.arc(x, y, Math.max(12, width * .03), Math.PI * .15, Math.PI * .85); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (forestProgress > 0) {
+    const darkness = smoothstep(.02, 1, forestProgress) * .16;
+    const forestShade = ctx.createLinearGradient(0, 0, 0, horizon);
+    forestShade.addColorStop(0, `rgba(4, 7, 9, ${darkness})`);
+    forestShade.addColorStop(.64, `rgba(5, 8, 10, ${darkness * .72})`);
+    forestShade.addColorStop(1, `rgba(8, 12, 12, ${darkness * .18})`);
+    ctx.fillStyle = forestShade;
+    ctx.fillRect(0, 0, width, Math.max(0, horizon));
+  }
+  if (state.room === SANCTUARY_ROOM_INDEX) {
+    const sanctuaryGlow = ctx.createRadialGradient(width * .5, horizon * .72, 0, width * .5, horizon * .72, Math.max(width, height) * .75);
+    sanctuaryGlow.addColorStop(0, 'rgba(255, 255, 226, .62)');
+    sanctuaryGlow.addColorStop(.36, 'rgba(190, 245, 226, .3)');
+    sanctuaryGlow.addColorStop(1, 'rgba(190, 245, 226, 0)');
+    ctx.fillStyle = sanctuaryGlow;
+    ctx.fillRect(0, 0, width, Math.max(0, horizon));
+    ctx.save();
+    ctx.globalAlpha = .42;
+    ctx.strokeStyle = '#fff8d6';
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = '#d9fff0';
+    for (let star = 0; star < 24; star += 1) {
+      const x = width * fract(star * .417 + .08);
+      const y = horizon * (.18 + fract(star * .719) * .68);
+      const radius = 1 + (star % 3) * .55;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, TAU);
+      ctx.fillStyle = star % 4 === 0 ? '#fff1b0' : '#e5fff6';
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -2203,13 +3011,13 @@ function drawBackground(width, height) {
     const moonY = projectY(moonCamera.z, moonCamera.forward);
     const moonRadius = clamp(Math.min(width, height) * .075, 16, 42);
     ctx.save();
-    ctx.globalAlpha = .72;
+    ctx.globalAlpha = .72 * (1 - forestProgress * .62);
     const moonGlow = ctx.createRadialGradient(moonX, moonY, moonRadius * .35, moonX, moonY, moonRadius * 2.8);
     moonGlow.addColorStop(0, rgba({ r: moonColor.r, g: moonColor.g, b: moonColor.b }, .23));
     moonGlow.addColorStop(.44, rgba({ r: lerp(190, 100, progress), g: lerp(202, 28, progress), b: lerp(188, 24, progress) }, .1));
     moonGlow.addColorStop(1, rgba(moonColor, 0));
     ctx.fillStyle = moonGlow; ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius * 2.8, 0, TAU); ctx.fill();
-    ctx.globalAlpha = .86;
+    ctx.globalAlpha = .86 * (1 - forestProgress * .62);
     ctx.fillStyle = rgba(moonColor, 1); ctx.shadowBlur = 10 + progress * 18; ctx.shadowColor = rgba(moonColor, .44); ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius, 0, TAU); ctx.fill();
     ctx.shadowBlur = 0; ctx.fillStyle = rgba(craterColor, .26 + progress * .16);
     [[-.32, -.18, .15], [.18, -.28, .11], [.27, .18, .18], [-.2, .27, .1], [.02, .08, .075]].forEach(([x, y, radius]) => { ctx.beginPath(); ctx.arc(moonX + x * moonRadius, moonY + y * moonRadius, radius * moonRadius, 0, TAU); ctx.fill(); });
@@ -2218,6 +3026,80 @@ function drawBackground(width, height) {
   const floor = ctx.createLinearGradient(0, horizon, 0, height);
   floor.addColorStop(0, palette[1]); floor.addColorStop(1, palette[0]);
   ctx.fillStyle = floor; ctx.fillRect(0, Math.max(0, horizon), width, height - Math.max(0, horizon));
+}
+let ceilingBuffer = null;
+let ceilingBufferContext = null;
+let ceilingBufferImage = null;
+let ceilingBufferHeight = 0;
+let ceilingRowDistances = null;
+
+function ensureCeilingBuffer(height) {
+  const nextHeight = Math.ceil(height / FLOOR_STEP);
+  if (ceilingBuffer && ceilingBuffer.height === nextHeight) return;
+  ceilingBuffer = document.createElement('canvas');
+  ceilingBuffer.width = RAY_COUNT;
+  ceilingBuffer.height = nextHeight;
+  ceilingBufferContext = ceilingBuffer.getContext('2d', { alpha: true });
+  ceilingBufferImage = ceilingBufferContext.createImageData(RAY_COUNT, nextHeight);
+  ceilingBufferHeight = nextHeight;
+  ceilingRowDistances = new Float32Array(nextHeight);
+}
+
+function ceilingDistanceAtScreenY(y) {
+  const verticalAngle = state.player.pitch - Math.atan((y - canvas.height / 2) / focalY());
+  const denominator = Math.tan(verticalAngle);
+  return denominator > .01 ? (CEILING_Z - EYE_HEIGHT) / denominator : MAX_DEPTH;
+}
+
+function drawRoomRoof(width, height) {
+  const room = rooms[state.room];
+  const roomStart = roomOffsets[state.room];
+  const roomEnd = roomStart + roomWidths[state.room];
+  if (!room?.roof || state.player.x < roomStart || state.player.x >= roomEnd) return;
+  ensureCeilingBuffer(height);
+  const data = ceilingBufferImage.data;
+  data.fill(0);
+  const horizon = clamp(height / 2 + Math.tan(state.player.pitch) * focalY(), 0, height);
+  for (let row = 0; row < ceilingBufferHeight; row += 1) {
+    const screenY = row * FLOOR_STEP + FLOOR_STEP * .5;
+    if (screenY >= horizon) continue;
+    ceilingRowDistances[row] = clamp(ceilingDistanceAtScreenY(screenY), .35, MAX_DEPTH);
+  }
+  for (let ray = 0; ray < RAY_COUNT; ray += 1) {
+    const angle = state.player.angle + (ray / RAY_COUNT - .5) * FOV;
+    const directionX = Math.cos(angle); const directionY = Math.sin(angle);
+    for (let row = 0; row < ceilingBufferHeight; row += 1) {
+      const screenY = row * FLOOR_STEP + FLOOR_STEP * .5;
+      if (screenY >= horizon) continue;
+      const distance = ceilingRowDistances[row];
+      const worldX = state.player.x + directionX * distance;
+      const worldY = state.player.y + directionY * distance;
+      const sampledRoomIndex = roomIndexAtX(worldX);
+      if (sampledRoomIndex !== state.room || !rooms[sampledRoomIndex]?.roof || isWall(worldX, worldY)) continue;
+      const surface = sampleGround(worldX, worldY);
+      const light = sampleLight(worldX, worldY);
+      const factor = clamp(.28 + light * .5, .12, .92);
+      const index = (row * RAY_COUNT + ray) * 4;
+      data[index] = clamp(Math.round(surface.r * factor), 0, 255);
+      data[index + 1] = clamp(Math.round(surface.g * factor), 0, 255);
+      data[index + 2] = clamp(Math.round(surface.b * factor), 0, 255);
+      data[index + 3] = 255;
+    }
+  }
+  ceilingBufferContext.putImageData(ceilingBufferImage, 0, 0);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, width, horizon + 1); ctx.clip();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(ceilingBuffer, 0, 0, width, height);
+  // Keep the far ceiling quiet so the floor-like tile pattern transitions into
+  // neighboring rooms without a hard beam or material break at eye level.
+  const shade = ctx.createLinearGradient(0, 0, 0, horizon);
+  shade.addColorStop(0, 'rgba(4, 3, 3, .25)');
+  shade.addColorStop(.72, 'rgba(4, 3, 3, .04)');
+  shade.addColorStop(1, 'rgba(4, 3, 3, 0)');
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 0, width, horizon + 1);
+  ctx.restore();
 }
 function drawWalls(width, height) {
   const textureStone = textures.stone; const textureWood = textures.wood;
@@ -2228,7 +3110,7 @@ function drawWalls(width, height) {
     if (base <= 0 || top >= height) continue;
     const sourceX = Math.floor(hit.wallX * texture.width); ctx.drawImage(texture, sourceX, 0, 1, texture.height, x, top, width / RAY_COUNT + 1, base - top);
     const light = sampleLight(hit.hitX, hit.hitY); const fog = clamp((corrected - 3) / 17, 0, .72); const darkness = clamp(1 - light * .8 + fog * .44, .08, .9);
-    const wallShade = state.room === 0 ? `rgba(22, 55, 41, ${darkness * .42})` : `rgba(8, 4, 2, ${darkness})`; ctx.fillStyle = wallShade; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top);
+    const wallShade = state.room === SANCTUARY_ROOM_INDEX ? `rgba(37, 111, 105, ${darkness * .16})` : state.room === 0 ? `rgba(22, 55, 41, ${darkness * .42})` : `rgba(8, 4, 2, ${darkness})`; ctx.fillStyle = wallShade; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top);
     const warmth = clamp(torchInfluence(hit.hitX, hit.hitY) * .035, 0, .08); if (warmth > .005) { ctx.fillStyle = `rgba(196, 112, 43, ${warmth})`; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top); }
     if (hit.vertical) { ctx.fillStyle = 'rgba(24, 10, 3, .13)'; ctx.fillRect(x, top, 1, base - top); }
   }
@@ -2311,7 +3193,16 @@ function makeItemSprite(item) {
   paint.shadowBlur = 0;
   paint.strokeStyle = rgba(color, .9);
   paint.lineWidth = 4;
-  if (['scroll', 'ledger', 'chronicle', 'map'].includes(item.kind)) {
+  if (item.kind === 'health-potion') {
+    paint.fillStyle = '#6a2b2a';
+    paint.beginPath(); paint.arc(0, 9, 23, 0, TAU); paint.fill(); paint.stroke();
+    paint.fillStyle = '#d16f63';
+    paint.fillRect(-15, -18, 30, 30);
+    paint.fillStyle = '#f0ddaf';
+    paint.fillRect(-8, -29, 16, 11);
+    paint.fillStyle = '#fff1b0';
+    paint.fillRect(-4, -12, 8, 22); paint.fillRect(-12, -5, 24, 8);
+  } else if (['scroll', 'ledger', 'chronicle', 'map'].includes(item.kind)) {
     paint.fillStyle = '#d6b57b';
     paint.fillRect(-26, -34, 52, 68);
     paint.strokeStyle = '#71451f';
@@ -2446,8 +3337,19 @@ function paintFace(face) {
     for (const point of face.projected) { minX = Math.min(minX, point.x); minY = Math.min(minY, point.y); maxX = Math.max(maxX, point.x); maxY = Math.max(maxY, point.y); }
     minX = clamp(Math.floor(minX) - 2, 0, canvas.width); minY = clamp(Math.floor(minY) - 2, 0, canvas.height);
     maxX = clamp(Math.ceil(maxX) + 2, 0, canvas.width); maxY = clamp(Math.ceil(maxY) + 2, 0, canvas.height);
-    ctx.save(); traceFace(face); ctx.clip(); ctx.fillStyle = pattern; ctx.fillRect(minX, minY, Math.max(1, maxX - minX), Math.max(1, maxY - minY));
-    if (face.shade < 1) { ctx.fillStyle = `rgba(18, 10, 5, ${clamp(1 - face.shade, 0, .75)})`; ctx.fillRect(minX, minY, Math.max(1, maxX - minX), Math.max(1, maxY - minY)); }
+    ctx.save();
+    traceFace(face); ctx.clip();
+    ctx.fillStyle = pattern;
+    ctx.fillRect(minX, minY, Math.max(1, maxX - minX), Math.max(1, maxY - minY));
+    // Procedural textures are detail layers; preserve the authored material color.
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = rgba(color, .92);
+    ctx.fillRect(minX, minY, Math.max(1, maxX - minX), Math.max(1, maxY - minY));
+    ctx.globalCompositeOperation = 'source-over';
+    if (face.shade < 1) {
+      ctx.fillStyle = `rgba(18, 10, 5, ${clamp(1 - face.shade, 0, .75)})`;
+      ctx.fillRect(minX, minY, Math.max(1, maxX - minX), Math.max(1, maxY - minY));
+    }
     ctx.restore();
   } else { ctx.fillStyle = rgba({ r: color.r * face.shade, g: color.g * face.shade, b: color.b * face.shade }, 1); traceFace(face); ctx.fill(); }
   traceFace(face); ctx.strokeStyle = 'rgba(33, 21, 13, .72)'; ctx.lineWidth = 1; ctx.stroke();
@@ -2575,6 +3477,32 @@ function quadrupedFaces(enemy) {
   return mesh.faces;
 }
 
+function cockroachFaces(enemy) {
+  const mesh = enemyMeshContext(enemy); const { box, bone, color: shell } = mesh;
+  const darkShell = '#30241d';
+  const amber = '#b8894c';
+  // A low, segmented body makes this read as an actual cockroach rather than a
+  // generic crawler. The head points toward the player through the authored yaw.
+  box({ side: 0, forward: -.22, z: .34 }, [.48, .62, .22], darkShell, .84, 'leather');
+  box({ side: 0, forward: .16, z: .38 }, [.42, .52, .28], shell, .96, 'leather');
+  box({ side: 0, forward: .48, z: .4 }, [.3, .3, .2], '#4b3323', .92, 'leather');
+  box({ side: 0, forward: .66, z: .42 }, [.22, .16, .14], amber, 1.02, 'steel');
+  box({ side: -.12, forward: .73, z: .47 }, [.045, .035, .045], '#f0cf79', 1.1, 'steel');
+  box({ side: .12, forward: .73, z: .47 }, [.045, .035, .045], '#f0cf79', 1.1, 'steel');
+  for (const side of [-1, 1]) {
+    for (let leg = 0; leg < 3; leg += 1) {
+      const forward = .3 - leg * .28;
+      const reach = .38 + (leg === 1 ? .08 : 0);
+      const lift = .18 + (leg === 1 ? .03 : 0);
+      bone({ side: side * .16, forward, z: .34 }, { side: side * reach, forward: forward + .18, z: lift }, .028, shell, 'leather');
+      bone({ side: side * reach, forward: forward + .18, z: lift }, { side: side * (.54 + leg * .035), forward: forward - .04, z: .08 }, .022, darkShell, 'leather');
+    }
+  }
+  bone({ side: -.08, forward: .66, z: .46 }, { side: -.34, forward: .98, z: .55 }, .018, amber, 'bone');
+  bone({ side: .08, forward: .66, z: .46 }, { side: .34, forward: .98, z: .55 }, .018, amber, 'bone');
+  return mesh.faces;
+}
+
 function mothFaces(enemy) {
   const mesh = enemyMeshContext(enemy); const { box, bone, color: wing } = mesh;
   box({ side: 0, forward: 0, z: 1.16 }, [.2, .36, .56], '#49382b', .9);
@@ -2692,6 +3620,7 @@ function enemyFaces(enemy) {
     case 'wraith': return wraithFaces(enemy);
     case 'imp': return impFaces(enemy);
     case 'crawler': return crawlerFaces(enemy);
+    case 'cockroach': return cockroachFaces(enemy);
     case 'leech': return leechFaces(enemy);
     case 'ghoul': return ghoulFaces(enemy);
     case 'beast':
@@ -2744,6 +3673,14 @@ function drawEnemy3D(enemy) {
 function objectInView(x, y, maxDistance = MAX_DEPTH + 1) {
   const dx = x - state.player.x; const dy = y - state.player.y; const distance = Math.hypot(dx, dy); if (distance > maxDistance) return false;
   const relative = Math.abs(normalizeAngle(Math.atan2(dy, dx) - state.player.angle)); return relative < FOV * .82;
+}
+function treeFootprintIsClear(tree) {
+  const radius = .82 * (tree.scale || 1);
+  for (let index = 0; index < 16; index += 1) {
+    const angle = index * TAU / 16;
+    if (isWall(tree.x + Math.cos(angle) * radius, tree.y + Math.sin(angle) * radius)) return false;
+  }
+  return !isWall(tree.x, tree.y);
 }
 function drawGroundGlow(x, y, color, now, radius = .48, z = .035) {
   const center = projectCameraPoint(cameraPoint(x, y, z));
@@ -2810,108 +3747,234 @@ function drawLobbyStonePath(now) {
     ctx.restore();
   }
 }
+function drawForestHallPath(now) {
+  if (state.room !== 0) return;
+  const startX = FOREST_HALL_START + .35;
+  const endX = FOREST_HALL_END - .35;
+  const pathWidth = .86;
+  const slabLength = .82;
+  const slabColors = ['#6f684d', '#837651', '#5b5948', '#947d55', '#676047'];
+  for (let x = startX, index = 0; x < endX; x += slabLength, index += 1) {
+    const x0 = x + .035;
+    const x1 = Math.min(endX, x + slabLength - .06);
+    const wobble0 = Math.sin(index * 1.37) * .055;
+    const wobble1 = Math.sin((index + 1) * 1.37) * .055;
+    const points = [
+      projectLobbyGroundPoint(x0, FOREST_HALL_CENTER_Y - pathWidth / 2 + wobble0),
+      projectLobbyGroundPoint(x1, FOREST_HALL_CENTER_Y - pathWidth / 2 + wobble1),
+      projectLobbyGroundPoint(x1, FOREST_HALL_CENTER_Y + pathWidth / 2 + wobble1),
+      projectLobbyGroundPoint(x0, FOREST_HALL_CENTER_Y + pathWidth / 2 + wobble0),
+    ];
+    if (points.some((point) => !point)) continue;
+    ctx.save();
+    ctx.globalAlpha = .9;
+    ctx.fillStyle = slabColors[index % slabColors.length];
+    ctx.strokeStyle = 'rgba(35, 31, 22, .72)';
+    ctx.lineWidth = Math.max(1, canvas.height * .0022);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawForestHallFog(now) {
+  if (state.room !== 0 || !state.lobbyGateOpen) return;
+  const firstFogX = FOREST_HALL_START + FOREST_HALL_GAP * .28;
+  const finalFogX = FOREST_HALL_END - 1.1;
+  const layers = 7;
+  // Draw the farthest layers first so the corridor dissolves into a deep,
+  // opaque bank rather than ending in a single visible curtain.
+  for (let layer = layers - 1; layer >= 0; layer -= 1) {
+    const depth = layer / (layers - 1);
+    const fogX = lerp(firstFogX, finalFogX, depth);
+    const halfWidth = 1.28 + depth * .28;
+    const bottom = projectCameraPoint(cameraPoint(fogX, FOREST_HALL_CENTER_Y + halfWidth, .03));
+    const bottomLeft = projectCameraPoint(cameraPoint(fogX, FOREST_HALL_CENTER_Y - halfWidth, .03));
+    const top = projectCameraPoint(cameraPoint(fogX, FOREST_HALL_CENTER_Y + halfWidth, 2.55));
+    const topLeft = projectCameraPoint(cameraPoint(fogX, FOREST_HALL_CENTER_Y - halfWidth, 2.55));
+    if ([bottom, bottomLeft, top, topLeft].some((point) => !point)) continue;
+    const left = Math.min(bottomLeft.x, topLeft.x);
+    const right = Math.max(bottom.x, top.x);
+    const topY = Math.min(top.y, topLeft.y);
+    const bottomY = Math.max(bottom.y, bottomLeft.y);
+    const strength = (.16 + depth * .34) * (.94 + Math.sin(now / 1300 + layer) * .06);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(topLeft.x, topLeft.y);
+    ctx.lineTo(top.x, top.y);
+    ctx.lineTo(bottom.x, bottom.y);
+    ctx.lineTo(bottomLeft.x, bottomLeft.y);
+    ctx.closePath();
+    ctx.clip();
+    const fog = ctx.createLinearGradient(0, topY, 0, bottomY);
+    fog.addColorStop(0, `rgba(145, 166, 152, ${strength * .32})`);
+    fog.addColorStop(.28, `rgba(170, 190, 163, ${strength * .82})`);
+    fog.addColorStop(.66, `rgba(144, 165, 147, ${strength})`);
+    fog.addColorStop(1, `rgba(104, 126, 112, ${strength * .7})`);
+    ctx.fillStyle = fog;
+    ctx.fillRect(left, topY, Math.max(1, right - left), Math.max(1, bottomY - topY));
+    for (let wisp = 0; wisp < 3; wisp += 1) {
+      const y = topY + (bottomY - topY) * (.26 + wisp * .23) + Math.sin(now / 900 + wisp * 1.7 + layer) * 5;
+      const wispGradient = ctx.createRadialGradient(left + (right - left) * (.2 + wisp * .3), y, 0, left + (right - left) * (.2 + wisp * .3), y, Math.max(12, (right - left) * .38));
+      wispGradient.addColorStop(0, `rgba(218, 228, 207, ${strength * .34})`);
+      wispGradient.addColorStop(1, 'rgba(218, 228, 207, 0)');
+      ctx.fillStyle = wispGradient;
+      ctx.fillRect(left, y - 20, Math.max(1, right - left), 40);
+    }
+    ctx.restore();
+  }
+}
+
 function drawWorldRoute(now) {
-  // Only the entrance hall receives a physical path; later rooms remain unmarked.
-  if (state.room === 0) drawLobbyStonePath(now);
+  if (state.room === 0) {
+    drawLobbyStonePath(now);
+    drawForestHallPath(now);
+  }
+  if (state.room === FINAL_ROOM_INDEX) drawDoorOfLight(now);
+  if (state.room === SANCTUARY_ROOM_INDEX) drawSanctuaryPedestal(now);
 }
-function drawTrader3D(trader, now) {
+function drawLobbyWeaponPedestal(faces, origin, yaw, accent) {
+  // Small three-tier display pedestal: broad foot, tapered-looking column,
+  // and a thin illuminated cap under the weapon.
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .05 }, [.30, .30, .10], yaw, '#3b2a20', .82, 'stone');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .15 }, [.21, .21, .20], yaw, '#68452d', .9, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .275 }, [.25, .25, .05], yaw, accent, .88, 'steel');
+}
+
+function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
+  if (state.room !== 0 || !creature) return;
+
   const faces = [];
-  const origin = { x: trader.x, y: trader.y };
-  const yaw = Math.atan2(state.player.y - trader.y, state.player.x - trader.x);
-  const scale = .76;
-  const scaledPoint = (point) => ({ side: point.side * scale, forward: point.forward * scale, z: point.z * scale });
-  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
-    faces,
-    origin,
-    scaledPoint(center),
-    dimensions.map((value) => value * scale),
-    yaw,
-    color,
-    shade,
-    material,
-  );
-  const bone = (start, end, radius, color, material = null) => addBoneLocal(
-    faces,
-    origin,
-    scaledPoint(start),
-    scaledPoint(end),
-    radius * scale,
-    yaw,
-    color,
-    material,
-  );
+  const origin = { x: creature.x, y: creature.y };
+  // Keep each display fixed in world space. These are not billboards.
+  const yaw = creature.yaw ?? 0;
+  const type = creature.type;
+  const color = type === 'wand' ? '#db8872' : type === 'crossbow' ? '#f0d38d' : '#d8c18b';
+  const light = type === 'wand' ? '#f4a06d' : type === 'crossbow' ? '#fff0b2' : '#fff4c7';
+  const pedestalTop = .30;
+  let bottomZ = pedestalTop + .015;
+  let topZ = .58;
+  let haloRadius = .24;
 
-  box({ side: 0, forward: 0, z: .78 }, [.58, .44, 1.22], '#56402d', .9, 'leather');
-  box({ side: 0, forward: .05, z: 1.44 }, [.42, .38, .42], '#bd9360', .98, 'bone');
-  box({ side: 0, forward: .22, z: 1.48 }, [.22, .08, .12], '#2e2119', .84, 'steel');
-  box({ side: -.09, forward: .25, z: 1.52 }, [.045, .03, .045], '#e7c879', 1.12, 'steel');
-  box({ side: .09, forward: .25, z: 1.52 }, [.045, .03, .045], '#e7c879', 1.12, 'steel');
-  bone({ side: -.24, forward: 0, z: 1.12 }, { side: -.48, forward: .12, z: .62 }, .065, '#76583d', 'leather');
-  bone({ side: .24, forward: 0, z: 1.12 }, { side: .48, forward: .12, z: .62 }, .065, '#76583d', 'leather');
-  bone({ side: -.13, forward: -.02, z: .3 }, { side: -.19, forward: .04, z: .06 }, .085, '#30251d', 'leather');
-  bone({ side: .13, forward: -.02, z: .3 }, { side: .19, forward: .04, z: .06 }, .085, '#30251d', 'leather');
-  bone({ side: .62, forward: .04, z: .08 }, { side: .62, forward: .04, z: 1.7 }, .035, '#9d7042', 'wood');
-  box({ side: .62, forward: .04, z: 1.82 }, [.16, .16, .16], '#e7ad67', 1.12, 'steel');
-  renderFaces(faces, .98, true);
-  drawGroundGlow(trader.x, trader.y, '#e7ad67', now, .52, .04);
-  const projection = projectVerticalBounds(trader.x, trader.y, .86 * scale, 1.9 * scale);
-  if (!projection) return;
-  // Guaranteed silhouette fallback for the waypoint character, matching the
-  // scaled mesh above rather than restoring the retired oversized figure.
-  const h = clamp(projection.height, 18, canvas.height * .42);
-  const bottom = projection.bottom;
-  const x = projection.x;
-  ctx.save();
-  ctx.globalAlpha = .92;
-  ctx.shadowBlur = Math.max(6, h * .08);
-  ctx.shadowColor = '#e7ad67';
-  ctx.fillStyle = '#6a4a30';
-  ctx.fillRect(x - h * .12, bottom - h * .58, h * .24, h * .48);
-  ctx.fillStyle = '#d0a66d';
-  ctx.beginPath(); ctx.arc(x, bottom - h * .7, Math.max(4, h * .11), 0, TAU); ctx.fill();
-  ctx.fillStyle = '#e7ad67';
-  ctx.fillRect(x + h * .16, bottom - h * .62, Math.max(2, h * .035), h * .46);
-  ctx.restore();
-  drawTraderSpeechBubble(trader, scale);
-}
+  drawLobbyWeaponPedestal(faces, origin, yaw, color);
 
-function drawTraderSpeechBubble(trader, scale = 1) {
-  if (state.room !== 0 || trader.roomIndex !== 0) return;
-  const anchor = projectCameraPoint(cameraPoint(trader.x, trader.y, 2.18 * scale));
+  if (type === 'stars') {
+    // The pedestal star is intentionally tiny so it reads as a display item,
+    // not a second pedestal. It is 20% of the previous plate size.
+    const starYaw = yaw + now / 1800;
+    const pedestalStarSize = .072;
+    addFlatSquareBladeWorld(faces, origin, { side: 0, forward: 0, z: .325 }, pedestalStarSize, .005, starYaw, color, 1.16);
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .327 }, [.011, .011, .008], starYaw, '#5b3d25', 1, 'steel');
+    topZ = .47;
+    haloRadius = .22;
+  } else if (type === 'crossbow') {
+    // Small stand-alone crossbow, scaled to sit naturally on the pedestal cap.
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .35 }, [.07, .32, .07], yaw, '#704622', 1, 'wood');
+    addBoxLocal(faces, origin, { side: 0, forward: .14, z: .445 }, [.44, .06, .07], yaw, '#a87843', 1.08, 'wood');
+    addBoxLocal(faces, origin, { side: 0, forward: .17, z: .47 }, [.38, .018, .018], yaw, '#fff0b2', 1.14, 'steel');
+    addBoxLocal(faces, origin, { side: -.23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .96, 'steel');
+    addBoxLocal(faces, origin, { side: .23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .88, 'steel');
+    topZ = .61;
+    haloRadius = .27;
+  } else if (type === 'wand') {
+    // Small upright Ember Wand with its base seated on the pedestal cap.
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .59 }, [.055, .055, .56], yaw, '#4a2d20', 1.02, 'wood');
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .90 }, [.12, .10, .11], yaw, '#d97856', 1.12, 'steel');
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.01 }, [.06, .06, .08], yaw, light, 1.2, 'steel');
+    topZ = 1.11;
+    haloRadius = .19;
+  } else {
+    return;
+  }
+
+  renderFaces(faces, .99, true);
+  drawGroundGlow(creature.x, creature.y, color, now, .44, .035);
+  drawLobbyWeaponHalos(creature, now, bottomZ, topZ, haloRadius, color, light);
+
+  const anchor = projectCameraPoint(cameraPoint(creature.x, creature.y, bottomZ + (topZ - bottomZ) * .5));
   if (!anchor) return;
-  const size = clamp(canvas.height * .019, 8, 13);
-  const lineHeight = size * 1.35;
-  const lines = ['NEED A WEAPON?', 'W SPEAR · A CROSSBOW', 'S WAND · D CYCLE'];
+
+  const size = clamp(canvas.height * .065 / Math.max(.8, anchor.depth), 9, 28);
   ctx.save();
-  ctx.font = `bold ${size}px "DM Mono", monospace`;
-  const bubbleWidth = Math.min(canvas.width - 16, Math.max(...lines.map((line) => ctx.measureText(line).width)) + 20);
-  const bubbleHeight = lineHeight * lines.length + 16;
-  const bubbleX = clamp(anchor.x - bubbleWidth / 2, 8, canvas.width - bubbleWidth - 8);
-  const bubbleY = Math.max(8, anchor.y - bubbleHeight - 12);
-  ctx.globalAlpha = .96;
-  ctx.fillStyle = 'rgba(246, 225, 174, .96)';
-  ctx.strokeStyle = '#704622';
-  ctx.lineWidth = Math.max(1, canvas.height * .002);
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = 'rgba(0, 0, 0, .58)';
-  ctx.beginPath();
-  roundedRectPath(ctx, bubbleX, bubbleY, bubbleWidth, bubbleHeight, 8);
-  ctx.fill();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(anchor.x - 8, bubbleY + bubbleHeight);
-  ctx.lineTo(anchor.x, bubbleY + bubbleHeight + 9);
-  ctx.lineTo(anchor.x + 8, bubbleY + bubbleHeight);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#3d2819';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  lines.forEach((line, index) => ctx.fillText(line, bubbleX + bubbleWidth / 2, bubbleY + 9 + lineHeight * (index + .5)));
+  ctx.globalAlpha = .82;
+  ctx.strokeStyle = light;
+  ctx.shadowBlur = Math.max(6, size * .3);
+  ctx.shadowColor = light;
+  ctx.lineWidth = Math.max(1, size * .07);
+  if (type === 'stars') {
+    ctx.strokeRect(anchor.x - size * .42, anchor.y - size * .18, size * .84, size * .36);
+  } else if (type === 'crossbow') {
+    ctx.beginPath();
+    ctx.moveTo(anchor.x - size * .48, anchor.y);
+    ctx.lineTo(anchor.x + size * .48, anchor.y);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(anchor.x, anchor.y - size * .55);
+    ctx.lineTo(anchor.x, anchor.y + size * .55);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(anchor.x, anchor.y - size * .62, Math.max(2, size * .12), 0, TAU);
+    ctx.fillStyle = light;
+    ctx.fill();
+  }
   ctx.restore();
+
 }
+
+function drawLobbyWeaponHalos(creature, now, bottomZ, topZ, radius, color, light) {
+  const bottom = projectCameraPoint(cameraPoint(creature.x, creature.y, bottomZ));
+  const top = projectCameraPoint(cameraPoint(creature.x, creature.y, topZ));
+  if (!bottom && !top) return;
+
+  const pulse = .78 + Math.sin(now / 230 + creature.x) * .16;
+  const drawHalo = (point, phase, scale) => {
+    if (!point) return;
+    const width = Math.max(5, canvas.height * radius / Math.max(1, point.depth) * .62 * scale);
+    const height = Math.max(2, width * .17);
+    ctx.save();
+    ctx.globalAlpha = .30 + pulse * .28;
+    ctx.strokeStyle = phase === 0 ? light : color;
+    ctx.shadowBlur = Math.max(8, width * .38);
+    ctx.shadowColor = phase === 0 ? light : color;
+    ctx.lineWidth = Math.max(1, width * .08);
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y, width, height, 0, 0, TAU);
+    ctx.stroke();
+    ctx.globalAlpha *= .48;
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y, width * .62, height * .55, 0, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  drawHalo(bottom, 1, 1);
+  drawHalo(top, 0, .82);
+}
+
+function drawNinjaStarWeapon3D(creature, now) {
+  drawLobbyWeaponMesh3D(creature, now);
+}
+
+function drawCrossbowWeapon3D(creature, now) {
+  drawLobbyWeaponMesh3D(creature, now);
+}
+
+function drawEmberWandWeapon3D(creature, now) {
+  drawLobbyWeaponMesh3D(creature, now);
+}
+
+function drawLobbyWeaponCreature(creature, now = state.now || performance.now()) {
+  if (!creature) return;
+  if (creature.type === 'stars') drawNinjaStarWeapon3D(creature, now);
+  else if (creature.type === 'crossbow') drawCrossbowWeapon3D(creature, now);
+  else if (creature.type === 'wand') drawEmberWandWeapon3D(creature, now);
+}
+
 function drawLobbyPortfolioScroll(item, now) {
   const projection = projectBillboard(item.x, item.y, item.z || .72, .86);
   drawBillboard(makeItemSprite(item), projection, .98);
@@ -2935,31 +3998,78 @@ function drawLobbyGate(now) {
   const progress = state.lobbyGateOpen ? 1 : state.lobbyGateProgress;
   const faces = [];
   const origin = { x: gate.x, y: gate.y };
-  addBoxLocal(faces, origin, { side: -.98, forward: 0, z: .96 }, [.2, .34, 1.92], gate.yaw, '#704b2d', .92, 'wood');
-  addBoxLocal(faces, origin, { side: .98, forward: 0, z: .96 }, [.2, .34, 1.92], gate.yaw, '#704b2d', .82, 'wood');
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.93 }, [2.15, .36, .18], gate.yaw, '#9f7443', 1, 'wood');
-  const slide = progress * 1.05;
+  const gateHalfWidth = FOREST_HALL_GATE_HALF_WIDTH;
+  const frameSide = gateHalfWidth - .12;
+  addBoxLocal(faces, origin, { side: -frameSide, forward: 0, z: .96 }, [.2, .34, 1.92], gate.yaw, '#704b2d', .92, 'wood');
+  addBoxLocal(faces, origin, { side: frameSide, forward: 0, z: .96 }, [.2, .34, 1.92], gate.yaw, '#704b2d', .82, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.93 }, [gateHalfWidth * 2, .36, .18], gate.yaw, '#9f7443', 1, 'wood');
+  const panelWidth = gateHalfWidth - .2;
+  const slide = progress * gateHalfWidth * 1.05;
   for (const side of [-1, 1]) {
-    const panelSide = side * (.36 + slide * 1.55);
-    addBoxLocal(faces, origin, { side: panelSide, forward: .02, z: .98 }, [.72, .25, 1.72], gate.yaw, '#3a2b24', .88, 'wood');
-    for (let bar = -2; bar <= 2; bar += 1) addBoxLocal(faces, origin, { side: panelSide + bar * .14, forward: .17, z: .98 }, [.045, .08, 1.64], gate.yaw, '#c2a56b', .9, 'steel');
+    const panelSide = side * (panelWidth / 2 + slide);
+    addBoxLocal(faces, origin, { side: panelSide, forward: .02, z: .98 }, [panelWidth, .25, 1.72], gate.yaw, '#3a2b24', .88, 'wood');
+    for (let bar = -3; bar <= 3; bar += 1) addBoxLocal(faces, origin, { side: panelSide + bar * .34, forward: .17, z: .98 }, [.045, .08, 1.64], gate.yaw, '#c2a56b', .9, 'steel');
   }
   renderFaces(faces, .98);
   const projection = projectVerticalBounds(gate.x, gate.y, 1, 2.2);
   if (projection && progress < 1) {
-    ctx.save(); ctx.globalAlpha = .18 + Math.sin(now / 180) * .06; ctx.strokeStyle = '#e7ad67'; ctx.shadowBlur = 24; ctx.shadowColor = '#e7ad67'; ctx.lineWidth = Math.max(2, projection.height * .018); ctx.strokeRect(projection.x - projection.height * .47, projection.top + projection.height * .06, projection.height * .94, projection.height * .88); ctx.restore();
+    ctx.save(); ctx.globalAlpha = .18 + Math.sin(now / 180) * .06; ctx.strokeStyle = '#e7ad67'; ctx.shadowBlur = 24; ctx.shadowColor = '#e7ad67'; ctx.lineWidth = Math.max(2, projection.height * .018); ctx.strokeRect(projection.x - projection.height * 1.14, projection.top + projection.height * .06, projection.height * 2.28, projection.height * .88); ctx.restore();
   }
 }
+function drawLobbyTree3D(tree, now) {
+  if (state.room !== (tree.roomIndex ?? 0) || !objectInView(tree.x, tree.y, 24)) return;
+  const faces = [];
+  const origin = { x: tree.x, y: tree.y };
+  const scale = tree.scale || 1;
+  // Trees are authored world props, not billboards. Keep their facing fixed.
+  const yaw = tree.yaw ?? 0;
+  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
+    faces,
+    origin,
+    { side: center.side * scale, forward: center.forward * scale, z: center.z * scale },
+    dimensions.map((value) => value * scale),
+    yaw,
+    color,
+    shade,
+    material,
+  );
+  // Trunk, split branches, then overlapping faceted canopy volumes. No sprite.
+  box({ side: 0, forward: 0, z: .55 }, [.34, .34, 1.1], '#4a2e1d', .94, 'wood');
+  box({ side: -.18, forward: .02, z: .98 }, [.12, .15, .64], '#70462a', .82, 'wood');
+  box({ side: .2, forward: .03, z: 1.03 }, [.12, .14, .58], '#6b4228', .76, 'wood');
+  box({ side: 0, forward: 0, z: 1.42 }, [1.24, .92, .7], '#1f6844', .96, null);
+  box({ side: -.37, forward: .02, z: 1.7 }, [.72, .62, .62], '#2f8a52', 1.02, null);
+  box({ side: .37, forward: .02, z: 1.7 }, [.72, .62, .62], '#277745', .98, null);
+  box({ side: 0, forward: .02, z: 2.03 }, [.58, .5, .5], '#70b965', 1.04, null);
+  renderFaces(faces, .98);
+  drawGroundGlow(tree.x, tree.y, '#6c9d68', now, .84 * scale, .035);
+}
+
 function drawWorldObjects(now) {
   const objects = [];
   if (state.room === 0) {
+    LOBBY_TREES.forEach((tree) => {
+      if (treeFootprintIsClear(tree) && objectInView(tree.x, tree.y, 24)) objects.push({ type: 'lobby-tree', ...tree, distance: Math.hypot(tree.x - state.player.x, tree.y - state.player.y) });
+    });
+    FOREST_HALL_TREES.forEach((tree) => {
+      // These are deliberately fixed world meshes. They do not billboard and
+      // they do not use the old 2D forest sequence.
+      if (objectInView(tree.x, tree.y, FOREST_HALL_GAP + 4)) objects.push({ type: 'forest-tree', ...tree, distance: Math.hypot(tree.x - state.player.x, tree.y - state.player.y) });
+    });
     if (!lobbyPortfolioScroll.recovered && objectInView(lobbyPortfolioScroll.x, lobbyPortfolioScroll.y, 16)) objects.push({ type: 'lobby-scroll', ...lobbyPortfolioScroll, distance: Math.hypot(lobbyPortfolioScroll.x - state.player.x, lobbyPortfolioScroll.y - state.player.y) });
     if (objectInView(LOBBY_GATE.x, LOBBY_GATE.y, 26)) objects.push({ type: 'lobby-gate', ...LOBBY_GATE, distance: Math.hypot(LOBBY_GATE.x - state.player.x, LOBBY_GATE.y - state.player.y) });
   }
-  worldItems.forEach((item) => { if (!item.recovered && objectInView(item.x, item.y)) objects.push({ type: 'item', ...item, distance: Math.hypot(item.x - state.player.x, item.y - state.player.y) }); });
-  traders.forEach((trader) => { if (objectInView(trader.x, trader.y, 22)) objects.push({ type: 'trader', ...trader, distance: Math.hypot(trader.x - state.player.x, trader.y - state.player.y) }); });
-  // The safe lobby contains displays only. Never allow a stale/legacy room-0 enemy
-  // to occupy a weapon stand or appear beside the portfolio scroll.
+  if (state.room === SANCTUARY_ROOM_INDEX) {
+    SANCTUARY_TREES.forEach((tree) => {
+      if (treeFootprintIsClear(tree) && objectInView(tree.x, tree.y, 24)) objects.push({ type: 'lobby-tree', ...tree, distance: Math.hypot(tree.x - state.player.x, tree.y - state.player.y) });
+    });
+  }
+  const activeRoom = currentRoomIndex();
+  worldItems.forEach((item) => { if (item.roomIndex !== activeRoom || item.recovered || !objectInView(item.x, item.y)) return; objects.push({ type: 'item', ...item, distance: Math.hypot(item.x - state.player.x, item.y - state.player.y) }); });
+  // Weapon keepers use a dedicated final trader-style pass below. They are
+  // intentionally not depth-sorted with trees, gates, and record props.
+  // The safe lobby contains the three weapon keepers only. Never allow a stale/legacy room-0 enemy
+  // to occupy a weapon keeper or appear beside the portfolio scroll.
   if (state.room !== 0) worldEnemies.forEach((enemy) => { if (enemy.roomIndex !== state.room) return; if ((!enemy.dead || enemy.deathTime < .75) && objectInView(enemy.x, enemy.y)) objects.push({ type: 'enemy', ...enemy, distance: Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) }); });
   if (state.room === FINAL_ROOM_INDEX && state.finalBoss && (!state.finalBoss.dead || state.finalBoss.deathTime < 2.4)) {
     const bossDistance = Math.hypot(state.finalBoss.x - state.player.x, state.finalBoss.y - state.player.y);
@@ -2967,11 +4077,11 @@ function drawWorldObjects(now) {
   }
   objects.sort((a, b) => b.distance - a.distance);
   for (const object of objects) {
-    if (object.type === 'lobby-scroll') drawLobbyPortfolioScroll(object, now);
+    if (object.type === 'lobby-tree' || object.type === 'forest-tree') drawLobbyTree3D(object, now);
+    else if (object.type === 'lobby-scroll') drawLobbyPortfolioScroll(object, now);
     else if (object.type === 'lobby-gate') drawLobbyGate(now);
-    else if (object.type === 'trader') drawTrader3D(object, now);
     else if (object.type === 'item') {
-      if (['scroll', 'ledger', 'chronicle', 'map'].includes(object.kind)) {
+      if (['scroll', 'ledger', 'chronicle', 'map', 'health-potion'].includes(object.kind)) {
         const bob = object.dropFromEnemy ? Math.sin(now * .003 + (object.bobPhase || 0)) * .09 : 0;
         const itemZ = .48 + bob;
         drawBillboard(makeItemSprite(object), projectBillboard(object.x, object.y, itemZ, .55), .9);
@@ -2994,19 +4104,239 @@ function drawWorldObjects(now) {
       } else drawPortfolioItem3D(object, now);
     } else drawEnemy3D(object);
   }
+
+  // Draw the weapon-only displays after every other lobby prop so they remain
+  // visible and interactable even when a tree or gate overlaps their projection.
+  if (currentRoomIndex() === 0) {
+    for (const keeper of LOBBY_WEAPON_CREATURES) drawLobbyWeaponCreature(keeper, now);
+  }
 }
+function ninjaStarProfile(size) {
+  const radius = size / 2;
+  const innerRadius = radius * .48;
+  const profile = [];
+  // Eight points in the side/forward plane. Thickness remains vertical so the
+  // held and thrown stars share the same readable axis orientation.
+  for (let index = 0; index < 16; index += 1) {
+    const angle = -Math.PI / 2 + index * Math.PI / 8;
+    const pointRadius = index % 2 === 0 ? radius : innerRadius;
+    profile.push({ side: Math.cos(angle) * pointRadius, forward: Math.sin(angle) * pointRadius });
+  }
+  return profile;
+}
+
+function addFlatSquareBladeWorld(faces, origin, center, size, thickness, yaw, color, shade = 1) {
+  const profile = ninjaStarProfile(size);
+  const layers = [-1, 1].map((layer) => profile.map((point) => transformLocalPoint(origin, {
+    side: center.side + point.side,
+    forward: center.forward + point.forward,
+    z: center.z + layer * thickness / 2,
+  }, yaw)));
+  const bottom = layers[0];
+  const top = layers[1];
+  faces.push({ points: top, color, shade, material: 'steel' });
+  faces.push({ points: [...bottom].reverse(), color, shade: shade * .62, material: 'steel' });
+  for (let index = 0; index < profile.length; index += 1) {
+    const next = (index + 1) % profile.length;
+    faces.push({ points: [top[index], top[next], bottom[next], bottom[index]], color, shade: shade * (.68 + (index % 3) * .1), material: 'steel' });
+  }
+}
+
+function weaponFlatPoint(origin, side, forward, z, yaw) {
+  const cosine = Math.cos(yaw);
+  const sine = Math.sin(yaw);
+  return {
+    side: origin.side + side * cosine - forward * sine,
+    forward: origin.forward + side * sine + forward * cosine,
+    z: origin.z + z,
+  };
+}
+
+function addFlatSquareBladeCamera(faces, origin, center, size, thickness, yaw, color, shade = 1) {
+  const profile = ninjaStarProfile(size);
+  const layers = [-1, 1].map((layer) => profile.map((point) => weaponFlatPoint(
+    origin,
+    center.side + point.side,
+    center.forward + point.forward,
+    center.z + layer * thickness / 2,
+    yaw,
+  )));
+  const bottom = layers[0];
+  const top = layers[1];
+  faces.push({ points: top, color, shade, material: 'steel' });
+  faces.push({ points: [...bottom].reverse(), color, shade: shade * .62, material: 'steel' });
+  for (let index = 0; index < profile.length; index += 1) {
+    const next = (index + 1) % profile.length;
+    faces.push({ points: [top[index], top[next], bottom[next], bottom[index]], color, shade: shade * (.72 + (index % 2) * .12), material: 'steel' });
+  }
+}
+
+function addThinSquareBladeCamera(faces, origin, center, size, thickness, roll, color, shade = 1) {
+  const half = size / 2;
+  const bevel = size * .12;
+  const profile = [
+    { side: -half + bevel, z: -half },
+    { side: half - bevel, z: -half },
+    { side: half, z: -half + bevel },
+    { side: half, z: half - bevel },
+    { side: half - bevel, z: half },
+    { side: -half + bevel, z: half },
+    { side: -half, z: half - bevel },
+    { side: -half, z: -half + bevel },
+  ];
+  const layers = [-1, 1].map((layer) => profile.map((point) => weaponLocalPoint(
+    origin,
+    center.side + point.side,
+    center.forward + layer * thickness / 2,
+    center.z + point.z,
+    roll,
+  )));
+  const back = layers[0];
+  const front = layers[1];
+  faces.push({ points: front, color, shade, material: 'steel' });
+  faces.push({ points: [...back].reverse(), color, shade: shade * .62, material: 'steel' });
+  for (let index = 0; index < profile.length; index += 1) {
+    const next = (index + 1) % profile.length;
+    faces.push({ points: [front[index], front[next], back[next], back[index]], color, shade: shade * (.68 + (index % 3) * .10), material: 'steel' });
+  }
+}
+
+function addFlatStarLocal(faces, origin, center, radius, depth, yaw, color, shade = 1) {
+  const layers = [];
+  for (const layer of [-1, 1]) {
+    const points = [];
+    for (let index = 0; index < 16; index += 1) {
+      const angle = -Math.PI / 2 + index * Math.PI / 8;
+      const pointRadius = index % 2 === 0 ? radius : radius * .42;
+      points.push(transformLocalPoint(origin, {
+        side: center.side + Math.cos(angle) * pointRadius,
+        forward: center.forward + layer * depth / 2,
+        z: center.z + Math.sin(angle) * pointRadius,
+      }, yaw));
+    }
+    layers.push(points);
+  }
+  const back = layers[0];
+  const front = layers[1];
+  faces.push({ points: front, color, shade, material: 'steel' });
+  faces.push({ points: [...back].reverse(), color, shade: shade * .68, material: 'steel' });
+  for (let index = 0; index < 16; index += 1) {
+    const next = (index + 1) % 16;
+    faces.push({ points: [front[index], front[next], back[next], back[index]], color, shade: shade * (.72 + (index % 3) * .08), material: 'steel' });
+  }
+}
+
+function drawNinjaStarBlade(centerX, centerY, size, rotation, color = '#f2e5bb', alpha = 1) {
+  // The hand-held star uses the same eight-point silhouette as the world prop,
+  // but is deliberately narrow and flat so it reads as a single blade in-hand.
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.rotate(rotation);
+  ctx.globalAlpha = alpha;
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = Math.max(5, size * .28);
+  ctx.shadowColor = color;
+  const outerRadius = size * .68;
+  const innerRadius = size * .28;
+  const widthScale = .62;
+  const points = [];
+  for (let index = 0; index < 16; index += 1) {
+    const angle = -Math.PI / 2 + index * Math.PI / 8;
+    const pointRadius = index % 2 === 0 ? outerRadius : innerRadius;
+    points.push({ x: Math.cos(angle) * pointRadius * widthScale, y: Math.sin(angle) * pointRadius });
+  }
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  ctx.fillStyle = '#c8a96d';
+  ctx.strokeStyle = '#5a4228';
+  ctx.lineWidth = Math.max(1, size * .045);
+  ctx.fill();
+  ctx.stroke();
+  ctx.globalAlpha = alpha * .76;
+  ctx.strokeStyle = '#f6df9c';
+  ctx.lineWidth = Math.max(1, size * .022);
+  ctx.beginPath();
+  ctx.moveTo(-size * .12, -size * .42);
+  ctx.lineTo(size * .12, -size * .42);
+  ctx.lineTo(size * .12, size * .42);
+  ctx.stroke();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#5b3d25';
+  ctx.beginPath();
+  ctx.arc(0, 0, size * .08, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawProjectedSquareBlade(centerX, centerY, size, rotation, color = '#f2e5bb', alpha = 1) {
+  const half = size * .5;
+  const bevel = size * .12;
+  const profile = [
+    [-half + bevel, -half], [half - bevel, -half], [half, -half + bevel],
+    [half, half - bevel], [half - bevel, half], [-half + bevel, half],
+    [-half, half - bevel], [-half, -half + bevel],
+  ];
+  const points = profile.map(([x, y]) => ({
+    x: centerX + x * Math.cos(rotation) - y * Math.sin(rotation),
+    y: centerY + x * Math.sin(rotation) + y * Math.cos(rotation),
+  }));
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.lineJoin = 'bevel';
+  ctx.shadowBlur = Math.max(5, size * .24);
+  ctx.shadowColor = color;
+  ctx.fillStyle = '#c8a96d';
+  ctx.strokeStyle = '#5a4228';
+  ctx.lineWidth = Math.max(1, size * .055);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.globalAlpha = alpha * .72;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1, size * .022);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1, 5).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawWorldProjectiles(now) {
   for (const projectile of state.projectiles) {
     const camera = cameraPoint(projectile.x, projectile.y, projectile.z);
     if (camera.forward <= .04 || Math.abs(Math.atan2(camera.side, camera.forward)) > FOV * .9) continue;
     const color = projectile.color;
+    const projectileSpellPalette = projectile.spell ? spellVisualPalette({ color: projectile.color, kind: projectile.spellKind }) : null;
+    const renderColor = projectileSpellPalette?.base || color;
+    const renderAccent = projectileSpellPalette?.accent || color;
+    const renderLight = projectileSpellPalette?.light || vividSpellRgb('#fff1b0');
     const yaw = Math.atan2(projectile.vy, projectile.vx);
     const faces = [];
-    const size = projectile.kind === 'arrow' ? .1 : projectile.kind === 'boss-bolt' ? .2 : .18;
-    if (projectile.kind === 'arrow') {
+    const size = projectile.kind === 'arrow' ? .1 : projectile.kind === 'ninja-star' ? .14 : projectile.kind === 'boss-bolt' ? .2 : projectile.spell ? .085 : .18;
+    if (projectile.kind === 'ninja-star') {
+      // Match the held star: the face uses side/forward and the short axis is
+      // vertical z, rather than making the short axis run through depth.
+      const starSize = .28;
+      const starThickness = .06;
+      const starRotation = yaw + projectile.spin + now / 155;
+      addFlatSquareBladeWorld(faces, projectile, { side: 0, forward: 0, z: projectile.z }, starSize, starThickness, starRotation, color, 1.12);
+      addFlatSquareBladeWorld(faces, projectile, { side: 0, forward: 0, z: projectile.z + starThickness * .52 }, starSize * .48, .012, starRotation, '#fff0b2', .98);
+      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [.065, .065, .08], starRotation, '#5b3d25', 1.08, 'steel');
+    } else if (projectile.kind === 'arrow') {
       addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [.045, .72, .045], yaw, '#d5b66e', 1, 'steel');
       addBoxLocal(faces, projectile, { side: 0, forward: .42, z: projectile.z }, [.16, .18, .16], color, 1.12, 'steel');
       addBoxLocal(faces, projectile, { side: 0, forward: -.27, z: projectile.z }, [.18, .1, .025], '#efe0a9', .95, 'steel');
+    } else if (projectile.spell) {
+      const spellScale = projectile.spellKind === 'fireball' ? 1.7 : projectile.spellKind === 'chain' ? 1.35 : 1.2;
+      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * spellScale, size * spellScale, size * spellScale], yaw, renderColor, 1.12, null);
+      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * spellScale * .5, size * spellScale * .5, size * spellScale * .5], yaw + Math.PI / 4, renderLight, 1.18, null);
+      if (projectile.spellKind === 'fireball') addBoxLocal(faces, projectile, { side: 0, forward: -.2, z: projectile.z }, [size * 2.1, size * .42, size * .42], yaw, renderAccent, 1.02, null);
+      if (projectile.spellKind === 'chain' || projectile.spellKind === 'beam') addBoxLocal(faces, projectile, { side: 0, forward: -.18, z: projectile.z + .08 }, [size * .34, size * 1.8, size * .34], yaw + Math.PI / 4, renderAccent, 1.02, null);
     } else {
       const coreScale = projectile.kind === 'spell-chain' ? 1.25 : projectile.kind === 'spell-orb' ? 1.08 : 1;
       addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * coreScale, size * coreScale, size * coreScale], yaw, color, 1.15, 'steel');
@@ -3022,35 +4352,60 @@ function drawWorldProjectiles(now) {
         addBoxLocal(faces, projectile, { side: 0, forward: .18, z: projectile.z }, [size * .55, size * 1.8, size * .55], yaw, '#fff1b0', 1.05, 'steel');
       }
     }
-    renderFaces(faces, clamp(.3 + projectile.lifetime / projectile.maxLifetime, .38, 1));
+    if (faces.length) renderFaces(faces, clamp(.3 + projectile.lifetime / projectile.maxLifetime, .38, 1));
     const projectilePoint = projectCameraPoint(cameraPoint(projectile.x, projectile.y, projectile.z));
     if (projectilePoint && projectile.kind !== 'arrow') {
       const pulse = .72 + Math.sin(now / 85 + projectile.x * 2.1) * .22;
       ctx.save();
-      ctx.globalAlpha = .42 * pulse;
-      ctx.strokeStyle = color;
-      ctx.shadowBlur = 16;
-      ctx.shadowColor = color;
-      ctx.lineWidth = Math.max(1, canvas.height * .0045 * projectile.trailSize);
-      ctx.beginPath();
-      ctx.arc(projectilePoint.x, projectilePoint.y, Math.max(3, canvas.height * .012 * projectile.trailSize), 0, TAU);
-      ctx.stroke();
+      let sphereRadius = 0;
+      if (projectile.spell) {
+        const sphereScaleByKind = { gate: 1.12, reveal: 1.05, homing: 1.18, ward: 1.1, chain: 1.08, echo: 1.04, fireball: 1.32, bloom: 1.16, beam: 1.12 };
+        sphereRadius = Math.max(3.5, canvas.height * .017 / Math.max(.8, camera.forward) * (sphereScaleByKind[projectile.spellKind] || 1));
+        ctx.globalAlpha = .82 * pulse;
+        ctx.fillStyle = color;
+        ctx.shadowBlur = 9;
+        ctx.shadowColor = color;
+        ctx.beginPath();
+        ctx.arc(projectilePoint.x, projectilePoint.y, sphereRadius, 0, TAU);
+        ctx.fill();
+        ctx.globalAlpha = .9;
+        ctx.fillStyle = '#fff1b0';
+        ctx.beginPath();
+        ctx.arc(projectilePoint.x - sphereRadius * .28, projectilePoint.y - sphereRadius * .3, Math.max(1, sphereRadius * .28), 0, TAU);
+        ctx.fill();
+        ctx.globalAlpha = .38 * pulse;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(1, canvas.height * .0015);
+        ctx.beginPath();
+        ctx.arc(projectilePoint.x, projectilePoint.y, sphereRadius * 2.25, 0, TAU);
+        ctx.stroke();
+        if (state.renderQuality > .62) drawSpellScreenMotif(projectile.spellKind, projectilePoint.x, projectilePoint.y, sphereRadius, now, .42 * pulse, now / 240 + projectile.spin, Math.atan2(projectile.vy, projectile.vx));
+      } else {
+        ctx.globalAlpha = .42 * pulse;
+        ctx.strokeStyle = color;
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = color;
+        ctx.lineWidth = Math.max(1, canvas.height * .0045 * projectile.trailSize);
+        ctx.beginPath();
+        ctx.arc(projectilePoint.x, projectilePoint.y, Math.max(2, canvas.height * .012 * projectile.trailSize), 0, TAU);
+        ctx.stroke();
+      }
       if (projectile.kind === 'spell-chain') {
         ctx.translate(projectilePoint.x, projectilePoint.y);
         ctx.rotate(now / 260);
-        ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.moveTo(0, -8); ctx.lineTo(0, 8); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(4, 0); ctx.moveTo(0, -4); ctx.lineTo(0, 4); ctx.stroke();
         ctx.rotate(Math.PI / 4);
         ctx.globalAlpha = .55 * pulse;
-        ctx.beginPath(); ctx.moveTo(-11, 0); ctx.lineTo(11, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.stroke();
       }
       if (projectile.spell && projectile.orbit) {
         ctx.translate(projectilePoint.x, projectilePoint.y);
         for (let orbit = 0; orbit < projectile.orbit; orbit += 1) {
           const angle = now / (180 + orbit * 55) + projectile.spin + orbit * TAU / projectile.orbit;
-          const radius = Math.max(7, canvas.height * .018 * projectile.trailSize);
-          ctx.globalAlpha = .72 * pulse;
-          ctx.fillStyle = orbit % 2 ? '#fff3b0' : color;
-          ctx.beginPath(); ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, Math.max(1.5, canvas.height * .004), 0, TAU); ctx.fill();
+          const orbitRadius = Math.max(4, canvas.height * .011 * projectile.trailSize);
+          ctx.globalAlpha = .78 * pulse;
+          ctx.fillStyle = orbit % 2 ? spellFocusProfile(projectile.spellKind).accent : color;
+          ctx.beginPath(); ctx.arc(Math.cos(angle) * orbitRadius, Math.sin(angle) * orbitRadius, Math.max(1.5, canvas.height * .0022), 0, TAU); ctx.fill();
         }
       }
       ctx.restore();
@@ -3070,24 +4425,98 @@ function drawWorldProjectiles(now) {
     }
   }
 }
+function drawWorldLabel(point, title, subtitle, color = '#fff8d6', alpha = 1) {
+  if (!point) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `bold ${Math.max(12, canvas.height * .022)}px "DM Mono", monospace`;
+  ctx.fillStyle = color;
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = color;
+  ctx.fillText(title, point.x, point.y);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = alpha * .76;
+  ctx.font = `${Math.max(8, canvas.height * .012)}px "DM Mono", monospace`;
+  ctx.fillText(subtitle, point.x, point.y + Math.max(14, canvas.height * .026));
+  ctx.restore();
+}
 function drawDoorOfLight(now) {
   const door = state.doorOfLight;
   if (!door?.active || state.room !== FINAL_ROOM_INDEX) return;
   const yaw = Math.atan2(state.player.y - door.y, state.player.x - door.x);
-  const pulse = .9 + Math.sin(now / 220) * .1;
+  const pulse = 1 + Math.sin(now / 180) * .055;
   const faces = [];
   const origin = { x: door.x, y: door.y };
-  addBoxLocal(faces, origin, { side: -.72, forward: 0, z: .9 }, [.2, .34, 1.8], yaw, '#d9bd70', 1, 'steel');
-  addBoxLocal(faces, origin, { side: .72, forward: 0, z: .9 }, [.2, .34, 1.8], yaw, '#d9bd70', .9, 'steel');
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.78 }, [1.62, .34, .2], yaw, '#f4df9c', 1.08, 'steel');
-  addBoxLocal(faces, origin, { side: 0, forward: .02, z: .91 }, [1.2 * pulse, .06, 1.56 * pulse], yaw, '#fff8db', 1.22, 'steel');
-  addBoxLocal(faces, origin, { side: 0, forward: .08, z: .91 }, [.72, .08, 1.18], yaw, '#b8f0e2', .95, 'steel');
-  renderFaces(faces, .95);
-  const projection = projectVerticalBounds(door.x, door.y, .9, 2.05);
-  if (projection) {
-    ctx.save(); ctx.globalAlpha = .26 + Math.sin(now / 170) * .08; ctx.strokeStyle = '#fff8d6'; ctx.shadowBlur = 28; ctx.shadowColor = '#baf4dc'; ctx.lineWidth = Math.max(2, projection.height * .035); ctx.beginPath(); ctx.ellipse(projection.x, (projection.top + projection.bottom) / 2, projection.height * .29, projection.height * .49, 0, 0, TAU); ctx.stroke(); ctx.restore();
-  }
+  // A broad stone-and-light arch is deliberately oversized so the boss exit
+  // reads as the next objective rather than another piece of arena dressing.
+  addBoxLocal(faces, origin, { side: -1.58, forward: 0, z: 1.38 }, [.32, .52, 2.76], yaw, '#d8c58c', 1, 'steel');
+  addBoxLocal(faces, origin, { side: 1.58, forward: 0, z: 1.38 }, [.32, .52, 2.76], yaw, '#d8c58c', .9, 'steel');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: 2.72 }, [3.48, .54, .32], yaw, '#fff0b7', 1.08, 'steel');
+  addBoxLocal(faces, origin, { side: 0, forward: .02, z: 1.37 }, [2.72 * pulse, .08, 2.46 * pulse], yaw, '#fffdf0', 1.22, 'steel');
+  addBoxLocal(faces, origin, { side: 0, forward: .09, z: 1.37 }, [1.78, .1, 2.08], yaw, '#b8f0e2', 1.02, 'steel');
+  renderFaces(faces, .98);
+  drawProjectedWorldRing({ x: door.x, y: door.y }, 1.72 * pulse, '#fff1b0', .72, 32, .045, Math.max(2, canvas.height * .004));
+  drawProjectedWorldRing({ x: door.x, y: door.y }, 1.3, '#b8f0e2', .56, 20, .055, Math.max(1, canvas.height * .002));
+  const projection = projectVerticalBounds(door.x, door.y, 1.38, 2.9);
+  if (!projection) return;
+  ctx.save();
+  ctx.globalAlpha = .34 + Math.sin(now / 130) * .1;
+  ctx.strokeStyle = '#fff8d6';
+  ctx.shadowBlur = 34;
+  ctx.shadowColor = '#b8f0e2';
+  ctx.lineWidth = Math.max(3, projection.height * .035);
+  ctx.beginPath();
+  ctx.ellipse(projection.x, (projection.top + projection.bottom) / 2, projection.height * .41, projection.height * .55, 0, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
+  drawWorldLabel(
+    { x: projection.x, y: Math.max(20, projection.top - 25) },
+    'ASCENSION GATE',
+    'ENTER SANCTUARY',
+    '#fff8d6',
+    .92 + Math.sin(now / 180) * .08,
+  );
 }
+function drawSanctuaryPedestal(now) {
+  if (state.room !== SANCTUARY_ROOM_INDEX) return;
+  const pedestal = SANCTUARY_RESUME_PEDESTAL;
+  const yaw = Math.atan2(state.player.y - pedestal.y, state.player.x - pedestal.x);
+  const origin = { x: pedestal.x, y: pedestal.y };
+  const faces = [];
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .22 }, [1.28, 1.08, .44], yaw, '#8dbaa9', .88, 'stone');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .68 }, [.72, .62, .78], yaw, '#d8ead6', 1.04, 'stone');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.12 }, [1.02, .82, .16], yaw, '#fff1b0', 1.12, 'steel');
+  // The résumé is a floating, readable page rather than a generic loot cube.
+  addBoxLocal(faces, origin, { side: 0, forward: .05, z: 1.62 }, [.62, .08, .78], yaw, '#fff8d6', 1.12, 'bone');
+  addBoxLocal(faces, origin, { side: 0, forward: .11, z: 1.62 }, [.46, .025, .62], yaw, '#b8f0e2', .92, 'leather');
+  for (let line = 0; line < 4; line += 1) addBoxLocal(faces, origin, { side: -.13, forward: .14, z: 1.43 + line * .12 }, [.26 - line * .03, .018, .024], '#397c74', .9, 'steel');
+  renderFaces(faces, .98);
+  drawGroundGlow(pedestal.x, pedestal.y, '#fff1b0', now, 1.1, .035);
+  drawProjectedWorldRing({ x: pedestal.x, y: pedestal.y }, 1.18, '#fff8d6', .74 + Math.sin(now / 190) * .12, 28, .045, Math.max(2, canvas.height * .004));
+  const projection = projectVerticalBounds(pedestal.x, pedestal.y, 1.18, 2.18);
+  if (!projection) return;
+  const page = projectVerticalBounds(pedestal.x, pedestal.y, 1.62, .82);
+  if (page) {
+    ctx.save();
+    ctx.globalAlpha = .22 + Math.sin(now / 160) * .07;
+    ctx.strokeStyle = '#fff8d6';
+    ctx.shadowBlur = 28;
+    ctx.shadowColor = '#fff1b0';
+    ctx.lineWidth = Math.max(2, page.height * .025);
+    ctx.strokeRect(page.x - page.height * .28, page.top, page.height * .56, page.height);
+    ctx.restore();
+  }
+  drawWorldLabel(
+    { x: projection.x, y: Math.max(20, projection.top - 22) },
+    'RÉSUMÉ PEDESTAL',
+    state.resumeDownloaded ? 'DOWNLOAD STARTED' : 'APPROACH TO DOWNLOAD',
+    '#fff8d6',
+    .9 + Math.sin(now / 220) * .08,
+  );
+}
+
 function drawImpactBursts(now) {
   for (const burst of state.impactBursts) {
     const progress = clamp(burst.elapsed / burst.duration, 0, 1);
@@ -3122,6 +4551,26 @@ function addCameraBox(faces, center, dimensions, roll, color, shade = 1, materia
   }
   addBoxFaces(faces, points, color, shade, material);
 }
+function addCameraCrystal(faces, center, radius, depth, height, roll, color, shade = 1, material = 'steel') {
+  const ring = [];
+  for (let index = 0; index < 6; index += 1) {
+    const angle = index * TAU / 6;
+    const localSide = Math.cos(angle) * radius;
+    const localForward = Math.sin(angle) * depth;
+    ring.push({
+      side: center.side + localSide * Math.cos(roll),
+      forward: center.forward + localForward,
+      z: center.z + localSide * Math.sin(roll),
+    });
+  }
+  const top = { side: center.side - Math.sin(roll) * height * .5, forward: center.forward, z: center.z + Math.cos(roll) * height * .5 };
+  const bottom = { side: center.side + Math.sin(roll) * height * .5, forward: center.forward, z: center.z - Math.cos(roll) * height * .5 };
+  for (let index = 0; index < ring.length; index += 1) {
+    const next = (index + 1) % ring.length;
+    faces.push({ points: [top, ring[index], ring[next]], color, shade: shade * (.72 + (index % 3) * .11), material });
+    faces.push({ points: [bottom, ring[next], ring[index]], color, shade: shade * (.6 + ((index + 1) % 3) * .12), material });
+  }
+}
 function addWeaponBox(faces, origin, center, dimensions, roll, color, shade = 1, material = null) {
   const [sideSize, forwardSize, height] = dimensions;
   const points = [];
@@ -3140,6 +4589,28 @@ function addWeaponBox(faces, origin, center, dimensions, roll, color, shade = 1,
   addBoxFaces(faces, points, color, shade, material);
 }
 
+function weaponLocalPoint(origin, side, forward, z, roll) {
+  return {
+    side: origin.side + side * Math.cos(roll) - z * Math.sin(roll),
+    forward: origin.forward + forward,
+    z: origin.z + side * Math.sin(roll) + z * Math.cos(roll),
+  };
+}
+function addWeaponCrystal(faces, origin, center, radius, depth, height, roll, color, shade = 1, material = null) {
+  const ring = [];
+  for (let index = 0; index < 6; index += 1) {
+    const angle = index * TAU / 6;
+    ring.push(weaponLocalPoint(origin, center.side + Math.cos(angle) * radius, center.forward + Math.sin(angle) * depth, center.z, roll));
+  }
+  const top = weaponLocalPoint(origin, center.side, center.forward, center.z + height * .5, roll);
+  const bottom = weaponLocalPoint(origin, center.side, center.forward, center.z - height * .5, roll);
+  for (let index = 0; index < ring.length; index += 1) {
+    const next = (index + 1) % ring.length;
+    faces.push({ points: [top, ring[index], ring[next]], color, shade: shade * (.72 + (index % 3) * .11), material });
+    faces.push({ points: [bottom, ring[next], ring[index]], color, shade: shade * (.6 + ((index + 1) % 3) * .12), material });
+  }
+}
+
 function weaponMotion() {
   const definition = weaponDefinition();
   const active = state.weapon.swing > 0;
@@ -3147,116 +4618,96 @@ function weaponMotion() {
   return { active, t, definition };
 }
 
-function drawSpear(now) {
+function drawNinjaStars(now) {
   const { active, t } = weaponMotion();
   const moving = state.weapon.moving;
-  const bob = moving ? Math.sin(state.weapon.bobPhase) * .025 : Math.sin(now / 700) * .007;
-  let thrust = 0;
-  let sideOffset = 0;
-  let lift = 0;
-  let roll = .08;
-
-  if (active && t < .22) {
-    const windup = easeOutCubic(t / .22);
-    thrust = -.38 * windup;
-    sideOffset = .13 * windup;
-    lift = .04 * windup;
-    roll = .08 - .34 * windup;
-  } else if (active && t < .62) {
-    const drive = smoothstep(0, 1, (t - .22) / .4);
-    thrust = -.38 + 1.42 * drive;
-    sideOffset = .13 - .27 * drive;
-    lift = .04 - .035 * drive;
-    roll = -.26 + .34 * drive;
-  } else if (active) {
-    const recovery = easeOutCubic((t - .62) / .38);
-    thrust = 1.04 - 1.04 * recovery;
-    sideOffset = -.14 + .14 * recovery;
-    lift = .005 - .005 * recovery;
-    roll = .08 + .08 * recovery;
-  }
-
+  const bob = moving ? Math.sin(state.weapon.bobPhase) * .025 : Math.sin(now / 650) * .01;
+  const throwMotion = active ? easeOutCubic(clamp(t / .55, 0, 1)) : 0;
+  const recoil = active ? Math.sin(clamp(t / .72, 0, 1) * Math.PI) * .14 : 0;
+  const starYaw = 0;
   const faces = [];
-  const scale = .8;
-  const origin = { side: .37 + sideOffset, forward: 1.42 + thrust, z: -.08 + bob + lift };
-  const steel = '#b9b7a0';
-  const brightSteel = '#eee3bd';
-  const darkSteel = '#70736f';
-
-  // Ash shaft and capped butt.
-  addWeaponBox(faces, origin, { side: 0, forward: 0, z: .72 * scale }, [.078 * scale, .078 * scale, 1.55 * scale], roll, '#704622', .98, 'wood');
-  addWeaponBox(faces, origin, { side: 0, forward: -.015, z: .045 * scale }, [.14 * scale, .13 * scale, .12 * scale], roll, darkSteel, .92, 'steel');
-
-  // Four raised leather wraps make the grip read clearly during the animation.
-  for (let wrap = 0; wrap < 4; wrap += 1) {
-    addWeaponBox(faces, origin, { side: 0, forward: .035, z: (.16 + wrap * .095) * scale }, [.13 * scale, .12 * scale, .045 * scale], roll, '#4d2d1b', .9, 'leather');
-  }
-
-  // Guard, socket, and a layered leaf head give the spear a readable low-poly profile.
-  addWeaponBox(faces, origin, { side: 0, forward: .045, z: 1.31 * scale }, [.38 * scale, .14 * scale, .09 * scale], roll, steel, .96, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: .07, z: 1.42 * scale }, [.18 * scale, .15 * scale, .17 * scale], roll, darkSteel, .9, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: .1, z: 1.56 * scale }, [.24 * scale, .13 * scale, .2 * scale], roll, steel, 1.02, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: .13, z: 1.73 * scale }, [.18 * scale, .12 * scale, .28 * scale], roll, brightSteel, 1.08, 'steel');
-  addWeaponBox(faces, origin, { side: -.075, forward: .125, z: 1.72 * scale }, [.06 * scale, .115 * scale, .18 * scale], roll, brightSteel, 1.1, 'steel');
-  addWeaponBox(faces, origin, { side: .075, forward: .125, z: 1.72 * scale }, [.06 * scale, .115 * scale, .18 * scale], roll, darkSteel, .86, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: .15, z: 1.94 * scale }, [.065 * scale, .095 * scale, .22 * scale], roll, brightSteel, 1.12, 'steel');
+  const origin = { side: .39 - recoil, forward: 1.18 + throwMotion * .2, z: -.12 + bob + throwMotion * .04 };
+  // The equipped Ninja Star is held lower in the view. Its face stays on the
+  // side/forward plane and its thin dimension stays vertical along z.
+  const starSize = .18 + (active ? .02 : 0);
+  const starCenter = { side: 0, forward: .18, z: .50 };
+  addFlatSquareBladeCamera(faces, origin, starCenter, starSize, .032, starYaw, '#e6d29a', 1.12);
+  addFlatSquareBladeCamera(faces, origin, { ...starCenter, z: starCenter.z + .019 }, starSize * .48, .012, starYaw, '#fff0b2', .98);
+  addWeaponBox(faces, origin, { side: 0, forward: .19, z: .50 }, [.045, .055, .045], 0, '#5b3d25', 1.08, 'steel');
   renderFaces(faces, 1, true);
 
-  // A short impact glint gives the thrust a readable endpoint without turning it into a beam.
-  if (active && t > .38 && t < .78) {
-    const tip = projectCameraPoint({ side: origin.side, forward: origin.forward + .15, z: origin.z + 2.06 * scale });
-    if (tip) {
-      const impact = Math.sin((t - .38) / .4 * Math.PI);
-      ctx.save();
-      ctx.globalAlpha = impact * .72;
-      ctx.strokeStyle = brightSteel;
-      ctx.shadowBlur = 16;
-      ctx.shadowColor = '#d59643';
-      ctx.lineWidth = Math.max(1, canvas.height * .0035);
-      ctx.beginPath();
-      ctx.arc(tip.x, tip.y, Math.max(3, canvas.height * .009 * impact), 0, TAU);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
+  const center = projectCameraPoint({ side: origin.side, forward: origin.forward + .18, z: origin.z + .50 });
+  if (!center) return;
+  const size = Math.max(10, canvas.height * (.045 + (active ? .006 : 0)));
+  ctx.save();
+  ctx.globalAlpha = .28 + (active ? .24 : 0);
+  ctx.strokeStyle = '#fff1b0';
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = '#d08a4c';
+  ctx.lineWidth = Math.max(1, canvas.height * .002);
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, size * .32, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
 }
+
 function drawWand(now) {
   const { active, t } = weaponMotion();
-  const color = wandColorForSpell();
-  const emerald = EMERALD;
-  const emeraldLight = EMERALD_LIGHT;
+  const attunement = wandColorForSpell();
+  const attunementLight = selectedSpellDefinition()?.color || EMERALD_LIGHT;
   const moving = state.weapon.moving;
   const bob = moving ? Math.sin(state.weapon.bobPhase) * .02 : Math.sin(now / 620) * .008;
   const cast = active ? Math.sin(clamp(t / .82, 0, 1) * Math.PI) : 0;
   const lift = active ? easeOutCubic(clamp(t / .48, 0, 1)) * .16 : 0;
-  const sideOffset = active ? -cast * .06 : 0;
-  const roll = -.14 + cast * .1;
+  const sideOffset = active ? -cast * .07 : 0;
+  const roll = -.16 + cast * .12;
   const faces = [];
-  const origin = { side: .42 + sideOffset, forward: 1.23 - cast * .08, z: -.02 + bob + lift };
-  addWeaponBox(faces, origin, { side: 0, forward: .02, z: .64 }, [.1, .1, 1.42], roll, '#593a24', .98, 'wood');
-  addWeaponBox(faces, origin, { side: 0, forward: .03, z: .1 }, [.17, .14, .2], roll, '#362217', .9, 'leather');
-  addWeaponBox(faces, origin, { side: 0, forward: .04, z: 1.16 }, [.14, .13, .12], roll, '#9c7543', .92, 'wood');
-  addWeaponBox(faces, origin, { side: 0, forward: .08, z: 1.39 }, [.28, .2, .3], roll, emerald, 1.12, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: .15, z: 1.41 }, [.12, .08, .17], roll, emeraldLight, 1.18, 'steel');
-  addWeaponBox(faces, origin, { side: -.18, forward: .06, z: 1.18 }, [.045, .045, .26], roll, emerald, 1.05, 'steel');
-  addWeaponBox(faces, origin, { side: .18, forward: .06, z: 1.18 }, [.045, .045, .26], roll, emerald, .86, 'steel');
+  const origin = { side: .42 + sideOffset, forward: 1.25 - cast * .08, z: -.04 + bob + lift };
+
+  // The shaft now drops below the hand toward the ground instead of ending at the grip.
+  addWeaponBox(faces, origin, { side: 0, forward: .02, z: .4 }, [.115, .12, 2.12], roll, '#4a2d20', .98, 'wood');
+  addWeaponBox(faces, origin, { side: 0, forward: .035, z: .12 }, [.2, .17, .24], roll, '#241716', .94, 'leather');
+  addWeaponBox(faces, origin, { side: 0, forward: .03, z: -.68 }, [.17, .16, .12], roll, '#8f6338', .92, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .04, z: .27 }, [.17, .15, .055], roll, '#b07a3f', .94, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .04, z: .82 }, [.15, .145, .05], roll, '#8f6338', .9, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .05, z: 1.17 }, [.19, .18, .085], roll, '#b07a3f', 1.02, 'steel');
+  addWeaponBox(faces, origin, { side: -.16, forward: .045, z: 1.21 }, [.045, .05, .28], roll, attunement, .9, 'steel');
+  addWeaponBox(faces, origin, { side: .16, forward: .045, z: 1.21 }, [.045, .05, .28], roll, attunement, .9, 'steel');
+
+  // The jewel is transformed in staff-local coordinates, so it stays seated on the tip.
+  const gem = { side: .01, forward: .08, z: 1.43 };
+  addWeaponBox(faces, origin, { side: gem.side, forward: gem.forward, z: gem.z - .07 }, [.15, .13, .07], roll, '#d09a4f', 1.08, null);
+  addWeaponCrystal(faces, origin, gem, .12, .08, .26, roll, attunement, 1.14, null);
+  addWeaponCrystal(faces, origin, { side: .01, forward: .105, z: 1.55 }, .055, .04, .12, roll, attunementLight || '#8de8d0', 1.2, null);
   renderFaces(faces, 1, true);
-  const tip = projectCameraPoint({ side: origin.side, forward: origin.forward + .18, z: origin.z + 1.42 });
+
+  const tip = projectCameraPoint({ side: origin.side, forward: origin.forward + .18, z: origin.z + 1.58 });
   if (tip) {
     ctx.save();
-    ctx.globalAlpha = .22 + cast * .45 + Math.sin(now / 130) * .05;
-    ctx.strokeStyle = emerald;
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = emerald;
+    ctx.globalAlpha = .22 + cast * .5 + Math.sin(now / 130) * .05;
+    ctx.strokeStyle = attunement;
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = attunement;
     ctx.lineWidth = Math.max(1, canvas.height * .004);
-    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(5, canvas.height * (.014 + cast * .012)), 0, TAU); ctx.stroke();
-    ctx.globalAlpha *= .8;
-    ctx.fillStyle = emeraldLight;
-    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(2, canvas.height * .009), 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(6, canvas.height * (.015 + cast * .014)), 0, TAU); ctx.stroke();
+    ctx.globalAlpha *= .78;
+    ctx.fillStyle = attunementLight;
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(2, canvas.height * .0085), 0, TAU); ctx.fill();
+    for (let rune = 0; rune < 3; rune += 1) {
+      const angle = now / 500 + rune * TAU / 3;
+      ctx.globalAlpha = .46;
+      ctx.beginPath(); ctx.arc(tip.x + Math.cos(angle) * canvas.height * .018, tip.y + Math.sin(angle) * canvas.height * .018, Math.max(1, canvas.height * .003), 0, TAU); ctx.fill();
+    }
     ctx.restore();
   }
 }
 
+function spawnNinjaStar() {
+  const direction = playerAimDirection();
+  const origin = { x: state.player.x + direction.x * .5, y: state.player.y + direction.y * .5, z: EYE_HEIGHT + direction.z * .05 };
+  makeProjectile('ninja-star', origin, { x: direction.x * 11.5, y: direction.y * 11.5, z: direction.z * 11.5 }, { color: '#e6d29a', damage: state.weapon.attackDamage || WEAPON_LOADOUTS.stars.damage, radius: .16, lifetime: 2.2, collisionHeight: .72, source: 'player', spell: false, trailSize: .8 });
+  showToast(`Ninja star thrown · combo ${state.weapon.comboStep || 1}.`, 'good');
+}
 function spawnCrossbowArrow() {
   const direction = playerAimDirection();
   const origin = { x: state.player.x + direction.x * .52, y: state.player.y + direction.y * .52, z: EYE_HEIGHT + direction.z * .06 };
@@ -3283,23 +4734,33 @@ function drawCrossbow(now) {
   const roll = -.13 + draw * .16;
   const faces = [];
   const scale = .68;
-  const origin = { side: .39 + sideOffset, forward: 1.36 - recoil, z: -.01 + bob };
-  addWeaponBox(faces, origin, { side: 0, forward: .2, z: .28 * scale }, [.2 * scale, .66 * scale, .18 * scale], roll, '#704622', .94, 'wood');
-  addWeaponBox(faces, origin, { side: 0, forward: .02, z: .43 * scale }, [.62 * scale, .11 * scale, .14 * scale], roll, '#6d7170', 1, 'steel');
-  addWeaponBox(faces, origin, { side: -.32 * scale, forward: .02, z: .43 * scale }, [.17 * scale, .11 * scale, .23 * scale], roll, '#b9b7a0', .92, 'steel');
-  addWeaponBox(faces, origin, { side: .32 * scale, forward: .02, z: .43 * scale }, [.17 * scale, .11 * scale, .23 * scale], roll, '#b9b7a0', .92, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: -.03, z: .51 * scale }, [.055 * scale, .055 * scale, .12 * scale], roll, '#c5ae73', 1, 'steel');
+  const origin = { side: .39 + sideOffset, forward: 1.44 - recoil, z: -.01 + bob };
+
+  // Long rear stock: the wood continues behind the trigger toward the player.
+  addWeaponBox(faces, origin, { side: 0, forward: -.34, z: .3 * scale }, [.24 * scale, 1.18 * scale, .2 * scale], roll, '#704622', .94, 'wood');
+  addWeaponBox(faces, origin, { side: 0, forward: -.91, z: .3 * scale }, [.28 * scale, .13 * scale, .25 * scale], roll, '#51331f', .98, 'wood');
+  // Raised rail and bolt channel.
+  addWeaponBox(faces, origin, { side: 0, forward: .13, z: .46 * scale }, [.15 * scale, .84 * scale, .1 * scale], roll, '#6d7170', 1, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .1, z: .52 * scale }, [.035 * scale, .82 * scale, .028 * scale], roll, '#e7d49d', 1, 'steel');
+  // Grip and trigger sit under the back half of the stock.
+  addWeaponBox(faces, origin, { side: 0, forward: -.1, z: .1 * scale }, [.16 * scale, .2 * scale, .38 * scale], roll, '#3e281b', .96, 'leather');
+  addWeaponBox(faces, origin, { side: 0, forward: -.1, z: .27 * scale }, [.12 * scale, .08 * scale, .16 * scale], roll, '#c5ae73', 1, 'steel');
+  // Bow limbs sit at the front and read separately from the wooden stock.
+  addWeaponBox(faces, origin, { side: 0, forward: .47 * scale, z: .46 * scale }, [.76 * scale, .1 * scale, .12 * scale], roll, '#6d7170', 1, 'steel');
+  addWeaponBox(faces, origin, { side: -.38 * scale, forward: .47 * scale, z: .46 * scale }, [.18 * scale, .11 * scale, .27 * scale], roll, '#b9b7a0', .92, 'steel');
+  addWeaponBox(faces, origin, { side: .38 * scale, forward: .47 * scale, z: .46 * scale }, [.18 * scale, .11 * scale, .27 * scale], roll, '#b9b7a0', .92, 'steel');
   // Bowstring flexes during the draw/release cycle; it is not an attack beam.
-  addWeaponBox(faces, origin, { side: 0, forward: .38 * scale - draw * .08, z: .44 * scale }, [.035 * scale, .42 * scale, .035 * scale], roll, '#e7d49d', 1, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .48 * scale - draw * .08, z: .46 * scale }, [.035 * scale, .035 * scale, .48 * scale], roll, '#e7d49d', 1, 'steel');
   renderFaces(faces, 1, true);
   drawCrossbowArrow();
 }
 
 function drawWeapon(now) {
   if (!state.weapon.equipped) return;
+  if (state.weapon.type === 'stars') { drawNinjaStars(now); return; }
   if (state.weapon.type === 'crossbow') { drawCrossbow(now); return; }
   if (state.weapon.type === 'wand') { drawWand(now); return; }
-  drawSpear(now);
+  drawNinjaStars(now);
 }
 
 function roundedRectPath(context, x, y, width, height, radius) {
@@ -3336,25 +4797,18 @@ function drawSpellWorldRing(centerWorld, radius, color, alpha, segments = 16, z 
 function drawActiveSpellEffects(now) {
   for (const effect of state.activeSpellEffects) {
     const progress = clamp(effect.elapsed / effect.duration, 0, 1);
-    const fade = Math.sin(Math.PI * clamp(progress, 0, 1));
+    const fade = Math.sin(Math.PI * progress);
     const color = effect.color || '#e7ad67';
     if (effect.kind === 'gate-key') {
       const gate = projectCameraPoint(cameraPoint(LOBBY_GATE.x, LOBBY_GATE.y, 1.05));
       if (!gate) continue;
       ctx.save();
-      ctx.globalAlpha = .88 * (1 - progress);
+      ctx.globalAlpha = .55 * (1 - progress);
       ctx.strokeStyle = color;
-      ctx.shadowBlur = 24;
+      ctx.shadowBlur = 10;
       ctx.shadowColor = color;
-      ctx.lineWidth = Math.max(2, canvas.height * .008);
-      ctx.beginPath();
-      ctx.arc(gate.x, gate.y, Math.max(14, canvas.height * (.045 + progress * .16)), 0, TAU);
-      ctx.stroke();
-      ctx.fillStyle = '#fff1b0';
-      ctx.font = `bold ${Math.max(18, canvas.height * .06)}px Georgia`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(GATE_TUTORIAL_SPELL.glyph, gate.x, gate.y);
+      ctx.lineWidth = Math.max(1, canvas.height * .0015);
+      ctx.beginPath(); ctx.arc(gate.x, gate.y, Math.max(4, canvas.height * (.01 + progress * .025)), 0, TAU); ctx.stroke();
       ctx.restore();
       continue;
     }
@@ -3363,307 +4817,168 @@ function drawActiveSpellEffects(now) {
       const end = projectCameraPoint(cameraPoint(effect.end.x, effect.end.y, effect.end.z));
       if (!start || !end) continue;
       ctx.save();
-      ctx.globalAlpha = .88 * (1 - progress);
+      ctx.globalAlpha = .56 * (1 - progress);
       ctx.lineCap = 'round';
-      for (let beam = 0; beam < 3; beam += 1) {
-        ctx.strokeStyle = beam === 0 ? '#fff8d0' : color;
-        ctx.shadowBlur = 24 - beam * 5;
-        ctx.shadowColor = color;
-        ctx.lineWidth = Math.max(2, canvas.height * (.028 - beam * .007) * (1 - progress * .35));
-        ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x + Math.sin(now / 33 + beam) * 7, end.y + Math.cos(now / 29 + beam) * 7);
-        ctx.stroke();
-      }
-      for (let ring = 0; ring < 5; ring += 1) {
-        const t = (ring / 5 + progress * 1.4) % 1;
-        const x = lerp(start.x, end.x, t);
-        const y = lerp(start.y, end.y, t);
-        ctx.globalAlpha = .75 * (1 - progress);
-        ctx.strokeStyle = '#fff3b0';
-        ctx.beginPath(); ctx.arc(x, y, Math.max(2, canvas.height * .008 * (1 - t * .45)), 0, TAU); ctx.stroke();
-      }
+      ctx.strokeStyle = color;
+      ctx.shadowBlur = 9;
+      ctx.shadowColor = color;
+      ctx.lineWidth = Math.max(1, canvas.height * .0035 * (1 - progress));
+      ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y); ctx.stroke();
       ctx.restore();
       continue;
     }
     if (effect.kind === 'chain' && effect.segments) {
       ctx.save();
-      ctx.globalAlpha = .92 * (1 - progress);
+      ctx.globalAlpha = .58 * (1 - progress);
       ctx.strokeStyle = color;
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 8;
       ctx.shadowColor = color;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = Math.max(2, canvas.height * .014 * (1 - progress * .5));
+      ctx.lineWidth = Math.max(1, canvas.height * .0028 * (1 - progress));
       for (const segment of effect.segments) {
         const start = projectCameraPoint(cameraPoint(segment.start.x, segment.start.y, segment.start.z));
         const end = projectCameraPoint(cameraPoint(segment.end.x, segment.end.y, segment.end.z));
         if (!start || !end) continue;
-        ctx.beginPath();
-        const bend = Math.sin(now / 30 + segment.start.x * 2) * 12;
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo((start.x + end.x) / 2 + bend, (start.y + end.y) / 2 - bend * .55);
-        ctx.lineTo(end.x, end.y);
-        ctx.stroke();
-        ctx.strokeStyle = '#f4f7d1';
-        ctx.lineWidth = Math.max(1, canvas.height * .004);
-        ctx.stroke();
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.arc(end.x, end.y, Math.max(3, canvas.height * .014 * (1 - progress)), 0, TAU); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y); ctx.stroke();
       }
       ctx.restore();
       continue;
     }
-    const centerWorld = { x: state.player.x, y: state.player.y, z: .58 };
-    const rings = effect.rings || 3;
+    const center = { x: state.player.x, y: state.player.y, z: .52 };
+    const point = projectCameraPoint(cameraPoint(center.x, center.y, center.z));
+    if (!point) continue;
     ctx.save();
-    if (effect.kind === 'reveal') {
-      const sweep = progress * 8.5;
-      drawSpellWorldRing(centerWorld, Math.max(.2, sweep), color, .85 * (1 - progress * .35), 24, .58, now / 500, Math.max(1, canvas.height * .007));
-      for (let ring = 0; ring < rings; ring += 1) drawSpellWorldRing(centerWorld, .65 + ring * .62 + progress * 1.4, color, .42 * fade, 8, .42 + ring * .08, -now / 700 + ring, Math.max(1, canvas.height * .003));
-      ctx.restore();
-      continue;
-    }
-    if (effect.kind === 'ward') {
-      for (let ring = 0; ring < rings; ring += 1) {
-        const radius = 1.02 + ring * .12;
-        drawSpellWorldRing(centerWorld, radius, color, .34 + Math.sin(now / 160 + ring) * .11, 6, .38 + ring * .08, now / (720 + ring * 40) + ring * .5, Math.max(1, canvas.height * .004));
+    ctx.globalAlpha = .24 * fade;
+    ctx.strokeStyle = color;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = color;
+    ctx.lineWidth = Math.max(1, canvas.height * .0018);
+    const radius = effect.kind === 'bloom' ? .7 * progress : effect.kind === 'echo' ? .52 * progress : .38 * progress;
+    const screenRadius = Math.max(3, canvas.height * (.006 + radius * .006));
+    ctx.beginPath(); ctx.arc(point.x, point.y, screenRadius, 0, TAU); ctx.stroke();
+    if (effect.kind === 'bloom' || effect.kind === 'echo') {
+      for (let mote = 0; mote < 4; mote += 1) {
+        const angle = now / 700 + mote * TAU / 4;
+        ctx.globalAlpha = .38 * fade;
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(point.x + Math.cos(angle) * screenRadius, point.y + Math.sin(angle) * screenRadius, Math.max(1, canvas.height * .002), 0, TAU); ctx.fill();
       }
-      for (let sigil = 0; sigil < 6; sigil += 1) {
-        const angle = now / 800 + sigil * TAU / 6;
-        const point = projectCameraPoint(cameraPoint(state.player.x + Math.cos(angle) * 1.2, state.player.y + Math.sin(angle) * 1.2, .85 + Math.sin(angle * 2) * .2));
-        if (!point) continue;
-        ctx.globalAlpha = .75; ctx.fillStyle = color; ctx.shadowBlur = 14; ctx.shadowColor = color;
-        ctx.font = `bold ${Math.max(12, canvas.height * .035)}px Georgia`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✦', point.x, point.y);
-      }
-      ctx.restore();
-      continue;
-    }
-    let radius = effect.kind === 'echo' ? 2.3 * progress : effect.kind === 'bloom' ? 3.1 * progress : 1.3;
-    if (effect.kind === 'echo') {
-      for (let ring = 0; ring < rings; ring += 1) drawSpellWorldRing(centerWorld, radius * (ring + 1) / rings, color, .75 * fade * (1 - ring / rings), 20, .4 + ring * .1, now / 800 + ring, Math.max(1, canvas.height * .005));
-      for (let ghost = 0; ghost < 4; ghost += 1) drawSpellWorldRing(centerWorld, .9 + ghost * .42, '#e9d9ff', .3 * fade, 6, .62 + ghost * .1, -now / 600 + ghost, 1);
-    } else if (effect.kind === 'bloom') {
-      for (let petal = 0; petal < 8; petal += 1) {
-        const angle = petal * TAU / 8 + now / 900;
-        const point = projectCameraPoint(cameraPoint(state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius, .45 + Math.sin(angle * 3) * .22));
-        if (!point) continue;
-        ctx.globalAlpha = .8 * fade; ctx.fillStyle = color; ctx.shadowBlur = 15; ctx.shadowColor = color;
-        ctx.beginPath(); ctx.ellipse(point.x, point.y, Math.max(3, canvas.height * .018), Math.max(7, canvas.height * .038), angle, 0, TAU); ctx.fill();
-      }
-      drawSpellWorldRing(centerWorld, radius, color, .74 * fade, 16, .35, now / 500, Math.max(1, canvas.height * .006));
-      drawSpellWorldRing(centerWorld, radius * .56, '#eaffd0', .64 * fade, 12, .65, -now / 390, Math.max(1, canvas.height * .004));
     }
     ctx.restore();
   }
 }
-
 function drawBossTransition(now) {
   const transition = state.transition;
   if (!transition) return;
   const elapsed = transition.elapsed;
-  const total = transition.duration;
   const width = canvas.width;
   const height = canvas.height;
-  const fakeEnding = elapsed < 2.1;
-  const flash = clamp(1 - Math.abs(elapsed - 2.45) / .42, 0, 1);
-  const reveal = clamp((elapsed - 2.45) / 2.35, 0, 1);
+  const opening = clamp(elapsed / 1.05, 0, 1);
+  const falling = clamp((elapsed - .75) / 1.75, 0, 1);
+  const landing = clamp((elapsed - 2.35) / 1.15, 0, 1);
+  const afterImpact = elapsed >= 2.35;
+  const message = elapsed < .85
+    ? 'THE FLOOR GIVES WAY.'
+    : elapsed < 2.35
+      ? 'YOU FALL THROUGH THE ARCHIVE.'
+      : 'YOU HIT THE STONE HARD.';
+  const submessage = elapsed < .85
+    ? 'The trap-door opens beneath your feet.'
+    : elapsed < 2.35
+      ? 'Your shoulder takes the impact on the way down.'
+      : 'You are hurt, but the chamber is waiting.';
   ctx.save();
-  ctx.fillStyle = `rgba(3, 2, 5, ${fakeEnding ? .86 : .38 * (1 - reveal)})`;
+  ctx.fillStyle = `rgba(9, 5, 3, ${afterImpact ? .62 * (1 - landing) : .78 + falling * .18})`;
   ctx.fillRect(0, 0, width, height);
-  ctx.globalAlpha = .12 + (fakeEnding ? .16 : .08);
-  ctx.fillStyle = '#e8d29a';
-  for (let y = 0; y < height; y += 6) ctx.fillRect(0, y, width, 1);
-  if (fakeEnding) {
-    const pulse = .72 + Math.sin(now / 170) * .16;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.globalAlpha = pulse;
-    ctx.fillStyle = '#f0ddaf';
-    ctx.shadowBlur = 22;
-    ctx.shadowColor = '#d7b16c';
-    ctx.font = `bold ${Math.max(19, height * .045)}px Georgia`;
-    ctx.fillText('DELIVERY COMPLETE', width / 2, height * .43);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#b9d9c5';
-    ctx.font = `${Math.max(10, height * .018)}px Georgia`;
-    ctx.fillText('RETURNING TO THE PORTFOLIO…', width / 2, height * .53);
-    ctx.globalAlpha = .36;
-    ctx.strokeStyle = '#b98542';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(width * .25, height * .61); ctx.lineTo(width * .75, height * .61); ctx.stroke();
+
+  if (!afterImpact) {
+    const centerX = width * .5;
+    const horizon = height * (.58 + falling * .12);
+    const openingWidth = width * (.08 + opening * .82);
+    const openingHeight = height * (.035 + opening * .34);
+    ctx.save();
+    ctx.translate(centerX, horizon);
+    ctx.rotate(Math.sin(now / 410) * .018);
+    ctx.fillStyle = 'rgba(2, 1, 1, .96)';
+    ctx.strokeStyle = '#5f3a20';
+    ctx.lineWidth = Math.max(2, height * .006);
+    ctx.beginPath();
+    ctx.moveTo(-openingWidth / 2, 0);
+    ctx.lineTo(-openingWidth * .38, openingHeight);
+    ctx.lineTo(openingWidth * .38, openingHeight);
+    ctx.lineTo(openingWidth / 2, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Broken timber and stone edges make the opening read as a real floor.
+    for (let plank = -3; plank <= 3; plank += 1) {
+      const x = plank * openingWidth * .12;
+      ctx.fillStyle = plank % 2 ? '#704622' : '#8b5b31';
+      ctx.fillRect(x - openingWidth * .055, -height * .018, openingWidth * .1, height * .035);
+    }
+    ctx.strokeStyle = 'rgba(200, 159, 103, .72)';
+    ctx.lineWidth = Math.max(1, height * .003);
+    for (let crack = 0; crack < 12; crack += 1) {
+      const angle = crack / 12 * TAU + .15;
+      const inner = openingWidth * .35;
+      const outer = openingWidth * (.5 + (crack % 3) * .1);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner * .28);
+      ctx.lineTo(Math.cos(angle + .08) * outer, Math.sin(angle + .08) * outer * .32);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    if (falling > 0) {
+      ctx.save();
+      ctx.globalAlpha = .34 + falling * .4;
+      for (let debris = 0; debris < 18; debris += 1) {
+        const seed = debris * 13.71;
+        const drift = Math.sin(now / 180 + seed) * width * .08;
+        const y = height * (.32 + fract(seed * .27 + elapsed * .9) * .55);
+        const x = width * (.5 + Math.sin(seed) * .42) + drift * falling;
+        const size = 3 + (debris % 4) * 2;
+        ctx.fillStyle = debris % 3 ? '#704622' : '#a17b50';
+        ctx.save(); ctx.translate(x, y); ctx.rotate(now / (180 + debris * 15)); ctx.fillRect(-size, -size / 2, size * 2.4, size); ctx.restore();
+      }
+      ctx.restore();
+    }
   } else {
-    ctx.globalAlpha = .28 + reveal * .7;
-    ctx.fillStyle = flash > 0 ? '#fff8dc' : '#071719';
+    const flash = Math.max(0, 1 - landing * 3.2);
+    if (flash > 0) { ctx.fillStyle = `rgba(244, 220, 165, ${flash * .68})`; ctx.fillRect(0, 0, width, height); }
+    ctx.fillStyle = `rgba(5, 3, 2, ${.42 + landing * .4})`;
     ctx.fillRect(0, 0, width, height);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.globalAlpha = .45 + reveal * .55;
-    ctx.fillStyle = '#d8fff1';
-    ctx.shadowBlur = 30;
-    ctx.shadowColor = '#6ce0c2';
-    ctx.font = `bold ${Math.max(18, height * .04)}px Georgia`;
-    ctx.fillText('NO. THE SYSTEM IS NOT DONE.', width / 2, height * .42);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#9ad5c4';
-    ctx.font = `${Math.max(10, height * .018)}px Georgia`;
-    ctx.fillText('THE OPERATIONS ARCHON // FLOOR 07', width / 2, height * .53);
+    // A brief low, warm impact vignette keeps the landing physical rather than digital.
+    const impactGlow = ctx.createRadialGradient(width / 2, height * .62, 0, width / 2, height * .62, Math.max(width, height) * .62);
+    impactGlow.addColorStop(0, `rgba(145, 93, 49, ${.2 * (1 - landing)})`);
+    impactGlow.addColorStop(1, 'rgba(15, 7, 3, 0)');
+    ctx.fillStyle = impactGlow; ctx.fillRect(0, 0, width, height);
   }
-  // Low-bit glitch shards make the false ending break apart before the arena reveal.
-  const shardCount = fakeEnding ? 18 : 8;
-  ctx.globalAlpha = .2 + flash * .65;
-  for (let index = 0; index < shardCount; index += 1) {
-    const seed = index * 97.17 + Math.floor(elapsed * 13);
-    const x = fract(Math.sin(seed) * 43758.5) * width;
-    const y = fract(Math.sin(seed * 1.7) * 27183.2) * height;
-    const shardWidth = 8 + fract(Math.sin(seed * 2.1) * 9123) * width * .12;
-    ctx.fillStyle = index % 2 ? '#6ce0c2' : '#e7ad67';
-    ctx.fillRect(x, y, shardWidth, 1 + (index % 3));
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f0ddaf';
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = '#8e5530';
+  ctx.font = `bold ${Math.max(17, height * .041)}px Georgia`;
+  ctx.fillText(message, width / 2, height * .42);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = .82;
+  ctx.fillStyle = '#d7bd87';
+  ctx.font = `${Math.max(10, height * .017)}px Georgia`;
+  ctx.fillText(submessage, width / 2, height * .51);
+  if (afterImpact) {
+    ctx.globalAlpha = .62;
+    ctx.fillStyle = '#b98542';
+    ctx.font = `${Math.max(9, height * .014)}px "DM Mono", monospace`;
+    ctx.fillText('LEVEL 08 · THE OPERATIONS ARCHON', width / 2, height * .61);
   }
+  ctx.restore();
   ctx.restore();
 }
 
 function drawEffects() { if (state.damageFlash > 0) { ctx.fillStyle = `rgba(156, 43, 32, ${state.damageFlash * .2})`; ctx.fillRect(0, 0, canvas.width, canvas.height); } }
-function drawMinimap() {
-  if (!minimapCtx || !minimap) return;
-  const width = minimap.width;
-  const height = minimap.height;
-  const route = { x: 8, y: 4, width: width - 16, height: 30 };
-  const detail = { x: 8, y: 51, width: width - 16, height: height - 56 };
-  const currentRoomIndex = clamp(state.room, 0, rooms.length - 1);
-  const currentOffset = roomOffsets[currentRoomIndex];
-  const currentWidth = roomWidths[currentRoomIndex];
-  const currentHeight = roomHeights[currentRoomIndex];
-  const routeScaleX = route.width / WORLD_WIDTH;
-  const routeScaleY = route.height / WORLD_HEIGHT;
-  const routeCenterY = route.y + route.height / 2;
-  const toRouteX = (x) => clamp(route.x + x * routeScaleX, route.x + 1, route.x + route.width - 1);
-  const roomRouteRect = (index) => {
-    const roomWidth = Math.max(7, roomWidths[index] * routeScaleX);
-    const roomHeight = Math.max(8, roomHeights[index] * routeScaleY);
-    return {
-      x: toRouteX(roomOffsets[index]),
-      y: routeCenterY - roomHeight / 2,
-      width: roomWidth,
-      height: roomHeight,
-    };
-  };
 
-  minimapCtx.clearRect(0, 0, width, height);
-  minimapCtx.fillStyle = 'rgba(7, 13, 10, .94)';
-  minimapCtx.fillRect(0, 0, width, height);
-  minimapCtx.strokeStyle = 'rgba(215, 189, 135, .32)';
-  minimapCtx.strokeRect(.5, .5, width - 1, height - 1);
-
-  // Upper strip: the complete connected route.
-  minimapCtx.fillStyle = 'rgba(240, 221, 175, .58)';
-  minimapCtx.font = 'bold 7px sans-serif';
-  minimapCtx.textAlign = 'left';
-  minimapCtx.textBaseline = 'top';
-  minimapCtx.fillText('ROUTE', route.x, 1);
-  minimapCtx.strokeStyle = 'rgba(215, 189, 135, .5)';
-  minimapCtx.lineWidth = 2;
-  minimapCtx.beginPath();
-  for (let index = 0; index < rooms.length - 1; index += 1) {
-    const left = roomRouteRect(index);
-    const right = roomRouteRect(index + 1);
-    minimapCtx.moveTo(left.x + left.width, routeCenterY);
-    minimapCtx.lineTo(right.x, routeCenterY);
-  }
-  minimapCtx.stroke();
-
-  for (let index = 0; index < rooms.length; index += 1) {
-    const rect = roomRouteRect(index);
-    const active = index === currentRoomIndex;
-    minimapCtx.fillStyle = active ? 'rgba(108, 224, 194, .38)' : 'rgba(173, 143, 91, .24)';
-    minimapCtx.fillRect(rect.x, rect.y, rect.width, rect.height);
-    minimapCtx.strokeStyle = active ? '#6ce0c2' : 'rgba(215, 189, 135, .68)';
-    minimapCtx.lineWidth = active ? 2 : 1;
-    minimapCtx.strokeRect(rect.x + .5, rect.y + .5, rect.width - 1, rect.height - 1);
-    minimapCtx.fillStyle = active ? '#e6f8df' : 'rgba(240, 221, 175, .82)';
-    minimapCtx.font = 'bold 7px sans-serif';
-    minimapCtx.textAlign = 'center';
-    minimapCtx.textBaseline = 'middle';
-    minimapCtx.fillText(String(index + 1).padStart(2, '0'), rect.x + rect.width / 2, rect.y + rect.height / 2);
-
-    if (active) {
-      const localX = clamp(state.player.x - currentOffset, 0, currentWidth);
-      const localY = clamp(state.player.y, 0, currentHeight);
-      const playerX = rect.x + localX / currentWidth * rect.width;
-      const playerY = rect.y + localY / currentHeight * rect.height;
-      minimapCtx.fillStyle = '#6ce0c2';
-      minimapCtx.beginPath();
-      minimapCtx.arc(playerX, playerY, 2.5, 0, TAU);
-      minimapCtx.fill();
-    }
-  }
-
-  // Lower panel: a true room-local view with the authored wall layout.
-  minimapCtx.strokeStyle = 'rgba(215, 189, 135, .32)';
-  minimapCtx.lineWidth = 1;
-  minimapCtx.beginPath();
-  minimapCtx.moveTo(detail.x, 43.5);
-  minimapCtx.lineTo(detail.x + detail.width, 43.5);
-  minimapCtx.stroke();
-  minimapCtx.fillStyle = '#e0b66d';
-  minimapCtx.font = 'bold 7px sans-serif';
-  minimapCtx.textAlign = 'left';
-  minimapCtx.textBaseline = 'middle';
-  minimapCtx.fillText('CURRENT ROOM / POSITION', detail.x, 46);
-
-  const cellScale = Math.min(detail.width / currentWidth, detail.height / currentHeight);
-  const roomMapWidth = currentWidth * cellScale;
-  const roomMapHeight = currentHeight * cellScale;
-  const roomMapX = detail.x + (detail.width - roomMapWidth) / 2;
-  const roomMapY = detail.y + (detail.height - roomMapHeight) / 2;
-  minimapCtx.fillStyle = 'rgba(20, 29, 24, .9)';
-  minimapCtx.fillRect(roomMapX, roomMapY, roomMapWidth, roomMapHeight);
-
-  for (let y = 0; y < currentHeight; y += 1) {
-    for (let x = 0; x < currentWidth; x += 1) {
-      const cell = worldMap[y]?.[currentOffset + x] || '1';
-      minimapCtx.fillStyle = cell === '1' ? 'rgba(215, 189, 135, .7)' : 'rgba(108, 224, 194, .1)';
-      minimapCtx.fillRect(roomMapX + x * cellScale, roomMapY + y * cellScale, Math.max(1, cellScale), Math.max(1, cellScale));
-    }
-  }
-  minimapCtx.strokeStyle = '#6ce0c2';
-  minimapCtx.strokeRect(roomMapX + .5, roomMapY + .5, roomMapWidth - 1, roomMapHeight - 1);
-
-  const toRoomX = (x) => clamp(roomMapX + (x - currentOffset) / currentWidth * roomMapWidth, roomMapX + 2, roomMapX + roomMapWidth - 2);
-  const toRoomY = (y) => clamp(roomMapY + y / currentHeight * roomMapHeight, roomMapY + 2, roomMapY + roomMapHeight - 2);
-  const drawRoomMarker = (x, y, color, radius = 2) => {
-    minimapCtx.fillStyle = color;
-    minimapCtx.beginPath();
-    minimapCtx.arc(toRoomX(x), toRoomY(y), radius, 0, TAU);
-    minimapCtx.fill();
-  };
-
-  worldItems.filter((item) => !item.recovered && item.roomIndex === currentRoomIndex).forEach((item) => {
-    drawRoomMarker(item.x, item.y, '#e7ad67', 2.1);
-  });
-  worldEnemies.filter((enemy) => !enemy.dead && enemy.roomIndex === currentRoomIndex && enemy.roomIndex !== 0).forEach((enemy) => {
-    drawRoomMarker(enemy.x, enemy.y, '#d16f63', 2.3);
-  });
-  if (currentRoomIndex === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead) {
-    drawRoomMarker(state.finalBoss.x, state.finalBoss.y, '#f0d38f', 3);
-  }
-
-  const playerX = toRoomX(state.player.x);
-  const playerY = toRoomY(state.player.y);
-  minimapCtx.save();
-  minimapCtx.translate(playerX, playerY);
-  minimapCtx.rotate(state.player.angle);
-  minimapCtx.fillStyle = '#6ce0c2';
-  minimapCtx.shadowBlur = 6;
-  minimapCtx.shadowColor = '#6ce0c2';
-  minimapCtx.beginPath();
-  minimapCtx.moveTo(0, -5);
-  minimapCtx.lineTo(3.5, 4);
-  minimapCtx.lineTo(-3.5, 4);
-  minimapCtx.closePath();
-  minimapCtx.fill();
-  minimapCtx.restore();
-}
 function drawDodgeOverlay(now) {
   if (settings.reducedMotion) return;
   const active = state.dodgeTime > 0;
@@ -3704,6 +5019,7 @@ function drawDodgeOverlay(now) {
   }
   ctx.restore();
 }
+
 function drawScene(now) {
   const width = canvas.width;
   const height = canvas.height;
@@ -3726,11 +5042,14 @@ function drawScene(now) {
     ctx.rotate(Math.sin(worldNow * .09) * impact * .05);
     ctx.translate(-width / 2, -height / 2);
   }
-  drawBackground(width, height);
-  drawWalls(width, height);
+  try {
+    drawBackground(width, height);
+    drawRoomRoof(width, height);
+    drawWalls(width, height);
   drawFloor(width, height);
   drawWorldRoute(worldNow);
   drawWorldObjects(worldNow);
+  drawForestHallFog(worldNow);
   drawGroundHazards(worldNow);
   drawEnemyTelegraphs(worldNow);
   drawBossTelegraph(worldNow);
@@ -3740,12 +5059,15 @@ function drawScene(now) {
   drawParticles();
   drawDamageNumbers();
   if (state.reading) drawHeldScroll(now);
-  else { drawWeapon(now); drawSpellCast(now); }
+  else { drawWeapon(now); drawPassiveSpellFocus(now); drawSpellCast(now); drawSpellSwitchControls(now); }
   drawEffects();
   drawLaunchTransition(now);
+  drawForestTransition(now);
   drawBossTransition(now);
-  if (state.endingFade >= 0) { ctx.fillStyle = `rgba(255, 250, 225, ${clamp(state.endingFade, 0, 1)})`; ctx.fillRect(0, 0, width, height); }
-  ctx.restore();
+    if (state.endingFade >= 0) { ctx.fillStyle = `rgba(255, 250, 225, ${clamp(state.endingFade, 0, 1)})`; ctx.fillRect(0, 0, width, height); }
+  } finally {
+    ctx.restore();
+  }
   drawDodgeOverlay(now);
 }
 
@@ -3758,7 +5080,7 @@ function spendStamina(amount) {
 }
 
 function tryDodge() {
-  if (state.menuActive || state.reading || state.launchTransition || state.transition || state.floorAnnouncement || state.gameComplete) return false;
+  if (state.menuActive || state.reading || state.deathScreen || state.launchTransition || state.transition || state.gameComplete) return false;
   if (state.dodgeTime > 0 || state.dodgeCooldown > 0) return false;
   if (!spendStamina(DODGE_COST)) {
     showHitMarker('NO STAMINA', 'miss');
@@ -3888,7 +5210,7 @@ function damagePlayer(source, options = {}) {
 
   let amount = baseDamage;
   if (state.wardTimer > 0) amount *= .22;
-  if (amount <= 0) return { blocked };
+  if (amount <= 0) return { blocked: true };
 
   state.player.hp -= amount;
   state.damageFlash = .95;
@@ -3898,18 +5220,7 @@ function damagePlayer(source, options = {}) {
   playHitSound();
   showToast(`${attackerName} struck you.`, 'danger');
   if (state.player.hp <= 0) {
-    state.player.hp = 100;
-    state.stamina = state.maxStamina;
-    state.groundHazards = [];
-    const room = rooms[state.room];
-    const respawn = roomContentPoint(state.room, room.spawn.x, room.spawn.y);
-    state.player.x = roomOffsets[state.room] + respawn.x;
-    state.player.y = respawn.y;
-    state.player.angle = room.spawn.angle;
-    state.player.pitch = 0;
-    state.dodgeTime = 0;
-    state.dodgeInvulnerable = 0;
-    showToast('You wake at the threshold.', 'danger');
+    openDeathScreen(`${attackerName} brought you down.`);
   }
   updateHud();
   return { damaged: true };
@@ -3917,7 +5228,7 @@ function damagePlayer(source, options = {}) {
 function damageHostile(target, amount, options = {}) {
   if (!target || target.dead) return false;
   if (target.boss && target.shield > 0) {
-    target.shield = Math.max(0, target.shield - amount * .34);
+    target.shield = Math.max(0, target.shield - amount * .8);
     target.hitTime = .22;
     state.impactBursts.push({ x: target.x, y: target.y, z: 1.4, elapsed: 0, duration: .42, color: '#c7f4e7', radius: 1.45, style: 'shield' });
     if (state.now - shieldFeedbackAt > 360) { showHitMarker('SHIELDED', 'shielded'); shieldFeedbackAt = state.now; }
@@ -3934,23 +5245,170 @@ function damageHostile(target, amount, options = {}) {
   if (target.hp <= 0) defeatHostile(target);
   return true;
 }
+function collectHealthPotion(item) {
+  if (!item || item.recovered || item.kind !== 'health-potion') return false;
+  const previousHp = state.player.hp;
+  state.player.hp = clamp(state.player.hp + (item.healAmount || 30), 0, 100);
+  item.recovered = true;
+  state.recoveredItems.add(item.id);
+  const recoveredAmount = Math.ceil(state.player.hp - previousHp);
+  spawnParticles(item.x, item.y, .42, ['#d16f63', '#f0ddaf', '#fff1b0'], settings.reducedMotion ? 6 : 16, { speed: 1.1, life: .75, size: .72, upward: .7, spread: TAU, glow: 14 });
+  state.impactBursts.push({ x: item.x, y: item.y, z: .42, elapsed: 0, duration: .45, color: '#d16f63', radius: .62, style: 'potion' });
+  playRecoverySound();
+  showToast(recoveredAmount > 0 ? `Health potion used · +${recoveredAmount} vitality.` : 'Health potion collected · vitality already full.', 'good');
+  updateHud();
+  return true;
+}
+function collectTouchItems() {
+  const activeRoom = currentRoomIndex();
+  for (const item of worldItems) {
+    if (item.recovered || item.kind !== 'health-potion' || item.roomIndex !== activeRoom) continue;
+    if (Math.hypot(item.x - state.player.x, item.y - state.player.y) <= .72) collectHealthPotion(item);
+  }
+}
+function monsterShouldDropHealthPotion(target) {
+  if (target?.boss) return true;
+  const favoredKinds = new Set(['warden', 'beast', 'quake']);
+  if (favoredKinds.has(target?.kind)) return true;
+  const signature = String(target?.id || '').split('').reduce((sum, character) => sum + character.charCodeAt(0), 0);
+  return signature % 5 === 0;
+}
+function deterministicDropAngle(target) {
+  const signature = String(target?.id || '').split('').reduce((sum, character) => sum + character.charCodeAt(0), 0);
+  return (signature % 360) * Math.PI / 180;
+}
+
+function spawnHealthPotion(x, y, roomIndex, sourceName) {
+  const id = `potion-${targetPotionSequence++}`;
+  worldItems.push({
+    id,
+    title: 'HEALTH POTION',
+    kind: 'health-potion',
+    icon: '+',
+    tag: 'RECOVERY / VITALITY',
+    summary: 'Restores 30 vitality.',
+    details: [`Dropped by ${sourceName}.`, 'Drink it from the ground to return to the fight.'],
+    color: '#d16f63',
+    healAmount: 30,
+    x,
+    y,
+    roomIndex,
+    recovered: false,
+    dropFromEnemy: true,
+    dropSource: sourceName,
+    spawnedAt: state.now || performance.now(),
+    bobPhase: Math.random() * TAU,
+  });
+  spawnScrollDropEffect(x, y, '#d16f63');
+}
+function openDeathScreen(message) {
+  if (state.deathScreen) return;
+  state.deathScreen = { elapsed: 0, message };
+  state.player.hp = 0;
+  state.keys.clear();
+  state.mouseAttack = false;
+  state.mouseLook = false;
+  state.projectiles = [];
+  state.groundHazards = [];
+  state.weapon.swing = 0;
+  state.weapon.cooldown = 0;
+  if (deathCause) deathCause.textContent = message;
+  if (deathOverlay) { deathOverlay.hidden = false; deathOverlay.classList.add('is-visible'); }
+  if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+  state.promptSignature = 'death';
+  showToast('You fell. Restart the level when you are ready.', 'danger');
+  playTone(46, .55, 'sawtooth', .045);
+}
+function resetCurrentLevel() {
+  const roomIndex = state.room;
+  const room = rooms[roomIndex];
+  const respawn = roomContentPoint(roomIndex, room.spawn.x, room.spawn.y);
+  state.player.x = roomOffsets[roomIndex] + respawn.x;
+  state.player.y = respawn.y;
+  state.player.angle = room.spawn.angle;
+  state.player.pitch = 0;
+  state.player.hp = 100;
+  state.stamina = state.maxStamina;
+  state.staminaRegenDelay = 0;
+  state.groundHazards = [];
+  state.projectiles = [];
+  state.activeSpellEffects = [];
+  state.spellCast = null;
+  state.spellCooldown = 0;
+  state.combo = 0;
+  state.comboTimer = 0;
+  state.dodgeTime = 0;
+  state.dodgeCooldown = 0;
+  state.dodgeInvulnerable = 0;
+  state.dodgeProgress = 0;
+  state.dodgeImpact = 0;
+  state.damageFlash = 0;
+  state.shakeTime = 0;
+  state.weapon.swing = 0;
+  state.weapon.cooldown = 0;
+  state.weapon.hit = false;
+  state.weapon.attackDamage = 0;
+  state.weapon.comboStep = 0;
+
+  for (let index = worldItems.length - 1; index >= 0; index -= 1) {
+    const item = worldItems[index];
+    if (item.roomIndex === roomIndex && item.dropFromEnemy) {
+      if (item.kind === 'scroll' || item.kind === 'ledger' || item.kind === 'chronicle' || item.kind === 'map') droppedRecordIds.delete(item.id.replace(/^drop-/, ''));
+      state.recoveredItems.delete(item.id);
+      worldItems.splice(index, 1);
+    }
+  }
+  for (const template of recordDropTemplates) if (template.roomIndex === roomIndex) droppedRecordIds.delete(template.id);
+  const replacement = initialEnemyData.filter((enemy) => enemy.roomIndex === roomIndex).map((enemy) => ({ ...enemy, dropTemplates: [...(enemy.dropTemplates || [])] }));
+  for (let index = worldEnemies.length - 1; index >= 0; index -= 1) if (worldEnemies[index].roomIndex === roomIndex) worldEnemies.splice(index, 1);
+  worldEnemies.push(...replacement);
+  if (roomIndex === FINAL_ROOM_INDEX) {
+    state.finalBoss = createFinalBoss();
+    state.finalBoss.alerted = true;
+    state.doorOfLight = null;
+    state.finalArenaTime = .01;
+    setMusicMode('boss');
+  } else {
+    state.doorOfLight = null;
+    setMusicMode('dungeon');
+  }
+  state.deathScreen = null;
+  if (deathOverlay) { deathOverlay.classList.remove('is-visible'); deathOverlay.hidden = true; }
+  state.promptSignature = '';
+  state.hudSignature = '';
+  updateHud();
+  showToast(`LEVEL RESTORED · ${room.title}`, 'good');
+  playRecoverySound();
+}
+let targetPotionSequence = 0;
+
 function defeatHostile(target) {
   if (target.dead) return;
   target.dead = true;
   target.deathTime = 0;
   state.groundHazards = state.groundHazards.filter((hazard) => hazard.ownerId !== target.id);
   state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: target.boss ? 1.2 : .56, color: target.boss ? '#fff4c5' : (target.color || '#d8c18b'), radius: target.boss ? 2.1 : .82, style: 'defeat' });
+  const dropAngle = deterministicDropAngle(target);
+  const scrollDropPoint = findWalkableSpawnPoint(target.x, target.y, target.roomIndex);
+  const potionDropPoint = findWalkableSpawnPoint(
+    target.x + Math.cos(dropAngle) * .92,
+    target.y + Math.sin(dropAngle) * .92,
+    target.roomIndex,
+    [scrollDropPoint],
+  );
   if (target.boss) {
-    state.doorOfLight = { x: FINAL_ROOM_OFFSET + 23.1, y: 7, active: true, pulse: 0 };
+    state.doorOfLight = { ...BOSS_EXIT_POINT, active: true, pulse: 0 };
     state.finalBoss.shield = 0;
     state.finalBoss.phase = 3;
     state.activeSpellEffects.push({ kind: 'boss-death', elapsed: 0, duration: 2.2, color: '#fff4c5' });
+    if (monsterShouldDropHealthPotion(target)) spawnHealthPotion(potionDropPoint.x, potionDropPoint.y, target.roomIndex, target.displayName || target.name);
     earnExperience(250, 'the Archon');
     showToast('THE OPERATIONS ARCHON FALLS. THE DOOR OF LIGHT OPENS.', 'good');
     playTone(55, .6, 'square', .045); playTone(330, .8, 'triangle', .035, .18);
   } else {
     const reward = target.kind === 'warden' ? 24 : target.kind === 'beast' ? 18 : 12;
     earnExperience(reward, target.displayName || target.name);
+    if (monsterShouldDropHealthPotion(target)) spawnHealthPotion(potionDropPoint.x, potionDropPoint.y, target.roomIndex, target.displayName || target.name);
     const templates = target.dropTemplates || [];
     templates.forEach((template) => {
       if (droppedRecordIds.has(template.id)) return;
@@ -3958,16 +5416,17 @@ function defeatHostile(target) {
       worldItems.push({
         ...template,
         id: `drop-${template.id}`,
+        recordId: template.id,
         kind: 'scroll',
-        x: target.x,
-        y: target.y,
+        x: scrollDropPoint.x,
+        y: scrollDropPoint.y,
         roomIndex: target.roomIndex,
         recovered: false,
         dropFromEnemy: true,
         spawnedAt: state.now || performance.now(),
         bobPhase: Math.random() * TAU,
       });
-      spawnScrollDropEffect(target.x, target.y, template.color || rooms[target.roomIndex].color);
+      spawnScrollDropEffect(scrollDropPoint.x, scrollDropPoint.y, template.color || rooms[target.roomIndex].color);
     });
     showToast(templates.length ? `${target.displayName || target.name} dropped field records.` : `${target.displayName || target.name} defeated.`, 'good');
   }
@@ -4230,12 +5689,12 @@ function executeBossPattern(boss, pattern, telegraph) {
   const targetX = telegraph?.targetX ?? state.player.x;
   const targetY = telegraph?.targetY ?? state.player.y;
   if (pattern === 0) {
-    spawnBossPattern('boss-bolt', boss, boss.phase === 3 ? 5 : 3, boss.phase === 3 ? 4.9 : 4.2, boss.phase === 3 ? '#f6e3a5' : '#d99762', boss.phase === 3 ? 16 : 12, { spread: boss.phase === 3 ? .16 : .2, z: 1.22, targetX, targetY });
+    spawnBossPattern('boss-bolt', boss, boss.phase === 3 ? 7 : 4, boss.phase === 3 ? 5.35 : 4.55, boss.phase === 3 ? '#f6e3a5' : '#d99762', boss.phase === 3 ? 18 : 13, { spread: boss.phase === 3 ? .16 : .2, z: 1.22, targetX, targetY });
   } else if (pattern === 1) {
-    const count = boss.phase === 3 ? 12 : boss.phase === 2 ? 9 : 6;
+    const count = boss.phase === 3 ? 14 : boss.phase === 2 ? 10 : 7;
     for (let index = 0; index < count; index += 1) {
       const angle = index / count * TAU + boss.pulse * .25;
-      makeProjectile('boss-ring', { x: boss.x, y: boss.y, z: .75 }, { x: Math.cos(angle) * (boss.phase === 3 ? 4.5 : 3.7), y: Math.sin(angle) * (boss.phase === 3 ? 4.5 : 3.7), z: 0 }, { color: boss.phase === 2 ? '#77a9e8' : '#d99762', damage: boss.phase === 3 ? 13 : 9, radius: .12, lifetime: 3.3, source: 'boss', sourceId: boss.id, collisionHeight: .45 });
+      makeProjectile('boss-ring', { x: boss.x, y: boss.y, z: .75 }, { x: Math.cos(angle) * (boss.phase === 3 ? 5.1 : 4.05), y: Math.sin(angle) * (boss.phase === 3 ? 5.1 : 4.05), z: 0 }, { color: boss.phase === 2 ? '#77a9e8' : '#d99762', damage: boss.phase === 3 ? 15 : 10, radius: .12, lifetime: 3.3, source: 'boss', sourceId: boss.id, collisionHeight: .45 });
     }
   } else if (pattern === 2) {
     boss.dashTime = .7;
@@ -4245,7 +5704,7 @@ function executeBossPattern(boss, pattern, telegraph) {
     if (canStand(nextX, nextY)) { boss.x = nextX; boss.y = nextY; }
     state.impactBursts.push({ x: boss.x, y: boss.y, z: 1, elapsed: 0, duration: .8, color: '#e9e9e0', radius: 1.2 });
   } else if (pattern === 3) {
-    boss.shield = Math.max(boss.shield, boss.phase === 3 ? 72 : 54);
+    boss.shield = Math.max(boss.shield, boss.phase === 3 ? 52 : 38);
     state.activeSpellEffects.push({ kind: 'boss-shield', elapsed: 0, duration: 1.1, color: '#9debdc' });
     showToast('THE ARCHON RAISES A LATTICE SHIELD.', 'danger');
   } else {
@@ -4263,7 +5722,7 @@ function updateBoss(delta) {
   if (nextPhase !== boss.phase) {
     boss.phase = nextPhase;
     boss.attackTelegraph = null;
-    boss.shield = nextPhase === 2 ? 92 : nextPhase === 3 ? 126 : 0;
+    boss.shield = nextPhase === 2 ? 58 : nextPhase === 3 ? 76 : 0;
     boss.cooldown = 1.1;
     state.shakeTime = settings.reducedMotion ? .2 : .8;
     state.impactBursts.push({ x: boss.x, y: boss.y, z: 1.3, elapsed: 0, duration: 1.4, color: BOSS_PHASES[nextPhase - 1].color, radius: 2.4 });
@@ -4286,11 +5745,14 @@ function updateBoss(delta) {
   }
   boss.summonTimer -= delta;
   if (boss.phase >= 2 && boss.summonTimer <= 0) {
-    boss.summonTimer = boss.phase === 3 ? 7.2 : 9.5;
+    boss.summonTimer = boss.phase === 3 ? 5.8 : 7.8;
     const spawnKind = boss.phase === 3 ? 'hound' : 'wraith';
-    const spawnX = clamp(boss.x + (Math.random() * 2 - 1) * 3.4, FINAL_ROOM_OFFSET + 2, FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH - 2);
-    const spawnY = clamp(boss.y + (Math.random() * 2 - 1) * 3.4, 1.2, FINAL_ROOM_HEIGHT - 1.2);
-    if (canStand(spawnX, spawnY)) worldEnemies.push({ id: `archon-summon-${Date.now()}-${Math.random()}`, name: boss.phase === 3 ? 'Delivery Hound' : 'System Wraith', displayName: boss.phase === 3 ? 'Delivery Hound' : 'System Wraith', kind: spawnKind, x: spawnX, y: spawnY, roomIndex: FINAL_ROOM_INDEX, hp: boss.phase === 3 ? 74 : 66, maxHp: boss.phase === 3 ? 74 : 66, speed: boss.phase === 3 ? .52 : .38, damage: boss.phase === 3 ? 9 : 7, color: boss.phase === 3 ? '#b76b66' : '#77a9e8', cooldown: 1.2, attackTime: 0, attackHit: false, hitTime: 0, walkPhase: Math.random() * 5, alerted: true, dead: false, deathTime: 0, dropTemplates: [] });
+    const requestedX = clamp(boss.x + (Math.random() * 2 - 1) * 3.4, FINAL_ROOM_OFFSET + 2, FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH - 2);
+    const requestedY = clamp(boss.y + (Math.random() * 2 - 1) * 3.4, 1.2, FINAL_ROOM_HEIGHT - 1.2);
+    const occupied = worldEnemies.filter((enemy) => !enemy.dead).map((enemy) => ({ x: enemy.x, y: enemy.y }));
+    occupied.push({ x: boss.x, y: boss.y });
+    const summonPoint = findWalkableSpawnPoint(requestedX, requestedY, FINAL_ROOM_INDEX, occupied);
+    if (isClearForSpawn(summonPoint.x, summonPoint.y, .3)) worldEnemies.push({ id: `archon-summon-${Date.now()}-${Math.random()}`, name: boss.phase === 3 ? 'Delivery Hound' : 'System Wraith', displayName: boss.phase === 3 ? 'Delivery Hound' : 'System Wraith', kind: spawnKind, x: summonPoint.x, y: summonPoint.y, roomIndex: FINAL_ROOM_INDEX, hp: boss.phase === 3 ? 74 : 66, maxHp: boss.phase === 3 ? 74 : 66, speed: boss.phase === 3 ? .52 : .38, damage: boss.phase === 3 ? 9 : 7, color: boss.phase === 3 ? '#b76b66' : '#77a9e8', cooldown: 1.2, attackTime: 0, attackHit: false, hitTime: 0, walkPhase: Math.random() * 5, alerted: true, dead: false, deathTime: 0, dropTemplates: [] });
     showToast('The Archon dispatches a new blocker.', 'danger');
   }
 
@@ -4300,7 +5762,7 @@ function updateBoss(delta) {
       const attack = boss.attackTelegraph;
       executeBossPattern(boss, attack.pattern, attack);
       boss.attackTelegraph = null;
-      boss.cooldown = boss.phase === 3 ? 1.5 : boss.phase === 2 ? 1.9 : 2.25;
+      boss.cooldown = boss.phase === 3 ? 1.22 : boss.phase === 2 ? 1.58 : 1.9;
     }
     return;
   }
@@ -4402,6 +5864,7 @@ function hitTarget() {
   updateHud();
 }
 function projectileTargetHit(projectile, target) {
+  if (projectile.spell) spawnSpellImpactParticles(projectile.spellKind, target.x, target.y, hostileAimHeight(target), projectile.color, projectile.aoe ? 1.08 : .9);
   const damaged = damageHostile(target, projectile.damage, { stun: projectile.stun });
   if (!damaged) return;
   showHitMarker(target.boss ? 'ARCHON HIT' : 'HIT', target.boss ? 'crit' : 'hit');
@@ -4415,6 +5878,7 @@ function projectileTargetHit(projectile, target) {
     for (const other of chained) {
       damageHostile(other, projectile.damage * .5, { stun: projectile.stun * .72 });
       chainSegments.push({ start: { x: previous.x, y: previous.y, z: hostileAimHeight(previous) }, end: { x: other.x, y: other.y, z: hostileAimHeight(other) } });
+      spawnSpellImpactParticles(projectile.spellKind, other.x, other.y, hostileAimHeight(other), projectile.color, .72);
       state.impactBursts.push({ x: other.x, y: other.y, z: hostileAimHeight(other), elapsed: 0, duration: .62, color: projectile.color, radius: .85 });
       previous = other;
     }
@@ -4448,12 +5912,12 @@ function updateProjectiles(delta) {
     if (projectile.spell) {
       projectile.trail.unshift({ x: projectile.x, y: projectile.y, z: projectile.z });
       if (projectile.trail.length > 12) projectile.trail.pop();
-      if (projectile.spell && projectile.sparks && Math.random() < delta * (settings.reducedMotion ? 3 : 12)) spawnParticles(projectile.x, projectile.y, projectile.z, projectile.color, 1, { speed: .42, life: .34, size: .42, upward: .08, spread: TAU, gravity: .22, drag: .95, glow: 9, shape: 'dot', trail: true });
+      if (projectile.spell && projectile.sparks && Math.random() < delta * (settings.reducedMotion ? 3 : 12)) spawnSpellTrailParticle(projectile);
     }
     const next = { x: projectile.x + projectile.vx * delta, y: projectile.y + projectile.vy * delta, z: projectile.z + projectile.vz * delta };
     if (isWall(next.x, next.y) || next.z < .03 || next.z > CEILING_Z - .03) {
       state.impactBursts.push({ x: projectile.x, y: projectile.y, z: projectile.z, elapsed: 0, duration: .35, color: projectile.color, radius: .45, style: 'projectile-impact' });
-      if (projectile.spell) spawnParticles(projectile.x, projectile.y, projectile.z, [projectile.color, '#fff1b0'], settings.reducedMotion ? 4 : 10, { speed: 1.1, life: .42, size: .58, upward: .2, glow: 11, trail: true });
+      if (projectile.spell) spawnSpellImpactParticles(projectile.spellKind, projectile.x, projectile.y, projectile.z, projectile.color, 1.05);
       continue;
     }
     projectile.x = next.x;
@@ -4480,7 +5944,7 @@ function updateProjectiles(delta) {
 }
 function performAttack() {
   const definition = weaponDefinition();
-  if (state.reading || !state.weapon.equipped || state.menuActive || state.launchTransition || state.transition || state.weapon.swing > 0 || state.weapon.cooldown > 0 || state.gameComplete || state.dodgeTime > 0) return;
+  if (state.reading || state.deathScreen || !state.weapon.equipped || state.menuActive || state.launchTransition || state.transition || state.weapon.swing > 0 || state.weapon.cooldown > 0 || state.gameComplete || state.dodgeTime > 0) return;
   const nextStep = state.comboTimer > 0 && state.combo > 0 && state.combo < 3 ? state.combo + 1 : 1;
   const staminaCost = definition.staminaCost * (nextStep === 2 ? 1.08 : nextStep === 3 ? 1.2 : 1);
   if (!spendStamina(staminaCost)) {
@@ -4511,7 +5975,8 @@ function updateWeapon(delta) {
   const progress = 1 - state.weapon.swing / definition.duration;
   if (!state.weapon.hit && progress > definition.hitAt) {
     state.weapon.hit = true;
-    if (state.weapon.type === 'crossbow') spawnCrossbowArrow();
+    if (state.weapon.type === 'stars') spawnNinjaStar();
+    else if (state.weapon.type === 'crossbow') spawnCrossbowArrow();
     else if (state.weapon.type === 'wand') spawnWandFireball();
     else hitTarget();
   }
@@ -4520,80 +5985,98 @@ function updateWeapon(delta) {
 
 function updatePrompt(delta = 0) {
   state.promptTimer -= delta;
-  if (state.menuActive || state.transition || state.launchTransition || state.floorAnnouncement || state.trader) { interactionPrompt.hidden = true; return; }
-  if (state.reading) {
-    if (state.promptSignature !== 'reading') { interactionPrompt.hidden = true; state.promptSignature = 'reading'; }
+  if (state.menuActive || state.deathScreen || state.transition || state.forestTransition || state.launchTransition || state.reading) {
+    interactionPrompt.hidden = true;
+    state.promptSignature = '';
     return;
   }
   if (state.promptTimer > 0) return;
   state.promptTimer = .12;
-  const doorDistance = state.doorOfLight?.active ? Math.hypot(state.doorOfLight.x - state.player.x, state.doorOfLight.y - state.player.y) : Infinity;
-  const gateDistance = lobbyGateDistance();
-  const trader = getNearestTrader();
-  const item = getNearestItem();
-  const target = findAimTarget();
-  const spell = selectedSpellDefinition();
-  let nextKey = 'WASD';
-  let nextText = 'EXPLORE DUNGEON · FIND FIELD RECORDS';
-  if (doorDistance < 1.65) {
-    nextKey = 'E / ENTER';
-    nextText = 'OPEN LIGHTWELL · RETURN TO PORTFOLIO';
-  } else if (trader) {
-    nextKey = 'E / ENTER';
-    nextText = 'SPEAK WITH THE WAYFARER · CHANGE WEAPON';
-  } else if (gateDistance < 1.65 && !state.lobbyGateOpen) {
-    nextKey = state.tutorialSpell ? 'Q' : 'E / ENTER';
-    nextText = state.tutorialSpell ? 'CAST ARCHIVE KEY · OPEN GATE' : 'READ THE GLOWING SCROLL FIRST';
-  } else if (getNearestLobbyScroll()) {
-    nextKey = 'E / ENTER';
-    nextText = 'READ COMPLETE PORTFOLIO SCROLL';
-  } else if (target) {
-    nextKey = 'LMB / CLICK';
-    nextText = `ATTACK ${String(target.displayName || target.name).toUpperCase()}`;
-  } else if (item) {
-    nextKey = 'E / ENTER';
-    nextText = `READ ${String(item.title).toUpperCase()} · +${XP_PER_SCROLL} XP`;
-  } else if (!state.weapon.equipped) {
-    nextKey = 'E / ENTER';
-    nextText = 'SPEAK WITH THE WAYFARER TO TAKE A WEAPON';
-  } else if (spell) {
+
+  const finalDoorDistance = state.doorOfLight?.active
+    ? Math.hypot(state.doorOfLight.x - state.player.x, state.doorOfLight.y - state.player.y)
+    : Infinity;
+  const finalDoor = finalDoorDistance <= 1.65;
+  const weaponCreature = getNearestWeaponCreature();
+  const scroll = getNearestPromptScroll();
+  const lobbyGate = state.room === 0 && !state.lobbyGateOpen && lobbyGateDistance() <= 1.65;
+  let nextKey = null;
+  let nextText = '';
+
+  // Keep this list intentionally narrow: only immediate, explicitly actionable
+  // interactions are shown below the crosshair.
+  if (finalDoor) {
+    nextKey = 'E';
+    nextText = 'INTERACT WITH FINAL DOOR';
+  } else if (lobbyGate && !state.weapon.equipped) {
+    nextKey = 'E';
+    nextText = 'EQUIP A WEAPON BEFORE OPENING GATE';
+  } else if (lobbyGate && state.tutorialSpell) {
     nextKey = 'Q';
-    nextText = `CAST ${spell.name.toUpperCase()}${state.spellCooldown > 0 ? ` · ${state.spellCooldown.toFixed(1)}S` : ' · READY'}`;
+    nextText = 'CAST ARCHIVE KEY TO OPEN GATE';
+  } else if (weaponCreature) {
+    nextKey = 'E';
+    nextText = `PICK UP ${WEAPON_LOADOUTS[weaponCreature.type].label.toUpperCase()}`;
+  } else if (scroll) {
+    nextKey = 'E';
+    nextText = 'PICK UP SCROLL';
   }
-  const signature = `${nextKey}|${nextText}`;
+
+  if (!nextKey) {
+    interactionPrompt.hidden = true;
+    state.promptSignature = '';
+    return;
+  }
+
+  const keyLabel = `[${nextKey}]`;
+  const signature = `${keyLabel}|${nextText}`;
   if (signature === state.promptSignature) return;
   state.promptSignature = signature;
   interactionPrompt.hidden = false;
-  promptKey.textContent = nextKey;
+  promptKey.textContent = keyLabel;
   promptText.textContent = nextText;
 }
 function advanceToPortfolio() {
+  // Kept under the old name for compatibility with the existing ending flow;
+  // the completed run now fades into the sanctuary instead of the lobby.
   state.endingFade += .022;
   if (state.endingFade >= 1) {
     state.endingFade = -1;
-    resetRun();
-    state.menuActive = false;
-    mainMenu.classList.add('is-hidden');
-    gameShell.classList.remove('menu-active');
-    lobbyDock?.classList.add('is-active');
-    startMusic();
-    showToast('The lightwell returns you to the safe field lobby.', 'good');
+    const spawn = roomContentPoint(SANCTUARY_ROOM_INDEX, rooms[SANCTUARY_ROOM_INDEX].spawn.x, rooms[SANCTUARY_ROOM_INDEX].spawn.y);
+    state.player.x = roomOffsets[SANCTUARY_ROOM_INDEX] + spawn.x;
+    state.player.y = spawn.y;
+    state.player.angle = rooms[SANCTUARY_ROOM_INDEX].spawn.angle;
+    state.player.pitch = 0;
+    state.room = SANCTUARY_ROOM_INDEX;
+    state.sanctuaryActive = true;
+    state.gameComplete = false;
+    state.doorOfLight = null;
+    state.keys.clear();
+    state.mouseAttack = false;
+    state.mouseLook = false;
+    setMusicMode('dungeon');
+    updateHud();
+    spawnParticles(state.player.x, state.player.y, .65, ['#fff8d6', '#b8f0e2'], settings.reducedMotion ? 14 : 34, { speed: 1.1, life: 1.2, size: .9, upward: .8, spread: TAU, gravity: -.08, glow: 19, trail: true });
+    showToast('ASCENSION COMPLETE · APPROACH THE RÉSUMÉ PEDESTAL.', 'good');
   }
 }
 function tick(delta, now) {
   if (state.menuActive) return;
+  if (state.deathScreen) { state.deathScreen.elapsed += delta; return; }
   if (state.reading) { state.readingElapsed += delta; return; }
-  if (state.trader) return;
   state.now = now;
   updateParticles(delta);
   updateDamageNumbers(delta);
   emitAmbientParticles(delta);
-  if (state.launchTransition) { updateLaunchTransition(delta); state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8); state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8); return; }
+  if (state.launchTransition) { updateLaunchTransition(delta); state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8); state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8); }
   if (state.gameComplete) { advanceToPortfolio(); return; }
+  if (state.forestTransition) { updateForestTransition(delta); state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8); state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8); return; }
   if (state.transition) { updateBossTransition(delta); state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8); state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8); return; }
-  if (state.floorAnnouncement) { updateFloorAnnouncement(delta); state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8); state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8); return; }
+  if (state.floorAnnouncement) updateFloorAnnouncement(delta);
   updateLobbyGate(delta);
   updatePlayer(delta);
+  updateSanctuaryResume();
+  collectTouchItems();
   if (state.room === FINAL_ROOM_INDEX) state.finalArenaTime += delta;
   updateWeapon(delta);
   if (state.mouseAttack && state.weapon.swing <= 0 && state.weapon.cooldown <= 0) performAttack();
@@ -4605,7 +6088,103 @@ function tick(delta, now) {
   state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8);
   updateCombatHud();
 }
-function gameLoop(now) { const delta = Math.min(.05, (now - state.lastTime) / 1000 || 0); state.lastTime = now; tick(delta, now); updatePrompt(delta); drawMinimap(); if (now - state.lastRenderAt >= RENDER_INTERVAL) { state.lastRenderAt = now; drawScene(now); } requestAnimationFrame(gameLoop); }
+const runtimeDiagnostics = {
+  lastErrorAt: -Infinity,
+  lastReportedSignature: '',
+  lastToastAt: -Infinity,
+};
+function reportRuntimeError(scope, error) {
+  const now = performance.now();
+  const message = error?.stack || error?.message || String(error);
+  const signature = `${scope}:${message}`;
+  state.runtimeErrorCount += 1;
+  state.lastRuntimeError = `${scope}: ${message}`;
+  if (signature !== runtimeDiagnostics.lastReportedSignature || now - runtimeDiagnostics.lastErrorAt > 2000) {
+    console.error(`[Portfolio game] recovered ${scope} error`, error);
+    runtimeDiagnostics.lastReportedSignature = signature;
+    runtimeDiagnostics.lastErrorAt = now;
+  }
+  if (!state.menuActive && now - runtimeDiagnostics.lastToastAt > 5000) {
+    runtimeDiagnostics.lastToastAt = now;
+    try { showToast('The renderer recovered from a transient fault.', 'danger'); } catch { /* keep the frame loop alive even if the HUD is unavailable */ }
+  }
+}
+function runFrameTask(scope, callback) {
+  try {
+    callback();
+    return true;
+  } catch (error) {
+    reportRuntimeError(scope, error);
+    return false;
+  }
+}
+function drawRecoveryScene(now) {
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.save();
+  try {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#090705';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#f0ddaf';
+    ctx.font = `bold ${Math.max(12, height * .025)}px "DM Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('RENDERER RECOVERING', width / 2, height / 2 - 14);
+    ctx.fillStyle = '#b8f0e2';
+    ctx.font = `${Math.max(9, height * .014)}px "DM Mono", monospace`;
+    ctx.fillText('THE RUN IS STILL ACTIVE', width / 2, height / 2 + 16);
+  } finally {
+    ctx.restore();
+  }
+}
+function updateFrameQuality(frameMs) {
+  const sample = clamp(frameMs, 0, 250);
+  state.frameAverageMs = state.frameAverageMs ? state.frameAverageMs * .92 + sample * .08 : sample;
+  if (state.frameAverageMs > 28) {
+    state.slowFrameStreak += 1;
+    state.stableFrameStreak = 0;
+  } else if (state.frameAverageMs < 19) {
+    state.stableFrameStreak += 1;
+    state.slowFrameStreak = 0;
+  } else {
+    state.slowFrameStreak = 0;
+    state.stableFrameStreak = 0;
+  }
+  if (state.slowFrameStreak >= 8) {
+    state.renderQuality = Math.max(.58, state.renderQuality - .12);
+    state.slowFrameStreak = 0;
+  } else if (state.stableFrameStreak >= 45) {
+    state.renderQuality = Math.min(1, state.renderQuality + .06);
+    state.stableFrameStreak = 0;
+  }
+}
+function gameLoop(now) {
+  const frameStart = performance.now();
+  try {
+    const delta = Math.min(.05, (now - state.lastTime) / 1000 || 0);
+    state.lastTime = now;
+    runFrameTask('update', () => tick(delta, now));
+    runFrameTask('prompt', () => updatePrompt(delta));
+    if (now - state.lastRenderAt >= RENDER_INTERVAL) {
+      state.lastRenderAt = now;
+      const rendered = runFrameTask('scene', () => drawScene(now));
+      if (!rendered) runFrameTask('recovery scene', () => drawRecoveryScene(now));
+    }
+  } catch (error) {
+    reportRuntimeError('frame loop', error);
+  } finally {
+    updateFrameQuality(performance.now() - frameStart);
+    requestAnimationFrame(gameLoop);
+  }
+}
+window.addEventListener('error', (event) => {
+  if (event.error) reportRuntimeError('window', event.error);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  reportRuntimeError('promise', event.reason || 'Unhandled promise rejection');
+});
 
 function setKey(event, down) {
   const rawKey = event.key;
@@ -4615,22 +6194,15 @@ function setKey(event, down) {
     if (down && !event.repeat) tryDodge();
     return;
   }
-  if (down && !event.repeat && (key === 'e' || key === 'enter')) { event.preventDefault(); recoverNearby(); return; }
+  if (down && !event.repeat && (key === 'e' || key === 'enter')) { event.preventDefault(); if (state.deathScreen) resetCurrentLevel(); else recoverNearby(); return; }
   if (down && !event.repeat && key === 'escape') {
     if (helpDialog?.open || settingsDialog?.open) return;
     event.preventDefault();
     if (state.reading) closeReading();
-    else if (state.trader) closeTrader();
     else showToast(state.room === 0 ? 'You are in the safe field lobby.' : 'The archive has no pause menu. Return to the entrance hall for the safe lobby.');
     return;
   }
-  if (down && !event.repeat && state.trader && ['w', 'a', 's', 'd'].includes(key)) {
-    event.preventDefault();
-    handleTraderKey(key);
-    return;
-  }
   if (down && !event.repeat && key === 'q') { event.preventDefault(); castSpell(); return; }
-  if (down && !event.repeat && ['1', '2', '3'].includes(key)) { event.preventDefault(); setWeapon({ '1': 'spear', '2': 'crossbow', '3': 'wand' }[key]); return; }
   if (down && !event.repeat && key === 'z') { event.preventDefault(); cycleSpell(-1); return; }
   if (down && !event.repeat && key === 'x') { event.preventDefault(); cycleSpell(1); return; }
   const movementKeys = ['w', 'a', 's', 'd', 'shift', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
@@ -4642,7 +6214,7 @@ function requestGamePointerLock() {
   if (settings.pointerLock && !state.menuActive && !state.reading && document.pointerLockElement !== canvas) canvas.requestPointerLock?.();
 }
 function handleMouseMove(event) {
-  if (state.menuActive || state.reading || state.trader) return;
+  if (state.menuActive || state.reading) return;
   if (document.pointerLockElement !== canvas && !state.mouseLook) return;
   const dx = document.pointerLockElement === canvas ? event.movementX : event.movementX || 0;
   const dy = document.pointerLockElement === canvas ? event.movementY : event.movementY || 0;
@@ -4659,7 +6231,7 @@ document.addEventListener('pointerlockchange', () => {
   if (!state.pointerLocked && !state.mouseAttack) state.mouseLook = false;
 });
 canvas.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || state.reading || state.trader || state.menuActive) return;
+  if (event.button !== 0 || state.reading || state.menuActive) return;
   state.mouseAttack = true;
   state.mouseLook = true;
   requestGamePointerLock();
@@ -4681,12 +6253,45 @@ for (const button of document.querySelectorAll('[data-control]')) {
   const release = (event) => { event.preventDefault(); state.keys.delete(key); };
   button.addEventListener('pointerdown', press); button.addEventListener('pointerup', release); button.addEventListener('pointerleave', release); button.addEventListener('pointercancel', release);
 }
+function showHoverTooltip(target) {
+  if (!hoverTooltip || !target) return;
+  const text = target.dataset.tooltip;
+  if (!text) return;
+  hoverTooltip.textContent = text;
+  hoverTooltip.hidden = false;
+  hoverTooltip.classList.add('is-visible');
+}
+function hideHoverTooltip(target = null) {
+  if (!hoverTooltip) return;
+  if (target && hoverTooltip.dataset.owner !== target.dataset.tooltip) return;
+  hoverTooltip.hidden = true;
+  hoverTooltip.classList.remove('is-visible');
+  hoverTooltip.dataset.owner = '';
+}
+document.addEventListener('pointerover', (event) => {
+  const target = event.target.closest?.('[data-tooltip]');
+  if (!target || (event.relatedTarget && target.contains(event.relatedTarget))) return;
+  if (hoverTooltip) hoverTooltip.dataset.owner = target.dataset.tooltip || '';
+  showHoverTooltip(target);
+});
+document.addEventListener('pointerout', (event) => {
+  const target = event.target.closest?.('[data-tooltip]');
+  if (!target || (event.relatedTarget && target.contains(event.relatedTarget))) return;
+  hideHoverTooltip(target);
+});
+document.addEventListener('focusin', (event) => {
+  const target = event.target.closest?.('[data-tooltip]');
+  if (!target) return;
+  if (hoverTooltip) hoverTooltip.dataset.owner = target.dataset.tooltip || '';
+  showHoverTooltip(target);
+});
+document.addEventListener('focusout', (event) => {
+  const target = event.target.closest?.('[data-tooltip]');
+  if (target) hideHoverTooltip(target);
+});
+
 closeScrollButton.addEventListener('click', closeReading);
-traderClose?.addEventListener('click', closeTrader);
-traderOptionButtons.forEach((button) => button.addEventListener('click', () => {
-  const type = button.dataset.traderWeapon;
-  if (type) equipTraderWeapon(type);
-}));
+deathRestart?.addEventListener('click', resetCurrentLevel);
 helpButton.addEventListener('click', () => { if (typeof helpDialog.showModal === 'function' && !helpDialog.open) helpDialog.showModal(); else helpDialog.setAttribute('open', ''); });
 settingsButton?.addEventListener('click', () => {
   if (!settingsDialog) return;
@@ -4701,15 +6306,30 @@ pointerLockInput?.addEventListener('change', (event) => {
   settings.pointerLock = event.target.checked;
   if (!settings.pointerLock && document.pointerLockElement === canvas) document.exitPointerLock?.();
 });
-resumeOnlyButton?.addEventListener('click', () => {
-  window.location.assign('assets/Liam_Hosfeld_Resume.pdf');
-});
-playButton.addEventListener('click', () => { setMenuVisible(false); requestGamePointerLock(); });
-weaponOptionButtons.forEach((button) => button.addEventListener('click', () => setWeapon(button.dataset.weapon)));
+weaponOptionButtons.forEach((button) => button.addEventListener('click', () => {
+  updateWeaponSelection(button.dataset.weapon);
+  state.weapon.equipped = false;
+  state.promptSignature = '';
+}));
 if (musicVolumeInput) musicVolumeInput.value = String(settings.musicVolume);
 if (sfxVolumeInput) sfxVolumeInput.value = String(settings.sfxVolume);
 if (reducedMotionInput) reducedMotionInput.checked = settings.reducedMotion;
 if (pointerLockInput) pointerLockInput.checked = settings.pointerLock;
 window.addEventListener('resize', resizeCanvas);
 
-textures.stone = createStoneTexture(256, 13); textures.wood = createWoodTexture(256, 29); buildGroundCache(); textures.bone = createBoneTexture(96, 37); textures.steel = createSteelTexture(96, 53); textures.leather = createLeatherTexture(96, 71); textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat') }; setWeapon(state.weapon.type); populateMenuData(); setMenuVisible(true); updateHud(); resizeCanvas(); requestAnimationFrame(gameLoop);
+function clearLegacyStartupOverlays() {
+  document.querySelectorAll('.game-shell > [class$="-overlay"], .game-shell > [id^="main-"]').forEach((node) => {
+    if (!node.classList.contains('reading-overlay') && !node.classList.contains('death-overlay')) node.remove();
+  });
+  if (readingOverlay && !state.reading) {
+    readingOverlay.hidden = true;
+    readingOverlay.classList.remove('open', 'intro-scroll');
+  }
+  if (floorAnnouncement && !state.floorAnnouncement) {
+    floorAnnouncement.hidden = true;
+    floorAnnouncement.classList.remove('is-visible');
+  }
+  gameShell.classList.remove('menu-active', 'game-launching');
+}
+
+textures.stone = createStoneTexture(256, 13); textures.wood = createWoodTexture(256, 29); buildGroundCache(); textures.bone = createBoneTexture(96, 37); textures.steel = createSteelTexture(96, 53); textures.leather = createLeatherTexture(96, 71); textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat') }; updateWeaponSelection(state.weapon.type); state.weapon.equipped = false; clearLegacyStartupOverlays(); state.lastTime = performance.now(); updateHud(); resizeCanvas(); requestAnimationFrame(gameLoop);

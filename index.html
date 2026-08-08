@@ -5,36 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b2a20" />
   <meta name="description" content="Liam Hosfeld's first-person operations, analytics, and technical delivery portfolio archive." />
-  <title>LIAM HOSFELD // THE OPERATIONS DUNGEON</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Liam Hosfeld</title>
+  <link rel="stylesheet" href="styles.css?v=20260808-ui8" />
 </head>
 <body>
   <main class="game-shell" aria-label="Liam Hosfeld portfolio game">
     <canvas id="game-canvas" aria-label="First-person medieval portfolio dungeon"></canvas>
     <div class="vignette" aria-hidden="true"></div>
 
-    <section class="welcome-overlay" id="main-menu" aria-labelledby="welcome-title">
-      <div class="welcome-card">
-        <div class="welcome-mark" aria-hidden="true">LH</div>
-        <p class="eyebrow">FIELD ARCHIVE / WELCOME</p>
-        <h2 id="welcome-title">Welcome to the field lobby.</h2>
-        <p class="welcome-lede">A quiet starting room for exploring Liam Hosfeld’s work across operations, analytics, integrations, automation, and delivery.</p>
-        <div class="welcome-notes">
-          <span><i>01</i> Enter the field lobby and meet the Wayfarer.</span>
-          <span><i>02</i> Read the complete portfolio record to learn the gate spell.</span>
-          <span><i>03</i> Cast it at the archive gate, then enter the world.</span>
-        </div>
-        <div class="welcome-actions">
-          <button type="button" class="play-button" id="play-button">ENTER THE FIELD LOBBY <span>↗</span></button>
-          <button type="button" class="resume-only-button" id="resume-only-button">OPEN RÉSUMÉ PDF</button>
-        </div>
-        <p class="welcome-signoff">LIAM HOSFELD · TECHNICAL CONSULTANT · ATLANTA, GA</p>
-      </div>
-    </section>
-
     <header class="game-hud">
       <div class="room-plaque" aria-live="polite">
-        <p class="eyebrow"><span id="room-floor">FLOOR 01</span> · <span id="room-count">01 / 07</span></p>
+        <p class="eyebrow"><span id="room-floor">LEVEL 01</span> · <span id="room-count">01 / 09</span></p>
       </div>
 
       <div class="boss-plaque" id="boss-plaque" hidden aria-live="polite">
@@ -43,21 +24,32 @@
         <div class="boss-phase" id="boss-phase">PHASE I · THE BRIEF</div>
       </div>
 
-      <div class="minimap-plaque" aria-label="Dungeon map and current floor">
-        <div class="minimap-heading"><span id="minimap-floor">LEVEL 01 / 07</span><strong id="minimap-room">PLAYER POSITION</strong></div>
-        <canvas id="minimap" width="180" height="116" aria-label="Route map with current room and player placement"></canvas>
-        <div class="minimap-legend"><span><i class="map-player"></i> YOU</span><span><i class="map-record"></i> RECORDS</span><span><i class="map-threat"></i> THREATS</span></div>
-      </div>
     </header>
 
     <section class="player-status" aria-label="Player status">
       <div class="status-bars">
-        <div class="status-bar vitality"><span class="status-label">VITALITY</span><strong id="hp-value">100 / 100</strong><div class="status-track"><span id="hp-bar"></span></div></div>
-        <div class="status-bar stamina"><span class="status-label">STAMINA</span><strong id="stamina-value">100 / 100</strong><div class="status-track"><span id="stamina-bar"></span></div></div>
+        <div class="status-bar vitality"><span class="status-label">VITALITY</span><strong id="hp-value">100 / 100</strong><div class="status-track" role="progressbar" aria-label="Vitality" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="hp-bar"></span></div></div>
+        <div class="status-bar stamina"><span class="status-label">STAMINA</span><strong id="stamina-value">100 / 100</strong><div class="status-track" role="progressbar" aria-label="Stamina" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="stamina-bar"></span></div></div>
       </div>
-      <div class="status-meta"><span id="weapon-hud-label">SPEAR</span><span id="weapon-status">READY</span><span id="experience-value">LVL 0 · 0 XP</span></div>
-      <div class="spell-status-row"><span id="spell-hud-label">SPELLBOOK · NONE LEARNED</span><span id="spell-status">READ RECORDS TO LEARN</span></div>
-      <div class="spell-slots" id="spell-slots" aria-label="Learned spells"><span class="spell-slot-empty">NO SPELLS</span></div>
+      <div class="status-meta"><span id="weapon-hud-label">NINJA STARS</span><span id="weapon-status">READY</span><span id="experience-value">LVL 0 · 0 XP</span></div>
+    </section>
+
+    <div class="spell-status" aria-label="Switch spell">
+      <div id="spell-hud-controls" class="spell-status-controls">
+        <span class="spell-key">Z</span>
+        <span class="spell-arrow" aria-hidden="true">◀</span>
+        <span class="spell-arrow" aria-hidden="true">▶</span>
+        <span class="spell-key">X</span>
+      </div>
+    </div>
+
+
+    <section class="boss-bottom-hud" id="boss-bottom-hud" hidden aria-live="polite">
+      <div class="boss-bottom-heading">
+        <strong id="boss-bottom-name">THE OPERATIONS ARCHON</strong>
+        <span id="boss-bottom-phase">PHASE I · THE BRIEF</span>
+      </div>
+      <div class="boss-bottom-track" aria-label="Operations Archon vitality"><span id="boss-bottom-health"></span></div>
     </section>
 
     <section class="objective-panel" id="objective-panel" aria-live="polite">
@@ -67,10 +59,10 @@
 
     <section class="floor-announcement" id="floor-announcement" hidden aria-live="assertive">
       <div class="floor-announcement-card">
-        <p class="eyebrow" id="floor-announcement-kicker">FIELD ARCHIVE / NEW LEVEL</p>
-        <strong id="floor-announcement-number">FLOOR 01</strong>
+        <p class="eyebrow" id="floor-announcement-kicker" hidden aria-hidden="true">FIELD ARCHIVE / NEW LEVEL</p>
+        <strong id="floor-announcement-number" hidden aria-hidden="true">LEVEL 01</strong>
         <h2 id="floor-announcement-title">THE ENTRANCE HALL</h2>
-        <p id="floor-announcement-subtitle">Identity, scope, and the work behind the map.</p>
+        <p id="floor-announcement-subtitle" hidden aria-hidden="true">Identity, scope, and the work behind the map.</p>
       </div>
     </section>
 
@@ -78,11 +70,12 @@
     <div class="hit-marker" id="hit-marker" hidden aria-live="polite"><span id="hit-marker-symbol">✦</span><small id="hit-marker-label">HIT</small></div>
 
     <div class="interaction-prompt" id="interaction-prompt" hidden aria-live="polite">
-      <span class="prompt-key" id="prompt-key">E</span>
-      <span id="prompt-text">READ FIELD RECORD</span>
+      <span class="prompt-key" id="prompt-key">[E]</span>
+      <span id="prompt-text"></span>
     </div>
 
     <div class="toast" id="toast" hidden aria-live="polite"></div>
+    <div class="hover-tooltip" id="hover-tooltip" role="tooltip" hidden></div>
 
 
     <section class="reading-overlay" id="reading-overlay" hidden aria-live="assertive">
@@ -96,6 +89,11 @@
           <div class="scroll-stamp" aria-hidden="true">LH<br /><small>FILED</small></div>
           <h2 id="scroll-title">FIELD RECORD</h2>
           <p class="scroll-summary" id="scroll-summary"></p>
+          <div class="scroll-author-line" aria-label="Record author and status">
+            <span id="scroll-author-line">LIAM HOSFELD · TECHNICAL CONSULTANT</span>
+            <span id="scroll-record-status">NEW SIGNAL</span>
+          </div>
+          <p class="scroll-positioning" id="scroll-positioning"></p>
           <div class="scroll-intro-grid" id="scroll-intro-grid" hidden aria-label="Selected portfolio impact metrics"></div>
           <p class="scroll-section-label" id="scroll-proof-label" hidden>SELECTED PROOF / WHAT CHANGED</p>
           <div class="scroll-proof-grid" id="scroll-proof-grid" hidden aria-label="Selected portfolio case studies"></div>
@@ -116,27 +114,35 @@
             <div class="scroll-progress-track"><span id="scroll-progress-bar"></span></div>
             <p id="scroll-progress-caption">Scope Sight unlocks at 50 XP.</p>
           </div>
+          <div class="scroll-details-heading">
+            <p class="scroll-section-label" id="scroll-details-label">FIELD NOTES / EVIDENCE</p>
+            <span id="scroll-detail-count">0 EVIDENCE POINTS</span>
+          </div>
           <ul class="scroll-details" id="scroll-details"></ul>
           <div class="scroll-tags" id="scroll-tags"></div>
+          <div class="scroll-cta" id="scroll-cta">
+            <small>WORK WITH LIAM</small>
+            <strong id="scroll-cta-title">BUILD THE NEXT ROUTE</strong>
+            <p id="scroll-cta-copy">For TMS, operational analytics, integrations, and automation work, start with the evidence and make the next decision easier.</p>
+          </div>
           <div class="scroll-actions" id="scroll-actions"></div>
-          <button type="button" id="close-scroll" class="close-scroll">RETURN TO THE DUNGEON <span>ESC / E · CLOSE RECORD</span></button>
+          <button type="button" id="close-scroll" class="close-scroll" data-tooltip="RETURN TO THE DUNGEON · [ESC]">RETURN TO THE DUNGEON <span>ESC / E · CLOSE RECORD</span></button>
         </article>
         <div class="scroll-roller scroll-roller-bottom" aria-hidden="true"></div>
       </div>
     </section>
 
-    <section class="trader-overlay" id="trader-overlay" hidden aria-live="assertive">
-      <div class="trader-card" role="dialog" aria-modal="true" aria-labelledby="trader-title">
-        <button type="button" class="trader-close" id="trader-close" aria-label="Close trader">×</button>
-        <p class="eyebrow" id="trader-kicker">FIRST ROOM / WEAPON COUNTER · LEVEL 01</p>
-        <h2 id="trader-title">THE WAYFARER</h2>
-        <p id="trader-dialogue">Welcome, traveler. Choose the tool that suits the next route.</p>
-        <div class="trader-options" id="trader-options">
-          <button type="button" data-trader-weapon="spear"><strong>SPEAR</strong><small>Deliberate melee reach</small></button>
-          <button type="button" data-trader-weapon="crossbow"><strong>CROSSBOW</strong><small>Patient precision shots</small></button>
-          <button type="button" data-trader-weapon="wand"><strong>EMBER WAND</strong><small>Arcane area response</small></button>
-        </div>
-        <p class="trader-note">W SPEAR · A CROSSBOW · S WAND · D CYCLE · E CLOSE</p>
+
+
+    <section class="death-overlay" id="death-overlay" hidden aria-live="assertive">
+      <div class="death-card" role="dialog" aria-modal="true" aria-labelledby="death-title">
+        <p class="eyebrow">FIELD FAILURE / LEVEL RECOVERY</p>
+        <div class="death-mark" aria-hidden="true">✦</div>
+        <h2 id="death-title">YOU FELL</h2>
+        <p class="death-cause" id="death-cause">The archive got the better of you.</p>
+        <p class="death-copy">The room will reset from its threshold. Enemies, hazards, and dropped supplies will return, while recovered records keep their XP and progression.</p>
+        <button type="button" class="death-restart" id="death-restart">RESTART LEVEL <span>E / ENTER</span></button>
+        <p class="death-note">Return to the beginning of this level with the field restored.</p>
       </div>
     </section>
 
@@ -153,9 +159,7 @@
       <span><b>MOUSE</b> LOOK / ATTACK</span>
       <span><b>SPACE</b> DODGE</span>
       <span><b>1 2 3</b> WEAPON</span>
-      <span><b>Z X</b> SPELL</span>
-      <span><b>E</b> TALK / READ / OPEN</span>
-      <span><b>Q</b> CAST</span>
+      <span><b>E</b> READ / OPEN</span>
       <button type="button" id="settings-button" aria-label="Open accessibility and audio settings" title="Open accessibility and audio settings">⚙</button>
       <button type="button" id="music-button" class="music-button" aria-label="Mute generated chiptune music" aria-pressed="true" title="Mute generated chiptune music">♫</button>
       <button type="button" id="help-button" aria-label="Open controls">?</button>
@@ -173,8 +177,8 @@
         <li><strong>Space</strong> dodges in the direction you are moving, costs stamina, and grants a brief invulnerability window.</li>
         <li>Chain up to <strong>three attacks</strong> inside the combo window for increased damage. Watch the stamina bar before committing to the third strike.</li>
         <li>Ranged enemies draw a warning line and reticle before firing. Ground attackers mark a warning circle before the hazard activates. Dodge the telegraph or move clear before the impact.</li>
-        <li>The Wayfarer is the only source of weapons. Approach him in the first room and press <strong>E</strong> to speak with him. Use <strong>W</strong> for the spear, <strong>A</strong> for the crossbow, <strong>S</strong> for the Ember Wand, and <strong>D</strong> to cycle. <strong>Z</strong> and <strong>X</strong> cycle learned spells; <strong>Q</strong> casts the selected spell.</li>
-        <li><strong>E</strong> talks to the Wayfarer, reads the glowing portfolio scroll or a field record, or opens the archive gate. Defeat the final boss, then reach the <strong>door of light</strong> and press <strong>E</strong> to return to the portfolio lobby.</li>
+        <li>Start with the ninja star. Walk to a lobby weapon display and press <strong>E</strong> to equip it, or use <strong>1</strong>, <strong>2</strong>, and <strong>3</strong> to switch weapons; use <strong>Z</strong> and <strong>X</strong> to cycle learned spells, then <strong>Q</strong> casts the selected spell.</li>
+        <li><strong>E</strong> equips a nearby lobby weapon display, reads the glowing portfolio scroll or a field record, or opens the archive gate. Press <strong>Q</strong> to cast the selected spell. Defeat the final boss, then enter the obvious <strong>ascension gate</strong> to reach the celestial sanctuary and approach the résumé pedestal for an automatic download.</li>
       </ul>
     </form>
   </dialog>
@@ -206,6 +210,6 @@
     </form>
   </dialog>
 
-  <script src="game.js"></script>
+  <script src="game.js?v=20260808-ui8"></script>
 </body>
 </html>

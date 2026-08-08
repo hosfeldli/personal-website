@@ -3,27 +3,9 @@ substitutions:
   _REPOSITORY: stem-portfolio
   _SERVICE: stem-portfolio-host
   _RUNTIME_SERVICE_ACCOUNT: portfolio-runtime@stem-471602.iam.gserviceaccount.com
-  _ANALYTICS_DATASET: portfolio_analytics
-  _ANALYTICS_TABLE: events
-  _ANALYTICS_USERNAME: liam
-  _ANALYTICS_SECRET: portfolio-analytics-password
   _IMAGE_TAG: latest
 
 steps:
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: bash
-    args:
-      - -ceu
-      - |
-        dataset="${PROJECT_ID}:${_ANALYTICS_DATASET}"
-        table="${PROJECT_ID}:${_ANALYTICS_DATASET}.${_ANALYTICS_TABLE}"
-        if ! bq show --project_id="${PROJECT_ID}" "${dataset}" >/dev/null 2>&1; then
-          bq mk --project_id="${PROJECT_ID}" --location=US --dataset "${dataset}"
-        fi
-        if ! bq show --project_id="${PROJECT_ID}" "${table}" >/dev/null 2>&1; then
-          bq mk --project_id="${PROJECT_ID}" --table --schema=analytics-schema.json "${table}"
-        fi
-
   - name: gcr.io/cloud-builders/docker
     args:
       - build
@@ -48,8 +30,6 @@ steps:
       - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
       - --ingress=internal-and-cloud-load-balancing
       - --allow-unauthenticated
-      - --set-env-vars=GCP_PROJECT_ID=$PROJECT_ID,ANALYTICS_DATASET=${_ANALYTICS_DATASET},ANALYTICS_TABLE=${_ANALYTICS_TABLE},BIGQUERY_LOCATION=US,ANALYTICS_USERNAME=${_ANALYTICS_USERNAME}
-      - --set-secrets=ANALYTICS_PASSWORD=${_ANALYTICS_SECRET}:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}

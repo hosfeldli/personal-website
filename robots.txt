@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /analytics
 Disallow: /api/
 
 Sitemap: https://www.liamhosfeld.com/sitemap.xml

@@ -1,6 +1,6 @@
 # Liam Hosfeld // The Operations Dungeon
 
-A fullscreen, dependency-free first-person portfolio game. The dungeon is one connected map: walk through seven chambers, recover Liam's field records, unlock spells, switch between distinct weapons, and defeat the Operations Archon before returning through the door of light.
+A fullscreen, dependency-free first-person portfolio game. The dungeon is one connected map: walk through the chambers, recover Liam's field records, unlock spells, switch between distinct weapons, and defeat the Operations Archon before entering the ascension gate to reach a celestial sanctuary and claim the résumé.
 
 The landing page is résumé-first. The interactive dungeon is an optional way to explore the same experience, impact, focus areas, and capabilities.
 
@@ -19,16 +19,16 @@ Then open <http://127.0.0.1:4173>. No `npm install` is required; the game uses t
 * `Shift` — sprint
 * Mouse — look around; left click attacks
 * `1` / `2` / `3` — switch between weapons you have received
-* First-room Wayfarer — press `E`, then use `W` / `A` / `S` to receive a weapon or `D` to cycle
+* Walk to a path weapon display and press `E` to equip it; `1` / `2` / `3` also switch weapons
 * `Z` / `X` — select the previous/next learned spell
 * `Q` — cast the selected spell
 * `Arrow Up` / `Arrow Down` — look up/down without a mouse
-* `E` or `Enter` — talk to the Wayfarer, read a nearby record, or enter the door of light
+* `E` or `Enter` — equip a nearby lobby weapon, read a record, or interact with the gate
 * `Esc` — return to the résumé menu
 * `?` — open the field manual
 * `⚙` — open audio, motion, and pointer-lock settings
 
-Records grant XP and unlock spells automatically. The spell strip in the HUD also supports direct mouse selection after spells are learned. The spear is a close-range thrust with knockback, the crossbow is a deliberate precision projectile with recovery, and the Ember Wand fires splash-damage projectiles colored by the active spell.
+Records grant XP and unlock spells automatically. Z and X select the previous or next learned spell, and Q casts the selected spell. Ninja stars are fast ranged throws, the crossbow is a deliberate precision projectile with recovery, and the Ember Wand fires splash-damage projectiles colored by the active spell.
 
 ## World and rendering
 
