@@ -366,6 +366,18 @@ function expandedRoomMap(room, roomIndex) {
       for (let x = 8; x <= 12; x += 1) map[y][x] = '0';
       for (let x = width - 13; x <= width - 9; x += 1) map[y][x] = '0';
     }
+    // Room 0 has an open-air armory clearing along its north edge. The authored
+    // entrance map originally placed a decorative interior wall on row 2; clear
+    // that row here so the armory cannot look blocked or behave like a hidden
+    // collision wall beneath its floor dressing.
+    if (roomIndex === 0) {
+      // The lobby is a single open clearing: preserve only its outer perimeter
+      // and the gate mouth. Interior authored walls would make the camp read as
+      // a corridor instead of an open staging area.
+      for (let y = 1; y < height - 1; y += 1) {
+        for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
+      }
+    }
     return map.map((row) => row.join(''));
   }
 
@@ -434,37 +446,85 @@ for (let roomIndex = 0; roomIndex < rooms.length - 1; roomIndex += 1) {
 const FOREST_EXIT_WALL_X = FOREST_HALL_END;
 for (const y of FOREST_HALL_ROWS) worldMap[y][FOREST_EXIT_WALL_X] = '1';
 
-// The first chamber doubles as a physical field lobby. The three weapons
-// flank the central path. Press E while standing at a pedestal to equip the
-// displayed weapon.
-// Each pedestal has an authored yaw, so its geometry remains fixed in world
-// space and never faces the player.
-lobbyPortfolioScroll.x = roomOffsets[0] + roomWidths[0] + .34 - 2.15;
-lobbyPortfolioScroll.y = ROOM_DOOR_Y + 1;
+// The first chamber is a calm, open field lobby. Props sit around the perimeter
+// while the center remains readable from the entrance to the archive gate.
+// Each display has an authored yaw, so its geometry remains fixed in world space
+// and never turns into a player-facing billboard.
+const LOBBY_WEAPON_PATH_Y = ROOM_DOOR_Y + 1;
+const LOBBY_ARMORY = {
+  xStart: roomOffsets[0] + 6.35,
+  xEnd: roomOffsets[0] + 19.35,
+  backY: 2.25,
+  weaponY: 3.45,
+  aisleY: 4.55,
+  frontY: 5.15,
+};
+// Keep the hearth visually to the player's left, outside the direct gate route.
+const LOBBY_CAMPFIRE = {
+  x: roomOffsets[0] + 4.75,
+  y: 5.8,
+};
+const LOBBY_WEAPON_INTERACTION_RANGE = 1.2;
+// The scroll is positioned after the gate is authored below. Keeping the
+// initialization here limited to stable fields avoids touching LOBBY_GATE before
+// its declaration has been assigned.
 lobbyPortfolioScroll.z = .7;
 lobbyPortfolioScroll.recovered = false;
-const LOBBY_WEAPON_PATH_Y = ROOM_DOOR_Y + 1;
-const LOBBY_WEAPON_SIDE_OFFSET = 1.35;
 const LOBBY_WEAPON_CREATURES = [
-  // Displays sit well outside the stone path while remaining within reach.
-  { id: 'creature-ninja-star', type: 'stars', name: 'NINJA STARS', x: roomOffsets[0] + 9.4, y: LOBBY_WEAPON_PATH_Y - LOBBY_WEAPON_SIDE_OFFSET, yaw: 0 },
-  { id: 'creature-crossbow', type: 'crossbow', name: 'CROSSBOW', x: roomOffsets[0] + 13.0, y: LOBBY_WEAPON_PATH_Y + LOBBY_WEAPON_SIDE_OFFSET, yaw: 0 },
-  { id: 'creature-ember-wand', type: 'wand', name: 'EMBER WAND', x: roomOffsets[0] + 16.6, y: LOBBY_WEAPON_PATH_Y - LOBBY_WEAPON_SIDE_OFFSET, yaw: 0 },
+  { id: 'creature-ninja-star', type: 'stars', name: 'NINJA STARS', x: roomOffsets[0] + 8.35, y: LOBBY_ARMORY.weaponY, yaw: 0 },
+  { id: 'creature-crossbow', type: 'crossbow', name: 'CROSSBOW', x: roomOffsets[0] + 11.55, y: LOBBY_ARMORY.weaponY, yaw: 0 },
+  { id: 'creature-ember-wand', type: 'wand', name: 'EMBER WAND', x: roomOffsets[0] + 14.75, y: LOBBY_ARMORY.weaponY, yaw: 0 },
+  { id: 'creature-moonsteel-blade', type: 'blade', name: 'MOONSTEEL BLADE', x: roomOffsets[0] + 17.95, y: LOBBY_ARMORY.weaponY, yaw: 0 },
 ];
 // The gate belongs on the two-cell-wide east corridor mouth, not in the room's
 // visual center. Its center is the midpoint of the actual opening rows.
-LOBBY_GATE = { id: 'archive-gate', x: roomOffsets[0] + roomWidths[0] + .34, y: ROOM_DOOR_Y + 1, z: 1.12, yaw: 0 };
+LOBBY_GATE = { id: 'archive-gate', x: roomOffsets[0] + roomWidths[0] + .34, y: LOBBY_WEAPON_PATH_Y, z: 1.12, yaw: 0 };
+// Keep the portfolio scroll just inside the gate-facing route.
+lobbyPortfolioScroll.x = LOBBY_GATE.x - 2.6;
+lobbyPortfolioScroll.y = LOBBY_GATE.y;
+// A physical sign hangs above the entrance arch. Its lettering is projected
+// onto the sign face so it remains part of the world rather than a HUD label.
+const LOBBY_ENTRANCE_SIGN = {
+  id: 'lobby-entrance-sign',
+  x: LOBBY_GATE.x - .2,
+  y: LOBBY_GATE.y,
+  z: 2.72,
+  width: 4.7,
+  height: .78,
+  yaw: 0,
+  text: "Liam's Portfolio Journey",
+};
 const LOBBY_TREES = [
-  { id: 'lobby-tree-northwest', roomIndex: 0, x: roomOffsets[0] + 5.2, y: 4.0, scale: .86, yaw: .12 },
-  { id: 'lobby-tree-north', roomIndex: 0, x: roomOffsets[0] + 7.8, y: 3.95, scale: .72, yaw: -.18 },
-  { id: 'lobby-tree-northeast', roomIndex: 0, x: roomOffsets[0] + 14.6, y: 4.0, scale: .9, yaw: .22 },
-  { id: 'lobby-tree-far-east', roomIndex: 0, x: roomOffsets[0] + 15.7, y: 5.45, scale: .76, yaw: -.14 },
-  { id: 'lobby-tree-west', roomIndex: 0, x: roomOffsets[0] + 5.0, y: 6.15, scale: 1.05, yaw: .16 },
-  { id: 'lobby-tree-southwest', roomIndex: 0, x: roomOffsets[0] + 6.2, y: 7.85, scale: .92, yaw: -.2 },
-  { id: 'lobby-tree-south', roomIndex: 0, x: roomOffsets[0] + 9.0, y: 7.8, scale: .8, yaw: .1 },
-  { id: 'lobby-tree-southeast', roomIndex: 0, x: roomOffsets[0] + 13.4, y: 7.85, scale: .96, yaw: -.16 },
-  { id: 'lobby-tree-east', roomIndex: 0, x: roomOffsets[0] + 15.8, y: 7.1, scale: .82, yaw: -.12 },
+  // Keep the clearing open: trees live on the outer gallery edges, away from
+  // the campfire, weapon keepers, scroll approach, and gate lane.
+  { id: 'lobby-tree-west-north', roomIndex: 0, x: roomOffsets[0] + 2.35, y: 2.35, scale: .7, yaw: .12 },
+  { id: 'lobby-tree-west-upper', roomIndex: 0, x: roomOffsets[0] + 2.45, y: 4.25, scale: .64, yaw: -.14 },
+  { id: 'lobby-tree-west-lower', roomIndex: 0, x: roomOffsets[0] + 2.35, y: 7.65, scale: .7, yaw: .18 },
+  { id: 'lobby-tree-west-south', roomIndex: 0, x: roomOffsets[0] + 2.65, y: 9.15, scale: .62, yaw: -.16 },
+  { id: 'lobby-tree-northwest', roomIndex: 0, x: roomOffsets[0] + 6.05, y: 2.2, scale: .58, yaw: .16 },
+  { id: 'lobby-tree-north-center', roomIndex: 0, x: roomOffsets[0] + 12.15, y: 2.15, scale: .62, yaw: -.2 },
+  { id: 'lobby-tree-northeast', roomIndex: 0, x: roomOffsets[0] + 17.2, y: 2.25, scale: .6, yaw: .1 },
+  { id: 'lobby-tree-east-north', roomIndex: 0, x: roomOffsets[0] + 19.65, y: 2.45, scale: .68, yaw: -.18 },
+  { id: 'lobby-tree-east-upper', roomIndex: 0, x: roomOffsets[0] + 19.7, y: 4.35, scale: .62, yaw: .12 },
+  { id: 'lobby-tree-east-lower', roomIndex: 0, x: roomOffsets[0] + 19.7, y: 7.85, scale: .68, yaw: -.16 },
+  { id: 'lobby-tree-east-south', roomIndex: 0, x: roomOffsets[0] + 19.4, y: 9.15, scale: .62, yaw: .14 },
+  { id: 'lobby-tree-southwest', roomIndex: 0, x: roomOffsets[0] + 6.65, y: 9.2, scale: .6, yaw: .16 },
+  { id: 'lobby-tree-south-center', roomIndex: 0, x: roomOffsets[0] + 11.15, y: 9.3, scale: .58, yaw: -.2 },
+  { id: 'lobby-tree-southeast', roomIndex: 0, x: roomOffsets[0] + 15.75, y: 9.2, scale: .62, yaw: .14 },
 ];
+
+const LOBBY_BUSHES = [
+  { id: 'lobby-bush-west-north', roomIndex: 0, x: roomOffsets[0] + 3.25, y: 2.05, scale: .72, yaw: .18 },
+  { id: 'lobby-bush-west-middle', roomIndex: 0, x: roomOffsets[0] + 2.75, y: 6.55, scale: .62, yaw: -.12 },
+  { id: 'lobby-bush-west-south', roomIndex: 0, x: roomOffsets[0] + 4.2, y: 9.45, scale: .68, yaw: .08 },
+  { id: 'lobby-bush-north-left', roomIndex: 0, x: roomOffsets[0] + 8.25, y: 2.0, scale: .58, yaw: -.16 },
+  { id: 'lobby-bush-north-right', roomIndex: 0, x: roomOffsets[0] + 15.05, y: 2.0, scale: .62, yaw: .14 },
+  { id: 'lobby-bush-east-north', roomIndex: 0, x: roomOffsets[0] + 20.05, y: 3.05, scale: .64, yaw: -.18 },
+  { id: 'lobby-bush-east-south', roomIndex: 0, x: roomOffsets[0] + 20.0, y: 8.95, scale: .66, yaw: .12 },
+  { id: 'lobby-bush-south-left', roomIndex: 0, x: roomOffsets[0] + 8.85, y: 9.35, scale: .56, yaw: -.14 },
+  { id: 'lobby-bush-south-right', roomIndex: 0, x: roomOffsets[0] + 17.55, y: 9.35, scale: .58, yaw: .16 },
+];
+
 const FOREST_HALL_TREES = [];
 const FOREST_HALL_TREE_COUNT = Math.floor((FOREST_HALL_GAP - 2.4) / FOREST_HALL_TREE_SPACING);
 for (let index = 0; index < FOREST_HALL_TREE_COUNT; index += 1) {
@@ -835,9 +895,10 @@ const TAU = Math.PI * 2;
 const spriteCache = new Map();
 const textures = {};
 const WEAPON_LOADOUTS = {
-  stars: { label: 'Ninja Stars', description: 'A quick ranged throw: send a spinning star down the lane, chain the combo, and keep moving before the next throw.', range: 9.2, damage: 34, staminaCost: 12, comboMultipliers: [1, 1.12, 1.3], aim: .15, pitch: .2, hitAt: .48, knockback: .08, duration: .62, cooldown: .28, impactColor: '#d8c18b', projectileType: 'ninja-star' },
-  crossbow: { label: 'Crossbow', description: 'A patient precision tool: draw, release a fast bolt, then accept the longer reload before the next shot.', range: 8.5, damage: 48, staminaCost: 11, comboMultipliers: [1, 1.08, 1.2], aim: .12, pitch: .14, hitAt: .62, knockback: .06, duration: 1.02, cooldown: .42, impactColor: '#f0d38d' },
-  wand: { label: 'Ember Wand', description: 'An arcane area weapon: slower cast, long reach, color-matched fireballs, and splash damage around the impact.', range: 10.5, damage: 44, staminaCost: 14, comboMultipliers: [1, 1.1, 1.28], aim: .2, pitch: .26, hitAt: .56, knockback: .07, duration: .86, cooldown: .44, impactColor: '#db8872', projectileType: 'wand-fireball' },
+  stars: { label: 'Ninja Stars', description: 'A quick ranged throw: send a spinning star down the lane, chain the combo, and keep moving before the next throw.', range: 9.2, damage: 34, staminaCost: 12, comboMultipliers: [1, 1.12, 1.3], aim: .15, pitch: .2, hitAt: .48, knockback: .14, critChance: .08, critMultiplier: 1.7, duration: .62, cooldown: .28, impactColor: '#d8c18b', projectileType: 'ninja-star' },
+  crossbow: { label: 'Crossbow', description: 'A patient precision tool: draw, release a fast bolt, then accept the longer reload before the next shot.', range: 8.5, damage: 48, staminaCost: 11, comboMultipliers: [1, 1.08, 1.2], aim: .12, pitch: .14, hitAt: .62, knockback: .1, critChance: .18, critMultiplier: 1.9, duration: 1.02, cooldown: .42, impactColor: '#f0d38d' },
+  wand: { label: 'Ember Wand', description: 'An arcane area weapon: slower cast, long reach, color-matched fireballs, and splash damage around the impact.', range: 10.5, damage: 44, staminaCost: 14, comboMultipliers: [1, 1.1, 1.28], aim: .2, pitch: .26, hitAt: .56, knockback: .12, critChance: .1, critMultiplier: 1.65, duration: .86, cooldown: .44, impactColor: '#db8872', projectileType: 'wand-fireball' },
+  blade: { label: 'Moonsteel Blade', description: 'A dependable melee weapon: close the distance, chain three sweeping strikes, and stagger dangerous targets with the finisher.', range: 2.85, damage: 58, staminaCost: 16, comboMultipliers: [1, 1.18, 1.55], aim: .42, pitch: .52, hitAt: .42, knockback: .28, stagger: .24, critChance: .12, critMultiplier: 1.8, duration: .7, cooldown: .24, impactColor: '#b8f0e2', melee: true },
 };
 const ENEMY_PROFILES = {
   wraith: { scale: .54, height: 1.14, aimHeight: .84, speedMultiplier: 1.08, attackRate: 1.1, attackDistance: 2.2, opacity: .82, hover: .07, color: '#ae6fd0' },
@@ -1189,7 +1250,7 @@ function canStand(x, y) {
 }
 function hasLineOfSight(ax, ay, bx, by) { const distance = Math.hypot(bx - ax, by - ay); const steps = Math.ceil(distance / .12); for (let i = 1; i < steps; i += 1) { const t = i / steps; if (isWall(lerp(ax, bx, t), lerp(ay, by, t))) return false; } return true; }
 function allHostiles() {
-  const hostiles = worldEnemies.filter((enemy) => enemy.roomIndex !== 0 && !enemy.dead);
+  const hostiles = worldEnemies.filter((enemy) => enemy.roomIndex === state.room && enemy.roomIndex !== 0 && !enemy.dead);
   if (state.finalBoss && !state.finalBoss.dead && state.room === FINAL_ROOM_INDEX) hostiles.push(state.finalBoss);
   return hostiles;
 }
@@ -1236,11 +1297,11 @@ function updateCombatHud() {
   const spell = selectedSpellDefinition();
   const weaponBusy = state.weapon.equipped && state.weapon.swing > 0;
   const weaponCooling = state.weapon.equipped && state.weapon.cooldown > 0;
-  const weaponPhase = !state.weapon.equipped ? 'NO WEAPON' : weaponBusy ? (state.weapon.type === 'stars' ? 'THROWING' : state.weapon.type === 'crossbow' ? 'LOADING' : 'CASTING') : weaponCooling ? 'RECOVERING' : 'READY';
+  const weaponPhase = !state.weapon.equipped ? 'NO WEAPON' : weaponBusy ? (state.weapon.type === 'stars' ? 'THROWING' : state.weapon.type === 'crossbow' ? 'LOADING' : state.weapon.type === 'blade' ? 'SWINGING' : 'CASTING') : weaponCooling ? 'RECOVERING' : 'READY';
   const weaponTimer = weaponBusy ? state.weapon.swing : state.weapon.cooldown;
   const weaponTotal = weaponBusy ? definition.duration : Math.max(definition.cooldown || .01, .01);
   const weaponProgress = clamp(1 - weaponTimer / weaponTotal, 0, 1);
-  if (weaponHudLabel) weaponHudLabel.textContent = state.weapon.equipped ? `${definition.label.toUpperCase()} · ${state.weapon.type === 'stars' ? 'RANGED' : state.weapon.type === 'crossbow' ? 'PRECISION' : 'ARCANE'}` : 'NO WEAPON';
+  if (weaponHudLabel) weaponHudLabel.textContent = state.weapon.equipped ? `${definition.label.toUpperCase()} · ${state.weapon.type === 'blade' ? 'MELEE' : state.weapon.type === 'stars' ? 'RANGED' : state.weapon.type === 'crossbow' ? 'PRECISION' : 'ARCANE'}` : 'NO WEAPON';
   if (weaponStatus) weaponStatus.textContent = weaponPhase;
   const staminaPercent = clamp(state.stamina / state.maxStamina * 100, 0, 100);
   const staminaNow = Math.ceil(state.stamina);
@@ -1561,9 +1622,9 @@ function drawParticles() {
     ctx.restore();
   }
 }
-function spawnDamageNumber(x, y, z, value, color = '#f0ddaf') {
+function spawnDamageNumber(x, y, z, value, color = '#f0ddaf', options = {}) {
   if (settings.reducedMotion && state.damageNumbers.length > 4) return;
-  state.damageNumbers.push({ x, y, z, text: String(value), color, elapsed: 0, duration: settings.reducedMotion ? .45 : .8 });
+  state.damageNumbers.push({ x, y, z, text: String(value), color, critical: Boolean(options.critical), shield: Boolean(options.shield), elapsed: 0, duration: settings.reducedMotion ? .45 : options.critical ? .95 : .8 });
   if (state.damageNumbers.length > 24) state.damageNumbers.splice(0, state.damageNumbers.length - 24);
 }
 function updateDamageNumbers(delta) {
@@ -1574,7 +1635,7 @@ function drawDamageNumbers() {
     const point = projectCameraPoint(cameraPoint(number.x, number.y, number.z));
     if (!point) continue;
     const progress = clamp(number.elapsed / number.duration, 0, 1);
-    ctx.save(); ctx.globalAlpha = 1 - progress; ctx.fillStyle = number.color; ctx.shadowBlur = 8; ctx.shadowColor = number.color; ctx.font = `bold ${Math.max(10, canvas.height * .027)}px Georgia`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(number.text, point.x, point.y); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 1 - progress; ctx.fillStyle = number.color; ctx.shadowBlur = number.critical ? 14 : 8; ctx.shadowColor = number.color; ctx.font = `${number.critical ? 'bold' : '600'} ${Math.max(10, canvas.height * (number.critical ? .032 : .027))}px ${number.shield ? 'DM Mono' : 'Georgia'}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(number.text, point.x, point.y); ctx.restore();
   }
 }
 
@@ -2038,7 +2099,8 @@ function playTone(frequency, duration, type = 'sine', volume = .035, offset = 0)
 function playNinjaStarSound() { playTone(330, .06, 'triangle', .022); playTone(660, .1, 'sine', .016, .035); playTone(990, .08, 'square', .012, .07); }
 function playCrossbowSound() { playTone(72, .08, 'square', .018); playTone(260, .08, 'triangle', .018, .03); }
 function playWandSound() { playTone(116, .14, 'sine', .02); playTone(232, .24, 'triangle', .026, .07); playTone(464, .3, 'sine', .016, .16); }
-function playWeaponSound() { if (state.weapon.type === 'stars') playNinjaStarSound(); else if (state.weapon.type === 'crossbow') playCrossbowSound(); else playWandSound(); }
+function playBladeSound() { playTone(176, .08, 'sawtooth', .018); playTone(352, .12, 'triangle', .022, .035); }
+function playWeaponSound() { if (state.weapon.type === 'stars') playNinjaStarSound(); else if (state.weapon.type === 'crossbow') playCrossbowSound(); else if (state.weapon.type === 'blade') playBladeSound(); else playWandSound(); }
 function playRecoverySound() { playTone(294, .18, 'sine', .035); playTone(440, .24, 'triangle', .03, .11); playTone(587, .3, 'sine', .022, .21); }
 function playHitSound() { playTone(66, .18, 'square', .035); }
 function playBoneHitSound() { playTone(110, .12, 'triangle', .025); playTone(72, .13, 'square', .018, .05); }
@@ -2072,7 +2134,7 @@ function getNearestPromptScroll(maxDistance = 1.55) {
   }
   return nearest;
 }
-function getNearestWeaponCreature(maxDistance = 1.9) {
+function getNearestWeaponCreature(maxDistance = LOBBY_WEAPON_INTERACTION_RANGE) {
   if (state.room !== 0) return null;
   let nearest = null;
   let best = maxDistance;
@@ -2136,10 +2198,10 @@ function setWeapon(type) {
   state.weapon.projectile = 0;
   state.promptSignature = '';
   if (!state.menuActive && previousType !== type) {
-    const color = type === 'wand' ? wandColorForSpell() : type === 'crossbow' ? '#f0d38d' : '#d8c18b';
+    const color = type === 'wand' ? wandColorForSpell() : type === 'crossbow' ? '#f0d38d' : type === 'blade' ? '#b8f0e2' : '#d8c18b';
     state.impactBursts.push({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .24, color, radius: .22 });
     showToast(`${WEAPON_LOADOUTS[type].label} equipped.`, 'good');
-    playTone(type === 'stars' ? 330 : type === 'crossbow' ? 220 : 330, .12, 'triangle', .02);
+    playTone(type === 'stars' ? 330 : type === 'crossbow' ? 220 : type === 'blade' ? 176 : 330, .12, 'triangle', .02);
   }
 }
 
@@ -2215,7 +2277,7 @@ function chooseSpellTarget() {
   return findAimTarget(14, .32, .36) || worldEnemies.filter((enemy) => enemy.roomIndex !== 0 && !enemy.dead && enemy.roomIndex === state.room).sort((a, b) => Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y))[0] || (state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead ? state.finalBoss : null);
 }
 function makeProjectile(kind, origin, velocity, options = {}) {
-  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, spell: options.spell || false, spellKind: options.spellKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0 });
+  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, spell: options.spell || false, spellKind: options.spellKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, stagger: options.stagger || 0, knockback: options.knockback || 0, critChance: options.critChance || 0, critMultiplier: options.critMultiplier || 1.65, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0 });
 }
 function playerAimDirection() {
   return { x: Math.cos(state.player.angle) * Math.cos(state.player.pitch), y: Math.sin(state.player.angle) * Math.cos(state.player.pitch), z: Math.sin(state.player.pitch) };
@@ -2607,66 +2669,185 @@ function drawSpellGlyphSurface(blocks, palette, alpha, active) {
   }
   ctx.restore();
 }
-function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false) {
-  if (!spell) return;
-  const pattern = PIXEL_SPELL_GLYPHS[spell.kind] || PIXEL_SPELL_GLYPHS.gate;
-  const palette = spellVisualPalette(spell);
-  const cell = Math.max(.006, size * center.forward / Math.max(1, focalY()) / pattern.length);
-  const glyphWidth = pattern[0].length * cell;
-  const glyphHeight = pattern.length * cell;
-  const depth = cell * (active ? 1.25 : .9);
-  const left = center.side - glyphWidth / 2 + cell / 2;
-  const top = center.z + glyphHeight / 2 - cell / 2;
-  const faces = [];
-  const surfaceBlocks = [];
-  for (let row = 0; row < pattern.length; row += 1) {
-    for (let column = 0; column < pattern[row].length; column += 1) {
-      const value = pattern[row][column];
-      if (value === '0') continue;
-      const block = { side: left + column * cell, forward: center.forward, z: top - row * cell };
-      const highlight = value === '2' || value === '3';
-      const frontColor = value === '3' ? palette.light : highlight ? palette.accent : palette.base;
-      const sideColor = value === '3' ? palette.accent : palette.deep;
-      addSpellCameraBox(faces, { ...block, forward: center.forward + depth * .12 }, [cell * .94, depth, cell * .94], sideColor, .86, 'steel');
-      addSpellCameraBox(faces, { ...block, forward: center.forward - depth * .46 }, [cell * .82, depth * .2, cell * .82], frontColor, active ? 1.18 : 1.08, null);
-      surfaceBlocks.push({ side: block.side, frontForward: center.forward - depth * .56, z: block.z, cell, highlight });
+function spellMeshPoint(center, side, forward, z, roll = 0) {
+  const cosine = Math.cos(roll);
+  const sine = Math.sin(roll);
+  return {
+    side: center.side + side * cosine - z * sine,
+    forward: center.forward + forward,
+    z: center.z + side * sine + z * cosine,
+  };
+}
+function addSpellCrystalMesh(faces, center, radius, depth, height, roll, color, shade = 1, material = null) {
+  const ring = [];
+  for (let index = 0; index < 6; index += 1) {
+    const angle = index * TAU / 6;
+    ring.push(spellMeshPoint(center, Math.cos(angle) * radius, Math.sin(angle) * depth, 0, roll));
+  }
+  const top = spellMeshPoint(center, 0, 0, height * .5, roll);
+  const bottom = spellMeshPoint(center, 0, 0, -height * .5, roll);
+  for (let index = 0; index < ring.length; index += 1) {
+    const next = (index + 1) % ring.length;
+    faces.push({ points: [top, ring[index], ring[next]], color, shade: shade * (.76 + (index % 3) * .1), material });
+    faces.push({ points: [bottom, ring[next], ring[index]], color, shade: shade * (.58 + ((index + 1) % 3) * .1), material });
+  }
+}
+function addSpellOrbMesh(faces, center, radius, depth, color, shade = 1, material = null) {
+  const latitudes = [-Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2];
+  const segments = 8;
+  const rings = latitudes.map((latitude) => {
+    const ringRadius = Math.cos(latitude) * radius;
+    return Array.from({ length: segments }, (_, index) => {
+      const longitude = index * TAU / segments;
+      return spellMeshPoint(center, Math.cos(longitude) * ringRadius, Math.sin(longitude) * ringRadius * depth / radius, Math.sin(latitude) * radius);
+    });
+  });
+  for (let row = 0; row < rings.length - 1; row += 1) {
+    for (let index = 0; index < segments; index += 1) {
+      const next = (index + 1) % segments;
+      faces.push({ points: [rings[row][index], rings[row][next], rings[row + 1][next], rings[row + 1][index]], color, shade: shade * (.72 + ((index + row) % 4) * .09), material });
     }
   }
-  const orbitRadius = glyphWidth * (active ? 1.14 : .92);
-  const orbitDepth = Math.sin(now / 520) * depth * .8;
-  const orbitSize = Math.max(.008, cell * (active ? .52 : .4));
-  for (let index = 0; index < 4; index += 1) {
-    const angle = now / (active ? 900 : 1500) + index * TAU / 4;
-    addSpellCameraBox(faces, { side: center.side + Math.cos(angle) * orbitRadius, forward: center.forward + orbitDepth, z: center.z + Math.sin(angle) * orbitRadius }, [orbitSize, orbitSize * .9, orbitSize], index % 2 ? palette.accent : palette.light, active ? 1.08 : .86, null);
+}
+function addSpellTorusMesh(faces, center, radius, tube, roll, color, shade = 1, material = null, segments = 10) {
+  const tubeSegments = 4;
+  const rings = [];
+  for (let major = 0; major < segments; major += 1) {
+    const majorAngle = major * TAU / segments;
+    rings.push([]);
+    for (let minor = 0; minor < tubeSegments; minor += 1) {
+      const minorAngle = minor * TAU / tubeSegments;
+      const localRadius = radius + Math.cos(minorAngle) * tube;
+      rings[major].push(spellMeshPoint(center, Math.cos(majorAngle) * localRadius, Math.sin(minorAngle) * tube, Math.sin(majorAngle) * localRadius, roll));
+    }
   }
+  for (let major = 0; major < segments; major += 1) {
+    const nextMajor = (major + 1) % segments;
+    for (let minor = 0; minor < tubeSegments; minor += 1) {
+      const nextMinor = (minor + 1) % tubeSegments;
+      faces.push({ points: [rings[major][minor], rings[nextMajor][minor], rings[nextMajor][nextMinor], rings[major][nextMinor]], color, shade: shade * (.68 + ((major + minor) % 3) * .12), material });
+    }
+  }
+}
+function addSpellPlateMesh(faces, center, width, height, depth, roll, color, shade = 1, material = null) {
+  const bevel = Math.min(width, height) * .16;
+  const profile = [
+    { side: -width / 2 + bevel, z: -height / 2 },
+    { side: width / 2 - bevel, z: -height / 2 },
+    { side: width / 2, z: -height / 2 + bevel },
+    { side: width / 2, z: height / 2 - bevel },
+    { side: width / 2 - bevel, z: height / 2 },
+    { side: -width / 2 + bevel, z: height / 2 },
+    { side: -width / 2, z: height / 2 - bevel },
+    { side: -width / 2, z: -height / 2 + bevel },
+  ];
+  const front = profile.map((point) => spellMeshPoint(center, point.side, depth / 2, point.z, roll));
+  const back = profile.map((point) => spellMeshPoint(center, point.side, -depth / 2, point.z, roll));
+  faces.push({ points: front, color, shade, material });
+  faces.push({ points: [...back].reverse(), color, shade: shade * .56, material });
+  for (let index = 0; index < profile.length; index += 1) {
+    const next = (index + 1) % profile.length;
+    faces.push({ points: [front[index], front[next], back[next], back[index]], color, shade: shade * (.62 + (index % 3) * .1), material });
+  }
+}
+function addSpellConnectorMesh(faces, center, sideOffset, zOffset, width, height, color, shade = 1) {
+  addSpellCameraBox(faces, { side: center.side + sideOffset, forward: center.forward, z: center.z + zOffset }, [width, width * .7, height], color, shade, null);
+}
+function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false) {
+  if (!spell) return;
+  const palette = spellVisualPalette(spell);
+  const unit = Math.max(.004, size * center.forward / Math.max(1, focalY()) / 8);
+  const pulse = active ? 1 + Math.sin(now / 130) * .08 : 1 + Math.sin(now / 260) * .035;
+  const ringRotation = now / (active ? 1100 : 1700);
+  const faces = [];
+  const core = { ...center };
+  const side = (value) => center.side + value;
+  const height = (value) => center.z + value;
+
+  if (spell.kind === 'gate') {
+    addSpellCrystalMesh(faces, core, unit * 1.28, unit * 1.02, unit * 4.8 * pulse, ringRotation, palette.base, 1.1, 'steel');
+    addSpellConnectorMesh(faces, core, 0, -unit * 2.55, unit * .42, unit * .72, palette.deep, .9);
+    addSpellTorusMesh(faces, core, unit * 3.05, unit * .11, ringRotation, palette.accent, 1.04, null, 8);
+    addSpellCrystalMesh(faces, { side: side(-unit * 2.2), forward: center.forward, z: height(unit * .1) }, unit * .42, unit * .34, unit * 1.05, -.45, palette.light, 1.04, null);
+    addSpellCrystalMesh(faces, { side: side(unit * 2.2), forward: center.forward, z: height(unit * .1) }, unit * .42, unit * .34, unit * 1.05, .45, palette.light, .88, null);
+  } else if (spell.kind === 'reveal') {
+    addSpellOrbMesh(faces, core, unit * 1.45, unit * .74, palette.base, 1.04, null);
+    addSpellTorusMesh(faces, core, unit * 2.55, unit * .18, ringRotation, palette.accent, 1.02, null, 12);
+    addSpellCrystalMesh(faces, { ...core, forward: center.forward - unit * .84 }, unit * .42, unit * .18, unit * 1.6, 0, palette.light, 1.18, null);
+    addSpellCrystalMesh(faces, { ...core, forward: center.forward - unit * .98 }, unit * .18, unit * .1, unit * .72, 0, palette.accent, 1.22, null);
+  } else if (spell.kind === 'homing') {
+    addSpellOrbMesh(faces, core, unit * 1.48, unit * 1.48, palette.base, 1.08, 'steel');
+    addSpellTorusMesh(faces, core, unit * 2.25, unit * .13, -ringRotation * 1.25, palette.accent, 1.02, null, 9);
+    for (let index = 0; index < 4; index += 1) {
+      const angle = ringRotation * .9 + index * TAU / 4;
+      addSpellCrystalMesh(faces, { side: side(Math.cos(angle) * unit * 2.05), forward: center.forward, z: height(Math.sin(angle) * unit * 2.05) }, unit * .3, unit * .22, unit * 1.15, angle, palette.light, .98, null);
+    }
+  } else if (spell.kind === 'ward') {
+    addSpellPlateMesh(faces, core, unit * 4.7, unit * 4.9, unit * .7, Math.sin(now / 1600) * .06, palette.base, 1.02, 'steel');
+    addSpellCrystalMesh(faces, { ...core, forward: center.forward - unit * .48 }, unit * .7, unit * .26, unit * 2.5, 0, palette.accent, 1.08, null);
+    addSpellTorusMesh(faces, core, unit * 3.02, unit * .1, ringRotation, palette.light, .92, null, 8);
+  } else if (spell.kind === 'chain') {
+    for (let index = -1; index <= 1; index += 1) {
+      const linkCenter = { ...core, side: side(index * unit * 2.0), z: height(Math.sin(index * 1.2 + ringRotation) * unit * .32) };
+      addSpellTorusMesh(faces, linkCenter, unit * 1.02, unit * .16, ringRotation + index * .9, palette.base, 1.04, 'steel', 8);
+      if (index < 1) addSpellConnectorMesh(faces, core, (index + .5) * unit * 2, 0, unit * .28, unit * .3, palette.accent, .95);
+    }
+  } else if (spell.kind === 'echo') {
+    addSpellOrbMesh(faces, core, unit * .86, unit * .82, palette.base, 1.02, null);
+    addSpellTorusMesh(faces, core, unit * 1.65, unit * .13, ringRotation * .7, palette.accent, .96, null, 10);
+    addSpellTorusMesh(faces, core, unit * 2.45, unit * .11, -ringRotation, palette.light, .88, null, 10);
+    addSpellTorusMesh(faces, core, unit * 3.2, unit * .09, ringRotation * .58, palette.accent, .76, null, 10);
+  } else if (spell.kind === 'fireball') {
+    addSpellOrbMesh(faces, core, unit * 1.72, unit * 1.5, palette.base, 1.08, 'steel');
+    addSpellCrystalMesh(faces, { side: side(-unit * .55), forward: center.forward, z: height(unit * 1.65) }, unit * .34, unit * .22, unit * 1.72, -.3, palette.accent, 1.06, null);
+    addSpellCrystalMesh(faces, { side: side(unit * .7), forward: center.forward + unit * .08, z: height(unit * .95) }, unit * .28, unit * .2, unit * 1.35, .45, palette.light, .94, null);
+    addSpellCrystalMesh(faces, { side: side(-unit * .9), forward: center.forward, z: height(-unit * 1.2) }, unit * .25, unit * .18, unit * 1.18, .8, palette.accent, .9, null);
+    addSpellTorusMesh(faces, core, unit * 2.55, unit * .1, ringRotation * 1.2, palette.light, .74, null, 9);
+  } else if (spell.kind === 'bloom') {
+    addSpellOrbMesh(faces, core, unit * .78, unit * .72, palette.light, 1.08, null);
+    for (let index = 0; index < 6; index += 1) {
+      const angle = ringRotation + index * TAU / 6;
+      const petalCenter = { side: side(Math.cos(angle) * unit * 2.15), forward: center.forward, z: height(Math.sin(angle) * unit * 2.15) };
+      addSpellCrystalMesh(faces, petalCenter, unit * .58, unit * .22, unit * 1.62, angle, palette.base, 1.02, null);
+    }
+    addSpellTorusMesh(faces, core, unit * 2.95, unit * .1, -ringRotation, palette.accent, .8, null, 10);
+  } else if (spell.kind === 'beam') {
+    addSpellPlateMesh(faces, core, unit * 1.55, unit * 5.8, unit * .56, 0, palette.base, 1.08, 'steel');
+    addSpellCrystalMesh(faces, { ...core, z: height(unit * 2.8) }, unit * .42, unit * .24, unit * .92, 0, palette.light, 1.12, null);
+    addSpellCrystalMesh(faces, { ...core, z: height(-unit * 2.8) }, unit * .42, unit * .24, unit * .92, 0, palette.accent, .92, null);
+    addSpellTorusMesh(faces, core, unit * 2.75, unit * .1, ringRotation, palette.light, .8, null, 8);
+  } else {
+    addSpellOrbMesh(faces, core, unit * 1.3, unit * 1.15, palette.base, 1, null);
+    addSpellTorusMesh(faces, core, unit * 2.4, unit * .12, ringRotation, palette.accent, .9, null, 10);
+  }
+
   const projected = projectCameraPoint(center);
   if (projected) {
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = alpha * (active ? .17 : .08);
-    ctx.shadowBlur = Math.max(9, size * .16);
-    ctx.shadowColor = spellRgbCss(palette.glow, .9);
-    const aura = ctx.createRadialGradient(projected.x, projected.y, 0, projected.x, projected.y, Math.max(12, glyphWidth * focalX() / center.forward * .86));
-    aura.addColorStop(0, spellRgbCss(palette.glow, .42));
-    aura.addColorStop(.5, spellRgbCss(palette.base, .14));
+    ctx.globalAlpha = alpha * (active ? .2 : .09);
+    ctx.shadowBlur = Math.max(10, size * .17);
+    ctx.shadowColor = spellRgbCss(palette.glow, .92);
+    const auraRadius = Math.max(14, size * (active ? .72 : .55));
+    const aura = ctx.createRadialGradient(projected.x, projected.y, 0, projected.x, projected.y, auraRadius);
+    aura.addColorStop(0, spellRgbCss(palette.glow, .44));
+    aura.addColorStop(.48, spellRgbCss(palette.base, .16));
     aura.addColorStop(1, spellRgbCss(palette.base, 0));
     ctx.fillStyle = aura;
-    ctx.beginPath();
-    ctx.ellipse(projected.x, projected.y, glyphWidth * focalX() / center.forward * .78, glyphHeight * focalY() / center.forward * .78, 0, 0, TAU);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(projected.x, projected.y, auraRadius, 0, TAU); ctx.fill();
     ctx.restore();
   }
   renderFaces(faces, alpha, true);
   if (!projected) return;
-  drawSpellGlyphSurface(surfaceBlocks, palette, alpha, active);
   ctx.save();
-  ctx.globalAlpha = alpha * (active ? .5 : .22);
-  ctx.strokeStyle = spellRgbCss(palette.accent, .95);
-  ctx.shadowBlur = Math.max(8, size * .12);
-  ctx.shadowColor = spellRgbCss(palette.glow, .9);
-  ctx.lineWidth = Math.max(1, size * .018);
-  ctx.lineJoin = 'round';
-  ctx.strokeRect(projected.x - glyphWidth * focalX() / center.forward * .58, projected.y - glyphHeight * focalY() / center.forward * .58, glyphWidth * focalX() / center.forward * 1.16, glyphHeight * focalY() / center.forward * 1.16);
+  ctx.globalAlpha = alpha * (active ? .34 : .14);
+  ctx.strokeStyle = spellRgbCss(palette.accent, .9);
+  ctx.shadowBlur = Math.max(7, size * .1);
+  ctx.shadowColor = spellRgbCss(palette.glow, .8);
+  ctx.lineWidth = Math.max(1, size * .012);
+  ctx.beginPath();
+  ctx.arc(projected.x, projected.y, Math.max(5, size * .21), ringRotation, ringRotation + Math.PI * 1.32);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -2917,7 +3098,15 @@ function castRay(angle) {
   return { distance: MAX_DEPTH, hitX: state.player.x + rayDirX * MAX_DEPTH, hitY: state.player.y + rayDirY * MAX_DEPTH, wallX: 0, vertical: false };
 }
 function torchInfluence(x, y) { return 0; }
-function sampleLight(x, y) { if (state.room === SANCTUARY_ROOM_INDEX) return clamp(.92 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 12, 0, 1) * .18, .82, 1.18); if (state.room === 0) return clamp(.7 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 8, 0, 1) * .25, .56, 1.1); return clamp(.25 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 5.4, 0, 1) * .18, .12, 1.1); }
+function sampleLight(x, y) {
+  if (state.room === SANCTUARY_ROOM_INDEX) return clamp(.92 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 12, 0, 1) * .18, .82, 1.18);
+  if (state.room === 0) {
+    const lobbyBase = .84 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 10, 0, 1) * .22;
+    const fireWarmth = clamp(1 - Math.hypot(x - LOBBY_CAMPFIRE.x, y - LOBBY_CAMPFIRE.y) / 5.8, 0, 1) * .14;
+    return clamp(lobbyBase + fireWarmth, .7, 1.22);
+  }
+  return clamp(.25 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 5.4, 0, 1) * .18, .12, 1.1);
+}
 function drawBackground(width, height) {
   const palette = rooms[state.room].palette || ['#090503', '#392719', '#0e0906'];
   const forestProgress = state.room === 0
@@ -2939,8 +3128,8 @@ function drawBackground(width, height) {
   ctx.fillStyle = ceiling; ctx.fillRect(0, 0, width, Math.max(0, horizon));
   if (state.room === 0) {
     const glow = ctx.createRadialGradient(width * .52, horizon * .66, 0, width * .52, horizon * .66, Math.max(width, height) * .62);
-    glow.addColorStop(0, `rgba(238, 248, 207, ${.24 * forestLight})`);
-    glow.addColorStop(.48, `rgba(157, 222, 190, ${.1 * forestLight})`);
+    glow.addColorStop(0, `rgba(255, 250, 216, ${.32 * forestLight})`);
+    glow.addColorStop(.48, `rgba(157, 222, 190, ${.14 * forestLight})`);
     glow.addColorStop(1, 'rgba(157, 222, 190, 0)');
     ctx.fillStyle = glow; ctx.fillRect(0, 0, width, Math.max(0, horizon));
     ctx.save(); ctx.globalAlpha = .24 * forestLight; ctx.strokeStyle = '#dff1c2'; ctx.lineWidth = Math.max(1, height * .003);
@@ -3051,11 +3240,16 @@ function ceilingDistanceAtScreenY(y) {
   return denominator > .01 ? (CEILING_Z - EYE_HEIGHT) / denominator : MAX_DEPTH;
 }
 
+function roofRoomIndexAtX(x) {
+  for (let index = 0; index < rooms.length; index += 1) {
+    const start = roomOffsets[index];
+    if (x >= start && x < start + roomWidths[index]) return index;
+  }
+  return -1;
+}
 function drawRoomRoof(width, height) {
-  const room = rooms[state.room];
-  const roomStart = roomOffsets[state.room];
-  const roomEnd = roomStart + roomWidths[state.room];
-  if (!room?.roof || state.player.x < roomStart || state.player.x >= roomEnd) return;
+  // The player can be in a threshold/corridor while the next roofed chamber is
+  // already visible. Sample every actual room under the ray, not only state.room.
   ensureCeilingBuffer(height);
   const data = ceilingBufferImage.data;
   data.fill(0);
@@ -3074,8 +3268,8 @@ function drawRoomRoof(width, height) {
       const distance = ceilingRowDistances[row];
       const worldX = state.player.x + directionX * distance;
       const worldY = state.player.y + directionY * distance;
-      const sampledRoomIndex = roomIndexAtX(worldX);
-      if (sampledRoomIndex !== state.room || !rooms[sampledRoomIndex]?.roof || isWall(worldX, worldY)) continue;
+      const sampledRoomIndex = roofRoomIndexAtX(worldX);
+      if (sampledRoomIndex < 0 || !rooms[sampledRoomIndex]?.roof || isWall(worldX, worldY)) continue;
       const surface = sampleGround(worldX, worldY);
       const light = sampleLight(worldX, worldY);
       const factor = clamp(.28 + light * .5, .12, .92);
@@ -3699,53 +3893,211 @@ function drawGroundGlow(x, y, color, now, radius = .48, z = .035) {
 function projectLobbyGroundPoint(x, y, z = .045) {
   return projectCameraPoint(cameraPoint(x, y, z));
 }
-function drawLobbyStonePath(now) {
-  if (state.room !== 0 || !LOBBY_GATE) return;
-  const startX = roomOffsets[0] + 6.8;
-  const endX = LOBBY_GATE.x - .62;
-  const centerY = ROOM_DOOR_Y + 1;
-  const pathWidth = .9;
-  const slabLength = .72;
+function drawLobbyGroundPanel(xStart, yStart, xEnd, yEnd, fill, stroke, alpha = .9) {
+  const points = [
+    projectLobbyGroundPoint(xStart, yStart),
+    projectLobbyGroundPoint(xEnd, yStart),
+    projectLobbyGroundPoint(xEnd, yEnd),
+    projectLobbyGroundPoint(xStart, yEnd),
+  ];
+  if (points.some((point) => !point)) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = Math.max(1, canvas.height * .0022);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+function drawLobbyStoneSlab(x0, x1, y0, y1, index, now, fill = null) {
+  const points = [
+    projectLobbyGroundPoint(x0, y0),
+    projectLobbyGroundPoint(x1, y0),
+    projectLobbyGroundPoint(x1, y1),
+    projectLobbyGroundPoint(x0, y1),
+  ];
+  if (points.some((point) => !point)) return;
   const slabColors = ['#76634b', '#8d7657', '#665541', '#a0835e', '#5b4a39'];
-  for (let x = startX, index = 0; x < endX; x += slabLength, index += 1) {
-    const x0 = x + .055;
-    const x1 = Math.min(endX, x + slabLength - .07);
-    const wobble0 = Math.sin(index * 1.7) * .055;
-    const wobble1 = Math.sin((index + 1) * 1.7) * .055;
-    const points = [
-      projectLobbyGroundPoint(x0, centerY - pathWidth / 2 + wobble0),
-      projectLobbyGroundPoint(x1, centerY - pathWidth / 2 + wobble1),
-      projectLobbyGroundPoint(x1, centerY + pathWidth / 2 + wobble1),
-      projectLobbyGroundPoint(x0, centerY + pathWidth / 2 + wobble0),
-    ];
-    if (points.some((point) => !point)) continue;
+  ctx.save();
+  ctx.globalAlpha = .9;
+  ctx.fillStyle = fill || slabColors[index % slabColors.length];
+  ctx.strokeStyle = 'rgba(39, 27, 17, .74)';
+  ctx.lineWidth = Math.max(1, canvas.height * .0023);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+function drawLobbyBranchPath(x, yStart, yEnd, width, now, fill = null) {
+  const step = .68;
+  const low = Math.min(yStart, yEnd);
+  const high = Math.max(yStart, yEnd);
+  for (let y = low, index = 0; y < high; y += step, index += 1) {
+    const y0 = y + .045;
+    const y1 = Math.min(high, y + step - .055);
+    drawLobbyStoneSlab(x - width / 2, x + width / 2, y0, y1, index, now, fill);
+  }
+}
+function lobbyProjectionIsVisible(point, clearance = .08) {
+  if (!point || point.depth <= .04) return false;
+  const ray = clamp(Math.floor(point.x / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
+  return !state.zBuffer?.length || point.depth <= state.zBuffer[ray] + clearance;
+}
+function drawLobbyLowStone(faces, x, y, color = '#5b5948') {
+  addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .11 }, [.34, .34, .22], 0, color, .84, 'stone');
+}
+function drawLobbyArmory(now) {
+  if (state.room !== 0) return;
+  const { xStart, xEnd, backY, frontY } = LOBBY_ARMORY;
+  // Flat ground dressing only: the armory is an open clearing, not a room
+  // inside the room. No tall back panel or vertical bay walls are rendered.
+  drawLobbyGroundPanel(xStart, backY, xEnd, frontY, 'rgba(73, 102, 68, .72)', 'rgba(205, 174, 111, .72)', .88);
+  drawLobbyGroundPanel(xStart + .32, backY + .3, xEnd - .32, frontY - .3, 'rgba(122, 145, 85, .2)', 'rgba(222, 202, 139, .3)', .8);
+
+  const faces = [];
+  // A low perimeter of individual stones gives the area a readable boundary
+  // without creating the wall-like rendering problem from the previous design.
+  for (let x = xStart + .35; x <= xEnd - .35; x += 1.18) {
+    drawLobbyLowStone(faces, x, backY, '#5f604b');
+    drawLobbyLowStone(faces, x, frontY, '#6e694d');
+  }
+  for (let y = backY + .55; y <= frontY - .55; y += 1.05) {
+    drawLobbyLowStone(faces, xStart, y, '#5f604b');
+    drawLobbyLowStone(faces, xEnd, y, '#6e694d');
+  }
+  // Four open posts mark the armory corners. They stop below the weapon meshes
+  // and cannot be mistaken for enclosing walls.
+  for (const [x, y] of [[xStart + .22, backY + .22], [xEnd - .22, backY + .22], [xStart + .22, frontY - .22], [xEnd - .22, frontY - .22]]) {
+    addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .38 }, [.2, .2, .76], 0, '#4b3423', .88, 'wood');
+    addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .8 }, [.32, .32, .12], 0, '#d3aa62', 1.02, 'steel');
+  }
+  renderFaces(faces, .96);
+
+  drawGroundGlow((xStart + xEnd) / 2, LOBBY_ARMORY.aisleY, '#8fd4a0', now, 1.25, .035);
+  drawLobbyStoneSlab(xStart + .3, xEnd - .3, LOBBY_ARMORY.aisleY - .14, LOBBY_ARMORY.aisleY + .14, 2, now, 'rgba(208, 184, 120, .42)');
+  drawLobbyLantern(xStart + .65, backY + .52, now, '#f0d38f');
+  drawLobbyLantern(xEnd - .65, backY + .52, now, '#f0d38f');
+
+  const sign = projectCameraPoint(cameraPoint((xStart + xEnd) / 2, backY + .06, 1.52));
+  // No hovering room labels: let the geometry communicate the space.
+}
+function drawLobbyLantern(x, y, now, color = '#f0d38f') {
+  const faces = [];
+  const origin = { x, y };
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .26 }, [.13, .13, .52], 0, '#4b3423', .9, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .57 }, [.26, .22, .16], 0, color, 1.12, 'steel');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .7 }, [.1, .1, .1], 0, '#fff1b0', 1.18, 'steel');
+  renderFaces(faces, .98);
+  drawGroundGlow(x, y, color, now, .62, .035);
+}
+function drawLobbyCampfire(now) {
+  if (state.room !== 0) return;
+  const fire = LOBBY_CAMPFIRE;
+  const origin = { x: fire.x, y: fire.y };
+  const faces = [];
+  const stoneCount = 9;
+  for (let index = 0; index < stoneCount; index += 1) {
+    const angle = index / stoneCount * TAU;
+    const radius = .62;
+    addBoxLocal(faces, origin, { side: Math.sin(angle) * radius, forward: Math.cos(angle) * radius, z: .12 }, [.32, .25, .24], angle + Math.PI / 2, '#716a50', .9 - (index % 3) * .05, 'stone');
+  }
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .23 }, [.16, .92, .16], .45, '#6a3e24', .92, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .3 }, [.16, .92, .16], -.45, '#7b4827', .86, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .57 }, [.28, .24, .46], .08, '#d85f35', 1.04, 'steel');
+  addBoxLocal(faces, origin, { side: -.03, forward: .02, z: .74 }, [.16, .14, .36], -.18, '#f0a24b', 1.12, 'steel');
+  renderFaces(faces, .98);
+  drawGroundGlow(fire.x, fire.y, '#f0a24b', now, 1.16, .035);
+  drawProjectedWorldRing({ x: fire.x, y: fire.y }, .78, '#e7ad67', .4 + Math.sin(now / 180) * .08, 18, .045, Math.max(1, canvas.height * .0025));
+
+  const flame = projectCameraPoint(cameraPoint(fire.x, fire.y, .94));
+  const flameBase = projectCameraPoint(cameraPoint(fire.x, fire.y, .36));
+  if (lobbyProjectionIsVisible(flame, .12) && flameBase) {
+    const pulse = .9 + Math.sin(now / 115) * .08;
     ctx.save();
-    ctx.globalAlpha = .88;
-    ctx.fillStyle = slabColors[index % slabColors.length];
-    ctx.strokeStyle = 'rgba(39, 27, 17, .76)';
-    ctx.lineWidth = Math.max(1, canvas.height * .0025);
+    ctx.globalAlpha = .82 * pulse;
+    ctx.shadowBlur = 26;
+    ctx.shadowColor = '#f0a24b';
+    ctx.fillStyle = '#f7c967';
     ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+    ctx.moveTo(flameBase.x - 9 * pulse, flameBase.y);
+    ctx.quadraticCurveTo(flame.x - 11, flame.y + 12, flame.x, flame.y - 14 * pulse);
+    ctx.quadraticCurveTo(flame.x + 13, flame.y + 10, flameBase.x + 9 * pulse, flameBase.y);
     ctx.closePath();
     ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle = '#fff1b0';
+    ctx.beginPath();
+    ctx.moveTo(flameBase.x - 4, flameBase.y);
+    ctx.quadraticCurveTo(flame.x - 5, flame.y + 12, flame.x, flame.y - 4);
+    ctx.quadraticCurveTo(flame.x + 6, flame.y + 10, flameBase.x + 4, flameBase.y);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
+
+  // Smoke is built from depth-checked projected puffs so it cannot smear across
+  // the sky or draw through the lobby edge walls when the player turns.
+  for (let index = 0; index < 6; index += 1) {
+    const rise = index * .34 + .18;
+    const drift = Math.sin(now / (900 + index * 75) + index * 1.4) * (.08 + index * .035) + Math.sin(now / 1500 + index) * .05;
+    const puff = projectCameraPoint(cameraPoint(fire.x + drift, fire.y + Math.cos(index * 1.8) * .035, .92 + rise));
+    if (!lobbyProjectionIsVisible(puff, .16)) continue;
+    const radius = clamp(canvas.height * (.022 + index * .004) / Math.max(.8, puff.depth), 4, 22);
+    ctx.save();
+    ctx.globalAlpha = (.24 - index * .025) * (.9 + Math.sin(now / 410 + index) * .08);
+    ctx.fillStyle = index % 2 ? '#b9c1af' : '#d6d0b5';
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#9fa998';
+    ctx.beginPath();
+    ctx.arc(puff.x - radius * .55, puff.y + radius * .12, radius * .75, 0, TAU);
+    ctx.arc(puff.x + radius * .35, puff.y - radius * .18, radius, 0, TAU);
+    ctx.arc(puff.x + radius * .8, puff.y + radius * .18, radius * .62, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+  // No hovering camp label; the fire is the landmark.
+}
+function drawLobbyStonePath(now) {
+  if (state.room !== 0 || !LOBBY_GATE) return;
+  const startX = roomOffsets[0] + 5.15;
+  const endX = LOBBY_GATE.x - .62;
+  const centerY = LOBBY_WEAPON_PATH_Y;
+  const pathWidth = 1.12;
+  const slabLength = .78;
+  for (let x = startX, index = 0; x < endX; x += slabLength, index += 1) {
+    const x0 = x + .045;
+    const x1 = Math.min(endX, x + slabLength - .06);
+    const wobble0 = Math.sin(index * 1.7) * .045;
+    const wobble1 = Math.sin((index + 1) * 1.7) * .045;
+    drawLobbyStoneSlab(x0, x1, centerY - pathWidth / 2 + wobble0, centerY + pathWidth / 2 + wobble1, index, now);
+  }
+  drawLobbyBranchPath(LOBBY_ARMORY.xStart + .42, centerY - .46, LOBBY_ARMORY.aisleY, .86, now, 'rgba(178, 153, 102, .72)');
+  drawLobbyBranchPath(LOBBY_ARMORY.xEnd - .48, centerY + .46, lobbyPortfolioScroll.y - .48, .72, now, 'rgba(143, 122, 83, .64)');
+  drawLobbyStoneSlab(LOBBY_ARMORY.xStart + .22, LOBBY_ARMORY.xEnd - .22, LOBBY_ARMORY.aisleY - .16, LOBBY_ARMORY.aisleY + .16, 1, now, 'rgba(194, 165, 105, .52)');
+
   const edgeA = projectLobbyGroundPoint(startX, centerY - pathWidth / 2 - .08);
   const edgeB = projectLobbyGroundPoint(endX, centerY - pathWidth / 2 - .08);
   const edgeC = projectLobbyGroundPoint(startX, centerY + pathWidth / 2 + .08);
   const edgeD = projectLobbyGroundPoint(endX, centerY + pathWidth / 2 + .08);
   if ([edgeA, edgeB, edgeC, edgeD].every(Boolean)) {
     ctx.save();
-    ctx.globalAlpha = .2;
-    ctx.strokeStyle = '#b18a5e';
-    ctx.lineWidth = Math.max(2, canvas.height * .006);
+    ctx.globalAlpha = .27;
+    ctx.strokeStyle = '#c4a66b';
+    ctx.lineWidth = Math.max(2, canvas.height * .005);
     ctx.setLineDash([2, 12]);
     ctx.beginPath(); ctx.moveTo(edgeA.x, edgeA.y); ctx.lineTo(edgeB.x, edgeB.y); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(edgeC.x, edgeC.y); ctx.lineTo(edgeD.x, edgeD.y); ctx.stroke();
     ctx.restore();
   }
+  drawGroundGlow(roomOffsets[0] + 5.35, centerY, '#b8f0e2', now, 1.15, .035);
+  drawProjectedWorldRing({ x: roomOffsets[0] + 5.35, y: centerY }, 1.04, '#b8f0e2', .38 + Math.sin(now / 280) * .06, 28, .05, Math.max(1, canvas.height * .0025));
 }
 function drawForestHallPath(now) {
   if (state.room !== 0) return;
@@ -3831,7 +4183,10 @@ function drawForestHallFog(now) {
 
 function drawWorldRoute(now) {
   if (state.room === 0) {
-    drawLobbyStonePath(now);
+    // Keep the spawn courtyard open. Weapon displays remain as the only
+    // intentional lobby dressing; remove the old ground panels, stones,
+    // lanterns, and branching showcase paths.
+    drawLobbyCampfire(now);
     drawForestHallPath(now);
   }
   if (state.room === FINAL_ROOM_INDEX) drawDoorOfLight(now);
@@ -3853,8 +4208,8 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
   // Keep each display fixed in world space. These are not billboards.
   const yaw = creature.yaw ?? 0;
   const type = creature.type;
-  const color = type === 'wand' ? '#db8872' : type === 'crossbow' ? '#f0d38d' : '#d8c18b';
-  const light = type === 'wand' ? '#f4a06d' : type === 'crossbow' ? '#fff0b2' : '#fff4c7';
+  const color = type === 'wand' ? '#db8872' : type === 'crossbow' ? '#f0d38d' : type === 'blade' ? '#b8f0e2' : '#d8c18b';
+  const light = type === 'wand' ? '#f4a06d' : type === 'crossbow' ? '#fff0b2' : type === 'blade' ? '#effff7' : '#fff4c7';
   const pedestalTop = .30;
   let bottomZ = pedestalTop + .015;
   let topZ = .58;
@@ -3887,6 +4242,13 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
     addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.01 }, [.06, .06, .08], yaw, light, 1.2, 'steel');
     topZ = 1.11;
     haloRadius = .19;
+  } else if (type === 'blade') {
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .39 }, [.08, .08, .3], yaw, '#3a241b', .98, 'leather');
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .57 }, [.36, .08, .06], yaw, color, 1.04, 'steel');
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.05 }, [.13, .04, .9], yaw, '#cfe8dc', 1.06, 'steel');
+    addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.52 }, [.02, .04, .08], yaw, light, 1.15, 'steel');
+    topZ = 1.58;
+    haloRadius = .25;
   } else {
     return;
   }
@@ -3911,6 +4273,15 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
     ctx.beginPath();
     ctx.moveTo(anchor.x - size * .48, anchor.y);
     ctx.lineTo(anchor.x + size * .48, anchor.y);
+    ctx.stroke();
+  } else if (type === 'blade') {
+    ctx.beginPath();
+    ctx.moveTo(anchor.x, anchor.y + size * .58);
+    ctx.lineTo(anchor.x, anchor.y - size * .58);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(anchor.x - size * .25, anchor.y + size * .1);
+    ctx.lineTo(anchor.x + size * .25, anchor.y + size * .1);
     ctx.stroke();
   } else {
     ctx.beginPath();
@@ -3973,6 +4344,7 @@ function drawLobbyWeaponCreature(creature, now = state.now || performance.now())
   if (creature.type === 'stars') drawNinjaStarWeapon3D(creature, now);
   else if (creature.type === 'crossbow') drawCrossbowWeapon3D(creature, now);
   else if (creature.type === 'wand') drawEmberWandWeapon3D(creature, now);
+  else if (creature.type === 'blade') drawLobbyWeaponMesh3D(creature, now);
 }
 
 function drawLobbyPortfolioScroll(item, now) {
@@ -3992,6 +4364,61 @@ function drawLobbyPortfolioScroll(item, now) {
   ctx.restore();
   drawGroundGlow(item.x, item.y, item.color || EMERALD, now, .7, .035);
 }
+function drawLobbyEntranceSign(sign, now) {
+  if (state.room !== 0 || !sign || !objectInView(sign.x, sign.y, 28)) return;
+  const origin = { x: sign.x, y: sign.y };
+  const yaw = sign.yaw ?? 0;
+  const faces = [];
+  const sideOffset = sign.width * .39;
+
+  // Thick timber board with a raised face on both sides, so the sign reads from
+  // either direction when the player crosses the entrance.
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: sign.z }, [sign.width, .22, sign.height], yaw, '#51331f', .96, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: -.125, z: sign.z }, [sign.width - .18, .035, sign.height - .14], yaw, '#986536', 1.02, 'wood');
+  addBoxLocal(faces, origin, { side: 0, forward: .125, z: sign.z }, [sign.width - .18, .035, sign.height - .14], yaw, '#80532f', .9, 'wood');
+
+  // Short supports tie the board into the entrance arch without creating a new
+  // collision wall across the route.
+  for (const side of [-1, 1]) {
+    addBoxLocal(faces, origin, { side: side * sideOffset, forward: 0, z: 2.22 }, [.18, .24, .82], yaw, '#5f3b24', .92, 'wood');
+    addBoxLocal(faces, origin, { side: side * sideOffset, forward: -.01, z: 2.62 }, [.3, .3, .1], yaw, '#b7864e', 1.04, 'steel');
+  }
+  addBoxLocal(faces, origin, { side: 0, forward: -.01, z: sign.z + sign.height * .43 }, [sign.width + .12, .24, .1], yaw, '#b7864e', 1.02, 'steel');
+  renderFaces(faces, .98);
+
+  // Draw the title onto the projected front-facing plane of the board. The
+  // facing side changes as the player passes through the entrance.
+  const faceForward = state.player.x <= sign.x ? -.15 : .15;
+  const center = projectCameraPoint(cameraPoint(sign.x + faceForward, sign.y, sign.z));
+  const left = projectCameraPoint(cameraPoint(sign.x + faceForward, sign.y - sign.width * .44, sign.z));
+  const right = projectCameraPoint(cameraPoint(sign.x + faceForward, sign.y + sign.width * .44, sign.z));
+  const top = projectCameraPoint(cameraPoint(sign.x + faceForward, sign.y, sign.z + sign.height * .38));
+  const bottom = projectCameraPoint(cameraPoint(sign.x + faceForward, sign.y, sign.z - sign.height * .38));
+  if ([center, left, right, top, bottom].some((point) => !point) || !lobbyProjectionIsVisible(center, .2)) return;
+
+  const projectedWidth = Math.hypot(right.x - left.x, right.y - left.y);
+  const projectedHeight = Math.abs(bottom.y - top.y);
+  const fontSize = clamp(Math.min(projectedWidth / 15.2, projectedHeight * .56), 10, 30);
+  ctx.save();
+  ctx.globalAlpha = .98;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `bold ${fontSize}px Georgia, serif`;
+  ctx.fillStyle = '#fff1b0';
+  ctx.shadowBlur = Math.max(5, fontSize * .7);
+  ctx.shadowColor = '#2e1b12';
+  ctx.fillText(sign.text, center.x, center.y + projectedHeight * .04);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = .7;
+  ctx.strokeStyle = '#e7c980';
+  ctx.lineWidth = Math.max(1, fontSize * .07);
+  ctx.beginPath();
+  ctx.moveTo(center.x - projectedWidth * .35, center.y + projectedHeight * .33);
+  ctx.lineTo(center.x + projectedWidth * .35, center.y + projectedHeight * .33);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawLobbyGate(now) {
   if (!LOBBY_GATE || state.room !== 0) return;
   const gate = LOBBY_GATE;
@@ -4045,11 +4472,42 @@ function drawLobbyTree3D(tree, now) {
   drawGroundGlow(tree.x, tree.y, '#6c9d68', now, .84 * scale, .035);
 }
 
+function drawLobbyBush3D(bush, now) {
+  if (state.room !== (bush.roomIndex ?? 0) || !objectInView(bush.x, bush.y, 24)) return;
+  const faces = [];
+  const origin = { x: bush.x, y: bush.y };
+  const scale = bush.scale || 1;
+  const yaw = bush.yaw ?? 0;
+  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
+    faces,
+    origin,
+    { side: center.side * scale, forward: center.forward * scale, z: center.z * scale },
+    dimensions.map((value) => value * scale),
+    yaw,
+    color,
+    shade,
+    material,
+  );
+
+  // Overlapping cuboids keep the bush faceted and low-poly while giving it a
+  // softer silhouette than another full tree canopy.
+  box({ side: 0, forward: 0, z: .13 }, [.7, .56, .24], '#174b34', .88, null);
+  box({ side: -.22, forward: .01, z: .31 }, [.56, .48, .42], '#236b40', .98, null);
+  box({ side: .2, forward: .03, z: .34 }, [.58, .5, .46], '#2e8050', 1.02, null);
+  box({ side: 0, forward: -.08, z: .5 }, [.42, .4, .38], '#5aa85d', 1.03, null);
+  box({ side: -.08, forward: .15, z: .43 }, [.28, .24, .3], '#79bd68', 1.06, null);
+  renderFaces(faces, .98);
+  drawGroundGlow(bush.x, bush.y, '#4d9b5d', now, .55 * scale, .035);
+}
+
 function drawWorldObjects(now) {
   const objects = [];
   if (state.room === 0) {
     LOBBY_TREES.forEach((tree) => {
       if (treeFootprintIsClear(tree) && objectInView(tree.x, tree.y, 24)) objects.push({ type: 'lobby-tree', ...tree, distance: Math.hypot(tree.x - state.player.x, tree.y - state.player.y) });
+    });
+    LOBBY_BUSHES.forEach((bush) => {
+      if (objectInView(bush.x, bush.y, 24)) objects.push({ type: 'lobby-bush', ...bush, distance: Math.hypot(bush.x - state.player.x, bush.y - state.player.y) });
     });
     FOREST_HALL_TREES.forEach((tree) => {
       // These are deliberately fixed world meshes. They do not billboard and
@@ -4057,6 +4515,7 @@ function drawWorldObjects(now) {
       if (objectInView(tree.x, tree.y, FOREST_HALL_GAP + 4)) objects.push({ type: 'forest-tree', ...tree, distance: Math.hypot(tree.x - state.player.x, tree.y - state.player.y) });
     });
     if (!lobbyPortfolioScroll.recovered && objectInView(lobbyPortfolioScroll.x, lobbyPortfolioScroll.y, 16)) objects.push({ type: 'lobby-scroll', ...lobbyPortfolioScroll, distance: Math.hypot(lobbyPortfolioScroll.x - state.player.x, lobbyPortfolioScroll.y - state.player.y) });
+    if (objectInView(LOBBY_ENTRANCE_SIGN.x, LOBBY_ENTRANCE_SIGN.y, 28)) objects.push({ type: 'lobby-entrance-sign', ...LOBBY_ENTRANCE_SIGN, distance: Math.hypot(LOBBY_ENTRANCE_SIGN.x - state.player.x, LOBBY_ENTRANCE_SIGN.y - state.player.y) });
     if (objectInView(LOBBY_GATE.x, LOBBY_GATE.y, 26)) objects.push({ type: 'lobby-gate', ...LOBBY_GATE, distance: Math.hypot(LOBBY_GATE.x - state.player.x, LOBBY_GATE.y - state.player.y) });
   }
   if (state.room === SANCTUARY_ROOM_INDEX) {
@@ -4068,7 +4527,7 @@ function drawWorldObjects(now) {
   worldItems.forEach((item) => { if (item.roomIndex !== activeRoom || item.recovered || !objectInView(item.x, item.y)) return; objects.push({ type: 'item', ...item, distance: Math.hypot(item.x - state.player.x, item.y - state.player.y) }); });
   // Weapon keepers use a dedicated final trader-style pass below. They are
   // intentionally not depth-sorted with trees, gates, and record props.
-  // The safe lobby contains the three weapon keepers only. Never allow a stale/legacy room-0 enemy
+  // The safe lobby contains the four weapon displays only. Never allow a stale/legacy room-0 enemy
   // to occupy a weapon keeper or appear beside the portfolio scroll.
   if (state.room !== 0) worldEnemies.forEach((enemy) => { if (enemy.roomIndex !== state.room) return; if ((!enemy.dead || enemy.deathTime < .75) && objectInView(enemy.x, enemy.y)) objects.push({ type: 'enemy', ...enemy, distance: Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) }); });
   if (state.room === FINAL_ROOM_INDEX && state.finalBoss && (!state.finalBoss.dead || state.finalBoss.deathTime < 2.4)) {
@@ -4078,7 +4537,9 @@ function drawWorldObjects(now) {
   objects.sort((a, b) => b.distance - a.distance);
   for (const object of objects) {
     if (object.type === 'lobby-tree' || object.type === 'forest-tree') drawLobbyTree3D(object, now);
+    else if (object.type === 'lobby-bush') drawLobbyBush3D(object, now);
     else if (object.type === 'lobby-scroll') drawLobbyPortfolioScroll(object, now);
+    else if (object.type === 'lobby-entrance-sign') drawLobbyEntranceSign(object, now);
     else if (object.type === 'lobby-gate') drawLobbyGate(now);
     else if (object.type === 'item') {
       if (['scroll', 'ledger', 'chronicle', 'map', 'health-potion'].includes(object.kind)) {
@@ -4168,6 +4629,31 @@ function addFlatSquareBladeCamera(faces, origin, center, size, thickness, yaw, c
   for (let index = 0; index < profile.length; index += 1) {
     const next = (index + 1) % profile.length;
     faces.push({ points: [top[index], top[next], bottom[next], bottom[index]], color, shade: shade * (.72 + (index % 2) * .12), material: 'steel' });
+  }
+}
+
+function addSwordBladeCamera(faces, origin, center, width, length, thickness, roll, color, shade = 1) {
+  const profile = [
+    { side: -width * .5, z: 0 },
+    { side: width * .5, z: 0 },
+    { side: width * .42, z: length * .82 },
+    { side: 0, z: length },
+    { side: -width * .42, z: length * .82 },
+  ];
+  const layers = [-1, 1].map((layer) => profile.map((point) => weaponLocalPoint(
+    origin,
+    center.side + point.side,
+    center.forward + layer * thickness / 2,
+    center.z + point.z,
+    roll,
+  )));
+  const back = layers[0];
+  const front = layers[1];
+  faces.push({ points: front, color, shade, material: 'steel' });
+  faces.push({ points: [...back].reverse(), color, shade: shade * .58, material: 'steel' });
+  for (let index = 0; index < profile.length; index += 1) {
+    const next = (index + 1) % profile.length;
+    faces.push({ points: [front[index], front[next], back[next], back[index]], color, shade: shade * (.68 + (index % 2) * .12), material: 'steel' });
   }
 }
 
@@ -4705,24 +5191,85 @@ function drawWand(now) {
 function spawnNinjaStar() {
   const direction = playerAimDirection();
   const origin = { x: state.player.x + direction.x * .5, y: state.player.y + direction.y * .5, z: EYE_HEIGHT + direction.z * .05 };
-  makeProjectile('ninja-star', origin, { x: direction.x * 11.5, y: direction.y * 11.5, z: direction.z * 11.5 }, { color: '#e6d29a', damage: state.weapon.attackDamage || WEAPON_LOADOUTS.stars.damage, radius: .16, lifetime: 2.2, collisionHeight: .72, source: 'player', spell: false, trailSize: .8 });
+  makeProjectile('ninja-star', origin, { x: direction.x * 11.5, y: direction.y * 11.5, z: direction.z * 11.5 }, { color: '#e6d29a', damage: state.weapon.attackDamage || WEAPON_LOADOUTS.stars.damage, radius: .16, lifetime: 2.2, collisionHeight: .72, knockback: WEAPON_LOADOUTS.stars.knockback, critChance: WEAPON_LOADOUTS.stars.critChance + (state.weapon.comboStep === 3 ? .1 : 0), critMultiplier: WEAPON_LOADOUTS.stars.critMultiplier, source: 'player', spell: false, trailSize: .8 });
   showToast(`Ninja star thrown · combo ${state.weapon.comboStep || 1}.`, 'good');
 }
 function spawnCrossbowArrow() {
   const direction = playerAimDirection();
   const origin = { x: state.player.x + direction.x * .52, y: state.player.y + direction.y * .52, z: EYE_HEIGHT + direction.z * .06 };
-  makeProjectile('arrow', origin, { x: direction.x * 12, y: direction.y * 12, z: direction.z * 12 }, { color: '#f0d38d', damage: state.weapon.attackDamage || WEAPON_LOADOUTS.crossbow.damage, radius: .12, lifetime: 1.7, collisionHeight: .72, source: 'player', spell: false });
+  makeProjectile('arrow', origin, { x: direction.x * 12, y: direction.y * 12, z: direction.z * 12 }, { color: '#f0d38d', damage: state.weapon.attackDamage || WEAPON_LOADOUTS.crossbow.damage, radius: .12, lifetime: 1.7, collisionHeight: .72, knockback: WEAPON_LOADOUTS.crossbow.knockback, critChance: WEAPON_LOADOUTS.crossbow.critChance + (state.weapon.comboStep === 3 ? .1 : 0), critMultiplier: WEAPON_LOADOUTS.crossbow.critMultiplier, source: 'player', spell: false });
   showToast(`Crossbow bolt released · combo ${state.weapon.comboStep || 1}.`, 'good');
 }
 function spawnWandFireball() {
   const direction = playerAimDirection();
   const color = wandColorForSpell();
   const origin = { x: state.player.x + direction.x * .58, y: state.player.y + direction.y * .58, z: EYE_HEIGHT + direction.z * .1 };
-  makeProjectile('wand-fireball', origin, { x: direction.x * 7.1, y: direction.y * 7.1, z: direction.z * 7.1 }, { color, damage: state.weapon.attackDamage || WEAPON_LOADOUTS.wand.damage, radius: .23, lifetime: 2.8, aoe: 1.55, trailSize: 1, orbit: 0, collisionHeight: .88, source: 'player', spell: false });
+  makeProjectile('wand-fireball', origin, { x: direction.x * 7.1, y: direction.y * 7.1, z: direction.z * 7.1 }, { color, damage: state.weapon.attackDamage || WEAPON_LOADOUTS.wand.damage, radius: .23, lifetime: 2.8, aoe: 1.55, knockback: WEAPON_LOADOUTS.wand.knockback, stagger: .18, critChance: WEAPON_LOADOUTS.wand.critChance + (state.weapon.comboStep === 3 ? .08 : 0), critMultiplier: WEAPON_LOADOUTS.wand.critMultiplier, trailSize: 1, orbit: 0, collisionHeight: .88, source: 'player', spell: false });
   showToast(`${weaponDefinition().label} launched ${wandSpellName()} fire · combo ${state.weapon.comboStep || 1}.`, 'good');
   state.impactBursts.push({ x: state.player.x + direction.x * .42, y: state.player.y + direction.y * .42, z: EYE_HEIGHT, elapsed: 0, duration: .28, color, radius: .32, style: 'weapon-cast' });
 }
 function drawCrossbowArrow() { /* Arrows are rendered from state.projectiles in world space. */ }
+
+function drawSword(now) {
+  const { active, t, definition } = weaponMotion();
+  const moving = state.weapon.moving;
+  const bob = moving ? Math.sin(state.weapon.bobPhase) * .018 : Math.sin(now / 680) * .006;
+  const rawProgress = active ? clamp(t / definition.duration, 0, 1) : 0;
+  const progress = rawProgress < .5
+    ? 4 * rawProgress * rawProgress * rawProgress
+    : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+
+  // Sword coordinates are camera-local: negative side is screen-left and
+  // positive z is up. The authored endpoints make the attack unmistakable:
+  // high/right at the start, then low/left at the follow-through.
+  const poseAt = (sample) => ({
+    angle: active ? lerp(-.92, 1.08, sample) : -.14,
+    origin: {
+      side: active ? lerp(.54, -.48, sample) : .42,
+      forward: active ? lerp(1.28, 1.0, sample) : 1.16,
+      z: (active ? lerp(.1, -.34, sample) : -.14) + bob + (active ? Math.sin(sample * Math.PI) * .045 : 0),
+    },
+  });
+  const pose = poseAt(progress);
+  const origin = pose.origin;
+  const sweepAngle = pose.angle;
+  const faces = [];
+
+  addWeaponBox(faces, origin, { side: 0, forward: .03, z: .14 }, [.11, .15, .38], sweepAngle, '#3a241b', .98, 'leather');
+  addWeaponBox(faces, origin, { side: 0, forward: .05, z: .35 }, [.34, .16, .075], sweepAngle, '#b8f0e2', 1.02, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .03, z: -.08 }, [.16, .16, .1], sweepAngle, '#8d633d', .96, 'steel');
+  addSwordBladeCamera(faces, origin, { side: 0, forward: .1, z: .39 }, .17, 1.42, .045, sweepAngle, '#cfe8dc', 1.05);
+  addWeaponBox(faces, origin, { side: 0, forward: .08, z: 1.08 }, [.12, .06, .045], sweepAngle, '#f4fff0', 1.12, 'steel');
+  renderFaces(faces, 1, true);
+
+  const tip = projectCameraPoint(weaponLocalPoint(origin, 0, .1, .39 + 1.42, sweepAngle));
+  if (!tip) return;
+  ctx.save();
+  ctx.globalAlpha = .2 + (active ? .24 : 0);
+  ctx.strokeStyle = '#b8f0e2';
+  ctx.shadowBlur = 16;
+  ctx.shadowColor = '#b8f0e2';
+  ctx.lineWidth = Math.max(1, canvas.height * .0022);
+  ctx.beginPath();
+  ctx.arc(tip.x, tip.y, Math.max(4, canvas.height * (.018 + (active ? .012 : 0))), 0, TAU);
+  ctx.stroke();
+
+  if (active && !settings.reducedMotion) {
+    ctx.globalAlpha = .16 + Math.sin(progress * Math.PI) * .28;
+    ctx.lineWidth = Math.max(1, canvas.height * .0042);
+    ctx.beginPath();
+    const trailStart = Math.max(0, progress - .36);
+    for (let sample = trailStart; sample <= progress; sample += .04) {
+      const samplePose = poseAt(sample);
+      const sampleTip = projectCameraPoint(weaponLocalPoint(samplePose.origin, 0, .1, .39 + 1.42, samplePose.angle));
+      if (!sampleTip) continue;
+      if (sample === trailStart) ctx.moveTo(sampleTip.x, sampleTip.y);
+      else ctx.lineTo(sampleTip.x, sampleTip.y);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
 function drawCrossbow(now) {
   const { active, t } = weaponMotion();
@@ -4760,6 +5307,7 @@ function drawWeapon(now) {
   if (state.weapon.type === 'stars') { drawNinjaStars(now); return; }
   if (state.weapon.type === 'crossbow') { drawCrossbow(now); return; }
   if (state.weapon.type === 'wand') { drawWand(now); return; }
+  if (state.weapon.type === 'blade') { drawSword(now); return; }
   drawNinjaStars(now);
 }
 
@@ -5227,21 +5775,54 @@ function damagePlayer(source, options = {}) {
 }
 function damageHostile(target, amount, options = {}) {
   if (!target || target.dead) return false;
+  const baseAmount = Math.max(0, Number(amount || 0));
+  const critChance = clamp(Number(options.critChance || 0), 0, .85);
+  const critical = !target.boss && Math.random() < critChance;
+  const multiplier = critical ? Number(options.critMultiplier || 1.7) : 1;
+  const finalAmount = Math.max(1, Math.round(baseAmount * multiplier));
   if (target.boss && target.shield > 0) {
-    target.shield = Math.max(0, target.shield - amount * .8);
-    target.hitTime = .22;
-    state.impactBursts.push({ x: target.x, y: target.y, z: 1.4, elapsed: 0, duration: .42, color: '#c7f4e7', radius: 1.45, style: 'shield' });
+    const shieldDamage = Math.max(1, Math.round(finalAmount * .8));
+    target.shield = Math.max(0, target.shield - shieldDamage);
+    target.hitTime = .28;
+    target.hitFlash = .34;
+    state.impactBursts.push({ x: target.x, y: target.y, z: 1.4, elapsed: 0, duration: .52, color: '#c7f4e7', radius: 1.45 + (critical ? .2 : 0), style: 'shield' });
+    spawnDamageNumber(target.x, target.y, hostileAimHeight(target) + .2, `-${shieldDamage}`, '#b8f0e2', { shield: true });
     if (state.now - shieldFeedbackAt > 360) { showHitMarker('SHIELDED', 'shielded'); shieldFeedbackAt = state.now; }
-    if (target.shield <= 0) { showHitMarker('SHIELD BREAK', 'hit'); showToast('The Archon shield shatters.', 'good'); }
+    if (target.shield <= 0) {
+      showHitMarker('SHIELD BREAK', 'hit');
+      showToast('The Archon shield shatters.', 'good');
+      state.shakeTime = settings.reducedMotion ? .16 : .5;
+      spawnParticles(target.x, target.y, 1.3, ['#c7f4e7', '#fff1b0'], settings.reducedMotion ? 8 : 22, { speed: 1.8, life: .65, size: .7, upward: .55, spread: TAU, glow: 17, shape: 'rune' });
+    }
     return false;
   }
-  target.hp -= amount;
-  target.hitTime = .28;
+  target.hp -= finalAmount;
+  target.hitTime = critical ? .42 : .28;
+  target.hitFlash = critical ? .48 : .3;
   target.alerted = true;
+  const stagger = Number(options.stagger ?? options.stun ?? (options.source === 'spell' ? .18 : .14));
+  if (stagger > 0) target.staggerTimer = Math.max(target.staggerTimer || 0, target.boss ? stagger * .35 : stagger);
   if (options.stun) target.stunTimer = Math.max(target.stunTimer || 0, options.stun);
-  spawnDamageNumber(target.x, target.y, hostileAimHeight(target) + .18, Math.max(1, Math.round(amount)), target.boss ? '#fff1b0' : '#f0ddaf');
-  state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: .38, color: target.boss ? '#c7f4e7' : (target.color || '#d8c18b'), radius: target.boss ? .95 : .48, style: 'hit' });
+  const direction = options.knockbackDirection || { x: target.x - state.player.x, y: target.y - state.player.y };
+  const directionLength = Math.hypot(direction.x, direction.y) || 1;
+  const knockback = target.boss ? 0 : Number(options.knockback || 0) * (critical ? 1.25 : 1);
+  if (knockback > 0) {
+    target.knockbackX = (target.knockbackX || 0) + direction.x / directionLength * knockback * 5.2;
+    target.knockbackY = (target.knockbackY || 0) + direction.y / directionLength * knockback * 5.2;
+  }
+  const label = options.label || (options.source === 'spell' ? 'SPELL HIT' : 'HIT');
+  spawnDamageNumber(target.x, target.y, hostileAimHeight(target) + .18, `-${finalAmount}`, critical ? '#fff1b0' : (target.boss ? '#f0ddaf' : '#f0ddaf'), { critical });
+  const hitColor = options.color || (target.boss ? '#c7f4e7' : (target.color || '#d8c18b'));
+  state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: critical ? .62 : .42, color: hitColor, radius: (target.boss ? 1.05 : .56) + (critical ? .28 : 0), style: critical ? 'critical' : (options.source === 'spell' ? 'spell-hit' : 'hit') });
+  if (stagger > 0) state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target) + .12, elapsed: 0, duration: .3, color: critical ? '#fff1b0' : hitColor, radius: .32, style: 'stagger' });
+  state.shakeTime = Math.max(state.shakeTime, settings.reducedMotion ? (critical ? .1 : .05) : (critical ? .32 : .12));
   playBoneHitSound();
+  if (critical) {
+    showHitMarker(`CRITICAL · ${finalAmount}`, 'crit');
+    spawnParticles(target.x, target.y, hostileAimHeight(target), ['#fff1b0', hitColor], settings.reducedMotion ? 4 : 10, { speed: 1.2, life: .46, size: .5, upward: .2, spread: TAU, glow: 18, shape: 'star' });
+  } else {
+    showHitMarker(target.boss ? 'ARCHON HIT' : label, target.boss ? 'crit' : 'hit');
+  }
   if (target.hp <= 0) defeatHostile(target);
   return true;
 }
@@ -5597,8 +6178,18 @@ function updateEnemies(delta) {
     if (enemy.roomIndex !== state.room && !enemy.boss) continue;
     enemy.cooldown = Math.max(0, enemy.cooldown - delta);
     enemy.hitTime = Math.max(0, enemy.hitTime - delta);
+    enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - delta);
+    enemy.staggerTimer = Math.max(0, (enemy.staggerTimer || 0) - delta);
     enemy.stunTimer = Math.max(0, (enemy.stunTimer || 0) - delta);
-    if (enemy.stunTimer > 0) continue;
+    const recoilX = enemy.knockbackX || 0;
+    const recoilY = enemy.knockbackY || 0;
+    if (Math.abs(recoilX) + Math.abs(recoilY) > .01) {
+      if (canStand(enemy.x + recoilX * delta, enemy.y)) enemy.x += recoilX * delta;
+      if (canStand(enemy.x, enemy.y + recoilY * delta)) enemy.y += recoilY * delta;
+      enemy.knockbackX = recoilX * Math.pow(.035, delta);
+      enemy.knockbackY = recoilY * Math.pow(.035, delta);
+    }
+    if (enemy.stunTimer > 0 || enemy.staggerTimer > 0) continue;
 
     if (enemy.telegraph?.type === 'ranged') {
       enemy.telegraph.elapsed += delta;
@@ -5717,6 +6308,8 @@ function updateBoss(delta) {
   boss.pulse += delta * (boss.phase === 3 ? 2.4 : 1.4);
   if (boss.dead) { boss.deathTime += delta; return; }
   boss.hitTime = Math.max(0, boss.hitTime - delta);
+  boss.hitFlash = Math.max(0, (boss.hitFlash || 0) - delta);
+  boss.staggerTimer = Math.max(0, (boss.staggerTimer || 0) - delta);
   boss.stunTimer = Math.max(0, (boss.stunTimer || 0) - delta);
   const nextPhase = bossPhaseForHp(boss);
   if (nextPhase !== boss.phase) {
@@ -5730,7 +6323,7 @@ function updateBoss(delta) {
     showToast(`${BOSS_PHASES[nextPhase - 1].name} — THE ARCHON RECONFIGURES.`, 'danger');
     playTone(82, .32, 'sawtooth', .035); playTone(164, .45, 'triangle', .026, .1);
   }
-  if (boss.stunTimer > 0) return;
+  if (boss.stunTimer > 0 || boss.staggerTimer > 0) return;
   const dx = state.player.x - boss.x;
   const dy = state.player.y - boss.y;
   const distance = Math.hypot(dx, dy);
@@ -5840,32 +6433,48 @@ function findAimTarget(range = weaponDefinition().range, aim = weaponDefinition(
   }
   return target;
 }
-function hitTarget() {
-  const target = findAimTarget();
+function findMeleeTarget() {
   const definition = weaponDefinition();
+  let target = null;
+  let bestScore = Infinity;
+  for (const enemy of allHostiles()) {
+    if (enemy.dead) continue;
+    const profile = enemyProfile(enemy);
+    const dx = enemy.x - state.player.x;
+    const dy = enemy.y - state.player.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > definition.range || !hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y)) continue;
+    const camera = cameraPoint(enemy.x, enemy.y, profile.aimHeight);
+    if (camera.forward <= .05) continue;
+    const yawError = Math.abs(Math.atan2(camera.side, camera.forward));
+    const pitchError = Math.abs(Math.atan2(profile.aimHeight - EYE_HEIGHT, camera.forward) - state.player.pitch);
+    if (yawError > definition.aim || pitchError > definition.pitch) continue;
+    const score = yawError * 1.55 + pitchError * .75 + distance * .1;
+    if (score < bestScore) { bestScore = score; target = enemy; }
+  }
+  return target;
+}
+function hitTarget() {
+  const definition = weaponDefinition();
+  const target = definition.melee ? findMeleeTarget() : findAimTarget();
   const damage = state.weapon.attackDamage || definition.damage;
   const comboStep = state.weapon.comboStep || 1;
   if (!target) {
     showHitMarker('MISS', 'miss');
-    state.impactBursts.push({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .2, color: '#b9a57e', radius: .22, style: 'miss' });
+    state.impactBursts.push({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .2, color: definition.impactColor || '#b9a57e', radius: .22, style: definition.melee ? 'melee-miss' : 'miss' });
     showToast(`${definition.label} found empty air.`);
     return;
   }
-  const damaged = damageHostile(target, damage);
+  const direction = { x: target.x - state.player.x, y: target.y - state.player.y };
+  const damaged = damageHostile(target, damage, { source: 'weapon', label: `HIT · COMBO ${comboStep}`, color: definition.impactColor || '#d8c18b', knockback: definition.knockback * (1 + (comboStep - 1) * .25), knockbackDirection: direction, stagger: comboStep === 3 ? .3 : .16, critChance: (definition.critChance || .08) + (comboStep === 3 ? .12 : 0), critMultiplier: definition.critMultiplier || 1.7 });
   if (!damaged) return;
-  showHitMarker(target.boss ? 'ARCHON HIT' : `HIT · COMBO ${comboStep}`, target.boss ? 'crit' : 'hit');
-  state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: .32, color: definition.impactColor || '#d8c18b', radius: .42 + comboStep * .08, style: 'weapon-hit' });
-  const direction = Math.atan2(target.y - state.player.y, target.x - state.player.x);
-  const knockback = definition.knockback * (1 + (comboStep - 1) * .25);
-  const nx = target.x + Math.cos(direction) * knockback;
-  const ny = target.y + Math.sin(direction) * knockback;
-  if (!target.boss) { if (canStand(nx, target.y)) target.x = nx; if (canStand(target.x, ny)) target.y = ny; }
+  state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: comboStep === 3 ? .56 : .32, color: definition.impactColor || '#d8c18b', radius: .42 + comboStep * .1, style: definition.melee ? (comboStep === 3 ? 'blade-finisher' : 'blade-hit') : comboStep === 3 ? 'finisher' : 'weapon-hit' });
   if (!target.dead) showToast(`${definition.label} struck ${target.displayName || target.name}.`, 'good');
   updateHud();
 }
 function projectileTargetHit(projectile, target) {
   if (projectile.spell) spawnSpellImpactParticles(projectile.spellKind, target.x, target.y, hostileAimHeight(target), projectile.color, projectile.aoe ? 1.08 : .9);
-  const damaged = damageHostile(target, projectile.damage, { stun: projectile.stun });
+  const damaged = damageHostile(target, projectile.damage, { stun: projectile.stun, stagger: projectile.stagger, knockback: projectile.knockback, knockbackDirection: { x: projectile.vx, y: projectile.vy }, critChance: projectile.critChance, critMultiplier: projectile.critMultiplier, source: projectile.spell ? 'spell' : 'weapon', color: projectile.color, label: projectile.spell ? 'SPELL HIT' : 'HIT' });
   if (!damaged) return;
   showHitMarker(target.boss ? 'ARCHON HIT' : 'HIT', target.boss ? 'crit' : 'hit');
   const chainSegments = [];
@@ -5876,7 +6485,7 @@ function projectileTargetHit(projectile, target) {
       .slice(0, projectile.chainTargets);
     let previous = target;
     for (const other of chained) {
-      damageHostile(other, projectile.damage * .5, { stun: projectile.stun * .72 });
+      damageHostile(other, projectile.damage * .5, { stun: projectile.stun * .72, stagger: projectile.stagger, knockback: projectile.knockback * .65, knockbackDirection: { x: other.x - target.x, y: other.y - target.y }, critChance: projectile.critChance * .6, critMultiplier: projectile.critMultiplier, source: 'spell', color: projectile.color, label: 'CHAIN HIT' });
       chainSegments.push({ start: { x: previous.x, y: previous.y, z: hostileAimHeight(previous) }, end: { x: other.x, y: other.y, z: hostileAimHeight(other) } });
       spawnSpellImpactParticles(projectile.spellKind, other.x, other.y, hostileAimHeight(other), projectile.color, .72);
       state.impactBursts.push({ x: other.x, y: other.y, z: hostileAimHeight(other), elapsed: 0, duration: .62, color: projectile.color, radius: .85 });
@@ -5885,7 +6494,7 @@ function projectileTargetHit(projectile, target) {
     if (chainSegments.length) state.activeSpellEffects.push({ kind: 'chain', elapsed: 0, duration: .8, color: projectile.color, segments: chainSegments });
   } else if (projectile.aoe > 0) {
     for (const other of allHostiles()) {
-      if (other !== target && Math.hypot(other.x - target.x, other.y - target.y) < projectile.aoe) damageHostile(other, projectile.damage * .42, { stun: projectile.stun * .55 });
+      if (other !== target && Math.hypot(other.x - target.x, other.y - target.y) < projectile.aoe) damageHostile(other, projectile.damage * .42, { stun: projectile.stun * .55, stagger: projectile.stagger, knockback: projectile.knockback * .7, knockbackDirection: { x: other.x - target.x, y: other.y - target.y }, critChance: projectile.critChance * .55, critMultiplier: projectile.critMultiplier, source: projectile.spell ? 'spell' : 'weapon', color: projectile.color, label: 'SPLASH HIT' });
     }
   }
   state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: .55, color: projectile.color, radius: projectile.aoe || .65 });
@@ -6205,6 +6814,12 @@ function setKey(event, down) {
   if (down && !event.repeat && key === 'q') { event.preventDefault(); castSpell(); return; }
   if (down && !event.repeat && key === 'z') { event.preventDefault(); cycleSpell(-1); return; }
   if (down && !event.repeat && key === 'x') { event.preventDefault(); cycleSpell(1); return; }
+  if (down && !event.repeat && ['1', '2', '3', '4'].includes(key)) {
+    event.preventDefault();
+    const weaponTypes = { '1': 'stars', '2': 'crossbow', '3': 'wand', '4': 'blade' };
+    setWeapon(weaponTypes[key]);
+    return;
+  }
   const movementKeys = ['w', 'a', 's', 'd', 'shift', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
   if (!movementKeys.includes(key)) return;
   event.preventDefault();
