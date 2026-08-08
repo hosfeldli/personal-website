@@ -136,7 +136,7 @@ let shieldFeedbackAt = -Infinity;
 
 const rooms = [
   {
-    id: 'entrance', floor: 'FLOOR 01', title: 'THE ENTRANCE HALL', shortTitle: 'Entrance Hall', subtitle: 'Identity, scope, and the work behind the map.', color: '#6ce0c2', material: 'stone', levelType: 'grand hall', palette: ['#8fc7bd', '#cfe2c2', '#9ab991'],
+    id: 'entrance', floor: 'FLOOR 01', title: 'THE ENTRANCE HALL', shortTitle: 'Entrance Hall', subtitle: 'Identity, scope, and the work behind the map.', fieldNote: 'Liam is a Technical Consultant at Manhattan Associates, translating complex transportation systems into work people can run.', color: '#6ce0c2', material: 'stone', levelType: 'grand hall', palette: ['#8fc7bd', '#cfe2c2', '#9ab991'],
     intro: 'Liam Hosfeld is a Technical Consultant in Atlanta, Georgia, translating operational complexity into systems people can actually run.',
     details: [
       'Current class: Technical Consultant at Manhattan Associates.',
@@ -154,7 +154,7 @@ const rooms = [
     enemies: []
   },
   {
-    id: 'trophy', floor: 'FLOOR 02', title: 'THE TROPHY ROOM', shortTitle: 'Trophy Room', subtitle: 'Proof gathered on the journey.', color: '#e7ad67', material: 'wood', levelType: 'vault gallery', palette: ['#0c0704', '#3b2112', '#120805'],
+    id: 'trophy', floor: 'FLOOR 02', title: 'THE TROPHY ROOM', shortTitle: 'Trophy Room', subtitle: 'Proof gathered on the journey.', fieldNote: 'He supports five enterprise accounts and works with production data at more than one million tracking messages each month.', color: '#e7ad67', material: 'wood', levelType: 'vault gallery', palette: ['#0c0704', '#3b2112', '#120805'],
     intro: 'Customer-facing ownership at production scale, with measurable impact across data, billing, documentation, and cloud operations.',
     details: ['5 enterprise accounts supported, representing roughly 50% of the team’s managed contract value.', '1M+ tracking messages handled each month across production systems.', 'Approximately $40K in Azure savings identified through analysis and translated into a Finance-ready decision.', '40+ customer endpoints mapped through a reusable publishing and validation workflow.', 'Enterprise partners and ecosystems have included organizations such as Sysco, US Foods, BJ’s Wholesale Club, H&M Trucking, and Guest Supply.'],
     tags: ['5 accounts', '1M+ messages / month', '~$40K recovered', '40+ endpoints'],
@@ -173,7 +173,7 @@ const rooms = [
     ]
   },
   {
-    id: 'quests', floor: 'FLOOR 03', title: 'THE QUEST BOARD', shortTitle: 'Quest Board', subtitle: 'Selected problems, investigated and made repeatable.', color: '#c58de6', material: 'stone', levelType: 'crossroads', palette: ['#0a0508', '#2e1d2b', '#0b070b'],
+    id: 'quests', floor: 'FLOOR 03', title: 'THE QUEST BOARD', shortTitle: 'Quest Board', subtitle: 'Selected problems, investigated and made repeatable.', fieldNote: 'His pattern is simple: investigate the evidence, clarify the requirement, automate the repeatable path, and measure the result.', color: '#c58de6', material: 'stone', levelType: 'crossroads', palette: ['#0a0508', '#2e1d2b', '#0b070b'],
     intro: 'Four representative quests show how Liam moves from ambiguity to an operating improvement.',
     details: ['Billing clarity: turned high-volume message data into a report that helped Finance understand usage and recover approximately $40K.', 'Integration guidance: built a publication and validation workflow that made documentation easier to ship across 40+ customer endpoints.', 'Shipment integrity: investigated message and status relationships to diagnose a shipment-status issue and produce a defensible recommendation.', 'Support search: built an SSO search tool for 50K+ shipper records so live support could find the right relationship faster.'],
     tags: ['Investigate', 'Clarify', 'Automate', 'Measure'],
@@ -192,7 +192,7 @@ const rooms = [
     ]
   },
   {
-    id: 'chronicle', floor: 'FLOOR 04', title: 'THE CHRONICLE', shortTitle: 'Chronicle', subtitle: 'Experience that supports the proof.', color: '#77a9e8', material: 'stone', levelType: 'archive maze', palette: ['#05080c', '#1d2b3a', '#06090d'],
+    id: 'chronicle', floor: 'FLOOR 04', title: 'THE CHRONICLE', shortTitle: 'Chronicle', subtitle: 'Experience that supports the proof.', fieldNote: 'His route runs from Cloud Services and systems operations into customer-facing technical consulting.', color: '#77a9e8', material: 'stone', levelType: 'archive maze', palette: ['#05080c', '#1d2b3a', '#06090d'],
     intro: 'A progression from technical delivery to analytics, integrations, automation, and cross-functional ownership.',
     details: ['Manhattan Associates — Consultant, May 2025 to present: own customer-facing work and coordinate across Operations, Cloud Services, Finance, and R&D.', 'Manhattan Associates — Cloud Services Intern / Co-op, May 2023 to May 2025: built the 50K+ shipper-record SSO search tool and Azure savings analysis.', 'Soliant Healthcare — Systems Operations Intern, May to August 2022: automated account-setup work and found duplicate accounts tied to roughly $36K in annual savings.', 'Georgia Tech Research Institute — Research Intern, ATAS Lab, May to August 2020: built C# integration components for robotic object-detection research.'],
     tags: ['Manhattan Associates', 'Soliant Healthcare', 'GTRI', 'Customer delivery'],
@@ -211,7 +211,7 @@ const rooms = [
     ]
   },
   {
-    id: 'character', floor: 'FLOOR 05', title: 'THE CHARACTER SHEET', shortTitle: 'Character Sheet', subtitle: 'Tools carried into the dungeon.', color: '#e3c66e', material: 'wood', levelType: 'craft workshop', palette: ['#0d0703', '#402613', '#120805'],
+    id: 'character', floor: 'FLOOR 05', title: 'THE CHARACTER SHEET', shortTitle: 'Character Sheet', subtitle: 'Tools carried into the dungeon.', fieldNote: 'His toolkit crosses Oracle SQL, BigQuery, Power BI, Python, PowerShell, integrations, and automation.', color: '#e3c66e', material: 'wood', levelType: 'craft workshop', palette: ['#0d0703', '#402613', '#120805'],
     intro: 'A systems-minded toolkit spanning operational data, integration evidence, automation, and stakeholder delivery.',
     details: ['Education: University of Georgia, B.S. Computer Systems Engineering, GPA 3.83, May 2025.', 'Operational analytics: Oracle SQL, BigQuery, Power BI, DAX, data modeling, billing, and reporting.', 'Functional delivery: requirements, incident investigation, technical demos, process mapping, stakeholder coordination, and documentation.', 'Systems and integration: TMS, MIF, EDI/X12, AS2, SFTP, message troubleshooting, and event troubleshooting.', 'Automation and delivery: Python, PowerShell, Perl, Bash, JavaScript, C#, Git, and CI/CD.'],
     tags: ['UGA · 3.83 GPA', 'Oracle SQL', 'Python / PowerShell / Perl', 'EDI · AS2 · SFTP'],
@@ -230,7 +230,7 @@ const rooms = [
     ]
   },
   {
-    id: 'campfire', floor: 'FLOOR 06', title: 'THE CAMPFIRE', shortTitle: 'Campfire', subtitle: 'Plants, bread, and rhythm.', color: '#db8872', material: 'stone', levelType: 'garden hearth', palette: ['#120704', '#4a2418', '#100604'],
+    id: 'campfire', floor: 'FLOOR 06', title: 'THE CAMPFIRE', shortTitle: 'Campfire', subtitle: 'Plants, bread, and rhythm.', fieldNote: 'Away from the screen, Liam bakes bread, keeps plants alive, and trades drums for bass guitar.', color: '#db8872', material: 'stone', levelType: 'garden hearth', palette: ['#120704', '#4a2418', '#100604'],
     intro: 'Away from the screen, Liam likes slow, hands-on work: keeping plants alive, baking bread, and learning bass after years behind a drum kit.',
     details: ['Baking: long ferments, shaping, scoring, and the small improvements that show up in the next loaf.', 'Plants: light, propagation, watering routines, and building a greener home one cutting at a time.', 'Music: drums first, bass now — the same groove from a different seat.', 'Home base: Atlanta, Georgia.'],
     tags: ['Baking', 'Plants', 'Drums', 'Bass guitar', 'Atlanta'],
@@ -888,29 +888,68 @@ const groundCache = new Array(GROUND_CACHE_WIDTH * GROUND_CACHE_HEIGHT);
 
 function computeGroundColor(x, y) {
   const room = materialRoomAtX(x);
-  const roomSeed = roomIndexAtX(x);
-  const n = valueNoise(x * .82, y * .82, roomSeed + 41) * .72 + valueNoise(x * 1.64, y * 1.64, roomSeed + 59) * .28;
-  if (roomIndexAtX(x) === 0 && room.material !== 'wood') {
-    const tile = 1 - smoothstep(.025, .09, Math.min(fract(x * .92), 1 - fract(x * .92), fract(y * .92), 1 - fract(y * .92)));
-    const variation = n * 22 - tile * 18;
-    return { r: 104 + variation, g: 136 + variation, b: 115 + variation * .78 };
+  const roomIndex = roomIndexAtX(x);
+  const seed = roomIndex + 41;
+  const broad = valueNoise(x * .34, y * .34, seed + 17);
+  const n = valueNoise(x * .82, y * .82, seed) * .58
+    + valueNoise(x * 1.7, y * 1.7, seed + 23) * .27
+    + valueNoise(x * 3.5, y * 3.5, seed + 47) * .15;
+
+  if (roomIndex === 0 && room.material !== 'wood') {
+    const localX = fract(x * .92);
+    const localY = fract(y * .92);
+    const edge = Math.min(localX, 1 - localX, localY, 1 - localY);
+    const grout = 1 - smoothstep(.018, .095, edge);
+    const organic = valueNoise(x * .42, y * .42, seed + 73);
+    const moss = smoothstep(.52, .82, organic) * (1 - grout * .7);
+    const variation = n * 19 + broad * 12 - grout * 24;
+    return {
+      r: 83 + variation - moss * 10,
+      g: 111 + variation + moss * 18,
+      b: 89 + variation * .72 + moss * 7,
+    };
   }
+
   if (room.material === 'wood') {
     const plank = Math.floor(x * .82);
-    const warped = y * 9.5 + Math.sin(x * 2.1) * .72 + n * 2.2;
+    const plankTone = valueNoise(plank * .22, 0, seed + 61);
+    const warped = y * 9.5 + Math.sin(x * 2.1 + broad * 2) * .72 + n * 2.2;
     const grain = .5 + .5 * Math.sin(warped * 1.45 + Math.sin(y * 1.8) * .5);
     const fine = .5 + .5 * Math.sin(warped * 8.4 + x * 3.1);
     const seam = 1 - smoothstep(0, .065, Math.abs(fract(x * .82) - .5));
-    const knot = Math.exp(-Math.pow(Math.hypot(fract(x * .32) - .38, fract(y * .24) - .52) / .15, 2));
-    return { r: 66 + grain * 48 + fine * 13 - seam * 29 - knot * 21 + (plank % 2) * 3, g: 37 + grain * 29 + fine * 8 - seam * 16 - knot * 12, b: 19 + grain * 16 + fine * 4 - seam * 8 - knot * 7 };
+    const knotNoise = valueNoise(x * .32, y * .24, seed + 91);
+    const knot = Math.exp(-Math.pow((knotNoise - .54) / .12, 2)) * (.35 + .65 * valueNoise(x * .7, y * .7, seed + 97));
+    const warmth = plankTone * 12 + broad * 9;
+    return {
+      r: 62 + warmth + grain * 48 + fine * 13 - seam * 31 - knot * 24 + (plank % 2) * 4,
+      g: 34 + warmth * .58 + grain * 29 + fine * 8 - seam * 17 - knot * 13,
+      b: 17 + warmth * .24 + grain * 16 + fine * 4 - seam * 8 - knot * 8,
+    };
   }
-  const localX = fract(x * .92); const localY = fract(y * .92);
+
+  const localX = fract(x * .92);
+  const localY = fract(y * .92);
   const edge = Math.min(localX, 1 - localX, localY, 1 - localY);
-  const grout = 1 - smoothstep(.025, .09, edge);
-  const vein = Math.pow(clamp(1 - Math.abs(Math.sin(x * 1.7 + y * .83 + n * 4.8)), 0, 1), 12);
-  const crack = Math.pow(clamp(1 - Math.abs(Math.sin(x * 6.3 - y * 4.2 + n * 10)), 0, 1), 24);
-  const variation = n * 25 + hash2(Math.floor(x), Math.floor(y), roomSeed + 19) * 10 - grout * 29 - vein * 17 - crack * 22;
-  return { r: 62 + variation, g: 64 + variation, b: 59 + variation * .92 };
+  const grout = 1 - smoothstep(.018, .085, edge);
+  const slab = valueNoise(x * .31, y * .31, seed + 71);
+  const mottling = valueNoise(x * 2.15, y * 2.15, seed + 83);
+  const vein = Math.pow(clamp(1 - Math.abs(Math.sin(x * 1.7 + y * .83 + broad * 5.2)), 0, 1), 12);
+  const crack = Math.pow(clamp(1 - Math.abs(Math.sin(x * 6.3 - y * 4.2 + mottling * 10)), 0, 1), 24);
+  const palettes = [
+    [71, 73, 66],
+    [70, 61, 53],
+    [53, 50, 61],
+    [52, 64, 76],
+    [68, 56, 51],
+    [49, 65, 66],
+  ];
+  const palette = palettes[Math.min(roomIndex, palettes.length - 1)];
+  const variation = slab * 25 + mottling * 18 + n * 13 - grout * 31 - vein * 13 - crack * 23;
+  return {
+    r: palette[0] + variation,
+    g: palette[1] + variation * .96,
+    b: palette[2] + variation * .9,
+  };
 }
 
 function buildGroundCache() {
@@ -1078,6 +1117,32 @@ function showHitMarker(label = 'HIT', tone = 'hit') {
   hitMarkerTimeout = window.setTimeout(() => { hitMarker.hidden = true; }, settings.reducedMotion ? 360 : 620);
 }
 
+function spawnScrollDropEffect(x, y, color) {
+  const accent = color || '#e7ad67';
+  const count = settings.reducedMotion ? 8 : 22;
+  spawnParticles(x, y, .24, [accent, '#d6b57b', '#fff1b0'], count, {
+    speed: 1.25,
+    life: 1.05,
+    size: .82,
+    upward: .92,
+    spread: TAU,
+    gravity: .18,
+    drag: .94,
+    glow: 18,
+    trail: true,
+  });
+  spawnParticles(x, y, .29, [accent, '#f7e2ac'], settings.reducedMotion ? 3 : 8, {
+    speed: .72,
+    life: .82,
+    size: 1.25,
+    upward: .56,
+    spread: TAU,
+    gravity: -.06,
+    drag: .97,
+    glow: 16,
+    shape: 'ring',
+  });
+}
 function spawnParticles(x, y, z, color = '#e7ad67', count = 8, options = {}) {
   if (settings.reducedMotion) count = Math.ceil(count * .32);
   const maxParticles = settings.reducedMotion ? 220 : 520;
@@ -1151,6 +1216,9 @@ function drawParticles() {
     }
     if (particle.shape === 'dot') {
       ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, TAU); ctx.fill();
+    } else if (particle.shape === 'ring') {
+      ctx.lineWidth = Math.max(1, radius * .42);
+      ctx.beginPath(); ctx.arc(point.x, point.y, Math.max(2, radius * 1.65), 0, TAU); ctx.stroke();
     } else {
       ctx.translate(point.x, point.y);
       ctx.rotate(Math.atan2(particle.vy, particle.vx));
@@ -1466,7 +1534,6 @@ function updateBossTransition(delta) {
   }
   if (state.transition.elapsed >= state.transition.duration) {
     state.transition = null;
-    showFloorAnnouncement(FINAL_ROOM_INDEX);
   }
 }
 
@@ -1478,14 +1545,14 @@ function hideFloorAnnouncement() {
   }, 360);
 }
 function showFloorAnnouncement(roomIndex) {
-  if (state.visitedFloors.has(roomIndex) || !floorAnnouncement) return;
+  if (roomIndex === FINAL_ROOM_INDEX || state.visitedFloors.has(roomIndex) || !floorAnnouncement) return;
   state.visitedFloors.add(roomIndex);
   const room = rooms[roomIndex];
   state.floorAnnouncement = { roomIndex, elapsed: 0, duration: 2.65 };
-  floorAnnouncementKicker.textContent = roomIndex === FINAL_ROOM_INDEX ? 'FIELD ARCHIVE / FINAL LEVEL' : 'FIELD ARCHIVE / NEW LEVEL';
+  floorAnnouncementKicker.textContent = 'FIELD NOTE / ABOUT LIAM';
   floorAnnouncementNumber.textContent = room.floor;
   floorAnnouncementTitle.textContent = room.title;
-  floorAnnouncementSubtitle.textContent = room.subtitle;
+  floorAnnouncementSubtitle.textContent = room.fieldNote || room.subtitle;
   floorAnnouncement.hidden = false;
   floorAnnouncement.classList.remove('is-visible');
   void floorAnnouncement.offsetWidth;
@@ -2751,42 +2818,66 @@ function drawTrader3D(trader, now) {
   const faces = [];
   const origin = { x: trader.x, y: trader.y };
   const yaw = Math.atan2(state.player.y - trader.y, state.player.x - trader.x);
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .78 }, [.58, .44, 1.22], yaw, '#56402d', .9, 'leather');
-  addBoxLocal(faces, origin, { side: 0, forward: .05, z: 1.44 }, [.42, .38, .42], yaw, '#bd9360', .98, 'bone');
-  addBoxLocal(faces, origin, { side: 0, forward: .22, z: 1.48 }, [.22, .08, .12], yaw, '#2e2119', .84, 'steel');
-  addBoxLocal(faces, origin, { side: -.09, forward: .25, z: 1.52 }, [.045, .03, .045], yaw, '#e7c879', 1.12, 'steel');
-  addBoxLocal(faces, origin, { side: .09, forward: .25, z: 1.52 }, [.045, .03, .045], yaw, '#e7c879', 1.12, 'steel');
-  addBoneLocal(faces, origin, { side: -.24, forward: 0, z: 1.12 }, { side: -.48, forward: .12, z: .62 }, .065, yaw, '#76583d', 'leather');
-  addBoneLocal(faces, origin, { side: .24, forward: 0, z: 1.12 }, { side: .48, forward: .12, z: .62 }, .065, yaw, '#76583d', 'leather');
-  addBoneLocal(faces, origin, { side: -.13, forward: -.02, z: .3 }, { side: -.19, forward: .04, z: .06 }, .085, yaw, '#30251d', 'leather');
-  addBoneLocal(faces, origin, { side: .13, forward: -.02, z: .3 }, { side: .19, forward: .04, z: .06 }, .085, yaw, '#30251d', 'leather');
-  addBoneLocal(faces, origin, { side: .62, forward: .04, z: .08 }, { side: .62, forward: .04, z: 1.7 }, .035, yaw, '#9d7042', 'wood');
-  addBoxLocal(faces, origin, { side: .62, forward: .04, z: 1.82 }, [.16, .16, .16], yaw, '#e7ad67', 1.12, 'steel');
+  const scale = .76;
+  const scaledPoint = (point) => ({ side: point.side * scale, forward: point.forward * scale, z: point.z * scale });
+  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
+    faces,
+    origin,
+    scaledPoint(center),
+    dimensions.map((value) => value * scale),
+    yaw,
+    color,
+    shade,
+    material,
+  );
+  const bone = (start, end, radius, color, material = null) => addBoneLocal(
+    faces,
+    origin,
+    scaledPoint(start),
+    scaledPoint(end),
+    radius * scale,
+    yaw,
+    color,
+    material,
+  );
+
+  box({ side: 0, forward: 0, z: .78 }, [.58, .44, 1.22], '#56402d', .9, 'leather');
+  box({ side: 0, forward: .05, z: 1.44 }, [.42, .38, .42], '#bd9360', .98, 'bone');
+  box({ side: 0, forward: .22, z: 1.48 }, [.22, .08, .12], '#2e2119', .84, 'steel');
+  box({ side: -.09, forward: .25, z: 1.52 }, [.045, .03, .045], '#e7c879', 1.12, 'steel');
+  box({ side: .09, forward: .25, z: 1.52 }, [.045, .03, .045], '#e7c879', 1.12, 'steel');
+  bone({ side: -.24, forward: 0, z: 1.12 }, { side: -.48, forward: .12, z: .62 }, .065, '#76583d', 'leather');
+  bone({ side: .24, forward: 0, z: 1.12 }, { side: .48, forward: .12, z: .62 }, .065, '#76583d', 'leather');
+  bone({ side: -.13, forward: -.02, z: .3 }, { side: -.19, forward: .04, z: .06 }, .085, '#30251d', 'leather');
+  bone({ side: .13, forward: -.02, z: .3 }, { side: .19, forward: .04, z: .06 }, .085, '#30251d', 'leather');
+  bone({ side: .62, forward: .04, z: .08 }, { side: .62, forward: .04, z: 1.7 }, .035, '#9d7042', 'wood');
+  box({ side: .62, forward: .04, z: 1.82 }, [.16, .16, .16], '#e7ad67', 1.12, 'steel');
   renderFaces(faces, .98, true);
-  drawGroundGlow(trader.x, trader.y, '#e7ad67', now, .64, .04);
-  const projection = projectVerticalBounds(trader.x, trader.y, .86, 1.9);
+  drawGroundGlow(trader.x, trader.y, '#e7ad67', now, .52, .04);
+  const projection = projectVerticalBounds(trader.x, trader.y, .86 * scale, 1.9 * scale);
   if (!projection) return;
   // Guaranteed silhouette fallback for the waypoint character, matching the
-  // weapon fallback strategy while preserving the 3D mesh above it.
-  const h = clamp(projection.height, 22, canvas.height * .5);
+  // scaled mesh above rather than restoring the retired oversized figure.
+  const h = clamp(projection.height, 18, canvas.height * .42);
   const bottom = projection.bottom;
   const x = projection.x;
   ctx.save();
   ctx.globalAlpha = .92;
-  ctx.shadowBlur = Math.max(7, h * .08);
+  ctx.shadowBlur = Math.max(6, h * .08);
   ctx.shadowColor = '#e7ad67';
   ctx.fillStyle = '#6a4a30';
   ctx.fillRect(x - h * .12, bottom - h * .58, h * .24, h * .48);
   ctx.fillStyle = '#d0a66d';
-  ctx.beginPath(); ctx.arc(x, bottom - h * .7, Math.max(5, h * .11), 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, bottom - h * .7, Math.max(4, h * .11), 0, TAU); ctx.fill();
   ctx.fillStyle = '#e7ad67';
   ctx.fillRect(x + h * .16, bottom - h * .62, Math.max(2, h * .035), h * .46);
   ctx.restore();
-  drawTraderSpeechBubble(trader);
+  drawTraderSpeechBubble(trader, scale);
 }
-function drawTraderSpeechBubble(trader) {
+
+function drawTraderSpeechBubble(trader, scale = 1) {
   if (state.room !== 0 || trader.roomIndex !== 0) return;
-  const anchor = projectCameraPoint(cameraPoint(trader.x, trader.y, 2.18));
+  const anchor = projectCameraPoint(cameraPoint(trader.x, trader.y, 2.18 * scale));
   if (!anchor) return;
   const size = clamp(canvas.height * .019, 8, 13);
   const lineHeight = size * 1.35;
@@ -2881,9 +2972,12 @@ function drawWorldObjects(now) {
     else if (object.type === 'trader') drawTrader3D(object, now);
     else if (object.type === 'item') {
       if (['scroll', 'ledger', 'chronicle', 'map'].includes(object.kind)) {
-        drawBillboard(makeItemSprite(object), projectBillboard(object.x, object.y, .48, .55), .9);
+        const bob = object.dropFromEnemy ? Math.sin(now * .003 + (object.bobPhase || 0)) * .09 : 0;
+        const itemZ = .48 + bob;
+        drawBillboard(makeItemSprite(object), projectBillboard(object.x, object.y, itemZ, .55), .9);
+        if (object.dropFromEnemy) drawGroundGlow(object.x, object.y, object.color || '#e7ad67', now, .56, .035);
         if (state.revealTimer > 0) {
-          const projection = projectBillboard(object.x, object.y, .48, .55);
+          const projection = projectBillboard(object.x, object.y, itemZ, .55);
           if (projection) {
             ctx.save();
             ctx.globalAlpha = .55 + Math.sin(now / 120) * .15;
@@ -3870,7 +3964,10 @@ function defeatHostile(target) {
         roomIndex: target.roomIndex,
         recovered: false,
         dropFromEnemy: true,
+        spawnedAt: state.now || performance.now(),
+        bobPhase: Math.random() * TAU,
       });
+      spawnScrollDropEffect(target.x, target.y, template.color || rooms[target.roomIndex].color);
     });
     showToast(templates.length ? `${target.displayName || target.name} dropped field records.` : `${target.displayName || target.name} defeated.`, 'good');
   }

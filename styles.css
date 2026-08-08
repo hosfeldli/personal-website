@@ -2715,3 +2715,28 @@ button { color: inherit; }
 .trader-options small { color: #bda579; }
 .trader-note { margin: 17px 0 0; color: #a99472; font: 10px "DM Mono", monospace; letter-spacing: .06em; }
 @media (max-width: 680px) { .trader-card { padding: 25px 20px; } }
+
+
+/* Final dungeon HUD placement: keep the map tucked into the viewport corner. */
+.game-hud {
+  grid-template-columns: 1fr;
+  padding: 8px 8px 52px 14px;
+}
+.game-hud .identity-plaque { display: none; }
+.minimap-plaque {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 220px;
+  transform: none;
+  z-index: 7;
+}
+@media (max-width: 900px) {
+  .game-hud { padding: 8px 8px 52px 14px; }
+  .minimap-plaque { top: 8px; right: 8px; width: 205px; transform: none; }
+}
+@media (max-width: 760px) {
+  .game-hud { padding: 6px 6px 64px 10px; }
+  .minimap-plaque { top: 6px; right: 6px; width: 166px; transform: none; }
+  #minimap { height: 88px; }
+}
