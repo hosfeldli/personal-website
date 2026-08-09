@@ -348,6 +348,101 @@ function roomContentPoint(roomIndex, x, y) {
   return { x: x + ROOM_INSET_X, y: y + ROOM_INSET_Y };
 }
 
+function applyDungeonRoomWalls(map, room, roomIndex) {
+  if (roomIndex === 0 || roomIndex === BOSS_ROOM_INDEX || roomIndex === SANCTUARY_ROOM_INDEX) return;
+  const width = map[0].length;
+  const height = map.length;
+  const wall = (x, y) => {
+    if (x > 0 && x < width - 1 && y > 0 && y < height - 1) map[y][x] = '1';
+  };
+  const clear = (x, y) => {
+    if (x > 0 && x < width - 1 && y > 0 && y < height - 1) map[y][x] = '0';
+  };
+  const horizontal = (y, start, end, gaps = []) => {
+    for (let x = start; x <= end; x += 1) if (!gaps.includes(x)) wall(x, y);
+  };
+  const vertical = (x, start, end, gaps = []) => {
+    for (let y = start; y <= end; y += 1) if (!gaps.includes(y)) wall(x, y);
+  };
+
+  // Every room retains a readable east/west route and a central escape lane.
+  const doorRows = [ROOM_DOOR_Y, ROOM_DOOR_Y + 1];
+  for (const y of doorRows) for (let x = 1; x < width - 1; x += 1) clear(x, y);
+  const centerX = Math.floor(width / 2);
+  for (let y = 1; y < height - 1; y += 1) clear(centerX, y);
+
+  if (roomIndex === 1) {
+    // Threshold: two offset gatehouse shoulders create a short funnel without
+    // turning the first fight into a sealed corridor.
+    vertical(4, 2, Math.min(4, height - 2), [4]);
+    vertical(11, 2, Math.min(4, height - 2), [3]);
+    vertical(5, Math.max(7, height - 3), height - 2, [7]);
+    vertical(10, Math.max(7, height - 3), height - 2, [height - 2]);
+    horizontal(2, 6, Math.min(9, width - 2), [centerX]);
+  } else if (roomIndex === 2) {
+    // Trophy room: alternating gallery walls form four shallow bays and force
+    // the player to read the center before committing to either side.
+    horizontal(3, 3, 8, [5, 6]);
+    horizontal(3, 13, 18, [15, 16]);
+    horizontal(8, 3, 8, [4, 5]);
+    horizontal(8, 13, 18, [16, 17]);
+    vertical(3, 4, 7, [5, 6]);
+    vertical(18, 4, 7, [5, 6]);
+  } else if (roomIndex === 3) {
+    // Quest board: a deliberate crossroads with staggered branch barricades.
+    horizontal(3, 3, 8, [4, 7]);
+    horizontal(3, 13, 18, [14, 17]);
+    horizontal(8, 3, 8, [6, 8]);
+    horizontal(8, 13, 18, [13, 16]);
+    vertical(7, 2, 4, [3]);
+    vertical(14, 7, Math.min(9, height - 2), [8]);
+  } else if (roomIndex === 4) {
+    // Chronicle: offset archive fins create alternating sightline breaks while
+    // the middle column remains a reliable orientation landmark.
+    vertical(7, 2, 4, [3]);
+    vertical(16, 2, 4, [2, 4]);
+    vertical(7, 7, Math.min(9, height - 2), [8]);
+    vertical(16, 7, Math.min(9, height - 2), [7, 9]);
+    horizontal(3, 8, 13, [10, 12]);
+    horizontal(8, 8, 13, [9, 11]);
+  } else if (roomIndex === 5) {
+    // Character sheet: offset workshop braces create a zigzag route around the
+    // central lane and make the larger enemies easier to stage tactically.
+    horizontal(3, 3, 8, [5, 8]);
+    horizontal(3, 13, 18, [14, 17]);
+    horizontal(8, 3, 8, [4, 7]);
+    horizontal(8, 13, 18, [15, 18]);
+    vertical(5, 4, 5, []);
+    vertical(16, 6, 7, []);
+  } else if (roomIndex === 6) {
+    // Campfire: a broken outer ring leaves multiple openings, but gives the
+    // final regular room meaningful cover before the boss transition.
+    horizontal(3, 3, 8, [4, 7]);
+    horizontal(3, 13, 18, [13, 16]);
+    horizontal(8, 3, 8, [5, 8]);
+    horizontal(8, 13, 18, [14, 17]);
+    vertical(4, 4, 7, [5, 6]);
+    vertical(17, 4, 7, [6, 7]);
+  }
+
+  // Authored content gets a walkable footprint after the design pass. This is
+  // calculated from the same room-local coordinates used by roomContentPoint,
+  // so walls never strand a portfolio record, enemy, or room spawn.
+  const protectedPoints = [room.spawn, ...room.items, ...room.enemies];
+  for (const point of protectedPoints) {
+    const localX = point.x + ROOM_INSET_X;
+    const localY = point.y + ROOM_INSET_Y;
+    for (const x of [Math.floor(localX - .23), Math.floor(localX + .23)]) {
+      for (const y of [Math.floor(localY - .23), Math.floor(localY + .23)]) clear(x, y);
+    }
+  }
+
+  // Reassert the traversable spine after all room-specific walls and protected
+  // footprints have been applied.
+  for (const y of doorRows) for (let x = 1; x < width - 1; x += 1) clear(x, y);
+  for (let y = 1; y < height - 1; y += 1) clear(centerX, y);
+}
+
 function expandedRoomMap(room, roomIndex) {
   const width = roomWidths[roomIndex];
   const height = roomHeights[roomIndex];
@@ -369,6 +464,7 @@ function expandedRoomMap(room, roomIndex) {
       for (let x = 8; x <= 12; x += 1) map[y][x] = '0';
       for (let x = width - 13; x <= width - 9; x += 1) map[y][x] = '0';
     }
+    applyDungeonRoomWalls(map, room, roomIndex);
     // Room 0 has an open-air armory clearing along its north edge. The authored
     // entrance map originally placed a decorative interior wall on row 2; clear
     // that row here so the armory cannot look blocked or behave like a hidden
@@ -633,13 +729,9 @@ const GATE_TUTORIAL_SPELL = {
 };
 const SPELL_FORMS = [
   { id: 'scope-sight', name: 'Scope Sight', glyph: '◎', color: '#6ce0c2', threshold: 50, cooldown: 6, description: 'Reveals enemies and recovered evidence through the walls for a few seconds.', effect: 'reveals the signal', kind: 'reveal' },
-  { id: 'route-spark', name: 'Route Spark', glyph: '↗', color: '#e7ad67', threshold: 100, cooldown: 3.4, description: 'Launches a homing lightning orb that hunts a target through the chamber.', effect: 'marks the route', kind: 'homing' },
-  { id: 'ledger-ward', name: 'Ledger Ward', glyph: '✦', color: '#e3c66e', threshold: 175, cooldown: 8, description: 'Raises a golden ward that sharply reduces incoming damage for seven seconds.', effect: 'guards the evidence', kind: 'ward' },
-  { id: 'signal-thread', name: 'Signal Thread', glyph: '⌁', color: '#77a9e8', threshold: 275, cooldown: 4.2, description: 'Fires a blue chain that jumps from the first enemy into nearby targets.', effect: 'connects the message', kind: 'chain' },
-  { id: 'archive-echo', name: 'Archive Echo', glyph: '◈', color: '#c58de6', threshold: 400, cooldown: 7, description: 'Restores vitality and slows hostile movement as useful history returns.', effect: 'recovers the context', kind: 'echo' },
-  { id: 'forge-ember', name: 'Forge Ember', glyph: '✹', color: '#db8872', threshold: 525, cooldown: 3.8, description: 'Launches an explosive fireball with an area-of-effect impact.', effect: 'fires the iteration', kind: 'fireball' },
-  { id: 'garden-bloom', name: 'Garden Bloom', glyph: '✽', color: '#6ce0c2', threshold: 650, cooldown: 8.5, description: 'Releases a healing pulse that also damages enemies around you.', effect: 'grows the next step', kind: 'bloom' },
-  { id: 'gate-light', name: 'Gate Light', glyph: '△', color: '#e9e9e0', threshold: 800, cooldown: 10, description: 'A piercing beam that tears through every hostile target in its path.', effect: 'opens the next answer', kind: 'beam' },
+  { id: 'ledger-ward', name: 'Ledger Ward', glyph: '✦', color: '#e3c66e', threshold: 150, cooldown: 8, description: 'Raises a golden ward that sharply reduces incoming damage for seven seconds.', effect: 'guards the evidence', kind: 'ward' },
+  { id: 'forge-ember', name: 'Forge Ember', glyph: '✹', color: '#db8872', threshold: 300, cooldown: 3.8, description: 'Launches an explosive fireball with an area-of-effect impact.', effect: 'fires the iteration', kind: 'fireball' },
+  { id: 'gate-light', name: 'Gate Light', glyph: '△', color: '#e9e9e0', threshold: 500, cooldown: 10, description: 'A piercing beam that tears through every hostile target in its path.', effect: 'opens the next answer', kind: 'beam' },
 ];
 const XP_PER_SCROLL = 25;
 // Authored records are templates only. The live world starts empty and records
@@ -893,8 +985,33 @@ for (const template of recordDropTemplates) {
   owners[ownerIndex % owners.length].dropTemplates.push(template);
   recordOwnerIndexByRoom.set(template.roomIndex, ownerIndex + 1);
 }
+function dungeonDifficultyForRoom(roomIndex) {
+  const depth = Math.max(0, roomIndex - STARTING_ROOM_INDEX);
+  return {
+    depth,
+    health: .94 + depth * .10,
+    damage: .88 + depth * .08,
+    speed: .96 + depth * .045,
+    attackRate: .92 + depth * .06,
+  };
+}
+
+// Scale ordinary dungeon enemies once, before initialEnemyData is captured. A
+// reset therefore restores the same tuned encounter instead of reverting to the
+// authored baseline. The final Archon is created separately and is untouched.
+for (const enemy of worldEnemies) {
+  if (enemy.boss || enemy.roomIndex < STARTING_ROOM_INDEX || enemy.roomIndex >= FINAL_ROOM_INDEX) continue;
+  const difficulty = dungeonDifficultyForRoom(enemy.roomIndex);
+  enemy.hp = Math.round(enemy.hp * difficulty.health);
+  enemy.maxHp = enemy.hp;
+  enemy.damage = Math.round(enemy.damage * difficulty.damage);
+  enemy.speed *= difficulty.speed;
+  enemy.difficultyTier = difficulty.depth;
+  enemy.difficultyAttackRate = difficulty.attackRate;
+}
+
 const initialEnemyData = worldEnemies.map((enemy) => ({ ...enemy, dropTemplates: [...enemy.dropTemplates] }));
-const BOSS_MAX_HP = 720;
+const BOSS_MAX_HP = 640;
 const BOSS_PHASES = [
   { name: 'PHASE I · THE BRIEF', threshold: 1, color: '#d99762' },
   { name: 'PHASE II · THE SYSTEM', threshold: .66, color: '#77a9e8' },
@@ -910,7 +1027,7 @@ function createFinalBoss() {
     y: 9,
     hp: BOSS_MAX_HP,
     maxHp: BOSS_MAX_HP,
-    damage: 16,
+    damage: 14,
     phase: 1,
     cooldown: 1.2,
     attackTime: 0,
@@ -922,6 +1039,7 @@ function createFinalBoss() {
     dashTime: 0,
     summonTimer: 5,
     pulse: 0,
+    walkPhase: 0,
     dead: false,
     deathTime: 0,
     alerted: false,
@@ -987,6 +1105,9 @@ const ENEMY_PROFILES = {
 const EMPTY_ENEMY_PROFILE = { scale: .46, height: .98, aimHeight: .78, speedMultiplier: 1, attackRate: 1, attackDistance: ENEMY_ATTACK_DISTANCE, opacity: 0, color: '#000000' };
 function enemyProfile(enemy) {
   return ENEMY_PROFILES[enemy?.kind] || EMPTY_ENEMY_PROFILE;
+}
+function enemyAttackRate(enemy) {
+  return (enemyProfile(enemy).attackRate || 1) * (enemy.difficultyAttackRate || 1);
 }
 
 const MAX_RENDER_WIDTH = 1280;
@@ -1075,7 +1196,6 @@ const state = {
   particles: [],
   damageNumbers: [],
   ambientParticleTimer: 0,
-  spellFocusParticleTimer: 0,
   footstepTimer: 0,
   revealTimer: 0,
   wardTimer: 0,
@@ -1092,6 +1212,8 @@ const state = {
   finalBoss: createFinalBoss(),
   damageFlash: 0,
   shakeTime: 0,
+  healthBarShake: 0,
+  staminaBarShake: 0,
   reading: null,
   readingElapsed: 0,
   deathScreen: null,
@@ -1104,6 +1226,8 @@ const state = {
   promptSignature: '',
   lastRenderAt: 0,
   lastCombatHudAt: -Infinity,
+  spellCyclePulse: 0,
+  spellCycleDirection: 1,
   menuActive: false,
   visitedFloors: new Set(),
   floorAnnouncement: null,
@@ -1237,6 +1361,25 @@ function createLeatherTexture(size, seed) {
   }
   texture.getContext('2d').putImageData(image, 0, 0); return texture;
 }
+function createPipSkinTexture(size, seed) {
+  const texture = document.createElement('canvas'); texture.width = size; texture.height = size;
+  const image = texture.getContext('2d').createImageData(size, size);
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
+    const n = fractalNoise(x / 19, y / 23, seed);
+    const mottled = .5 + .5 * Math.sin(x * .12 + y * .17 + n * 8);
+    const pores = hash2(x * .9, y * .9, seed + 11) > .975 ? 24 : 0;
+    const shadow = Math.pow(clamp(1 - Math.abs(Math.sin(x * .045 - y * .08 + n * 7)), 0, 1), 12) * 18;
+    const base = 48 + n * 48 + mottled * 15 + pores - shadow;
+    const i = (y * size + x) * 4;
+    image.data[i] = clamp(base * .62, 0, 255);
+    image.data[i + 1] = clamp(base * 1.22, 0, 255);
+    image.data[i + 2] = clamp(base * .72, 0, 255);
+    image.data[i + 3] = 255;
+  }
+  texture.getContext('2d').putImageData(image, 0, 0);
+  return texture;
+}
+
 function createDialogueTexture(size, seed) {
   const texture = document.createElement('canvas'); texture.width = size; texture.height = size;
   const image = texture.getContext('2d').createImageData(size, size);
@@ -1497,7 +1640,6 @@ function updateCombatHud() {
     state.aimTarget = findAimTarget();
   }
   aimReticle?.classList.toggle('has-target', Boolean(state.aimTarget));
-  aimReticle?.classList.toggle('has-spell', Boolean(spell));
 }
 
 function updateHud() {
@@ -2643,6 +2785,7 @@ function selectSpell(spellId, announce = true) {
   const spell = learnedSpellDefinitions().find((entry) => entry.id === spellId);
   if (!spell) return false;
   state.selectedSpellId = spell.id;
+  state.spellCyclePulse = 1;
   state.promptSignature = '';
   state.hudSignature = '';
   if (announce) showToast(`${spell.name} selected.`, 'good');
@@ -2656,6 +2799,7 @@ function cycleSpell(direction = 1) {
   const foundIndex = learned.findIndex((spell) => spell.id === state.selectedSpellId);
   const currentIndex = foundIndex >= 0 ? foundIndex : (direction > 0 ? -1 : 0);
   const nextIndex = (currentIndex + direction + learned.length) % learned.length;
+  state.spellCycleDirection = direction >= 0 ? 1 : -1;
   selectSpell(learned[nextIndex].id);
 }
 function wandColorForSpell() { return selectedSpellDefinition()?.color || '#c76545'; }
@@ -2761,7 +2905,7 @@ function chooseSpellTarget() {
   return findAimTarget(14, .32, .36) || worldEnemies.filter((enemy) => enemy.roomIndex !== 0 && !enemy.dead && enemy.roomIndex === state.room).sort((a, b) => Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y))[0] || (state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead ? state.finalBoss : null);
 }
 function makeProjectile(kind, origin, velocity, options = {}) {
-  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, spell: options.spell || false, spellKind: options.spellKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, stagger: options.stagger || 0, knockback: options.knockback || 0, critChance: options.critChance || 0, critMultiplier: options.critMultiplier || 1.65, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0 });
+  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, spell: options.spell || false, spellKind: options.spellKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, stagger: options.stagger || 0, knockback: options.knockback || 0, critChance: options.critChance || 0, critMultiplier: options.critMultiplier || 1.65, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0, age: 0 });
 }
 function playerAimDirection() {
   return { x: Math.cos(state.player.angle) * Math.cos(state.player.pitch), y: Math.sin(state.player.angle) * Math.cos(state.player.pitch), z: Math.sin(state.player.pitch) };
@@ -2852,20 +2996,11 @@ function castSpell() {
   showToast(`${spell.name}: ${spell.effect}.`, 'good');
 }
 function updateSpell(delta) {
+  state.spellCyclePulse = Math.max(0, state.spellCyclePulse - delta * 1.8);
   state.spellCooldown = Math.max(0, state.spellCooldown - delta);
   state.revealTimer = Math.max(0, state.revealTimer - delta);
   state.wardTimer = Math.max(0, state.wardTimer - delta);
   state.enemySlowTimer = Math.max(0, state.enemySlowTimer - delta);
-  const equippedSpell = selectedSpellDefinition();
-  if (equippedSpell && !state.menuActive && !state.reading) {
-    state.spellFocusParticleTimer -= delta;
-    if (state.spellFocusParticleTimer <= 0) {
-      state.spellFocusParticleTimer = settings.reducedMotion ? .52 : .2;
-      spawnSpellFocusParticles(equippedSpell);
-    }
-  } else {
-    state.spellFocusParticleTimer = 0;
-  }
   if (state.spellCast) {
     state.spellCast.elapsed += delta;
     if (state.spellCast.elapsed >= state.spellCast.duration) state.spellCast = null;
@@ -2887,38 +3022,6 @@ const SPELL_FOCUS_PROFILES = {
 const DEFAULT_SPELL_FOCUS_PROFILE = { shape: 'dot', accent: '#fff1b0', count: 9, speed: .55, life: .76, size: .32, spread: TAU, gravity: -.06, upward: .2, glow: 16 };
 function spellFocusProfile(kind) { return SPELL_FOCUS_PROFILES[kind] || DEFAULT_SPELL_FOCUS_PROFILE; }
 
-function spawnSpellFocusParticles(spell) {
-  if (!spell || state.menuActive || state.reading) return;
-  const direction = playerAimDirection();
-  const origin = leftHandSpellOrigin(direction);
-  const profile = spellFocusProfile(spell.kind);
-  const colors = [spell.color, profile.accent, '#fff1b0'];
-  spawnParticles(origin.x, origin.y, origin.z + .06, colors, settings.reducedMotion ? 5 : profile.count, {
-    speed: profile.speed,
-    life: settings.reducedMotion ? profile.life * .72 : profile.life,
-    size: profile.size,
-    upward: profile.upward,
-    spread: profile.spread,
-    gravity: profile.gravity,
-    drag: .97,
-    glow: profile.glow,
-    shape: profile.shape,
-    trail: spell.kind === 'fireball' || spell.kind === 'chain' || spell.kind === 'beam',
-  });
-  const accentShape = spell.kind === 'fireball' ? 'ember' : spell.kind === 'bloom' ? 'petal' : spell.kind === 'chain' || spell.kind === 'beam' ? 'thread' : spell.kind === 'homing' ? 'star' : 'dot';
-  spawnParticles(origin.x, origin.y, origin.z + .08, profile.accent, settings.reducedMotion ? 1 : 3, {
-    speed: spell.kind === 'fireball' ? .66 : .82,
-    life: settings.reducedMotion ? .36 : .58,
-    size: spell.kind === 'fireball' ? .3 : .22,
-    upward: spell.kind === 'fireball' || spell.kind === 'bloom' ? .56 : .18,
-    spread: spell.kind === 'chain' || spell.kind === 'beam' ? .35 : TAU,
-    gravity: spell.kind === 'fireball' ? -.28 : -.06,
-    drag: .96,
-    glow: 16,
-    shape: 'pixel',
-    trail: spell.kind === 'fireball' || spell.kind === 'chain' || spell.kind === 'beam',
-  });
-}
 function drawSpellScreenMotif(kind, x, y, radius, now, alpha = 1, phase = 0, direction = 0) {
   const accent = spellFocusProfile(kind).accent;
   ctx.save();
@@ -2982,108 +3085,6 @@ function drawSpellScreenMotif(kind, x, y, radius, now, alpha = 1, phase = 0, dir
   }
   ctx.restore();
 }
-const PIXEL_SPELL_GLYPHS = {
-  gate: ['000010000', '000111000', '001212100', '011111110', '112232211', '011111110', '001212100', '000111000', '000010000'],
-  reveal: ['001111100', '011212110', '110000011', '120333021', '120232021', '120333021', '110000011', '011212110', '001111100'],
-  homing: ['000010000', '001111100', '011232110', '111111111', '122232221', '111111111', '011232110', '001111100', '000010000'],
-  ward: ['011111110', '112323211', '120000021', '123232321', '120232021', '123232321', '120000021', '112323211', '011111110'],
-  chain: ['100000001', '010000010', '001000100', '000111000', '111232111', '000111000', '001000100', '010000010', '100000001'],
-  echo: ['001111100', '011212110', '110000011', '120111021', '120232021', '120111021', '110000011', '011212110', '001111100'],
-  fireball: ['000010000', '001111100', '011212110', '112232211', '123333321', '112232211', '011212110', '001111100', '000010000'],
-  bloom: ['000010000', '010111010', '101212101', '011333110', '112232211', '011333110', '101212101', '010111010', '000010000'],
-  beam: ['000010000', '000010000', '001010100', '000111000', '112232211', '000111000', '001010100', '000010000', '000010000'],
-};
-
-function drawPixelSpellGlyph(kind, x, y, size, color, alpha = 1, active = false) {
-  const profile = spellFocusProfile(kind);
-  const pattern = PIXEL_SPELL_GLYPHS[kind] || PIXEL_SPELL_GLYPHS.gate;
-  const cell = Math.max(3, Math.round(size / pattern.length));
-  const width = pattern[0].length * cell;
-  const height = pattern.length * cell;
-  const left = Math.round(x - width / 2);
-  const top = Math.round(y - height / 2);
-  const depth = Math.max(3, Math.round(cell * .72));
-  const baseRgb = hexToRgb(color);
-  const dark = `rgb(${Math.round(baseRgb.r * .34)}, ${Math.round(baseRgb.g * .34)}, ${Math.round(baseRgb.b * .34)})`;
-  const side = `rgb(${Math.round(baseRgb.r * .58)}, ${Math.round(baseRgb.g * .58)}, ${Math.round(baseRgb.b * .58)})`;
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.imageSmoothingEnabled = false;
-  ctx.shadowBlur = 0;
-  const drawLayer = (offsetX, offsetY, fillMode) => {
-    for (let row = 0; row < pattern.length; row += 1) {
-      for (let column = 0; column < pattern[row].length; column += 1) {
-        const value = pattern[row][column];
-        if (value === '0') continue;
-        const px = left + column * cell + offsetX;
-        const py = top + row * cell + offsetY;
-        ctx.fillStyle = fillMode === 'dark' ? dark : fillMode === 'side' ? side : (value === '2' ? profile.accent : color);
-        ctx.fillRect(px, py, cell, cell);
-      }
-    }
-  };
-  for (let layer = depth; layer >= 1; layer -= 1) drawLayer(layer, layer, layer > depth * .52 ? 'dark' : 'side');
-  drawLayer(0, 0, 'front');
-  // Use the same procedural material language as the world meshes: a subtle
-  // repeating surface pattern, bevel highlights, and a second accent value.
-  const glyphPattern = textures.patterns?.steel || textures.patterns?.bone;
-  if (glyphPattern) {
-    ctx.save();
-    ctx.globalAlpha = .24;
-    ctx.beginPath();
-    for (let row = 0; row < pattern.length; row += 1) {
-      for (let column = 0; column < pattern[row].length; column += 1) {
-        if (pattern[row][column] === '0') continue;
-        ctx.rect(left + column * cell, top + row * cell, cell, cell);
-      }
-    }
-    ctx.clip();
-    ctx.fillStyle = glyphPattern;
-    ctx.fillRect(left, top, width, height);
-    ctx.restore();
-  }
-  ctx.fillStyle = profile.accent;
-  for (let row = 0; row < pattern.length; row += 1) {
-    for (let column = 0; column < pattern[row].length; column += 1) {
-      if (pattern[row][column] === '0') continue;
-      const px = left + column * cell;
-      const py = top + row * cell;
-      ctx.fillRect(px, py, Math.max(1, Math.round(cell * .22)), Math.max(1, Math.round(cell * .14)));
-      ctx.fillRect(px, py, Math.max(1, Math.round(cell * .14)), Math.max(1, Math.round(cell * .22)));
-    }
-  }
-  const orbitRadius = width * (active ? .9 : .72);
-  const orbitSize = Math.max(2, Math.round(cell * .62));
-  ctx.fillStyle = profile.accent;
-  for (let index = 0; index < 4; index += 1) {
-    const angle = (index * TAU / 4) + (active ? performance.now() / 900 : 0);
-    const orbitX = Math.round(x + Math.cos(angle) * orbitRadius - orbitSize / 2);
-    const orbitY = Math.round(y + Math.sin(angle) * orbitRadius - orbitSize / 2);
-    ctx.fillRect(orbitX, orbitY, orbitSize, orbitSize);
-  }
-  ctx.save();
-  ctx.globalAlpha = alpha * (active ? .72 : .38);
-  ctx.strokeStyle = profile.accent;
-  ctx.lineWidth = Math.max(1, Math.round(cell * .16));
-  ctx.setLineDash([Math.max(2, cell * .7), Math.max(2, cell * .45)]);
-  ctx.strokeRect(left - cell * .72, top - cell * .72, width + cell * 1.44, height + cell * 1.44);
-  ctx.setLineDash([]);
-  for (let corner = 0; corner < 4; corner += 1) {
-    const angle = corner * Math.PI / 2 + (active ? performance.now() / 2400 : 0);
-    const nodeX = x + Math.cos(angle) * (width * .72);
-    const nodeY = y + Math.sin(angle) * (height * .72);
-    ctx.fillStyle = corner % 2 ? profile.accent : '#fff1b0';
-    ctx.fillRect(Math.round(nodeX - cell * .16), Math.round(nodeY - cell * .16), Math.max(2, Math.round(cell * .32)), Math.max(2, Math.round(cell * .32)));
-  }
-  ctx.restore();
-  if (active) {
-    ctx.strokeStyle = profile.accent;
-    ctx.lineWidth = Math.max(2, Math.round(cell * .45));
-    ctx.strokeRect(left - cell, top - cell, width + cell * 2, height + cell * 2);
-  }
-  ctx.restore();
-}
-
 function addSpellCameraBox(faces, center, dimensions, color, shade = 1, material = 'steel') {
   addBoxFaces(faces, makeBoxPoints(center, dimensions, 0, (point) => point), color, shade, material);
 }
@@ -3237,7 +3238,7 @@ function addSpellPlateMesh(faces, center, width, height, depth, roll, color, sha
 function addSpellConnectorMesh(faces, center, sideOffset, zOffset, width, height, color, shade = 1) {
   addSpellCameraBox(faces, { side: center.side + sideOffset, forward: center.forward, z: center.z + zOffset }, [width, width * .7, height], color, shade, null);
 }
-function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false) {
+function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false, ignoreWorldDepth = false) {
   if (!spell) return;
   const palette = spellVisualPalette(spell);
   const unit = Math.max(.004, size * center.forward / Math.max(1, focalY()) / 8);
@@ -3321,8 +3322,8 @@ function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false) {
     ctx.beginPath(); ctx.arc(projected.x, projected.y, auraRadius, 0, TAU); ctx.fill();
     ctx.restore();
   }
-  renderFaces(faces, alpha, true);
-  if (!projected) return;
+  renderFaces(faces, alpha, ignoreWorldDepth);
+  if (!projected || (!ignoreWorldDepth && !spellCameraPointVisible(projected))) return;
   ctx.save();
   ctx.globalAlpha = alpha * (active ? .34 : .14);
   ctx.strokeStyle = spellRgbCss(palette.accent, .9);
@@ -3335,59 +3336,121 @@ function drawSpellGlyph3D(spell, now, center, size, alpha = 1, active = false) {
   ctx.restore();
 }
 
-function drawSpellFocusMesh(spell, now, active) {
-  if (!spell) return;
-  const pulse = .82 + Math.sin(now / 155) * .08 + (active ? .1 : 0);
-  const center = { side: -.38, forward: 1.06, z: .16 + Math.sin(now / 430) * .012 };
-  const projected = projectCameraPoint(center);
-  if (!projected) return;
-  const size = Math.max(26, canvas.height * .066);
-  drawSpellGlyph3D(spell, now, center, size, .78 + pulse * .12, active);
-}
-function drawPassiveSpellFocus(now) {
-  const spell = selectedSpellDefinition();
-  if (!spell || state.reading || state.menuActive) return;
-  drawSpellFocusMesh(spell, now, state.spellCast?.spell?.id === spell.id);
+function spellCameraPointVisible(point, clearance = .06) {
+  if (!point || point.depth <= .04) return false;
+  if (!state.zBuffer?.length) return true;
+  const ray = clamp(Math.floor(point.x / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
+  return point.depth <= state.zBuffer[ray] + clearance;
 }
 
-function drawSpellCast(now) {
-  if (!state.spellCast) return;
-  const spell = state.spellCast.spell;
-  const progress = clamp(state.spellCast.elapsed / state.spellCast.duration, 0, 1);
-  const fade = Math.sin(Math.PI * progress);
-  const size = canvas.height * (.09 + progress * .06);
-  drawSpellGlyph3D(spell, now, { side: 0, forward: 1.18, z: EYE_HEIGHT }, size, fade * .9, true);
+function bottomLeftSpellCameraAnchor(now) {
+  const bob = state.weapon.moving ? Math.sin(state.weapon.bobPhase) * .026 : Math.sin(now / 520) * .014;
+  // Camera-local placement keeps the spell in the lower-left view without
+  // bringing back the hand or a separate DOM/UI spell slot.
+  return { side: -.62, forward: 1.18, z: EYE_HEIGHT - .4 + bob };
 }
-function drawSpellSwitchControls(now) {
-  const spell = selectedSpellDefinition();
-  if (!spell || state.reading || state.menuActive || state.forestTransition) return;
-  // Use the exact same camera-space anchor as the in-hand spell glyph. This
-  // keeps the controls attached to the design instead of drifting to a HUD
-  // corner or appearing on the opposite side of the weapon.
-  const center = projectCameraPoint({ side: -.38, forward: 1.06, z: .16 + Math.sin(now / 430) * .012 });
-  if (!center) return;
-  const glyphSize = Math.max(26, canvas.height * .066);
-  const cell = Math.max(3, Math.round(glyphSize / 7));
-  const glyphHeight = 7 * cell;
-  const labelY = center.y + glyphHeight / 2 + Math.max(9, canvas.height * .014);
-  const fontSize = Math.max(10, Math.round(canvas.height * .016));
-  const keySpread = Math.max(fontSize * 2.55, glyphSize * .52);
-  const arrowSpread = Math.max(fontSize * 1.12, glyphSize * .18);
+
+function drawFloatingSpellParticles(spell, center, size, now, alpha = 1, active = true, ignoreWorldDepth = false) {
+  if (!spell || settings.reducedMotion && !active) return;
+  const palette = spellVisualPalette(spell);
+  const count = settings.reducedMotion ? 5 : active ? 15 : 8;
+  const unit = Math.max(.004, size * center.forward / Math.max(1, focalY()) / 8);
+  const orbit = unit * (active ? 4.6 : 3.8);
+  const phase = now / (active ? 650 : 1200) + spell.id.length * .31;
+  const colors = [palette.base, palette.accent, palette.light];
   ctx.save();
-  ctx.globalAlpha = .9;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `800 ${fontSize}px "DM Mono", monospace`;
-  ctx.shadowBlur = 3;
-  ctx.shadowColor = '#050302';
-  ctx.fillStyle = '#f0d38f';
-  ctx.fillText('Z', center.x - keySpread, labelY);
-  ctx.fillStyle = '#d6b56d';
-  ctx.fillText('◀', center.x - arrowSpread, labelY);
-  ctx.fillText('▶', center.x + arrowSpread, labelY);
-  ctx.fillStyle = '#f0d38f';
-  ctx.fillText('X', center.x + keySpread, labelY);
+  ctx.globalCompositeOperation = 'screen';
+  ctx.lineCap = 'round';
+  for (let index = 0; index < count; index += 1) {
+    const seed = index * 17.371 + spell.id.length * 2.13;
+    const angle = phase + index * TAU / count;
+    const distance = orbit * (.72 + fract(Math.sin(seed * 4.17) * 43758.5453) * .55);
+    const cameraPoint = {
+      side: center.side + Math.cos(angle) * distance,
+      forward: center.forward + Math.sin(angle * 1.7 + seed) * unit * .8,
+      z: center.z + Math.sin(angle) * distance,
+    };
+    const point = projectCameraPoint(cameraPoint);
+    if (!ignoreWorldDepth && !spellCameraPointVisible(point)) continue;
+    const previous = projectCameraPoint({
+      side: center.side + Math.cos(angle - .2) * distance,
+      forward: center.forward + Math.sin((angle - .2) * 1.7 + seed) * unit * .8,
+      z: center.z + Math.sin(angle - .2) * distance,
+    });
+    const particleAlpha = alpha * (active ? .74 : .4) * (.55 + .45 * Math.sin(angle * 1.6 + seed) ** 2);
+    const particleSize = Math.max(1.4, size * (.014 + (index % 3) * .005));
+    ctx.globalAlpha = particleAlpha;
+    ctx.shadowBlur = Math.max(5, size * .12);
+    ctx.shadowColor = spellRgbCss(palette.glow, .9);
+    ctx.fillStyle = spellRgbCss(colors[index % colors.length], .94);
+    if (active && previous && (ignoreWorldDepth || spellCameraPointVisible(previous))) {
+      ctx.strokeStyle = spellRgbCss(colors[index % colors.length], .68);
+      ctx.lineWidth = Math.max(1, particleSize * .55);
+      ctx.beginPath(); ctx.moveTo(previous.x, previous.y); ctx.lineTo(point.x, point.y); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(point.x, point.y, particleSize, 0, TAU); ctx.fill();
+  }
+  if (active && !settings.reducedMotion) {
+    ctx.globalAlpha = alpha * .66;
+    ctx.fillStyle = spellRgbCss(palette.light, .92);
+    for (let spark = 0; spark < 5; spark += 1) {
+      const angle = phase * 1.35 + spark * TAU / 5;
+      const point = projectCameraPoint({
+        side: center.side + Math.cos(angle) * orbit * .72,
+        forward: center.forward,
+        z: center.z + Math.sin(angle) * orbit * .72,
+      });
+      if (!ignoreWorldDepth && !spellCameraPointVisible(point)) continue;
+      ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(angle); ctx.fillRect(-2, -2, 4, 4); ctx.restore();
+    }
+  }
   ctx.restore();
+}
+
+function drawFloatingSpell(spell, now) {
+  if (!spell || state.reading || state.menuActive) return;
+  const casting = state.spellCast?.spell?.id === spell.id;
+  const castProgress = casting ? clamp(state.spellCast.elapsed / state.spellCast.duration, 0, 1) : 0;
+  const castPulse = casting ? Math.sin(Math.PI * castProgress) : 0;
+  const center = bottomLeftSpellCameraAnchor(now);
+  if (!center || center.forward <= .04) return;
+
+  const size = Math.max(58, canvas.height * (.15 + castPulse * .035));
+  const palette = spellVisualPalette(spell);
+  const unit = Math.max(.004, size * center.forward / Math.max(1, focalY()) / 8);
+  const ringFaces = [];
+  const rotation = now / (casting ? 520 : 1050);
+  addSpellTorusMesh(ringFaces, center, unit * 4.35, unit * .12, rotation, palette.accent, 1.08, 'steel', 12);
+  addSpellTorusMesh(ringFaces, center, unit * 3.35, unit * .06, -rotation * 1.3, palette.light, .92, null, 10);
+  for (let index = 0; index < 3; index += 1) {
+    const angle = rotation * 1.3 + index * TAU / 3;
+    addSpellCrystalMesh(ringFaces, {
+      side: center.side + Math.cos(angle) * unit * 3.8,
+      forward: center.forward + Math.sin(angle) * unit * .7,
+      z: center.z + Math.sin(angle) * unit * 3.8,
+    }, unit * .27, unit * .18, unit * 1.1, angle, index % 2 ? palette.light : palette.base, .98, null);
+  }
+  // Lower-left camera-local placement: no hand, no DOM slot, just the spell
+  // object rendered into the canvas at the requested corner.
+  renderFaces(ringFaces, casting ? 1 : .88, true);
+  drawSpellGlyph3D(spell, now, center, size, casting ? .98 : .88, casting, true);
+  drawFloatingSpellParticles(spell, center, size, now, casting ? 1 : .82, true, true);
+
+  const projected = projectCameraPoint(center);
+  if (projected) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = .18 + castPulse * .34;
+    ctx.fillStyle = spellRgbCss(palette.glow, .38);
+    ctx.shadowBlur = Math.max(12, size * .32);
+    ctx.shadowColor = spellRgbCss(palette.glow, .82);
+    ctx.beginPath(); ctx.arc(projected.x, projected.y, Math.max(7, size * (.28 + castPulse * .12)), 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawPassiveSpellFocus(now) {
+  drawFloatingSpell(selectedSpellDefinition(), now);
 }
 function playSpellSound() { playTone(220, .16, 'sine', .022); playTone(440, .26, 'triangle', .024, .08); playTone(660, .32, 'sine', .018, .17); }
 
@@ -3636,34 +3699,84 @@ function ensureSkyCloudTexture() {
   skyCloudTexture.width = 2048;
   skyCloudTexture.height = 256;
   const cloud = skyCloudTexture.getContext('2d');
-  cloud.clearRect(0, 0, skyCloudTexture.width, skyCloudTexture.height);
-  // One panorama, with integer-cycle waves, makes the left and right edges
-  // mathematically identical. Repeating it therefore produces no visible seam.
-  for (let band = 0; band < 7; band += 1) {
-    const y = 18 + band * 34;
+  const textureWidth = skyCloudTexture.width;
+  const textureHeight = skyCloudTexture.height;
+  cloud.clearRect(0, 0, textureWidth, textureHeight);
+
+  // Keep all primary waves on integer cycles so the panorama repeats without a
+  // seam. The ribbons are deliberately layered rather than drawn as one flat
+  // strip; the overlapping edges create the busy, hand-painted cloud depth.
+  const waveAt = (x, band, lower = false) => {
+    const t = x / textureWidth;
     const phase = band * 1.73;
-    const cyclesA = 2 + (band % 3);
-    const cyclesB = 5 + (band % 2);
-    const edgeAt = (x, lower = false) => {
-      const t = x / skyCloudTexture.width;
-      const waveA = Math.sin(TAU * cyclesA * t + phase + (lower ? 1.2 : 0)) * (lower ? 7 : 8);
-      const waveB = Math.sin(TAU * cyclesB * t - phase + (lower ? .6 : 0)) * (lower ? 4 : 4);
-      return y + (lower ? 23 : 0) + waveA + waveB;
-    };
+    const broad = Math.sin(TAU * (2 + band % 3) * t + phase + (lower ? 1.18 : 0)) * (lower ? 8 : 12);
+    const tight = Math.sin(TAU * (5 + band % 2) * t - phase + (lower ? .54 : 0)) * (lower ? 4 : 7);
+    const curl = Math.sin(TAU * (9 + band % 4) * t + phase * .7) * 2.4;
+    return broad + tight + curl;
+  };
+
+  for (let band = 0; band < 8; band += 1) {
+    const y = 12 + band * 31;
     cloud.beginPath();
-    for (let x = 0; x <= skyCloudTexture.width; x += 8) {
-      const edge = edgeAt(x);
+    for (let x = 0; x <= textureWidth; x += 8) {
+      const edge = y + waveAt(x, band);
       if (x === 0) cloud.moveTo(x, edge); else cloud.lineTo(x, edge);
     }
-    for (let x = skyCloudTexture.width; x >= 0; x -= 8) cloud.lineTo(x, edgeAt(x, true));
+    for (let x = textureWidth; x >= 0; x -= 8) cloud.lineTo(x, y + 22 + waveAt(x, band, true));
     cloud.closePath();
-    cloud.fillStyle = band % 2 ? 'rgba(47, 64, 65, .7)' : 'rgba(92, 108, 101, .58)';
+    cloud.fillStyle = band % 3 === 0 ? 'rgba(47, 64, 65, .62)' : 'rgba(79, 96, 91, .48)';
     cloud.fill();
-    cloud.globalAlpha = .32;
-    cloud.fillStyle = band % 2 ? '#afc1b1' : '#d0d3b9';
-    cloud.fillRect(0, y + 2, skyCloudTexture.width, 4);
-    cloud.globalAlpha = 1;
+
+    // A broken highlight along each upper edge makes the cloud mass read as
+    // rolled vapor instead of a collection of rectangular bars.
+    cloud.beginPath();
+    for (let x = 0; x <= textureWidth; x += 10) {
+      const edge = y + 2 + waveAt(x, band) * .92;
+      if (x === 0) cloud.moveTo(x, edge); else cloud.lineTo(x, edge);
+    }
+    cloud.strokeStyle = band % 2 ? 'rgba(190, 207, 190, .2)' : 'rgba(224, 225, 198, .24)';
+    cloud.lineWidth = 5 + (band % 3) * 2;
+    cloud.stroke();
   }
+
+  // Curved, periodically repeated wisps cross the ribbons. Each wisp is copied
+  // at both texture edges so even the looping strokes remain seamless.
+  const drawWisp = (x, y, width, height, alpha, light = false) => {
+    for (const wrap of [-textureWidth, 0, textureWidth]) {
+      cloud.beginPath();
+      cloud.moveTo(x + wrap, y + height * .18);
+      cloud.bezierCurveTo(x + width * .18 + wrap, y - height * .62, x + width * .38 + wrap, y - height * .62, x + width * .5 + wrap, y + height * .05);
+      cloud.bezierCurveTo(x + width * .64 + wrap, y + height * .7, x + width * .82 + wrap, y + height * .58, x + width + wrap, y - height * .08);
+      cloud.strokeStyle = light ? `rgba(218, 226, 204, ${alpha})` : `rgba(30, 47, 49, ${alpha})`;
+      cloud.lineWidth = Math.max(2, height * .16);
+      cloud.lineCap = 'round';
+      cloud.stroke();
+    }
+  };
+  for (let wisp = 0; wisp < 18; wisp += 1) {
+    const x = (wisp * 271 + 83) % textureWidth;
+    const y = 18 + (wisp * 37) % 218;
+    const width = 90 + (wisp % 5) * 34;
+    const height = 14 + (wisp % 4) * 5;
+    drawWisp(x, y, width, height, .11 + (wisp % 3) * .025, wisp % 3 === 0);
+    if (wisp % 2 === 0) drawWisp(x + 24, y + 8, width * .62, height * .58, .08, true);
+  }
+
+  // Small curled loops break up the long horizontal motion and give the sky a
+  // more turbulent, swirling silhouette at a glance.
+  for (let curl = 0; curl < 15; curl += 1) {
+    const x = (curl * 149 + 47) % textureWidth;
+    const y = 24 + (curl * 53) % 206;
+    const radius = 9 + (curl % 4) * 3;
+    for (const wrap of [-textureWidth, 0, textureWidth]) {
+      cloud.beginPath();
+      cloud.arc(x + wrap, y, radius, Math.PI * .12, Math.PI * 1.78);
+      cloud.strokeStyle = curl % 3 ? 'rgba(197, 214, 198, .12)' : 'rgba(34, 51, 52, .16)';
+      cloud.lineWidth = 2.5;
+      cloud.stroke();
+    }
+  }
+  cloud.lineCap = 'butt';
   return skyCloudTexture;
 }
 function drawSkyCloudTexture(width, horizon, forestProgress) {
@@ -3673,19 +3786,28 @@ function drawSkyCloudTexture(width, horizon, forestProgress) {
   const textureHeight = Math.min(horizon * .9, texture.height * textureScale);
   const time = state.now || performance.now();
   // Deliberate one-way travel: camera yaw is intentionally excluded, so
-  // looking around does not make the clouds swim. The single seamless texture
-  // moves quickly and continuously in one direction instead.
+  // looking around does not make the clouds swim. Several independently
+  // drifting passes now create depth without breaking that stable horizon.
   const travel = (time * .18) % textureWidth;
   const vertical = Math.sin(time * .0008) * 2.5 + Math.sin(time * .0017) * 1.2;
-  const offset = -travel;
+  const drawLayer = (layerWidth, layerHeight, speed, phase, y, alpha) => {
+    const layerTravel = (time * speed + phase) % layerWidth;
+    for (let x = -layerTravel - layerWidth; x < width + layerWidth; x += layerWidth) {
+      ctx.drawImage(texture, x, y, layerWidth, layerHeight);
+    }
+  };
   ctx.save();
-  ctx.globalAlpha = .22 + forestProgress * .3;
+  ctx.beginPath();
+  ctx.rect(0, 0, width, Math.max(0, horizon));
+  ctx.clip();
   ctx.imageSmoothingEnabled = false;
-  ctx.translate(0, vertical);
-  for (let x = offset - textureWidth; x < width + textureWidth; x += textureWidth) {
-    ctx.drawImage(texture, x, 0, textureWidth, textureHeight);
-  }
-  ctx.globalAlpha = .06 + forestProgress * .12;
+  ctx.globalAlpha = (.07 + forestProgress * .1);
+  drawLayer(textureWidth * .72, textureHeight * .78, .11, textureWidth * .31, vertical - 11, ctx.globalAlpha);
+  ctx.globalAlpha = .16 + forestProgress * .22;
+  drawLayer(textureWidth, textureHeight, .18, travel, vertical, ctx.globalAlpha);
+  ctx.globalAlpha = .08 + forestProgress * .12;
+  drawLayer(textureWidth * 1.34, textureHeight * 1.08, .235, textureWidth * .67, vertical + 16, ctx.globalAlpha);
+  ctx.globalAlpha = .045 + forestProgress * .09;
   ctx.fillStyle = forestProgress > .2 ? '#102025' : '#b9c9b8';
   ctx.fillRect(0, 0, width, textureHeight);
   ctx.restore();
@@ -4152,21 +4274,48 @@ function renderFaces(faces, opacity = 1, ignoreWall = false) {
   }
   projected.sort((a, b) => b.depth - a.depth); ctx.save(); ctx.globalAlpha = opacity; for (const face of projected) paintFace(face); ctx.restore();
 }
+function enemySurfaceMaterial(kind) {
+  if (kind === 'warden' || kind === 'archon') return 'steel';
+  if (kind === 'crawler' || kind === 'cockroach') return 'stone';
+  if (kind === 'moth') return 'bone';
+  return 'leather';
+}
 function enemyMeshContext(enemy) {
   const profile = enemyProfile(enemy);
   const faces = [];
   const yaw = Math.atan2(state.player.y - enemy.y, state.player.x - enemy.x);
-  const walk = enemy.alerted ? Math.sin(enemy.walkPhase) * .12 : 0;
+  const walkPhase = Number.isFinite(enemy.walkPhase) ? enemy.walkPhase : 0;
+  const walk = enemy.alerted ? Math.sin(walkPhase) * .12 : 0;
   const attack = enemy.attackTime > 0 ? easeOutCubic(1 - enemy.attackTime / .55) : 0;
   const fall = enemy.dead ? clamp(enemy.deathTime / .75, 0, 1) : 0;
   const hover = profile.hover ? Math.sin(enemy.walkPhase * .7) * profile.hover : 0;
+  const poseYaw = yaw + attack * .045 - walk * .035;
   const shift = (point) => ({
     side: point.side * profile.scale,
-    forward: point.forward * profile.scale + fall * .18,
+    forward: point.forward * profile.scale + fall * .18 - attack * .035,
     z: point.z * profile.scale * (1 - fall) + .06 + hover * (1 - fall),
   });
-  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(faces, { x: enemy.x, y: enemy.y }, shift(center), dimensions.map((value) => value * profile.scale), yaw, color, shade, material);
-  const bone = (start, end, radius, color, material = null) => addBoneLocal(faces, { x: enemy.x, y: enemy.y }, shift(start), shift(end), radius * profile.scale, yaw, color, material);
+  const surface = enemySurfaceMaterial(enemy.kind);
+  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
+    faces,
+    { x: enemy.x, y: enemy.y },
+    shift(center),
+    dimensions.map((value) => value * profile.scale),
+    poseYaw,
+    color,
+    shade,
+    material || surface,
+  );
+  const bone = (start, end, radius, color, material = null) => addBoneLocal(
+    faces,
+    { x: enemy.x, y: enemy.y },
+    shift(start),
+    shift(end),
+    radius * profile.scale,
+    poseYaw,
+    color,
+    material || 'bone',
+  );
   return { faces, profile, yaw, walk, attack, fall, box, bone, color: enemy.color || profile.color };
 }
 
@@ -4510,6 +4659,40 @@ function drawLobbyGroundPanel(xStart, yStart, xEnd, yEnd, fill, stroke, alpha = 
   ctx.stroke();
   ctx.restore();
 }
+function drawTexturedGroundPolygon(points, fill, stroke, alpha = .9) {
+  if (points.some((point) => !point)) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  ctx.clip();
+
+  const pattern = textures.patterns?.stone;
+  if (pattern) {
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = Math.max(1, canvas.height * .0023);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
 function drawLobbyStoneSlab(x0, x1, y0, y1, index, now, fill = null) {
   const points = [
     projectLobbyGroundPoint(x0, y0),
@@ -4519,18 +4702,12 @@ function drawLobbyStoneSlab(x0, x1, y0, y1, index, now, fill = null) {
   ];
   if (points.some((point) => !point)) return;
   const slabColors = ['#76634b', '#8d7657', '#665541', '#a0835e', '#5b4a39'];
-  ctx.save();
-  ctx.globalAlpha = .9;
-  ctx.fillStyle = fill || slabColors[index % slabColors.length];
-  ctx.strokeStyle = 'rgba(39, 27, 17, .74)';
-  ctx.lineWidth = Math.max(1, canvas.height * .0023);
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
+  drawTexturedGroundPolygon(
+    points,
+    fill || slabColors[index % slabColors.length],
+    'rgba(39, 27, 17, .74)',
+    .9,
+  );
 }
 function drawLobbyBranchPath(x, yStart, yEnd, width, now, fill = null) {
   const step = .68;
@@ -4604,18 +4781,12 @@ function drawForestHallPath(now) {
       projectLobbyGroundPoint(x0, FOREST_HALL_CENTER_Y + pathWidth / 2 + wobble0),
     ];
     if (points.some((point) => !point)) continue;
-    ctx.save();
-    ctx.globalAlpha = .9;
-    ctx.fillStyle = slabColors[index % slabColors.length];
-    ctx.strokeStyle = 'rgba(35, 31, 22, .72)';
-    ctx.lineWidth = Math.max(1, canvas.height * .0022);
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
+    drawTexturedGroundPolygon(
+      points,
+      slabColors[index % slabColors.length],
+      'rgba(35, 31, 22, .72)',
+      .9,
+    );
   }
 }
 
@@ -4685,73 +4856,169 @@ function drawLobbyWeaponPedestal(faces, origin, yaw, accent) {
   addBoxLocal(faces, origin, { side: 0, forward: 0, z: .275 }, [.25, .25, .05], yaw, accent, .88, 'steel');
 }
 
+function weaponWorldPoint(origin, point, yaw) {
+  const world = localToWorld(origin.x, origin.y, yaw, {
+    side: point.side,
+    forward: point.forward,
+    z: point.z + (origin.zOffset || 0),
+  });
+  return cameraPoint(world.x, world.y, world.z);
+}
+function addFacetedWeaponVolumeWorld(faces, origin, center, dimensions, yaw, color, shade = 1, material = 'steel', variant = 0) {
+  const [sideSize, forwardSize, height] = dimensions;
+  const ringCount = 8;
+  const ring = (z, radiusScale, phase) => {
+    const points = [];
+    for (let index = 0; index < ringCount; index += 1) {
+      const angle = index * TAU / ringCount + variant * .17;
+      const wobble = .92 + Math.sin(index * 2.55 + phase + variant) * .06;
+      points.push(weaponWorldPoint(origin, {
+        side: center.side + Math.cos(angle) * sideSize * .5 * radiusScale * wobble,
+        forward: center.forward + Math.sin(angle) * forwardSize * .5 * radiusScale * wobble,
+        z,
+      }, yaw));
+    }
+    return points;
+  };
+  const lower = ring(center.z - height * .5, .78, .2);
+  const upper = ring(center.z + height * .22, 1, 1.2);
+  const topWorld = localToWorld(origin.x, origin.y, yaw, {
+    side: center.side,
+    forward: center.forward,
+    z: center.z + height * .5,
+  });
+  const bottomWorld = localToWorld(origin.x, origin.y, yaw, {
+    side: center.side,
+    forward: center.forward,
+    z: center.z - height * .5,
+  });
+  const top = cameraPoint(topWorld.x, topWorld.y, topWorld.z + (origin.zOffset || 0));
+  const bottom = cameraPoint(bottomWorld.x, bottomWorld.y, bottomWorld.z + (origin.zOffset || 0));
+  for (let index = 0; index < ringCount; index += 1) {
+    const next = (index + 1) % ringCount;
+    const faceShade = shade * (.78 + ((index + variant) % 4) * .07);
+    faces.push({ points: [bottom, lower[index], lower[next]], color, shade: faceShade * .8, material });
+    faces.push({ points: [lower[index], upper[index], upper[next], lower[next]], color, shade: faceShade, material });
+    faces.push({ points: [upper[index], top, upper[next]], color, shade: faceShade * 1.08, material });
+  }
+}
+function addSwordBladeWorld(faces, origin, center, width, length, thickness, yaw, color, shade = 1) {
+  const profile = [
+    { side: -width * .5, z: 0 },
+    { side: width * .5, z: 0 },
+    { side: width * .43, z: length * .78 },
+    { side: width * .2, z: length * .93 },
+    { side: 0, z: length },
+    { side: -width * .2, z: length * .93 },
+    { side: -width * .43, z: length * .78 },
+  ];
+  const front = profile.map((point) => weaponWorldPoint(origin, {
+    side: center.side + point.side,
+    forward: center.forward + thickness * .5,
+    z: center.z + point.z,
+  }, yaw));
+  const back = profile.map((point) => weaponWorldPoint(origin, {
+    side: center.side + point.side,
+    forward: center.forward - thickness * .5,
+    z: center.z + point.z,
+  }, yaw));
+  faces.push({ points: front, color, shade, material: 'steel' });
+  faces.push({ points: [...back].reverse(), color, shade: shade * .58, material: 'steel' });
+  for (let index = 0; index < profile.length; index += 1) {
+    const next = (index + 1) % profile.length;
+    faces.push({ points: [front[index], front[next], back[next], back[index]], color, shade: shade * (.68 + (index % 3) * .1), material: 'steel' });
+  }
+}
 function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
   if (state.room !== 0 || !creature) return;
 
   const faces = [];
   const origin = { x: creature.x, y: creature.y };
-  const bob = settings.reducedMotion ? 0 : Math.sin(now / 420 + creature.x * .7) * .11;
-  const weaponOrigin = { ...origin, zOffset: bob, meshScale: .72, meshBaseZ: .30 };
-  // Keep each display fixed in world space. These are not billboards.
-  const yaw = creature.yaw ?? 0;
+  const float = settings.reducedMotion ? 0 : Math.sin(now / 430 + creature.x * .7) * .065;
+  const weaponOrigin = { ...origin, zOffset: float, meshScale: 1, meshBaseZ: 0 };
+  const baseYaw = creature.yaw ?? 0;
   const type = creature.type;
   const color = type === 'wand' ? '#db8872' : type === 'crossbow' ? '#f0d38d' : type === 'blade' ? '#b8f0e2' : '#d8c18b';
   const light = type === 'wand' ? '#f4a06d' : type === 'crossbow' ? '#fff0b2' : type === 'blade' ? '#effff7' : '#fff4c7';
-  const pedestalTop = .30;
-  let bottomZ = pedestalTop + .015;
+  const displayYaw = baseYaw + (type === 'stars' ? now / 1880 : Math.sin(now / 1420 + creature.x) * .035);
+  let bottomZ = .315;
   let topZ = .58;
   let haloRadius = .24;
 
-  drawLobbyWeaponPedestal(faces, origin, yaw, color);
+  drawLobbyWeaponPedestal(faces, origin, displayYaw, color);
 
   if (type === 'stars') {
-    // The pedestal star is intentionally tiny so it reads as a display item,
-    // not a second pedestal. It is 20% of the previous plate size.
-    const starYaw = yaw + now / 1800;
-    const pedestalStarSize = .072;
-    addFlatSquareBladeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .325 }, pedestalStarSize, .005, starYaw, color, 1.16);
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .327 }, [.011, .011, .008], starYaw, '#5b3d25', 1, 'steel');
-    topZ = .47;
+    const starYaw = displayYaw + now / 560;
+    const starSize = .17;
+    addFlatSquareBladeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .39 }, starSize, .02, starYaw, color, 1.16);
+    addFlatSquareBladeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .405 }, starSize * .42, .018, -starYaw * 1.45, light, 1.05);
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .4 }, [.065, .065, .06], displayYaw, '#684326', 1.08, 'steel', 1);
+    for (let shard = 0; shard < 4; shard += 1) {
+      const angle = now / 780 + shard * TAU / 4;
+      addFacetedWeaponVolumeWorld(faces, weaponOrigin, {
+        side: Math.cos(angle) * .145,
+        forward: Math.sin(angle) * .075,
+        z: .4 + Math.sin(angle * 1.4) * .028,
+      }, [.026, .026, .035], displayYaw, light, .9, 'steel', shard + 2);
+    }
+    bottomZ = .32;
+    topZ = .49;
     haloRadius = .22;
   } else if (type === 'crossbow') {
-    // Small stand-alone crossbow, scaled to sit naturally on the pedestal cap.
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .35 }, [.07, .32, .07], yaw, '#704622', 1, 'wood');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .14, z: .445 }, [.44, .06, .07], yaw, '#a87843', 1.08, 'wood');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .17, z: .47 }, [.38, .018, .018], yaw, '#fff0b2', 1.14, 'steel');
-    addBoxLocal(faces, weaponOrigin, { side: -.23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .96, 'steel');
-    addBoxLocal(faces, weaponOrigin, { side: .23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .88, 'steel');
-    topZ = .61;
-    haloRadius = .27;
+    const tension = settings.reducedMotion ? .32 : .38 + Math.sin(now / 690 + creature.x) * .1;
+    const scale = .58;
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .37 }, [.075, .34, .07], displayYaw, '#704622', 1, 'wood');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .15, z: .46 }, [.43, .06, .06], displayYaw, '#a87843', 1.08, 'wood');
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: .02, z: .46 }, [.14, .16, .12], displayYaw, '#6d7170', 1.02, 'steel', 2);
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .17, z: .495 }, [.34, .018, .018], displayYaw, '#fff0b2', 1.14, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: -.235, forward: .15, z: .46 }, [.055, .055, .15], displayYaw, '#b9b7a0', .96, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: .235, forward: .15, z: .46 }, [.055, .055, .15], displayYaw, '#b9b7a0', .88, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .17 - tension * .035, z: .495 }, [.018, .018, .29 + tension * .045], displayYaw, '#e7d49d', 1.1, 'steel');
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: .32, z: .5 }, [.045, .045, .06], displayYaw, '#e7d49d', 1.08, 'steel', 3);
+    bottomZ = .325;
+    topZ = .59;
+    haloRadius = .26;
+    void scale;
   } else if (type === 'wand') {
-    // Small upright Ember Wand with its base seated on the pedestal cap.
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .59 }, [.055, .055, .56], yaw, '#4a2d20', 1.02, 'wood');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .90 }, [.12, .10, .11], yaw, '#d97856', 1.12, 'steel');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: 1.01 }, [.06, .06, .08], yaw, light, 1.2, 'steel');
-    topZ = 1.11;
-    haloRadius = .19;
+    const tipPulse = settings.reducedMotion ? .5 : .5 + Math.sin(now / 300 + creature.x) * .12;
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .62 }, [.05, .05, .6], displayYaw, '#4a2d20', 1.02, 'wood');
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .94 }, [.13, .11, .12], displayYaw, '#d97856', 1.12, 'steel', 4);
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: 1.08 + tipPulse * .03 }, [.07, .07, .11], displayYaw, light, 1.18, 'steel', 5);
+    addBoxLocal(faces, weaponOrigin, { side: -.12, forward: .02, z: .94 }, [.032, .038, .23], displayYaw, '#b07a3f', .94, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: .12, forward: .02, z: .94 }, [.032, .038, .23], displayYaw, '#b07a3f', .88, 'steel');
+    for (let orbit = 0; orbit < 3; orbit += 1) {
+      const angle = now / 680 + orbit * TAU / 3;
+      addFacetedWeaponVolumeWorld(faces, weaponOrigin, {
+        side: Math.cos(angle) * (.15 + tipPulse * .015),
+        forward: Math.sin(angle) * .065,
+        z: 1.08 + Math.sin(angle * 1.5) * .045,
+      }, [.024, .024, .045], displayYaw, light, .96, 'steel', orbit + 6);
+    }
+    bottomZ = .33;
+    topZ = 1.18;
+    haloRadius = .21;
   } else if (type === 'blade') {
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .39 }, [.08, .08, .3], yaw, '#3a241b', .98, 'leather');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .57 }, [.36, .08, .06], yaw, color, 1.04, 'steel');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: 1.05 }, [.13, .04, .9], yaw, '#cfe8dc', 1.06, 'steel');
-    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: 1.52 }, [.02, .04, .08], yaw, light, 1.15, 'steel');
-    topZ = 1.58;
+    const bladeYaw = displayYaw + Math.sin(now / 910 + creature.x) * .028;
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .39 }, [.075, .075, .28], bladeYaw, '#3a241b', .98, 'leather');
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .56 }, [.33, .075, .055], bladeYaw, color, 1.04, 'steel', 7);
+    addSwordBladeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .6 }, .13, 1.16, .038, bladeYaw, '#cfe8dc', 1.08);
+    addSwordBladeWorld(faces, weaponOrigin, { side: 0, forward: .025, z: .63 }, .034, 1.04, .014, bladeYaw, '#f4fff0', 1.1);
+    addFacetedWeaponVolumeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: 1.78 }, [.05, .05, .07], bladeYaw, light, 1.12, 'steel', 8);
+    bottomZ = .33;
+    topZ = 1.8;
     haloRadius = .25;
   } else {
     return;
   }
 
-  // Let the armory obey the same depth-tested world pass as every other prop.
-  // This prevents a display from drawing through trees, signs, or the gate.
   renderFaces(faces, .99);
   drawGroundGlow(creature.x, creature.y, color, now, .44, .035);
-  drawLobbyWeaponHalos(creature, now, .30 + (bottomZ - .30) * .72 + bob, .30 + (topZ - .30) * .72 + bob, haloRadius * .82, color, light);
+  drawLobbyWeaponHalos(creature, now, bottomZ + float, topZ + float, haloRadius, color, light);
 
-  const scaledAnchorZ = .30 + (bottomZ + (topZ - bottomZ) * .5 - .30) * .72 + bob;
+  const scaledAnchorZ = (bottomZ + topZ) * .5 + float;
   const anchor = projectCameraPoint(cameraPoint(creature.x, creature.y, scaledAnchorZ));
-  if (!anchor) return;
-
-  if (!lobbyProjectionIsVisible(anchor, .08)) return;
-  const size = clamp(canvas.height * .065 / Math.max(.8, anchor.depth), 9, 28);
+  if (!anchor || !lobbyProjectionIsVisible(anchor, .08)) return;
+  const size = clamp(canvas.height * .06 / Math.max(.8, anchor.depth), 9, 28);
   drawWorldLabel(
     { x: anchor.x, y: anchor.y - size * 1.18 },
     creature.name,
@@ -4766,7 +5033,7 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
   ctx.shadowColor = light;
   ctx.lineWidth = Math.max(1, size * .07);
   if (type === 'stars') {
-    ctx.strokeRect(anchor.x - size * .42, anchor.y - size * .18, size * .84, size * .36);
+    ctx.save(); ctx.translate(anchor.x, anchor.y); ctx.rotate(now / 560); ctx.strokeRect(-size * .38, -size * .16, size * .76, size * .32); ctx.restore();
   } else if (type === 'crossbow') {
     ctx.beginPath();
     ctx.moveTo(anchor.x - size * .48, anchor.y);
@@ -4792,7 +5059,6 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
     ctx.fill();
   }
   ctx.restore();
-
 }
 
 function drawLobbyWeaponHalos(creature, now, bottomZ, topZ, radius, color, light) {
@@ -4941,16 +5207,78 @@ function drawLobbyGate(now) {
     ctx.save(); ctx.globalAlpha = .18 + Math.sin(now / 180) * .06; ctx.strokeStyle = '#e7ad67'; ctx.shadowBlur = 24; ctx.shadowColor = '#e7ad67'; ctx.lineWidth = Math.max(2, projection.height * .018); ctx.strokeRect(projection.x - projection.height * 1.14, projection.top + projection.height * .06, projection.height * 2.28, projection.height * .88); ctx.restore();
   }
 }
+function addFacetedTreeVolume(faces, origin, center, dimensions, yaw, color, shade = 1, material = 'stone', variant = 0) {
+  const [sideSize, forwardSize, height] = dimensions;
+  const ringCount = 8;
+  const ring = [];
+  for (let index = 0; index < ringCount; index += 1) {
+    const angle = index * TAU / ringCount + variant * .17;
+    const wobble = .9 + Math.sin(index * 2.7 + variant * 1.9) * .07;
+    const worldPoint = localToWorld(origin.x, origin.y, yaw, {
+      side: center.side + Math.cos(angle) * sideSize * .5 * wobble,
+      forward: center.forward + Math.sin(angle) * forwardSize * .5 * wobble,
+      z: center.z + Math.sin(angle * 2 + variant) * height * .055,
+    });
+    ring.push(cameraPoint(worldPoint.x, worldPoint.y, worldPoint.z));
+  }
+  const top = localToWorld(origin.x, origin.y, yaw, { side: center.side, forward: center.forward, z: center.z + height * .5 });
+  const bottom = localToWorld(origin.x, origin.y, yaw, { side: center.side, forward: center.forward, z: center.z - height * .5 });
+  const projectedRing = ring;
+  const projectedTop = cameraPoint(top.x, top.y, top.z);
+  const projectedBottom = cameraPoint(bottom.x, bottom.y, bottom.z);
+  for (let index = 0; index < ringCount; index += 1) {
+    const next = (index + 1) % ringCount;
+    const faceShade = shade * (.86 + ((index + variant) % 4) * .055);
+    faces.push({ points: [projectedTop, projectedRing[index], projectedRing[next]], color, shade: faceShade, material });
+    faces.push({ points: [projectedBottom, projectedRing[next], projectedRing[index]], color, shade: faceShade * .78, material });
+  }
+}
+function addFacetedTreeCrown(faces, origin, center, dimensions, yaw, color, shade = 1, variant = 0) {
+  const [sideSize, forwardSize, height] = dimensions;
+  const ringCount = 8;
+  const makeRing = (z, radiusScale, phase) => {
+    const points = [];
+    for (let index = 0; index < ringCount; index += 1) {
+      const angle = index * TAU / ringCount + variant * .13;
+      const wobble = .94 + Math.sin(index * 2.35 + phase + variant) * .06;
+      const worldPoint = localToWorld(origin.x, origin.y, yaw, {
+        side: center.side + Math.cos(angle) * sideSize * .5 * radiusScale * wobble,
+        forward: center.forward + Math.sin(angle) * forwardSize * .5 * radiusScale * wobble,
+        z,
+      });
+      points.push(cameraPoint(worldPoint.x, worldPoint.y, worldPoint.z));
+    }
+    return points;
+  };
+  const lower = makeRing(center.z - height * .5, .72, .2);
+  const shoulder = makeRing(center.z + height * .08, 1, 1.1);
+  const upper = makeRing(center.z + height * .5, .56, 2.4);
+  const crownTopWorld = localToWorld(origin.x, origin.y, yaw, {
+    side: center.side,
+    forward: center.forward,
+    z: center.z + height * .58,
+  });
+  const crownTop = cameraPoint(crownTopWorld.x, crownTopWorld.y, crownTopWorld.z);
+
+  for (let index = 0; index < ringCount; index += 1) {
+    const next = (index + 1) % ringCount;
+    const faceShade = shade * (.84 + ((index + variant) % 4) * .055);
+    faces.push({ points: [lower[index], lower[next], shoulder[next], shoulder[index]], color, shade: faceShade * .92, material: 'stone' });
+    faces.push({ points: [shoulder[index], shoulder[next], upper[next], upper[index]], color, shade: faceShade, material: 'stone' });
+    faces.push({ points: [upper[index], upper[next], crownTop], color, shade: faceShade * 1.04, material: 'stone' });
+  }
+}
 function drawLobbyTree3D(tree, now) {
   if (state.room !== (tree.roomIndex ?? 0) || !objectInView(tree.x, tree.y, 24)) return;
   const faces = [];
   const origin = { x: tree.x, y: tree.y };
-  const scale = tree.scale || 1;
-  // Trees are authored world props, not billboards. Keep their facing fixed.
+  // Visual scale is intentionally larger than the collision footprint. This
+  // makes the perimeter read as a forest without changing navigation.
+  const scale = (tree.scale || 1) * 1.26;
   const yaw = tree.yaw ?? 0;
   const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
     faces,
-    origin,
+    { x: tree.x, y: tree.y, meshScale: 1 },
     { side: center.side * scale, forward: center.forward * scale, z: center.z * scale },
     dimensions.map((value) => value * scale),
     yaw,
@@ -4958,25 +5286,94 @@ function drawLobbyTree3D(tree, now) {
     shade,
     material,
   );
-  // Trunk, split branches, then overlapping faceted canopy volumes. No sprite.
-  box({ side: 0, forward: 0, z: .55 }, [.34, .34, 1.1], '#4a2e1d', .94, 'wood');
-  box({ side: -.18, forward: .02, z: .98 }, [.12, .15, .64], '#70462a', .82, 'wood');
-  box({ side: .2, forward: .03, z: 1.03 }, [.12, .14, .58], '#6b4228', .76, 'wood');
-  box({ side: 0, forward: 0, z: 1.42 }, [1.24, .92, .7], '#1f6844', .96, null);
-  box({ side: -.37, forward: .02, z: 1.7 }, [.72, .62, .62], '#2f8a52', 1.02, null);
-  box({ side: .37, forward: .02, z: 1.7 }, [.72, .62, .62], '#277745', .98, null);
-  box({ side: 0, forward: .02, z: 2.03 }, [.58, .5, .5], '#70b965', 1.04, null);
+  const volume = (center, dimensions, color, shade = 1, variant = 0) => addFacetedTreeVolume(
+    faces,
+    origin,
+    { side: center.side * scale, forward: center.forward * scale, z: center.z * scale },
+    dimensions.map((value) => value * scale),
+    yaw,
+    color,
+    shade,
+    'stone',
+    variant,
+  );
+
+  // A textured, split trunk and roots anchor the canopy. The extra branch
+  // pieces make the silhouette less like a stack of cubes before the leaves.
+  box({ side: 0, forward: 0, z: .56 }, [.34, .34, 1.12], '#4a2e1d', .94, 'wood');
+  box({ side: -.17, forward: .01, z: .99 }, [.12, .15, .68], '#70462a', .82, 'wood');
+  box({ side: .2, forward: .03, z: 1.02 }, [.12, .14, .62], '#6b4228', .76, 'wood');
+  box({ side: -.17, forward: -.08, z: .18 }, [.2, .32, .18], '#59351f', .82, 'wood');
+  box({ side: .18, forward: -.06, z: .19 }, [.2, .3, .18], '#58341f', .76, 'wood');
+  box({ side: -.29, forward: .03, z: 1.2 }, [.12, .5, .13], '#6f4529', .82, 'wood');
+  box({ side: .3, forward: .02, z: 1.22 }, [.12, .48, .13], '#613c26', .74, 'wood');
+
+  // Eight overlapping low-poly foliage volumes use the stone pattern. Their
+  // varied facets preserve green authored colors while matching the world’s
+  // existing painted texture treatment.
+  volume({ side: 0, forward: -.02, z: 1.38 }, [1.34, .98, .78], '#1a593b', .98, 0);
+  volume({ side: -.43, forward: -.02, z: 1.62 }, [.78, .7, .72], '#247747', 1.02, 1);
+  volume({ side: .43, forward: -.01, z: 1.61 }, [.8, .68, .7], '#216b42', .98, 2);
+  volume({ side: -.18, forward: .28, z: 1.72 }, [.72, .58, .66], '#2d8750', 1.01, 3);
+  volume({ side: .2, forward: .24, z: 1.75 }, [.7, .56, .68], '#2a7d49', .96, 4);
+  volume({ side: -.3, forward: -.08, z: 1.98 }, [.68, .58, .62], '#3a9455', 1.02, 5);
+  volume({ side: .3, forward: -.04, z: 2.0 }, [.66, .56, .62], '#32874d', 1, 6);
+  volume({ side: 0, forward: .04, z: 2.27 }, [.58, .5, .54], '#70b965', 1.06, 7);
+
+  // Add a broad upper crown so the tree has an unmistakable leafy top rather
+  // than ending in a narrow point. Both tiers use the same stone pattern as
+  // the lower foliage and expose textured upper-facing triangles.
+  addFacetedTreeCrown(faces, origin, { side: 0, forward: -.02, z: 2.34 * scale }, [1.2 * scale, .94 * scale, .88 * scale], yaw, '#3d9655', 1.02, 8);
+  addFacetedTreeCrown(faces, origin, { side: -.03 * scale, forward: .02 * scale, z: 2.78 * scale }, [.82 * scale, .66 * scale, .7 * scale], yaw, '#58aa5d', 1.04, 9);
+  addFacetedTreeCrown(faces, origin, { side: .04 * scale, forward: -.01 * scale, z: 3.1 * scale }, [.48 * scale, .4 * scale, .48 * scale], yaw, '#79c56a', 1.08, 10);
   renderFaces(faces, .98);
-  drawGroundGlow(tree.x, tree.y, '#6c9d68', now, .84 * scale, .035);
+  drawGroundGlow(tree.x, tree.y, '#6c9d68', now, .92 * scale, .035);
 }
 
+function addFacetedBushCluster(faces, origin, center, dimensions, yaw, color, shade = 1, variant = 0) {
+  const [sideSize, forwardSize, height] = dimensions;
+  const ringCount = 10;
+  const makeRing = (z, radiusScale, phase) => {
+    const points = [];
+    for (let index = 0; index < ringCount; index += 1) {
+      const angle = index * TAU / ringCount + variant * .19;
+      const wobble = .9 + Math.sin(index * 2.41 + phase + variant * 1.3) * .08;
+      const worldPoint = localToWorld(origin.x, origin.y, yaw, {
+        side: center.side + Math.cos(angle) * sideSize * .5 * radiusScale * wobble,
+        forward: center.forward + Math.sin(angle) * forwardSize * .5 * radiusScale * wobble,
+        z,
+      });
+      points.push(cameraPoint(worldPoint.x, worldPoint.y, worldPoint.z));
+    }
+    return points;
+  };
+  const lower = makeRing(center.z - height * .5, .78, .2);
+  const shoulder = makeRing(center.z + height * .02, 1, 1.1);
+  const top = makeRing(center.z + height * .38, .68, 2.2);
+  const capWorld = localToWorld(origin.x, origin.y, yaw, {
+    side: center.side + Math.sin(variant * 1.7) * sideSize * .06,
+    forward: center.forward + Math.cos(variant * 1.4) * forwardSize * .05,
+    z: center.z + height * .52,
+  });
+  const cap = cameraPoint(capWorld.x, capWorld.y, capWorld.z);
+
+  for (let index = 0; index < ringCount; index += 1) {
+    const next = (index + 1) % ringCount;
+    const faceShade = shade * (.8 + ((index + variant) % 4) * .065);
+    faces.push({ points: [lower[index], lower[next], shoulder[next], shoulder[index]], color, shade: faceShade * .9, material: 'stone' });
+    faces.push({ points: [shoulder[index], shoulder[next], top[next], top[index]], color, shade: faceShade, material: 'stone' });
+    faces.push({ points: [top[index], top[next], cap], color, shade: faceShade * 1.04, material: 'stone' });
+  }
+}
 function drawLobbyBush3D(bush, now) {
   if (state.room !== (bush.roomIndex ?? 0) || !objectInView(bush.x, bush.y, 24)) return;
   const faces = [];
   const origin = { x: bush.x, y: bush.y };
-  const scale = bush.scale || 1;
+  // Give bushes the same expanded, faceted treatment as the trees while keeping
+  // them low enough to frame paths and weapon displays.
+  const scale = (bush.scale || 1) * 1.2;
   const yaw = bush.yaw ?? 0;
-  const box = (center, dimensions, color, shade = 1, material = null) => addBoxLocal(
+  const cluster = (center, dimensions, color, shade = 1, variant = 0) => addFacetedBushCluster(
     faces,
     origin,
     { side: center.side * scale, forward: center.forward * scale, z: center.z * scale },
@@ -4984,18 +5381,21 @@ function drawLobbyBush3D(bush, now) {
     yaw,
     color,
     shade,
-    material,
+    variant,
   );
 
-  // Overlapping cuboids keep the bush faceted and low-poly while giving it a
-  // softer silhouette than another full tree canopy.
-  box({ side: 0, forward: 0, z: .13 }, [.7, .56, .24], '#174b34', .88, null);
-  box({ side: -.22, forward: .01, z: .31 }, [.56, .48, .42], '#236b40', .98, null);
-  box({ side: .2, forward: .03, z: .34 }, [.58, .5, .46], '#2e8050', 1.02, null);
-  box({ side: 0, forward: -.08, z: .5 }, [.42, .4, .38], '#5aa85d', 1.03, null);
-  box({ side: -.08, forward: .15, z: .43 }, [.28, .24, .3], '#79bd68', 1.06, null);
+  // Layered eight-sided clusters create a busy silhouette with leafy material
+  // on every face, including the upper triangles and visible caps.
+  cluster({ side: 0, forward: 0, z: .18 }, [.86, .66, .3], '#174b34', .88, 0);
+  cluster({ side: -.28, forward: -.01, z: .35 }, [.64, .54, .48], '#236b40', .98, 1);
+  cluster({ side: .27, forward: .02, z: .38 }, [.68, .56, .5], '#2e8050', 1.02, 2);
+  cluster({ side: -.08, forward: .17, z: .52 }, [.55, .46, .5], '#439654', 1.03, 3);
+  cluster({ side: .1, forward: -.12, z: .63 }, [.48, .4, .48], '#65ae60', 1.06, 4);
+  cluster({ side: -.16, forward: .04, z: .72 }, [.38, .34, .4], '#55a85a', 1.04, 5);
+  cluster({ side: .18, forward: .06, z: .75 }, [.4, .34, .42], '#70b965', 1.06, 6);
+  cluster({ side: 0, forward: .01, z: .91 }, [.34, .3, .36], '#8bc96e', 1.08, 7);
   renderFaces(faces, .98);
-  drawGroundGlow(bush.x, bush.y, '#4d9b5d', now, .55 * scale, .035);
+  drawGroundGlow(bush.x, bush.y, '#4d9b5d', now, .62 * scale, .035);
 }
 
 function drawLobbyGuide(guide, now) {
@@ -5004,26 +5404,47 @@ function drawLobbyGuide(guide, now) {
   const origin = { x: guide.x, y: guide.y };
   const yaw = guide.yaw ?? 0;
   const walking = Boolean(state.guideRun);
-  const walkPhase = walking ? now / LOBBY_GUIDE_WALK_ANIMATION_MS : 0;
-  const stride = walking ? Math.sin(walkPhase) : 0;
-  const bob = walking ? Math.abs(Math.sin(walkPhase)) * .012 : 0;
+  const walkPhase = walking ? now / LOBBY_GUIDE_WALK_ANIMATION_MS : now / 1150;
+  const stride = walking ? Math.sin(walkPhase) : Math.sin(walkPhase) * .16;
+  const bob = walking ? Math.abs(Math.sin(walkPhase)) * .012 : Math.sin(now / 620) * .006;
   const legForward = stride * .045;
   const armForward = -stride * .035;
-  // Pip is intentionally small—about half the camera eye height—with an
-  // oversized head and ears so the silhouette reads at a glance.
+
+  // Restore Pip's original compact silhouette. The authored pip-skin material
+  // adds surface detail without increasing the mesh's polygon count.
   addBoxLocal(faces, origin, { side: 0, forward: 0, z: .085 + bob }, [.18, .16, .13], yaw, '#76502f', .9, 'leather');
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .19 + bob }, [.19, .17, .11], yaw, '#4d9a68', 1.02, null);
-  addBoxLocal(faces, origin, { side: -.12, forward: .01, z: .215 + bob }, [.08, .08, .13], yaw - .16, '#3c7e56', .92, null);
-  addBoxLocal(faces, origin, { side: .12, forward: .01, z: .215 + bob }, [.08, .08, .13], yaw + .16, '#3c7e56', .86, null);
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .19 + bob }, [.19, .17, .11], yaw, '#4d9a68', 1.02, 'pip-skin');
+  addBoxLocal(faces, origin, { side: -.12, forward: .01, z: .215 + bob }, [.08, .08, .13], yaw - .16, '#3c7e56', .92, 'pip-skin');
+  addBoxLocal(faces, origin, { side: .12, forward: .01, z: .215 + bob }, [.08, .08, .13], yaw + .16, '#3c7e56', .86, 'pip-skin');
   addBoxLocal(faces, origin, { side: -.045, forward: .095, z: .19 + bob }, [.028, .018, .024], yaw, '#1c2923', .96, 'steel');
   addBoxLocal(faces, origin, { side: .045, forward: .095, z: .19 + bob }, [.028, .018, .024], yaw, '#1c2923', .96, 'steel');
-  addBoxLocal(faces, origin, { side: -.125, forward: armForward, z: .14 + bob }, [.055, .08, .16], yaw, '#36794e', .9, null);
-  addBoxLocal(faces, origin, { side: .125, forward: -armForward, z: .14 + bob }, [.055, .08, .16], yaw, '#36794e', .86, null);
+  addBoxLocal(faces, origin, { side: -.125, forward: armForward, z: .14 + bob }, [.055, .08, .16], yaw, '#36794e', .9, 'pip-skin');
+  addBoxLocal(faces, origin, { side: .125, forward: -armForward, z: .14 + bob }, [.055, .08, .16], yaw, '#36794e', .86, 'pip-skin');
   addBoxLocal(faces, origin, { side: -.055, forward: legForward, z: .035 }, [.07, .1, .07], yaw, '#392821', .84, 'leather');
   addBoxLocal(faces, origin, { side: .055, forward: -legForward, z: .035 }, [.07, .1, .07], yaw, '#392821', .78, 'leather');
-  renderFaces(faces, .99);
-  drawGroundGlow(guide.x, guide.y, '#70d38f', now, .38, .035);
 
+  // Keep the shorter cane, but animate its plant and lean opposite Pip's step.
+  const caneStride = walking ? Math.sin(walkPhase + Math.PI) : Math.sin(now / 900) * .08;
+  const caneSide = .19 + caneStride * .035;
+  const caneForward = .035 + caneStride * .045;
+  const caneLean = caneStride * .08;
+  const caneStart = { side: caneSide, forward: caneForward, z: .045 };
+  const caneEnd = { side: caneSide + caneLean * .12, forward: caneForward + caneStride * .012, z: .29 };
+  addBoneLocal(faces, origin, caneStart, caneEnd, .018, yaw, '#76502f', 'wood');
+  addBoneLocal(
+    faces,
+    origin,
+    { side: caneEnd.side - .045, forward: caneEnd.forward, z: caneEnd.z },
+    { side: caneEnd.side + .02, forward: caneEnd.forward + .005, z: caneEnd.z },
+    .021,
+    yaw,
+    '#8e6339',
+    'wood',
+  );
+  addBoxLocal(faces, origin, { side: caneStart.side, forward: caneStart.forward, z: .03 }, [.035, .035, .025], yaw, '#d0a456', 1.04, 'steel');
+
+  renderFaces(faces, .99);
+  drawGroundGlow(guide.x, guide.y, '#70d38f', now, .3, .035);
 }
 
 function drawLobbyGuideSpeechBubble(guide, now) {
@@ -5411,20 +5832,24 @@ function drawWorldProjectiles(now) {
       addFlatSquareBladeWorld(faces, projectile, { side: 0, forward: 0, z: projectile.z + starThickness * .52 }, starSize * .48, .012, starRotation, '#fff0b2', .98);
       addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [.065, .065, .08], starRotation, '#5b3d25', 1.08, 'steel');
     } else if (projectile.kind === 'arrow') {
-      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [.045, .72, .045], yaw, '#d5b66e', 1, 'steel');
-      addBoxLocal(faces, projectile, { side: 0, forward: .42, z: projectile.z }, [.16, .18, .16], color, 1.12, 'steel');
-      addBoxLocal(faces, projectile, { side: 0, forward: -.27, z: projectile.z }, [.18, .1, .025], '#efe0a9', .95, 'steel');
-    } else if (projectile.spell) {
-      const spellScale = projectile.spellKind === 'fireball' ? 1.7 : projectile.spellKind === 'chain' ? 1.35 : 1.2;
-      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * spellScale, size * spellScale, size * spellScale], yaw, renderColor, 1.12, null);
-      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * spellScale * .5, size * spellScale * .5, size * spellScale * .5], yaw + Math.PI / 4, renderLight, 1.18, null);
-      if (projectile.spellKind === 'fireball') addBoxLocal(faces, projectile, { side: 0, forward: -.2, z: projectile.z }, [size * 2.1, size * .42, size * .42], yaw, renderAccent, 1.02, null);
-      if (projectile.spellKind === 'chain' || projectile.spellKind === 'beam') addBoxLocal(faces, projectile, { side: 0, forward: -.18, z: projectile.z + .08 }, [size * .34, size * 1.8, size * .34], yaw + Math.PI / 4, renderAccent, 1.02, null);
+      const boltYaw = yaw + Math.sin((projectile.age || 0) * 18 + projectile.spin) * .015;
+      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [.045, .76, .045], boltYaw, '#d5b66e', 1, 'wood');
+      addFacetedWeaponVolumeWorld(faces, projectile, { side: 0, forward: .42, z: projectile.z }, [.16, .19, .14], boltYaw, color, 1.16, 'steel', 2);
+      addBoxLocal(faces, projectile, { side: -.075, forward: -.28, z: projectile.z + .025 }, [.026, .16, .09], boltYaw, '#efe0a9', .98, 'bone');
+      addBoxLocal(faces, projectile, { side: .075, forward: -.28, z: projectile.z + .025 }, [.026, .16, .09], boltYaw, '#efe0a9', .9, 'bone');
+      addBoxLocal(faces, projectile, { side: 0, forward: -.29, z: projectile.z }, [.17, .08, .025], '#9d6d39', .92, 'wood');
+    } else if (projectile.kind === 'wand-fireball') {
+      const firePulse = settings.reducedMotion ? .5 : .8 + Math.sin((projectile.age || 0) * 15 + projectile.spin) * .16;
+      const fireYaw = yaw + (projectile.age || 0) * 2.8;
+      addFacetedWeaponVolumeWorld(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * 1.7 * firePulse, size * 1.45, size * 1.7 * firePulse], fireYaw, color, 1.12, 'steel', 4);
+      addFacetedWeaponVolumeWorld(faces, projectile, { side: 0, forward: .03, z: projectile.z }, [size * .82, size * .7, size * .82], fireYaw - .7, '#fff1b0', 1.2, 'steel', 5);
+      addBoxLocal(faces, projectile, { side: 0, forward: -.22, z: projectile.z }, [size * 1.85, size * .38, size * .38], yaw, '#9f3f2f', .92, 'steel');
+      addBoxLocal(faces, projectile, { side: 0, forward: -.42, z: projectile.z }, [size * 1.05, size * .2, size * .2], yaw, '#f3b34e', 1.04, 'steel');
     } else {
       const coreScale = projectile.kind === 'spell-chain' ? 1.25 : projectile.kind === 'spell-orb' ? 1.08 : 1;
-      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * coreScale, size * coreScale, size * coreScale], yaw, color, 1.15, 'steel');
-      addBoxLocal(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * .54, size * .54, size * .54], yaw, '#fff1b0', 1.18, 'steel');
-      if (projectile.kind === 'spell-fireball' || projectile.kind === 'wand-fireball') {
+      addFacetedWeaponVolumeWorld(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * coreScale, size * coreScale, size * coreScale], yaw, color, 1.15, 'steel', 1);
+      addFacetedWeaponVolumeWorld(faces, projectile, { side: 0, forward: 0, z: projectile.z }, [size * .54, size * .54, size * .54], yaw + Math.PI / 4, '#fff1b0', 1.18, 'steel', 2);
+      if (projectile.kind === 'spell-fireball') {
         addBoxLocal(faces, projectile, { side: 0, forward: -.2, z: projectile.z }, [size * 1.5, size * .35, size * .35], yaw, '#9f3f2f', .9, 'steel');
         addBoxLocal(faces, projectile, { side: 0, forward: -.38, z: projectile.z }, [size * .9, size * .18, size * .18], yaw, '#f3b34e', 1, 'steel');
       }
@@ -5494,14 +5919,15 @@ function drawWorldProjectiles(now) {
       ctx.restore();
     }
     const trail = projectile.trail || [];
-    if (projectile.spell && trail.length > 1) {
+    const leavesTrail = projectile.spell || ['ninja-star', 'arrow', 'wand-fireball'].includes(projectile.kind);
+    if (leavesTrail && trail.length > 1) {
       ctx.save(); ctx.lineCap = 'round';
       for (let index = 1; index < trail.length; index += 1) {
         const a = projectCameraPoint(cameraPoint(trail[index - 1].x, trail[index - 1].y, trail[index - 1].z));
         const b = projectCameraPoint(cameraPoint(trail[index].x, trail[index].y, trail[index].z));
         if (!a || !b) continue;
-        ctx.globalAlpha = (1 - index / trail.length) * .48;
-        ctx.strokeStyle = color; ctx.shadowBlur = 10; ctx.shadowColor = color; ctx.lineWidth = Math.max(1, canvas.height * .006 * (1 - index / trail.length));
+        ctx.globalAlpha = (1 - index / trail.length) * (projectile.spell ? .48 : .34);
+        ctx.strokeStyle = projectile.kind === 'arrow' ? '#f0d38d' : color; ctx.shadowBlur = projectile.spell ? 10 : 7; ctx.shadowColor = ctx.strokeStyle; ctx.lineWidth = Math.max(1, canvas.height * (projectile.kind === 'arrow' ? .0032 : .006) * (1 - index / trail.length));
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
       }
       ctx.restore();
@@ -5703,33 +6129,46 @@ function weaponMotion() {
 
 function drawNinjaStars(now) {
   const { active, t } = weaponMotion();
+  const combo = state.weapon.comboStep || 1;
   const moving = state.weapon.moving;
+  const idleSpin = settings.reducedMotion ? 0 : now / 390;
+  const anticipation = active ? 1 - clamp(t / .22, 0, 1) : 0;
+  const release = active ? easeOutCubic(clamp((t - .18) / .64, 0, 1)) : 0;
+  const recoil = active ? Math.sin(clamp((t - .54) / .3, 0, 1) * Math.PI) : 0;
   const bob = moving ? Math.sin(state.weapon.bobPhase) * .025 : Math.sin(now / 650) * .01;
-  const throwMotion = active ? easeOutCubic(clamp(t / .55, 0, 1)) : 0;
-  const recoil = active ? Math.sin(clamp(t / .72, 0, 1) * Math.PI) * .14 : 0;
-  const starYaw = 0;
+  const starYaw = idleSpin + release * (combo === 3 ? 8.5 : 6.4) + combo * .12;
   const faces = [];
-  const origin = { side: .39 - recoil, forward: 1.18 + throwMotion * .2, z: -.12 + bob + throwMotion * .04 };
-  // The equipped Ninja Star is held lower in the view. Its face stays on the
-  // side/forward plane and its thin dimension stays vertical along z.
-  const starSize = .18 + (active ? .02 : 0);
+  const origin = {
+    side: .39 - anticipation * .09 - release * .16 + recoil * .07,
+    forward: 1.18 + anticipation * .06 + release * .2,
+    z: -.12 + bob + anticipation * .05,
+  };
+  const starSize = .158 + (active ? .018 + recoil * .01 : 0);
   const starCenter = { side: 0, forward: .18, z: .50 };
   addFlatSquareBladeCamera(faces, origin, starCenter, starSize, .032, starYaw, '#e6d29a', 1.12);
-  addFlatSquareBladeCamera(faces, origin, { ...starCenter, z: starCenter.z + .019 }, starSize * .48, .012, starYaw, '#fff0b2', .98);
-  addWeaponBox(faces, origin, { side: 0, forward: .19, z: .50 }, [.045, .055, .045], 0, '#5b3d25', 1.08, 'steel');
+  addFlatSquareBladeCamera(faces, origin, { ...starCenter, z: starCenter.z + .016 }, starSize * .44, .009, starYaw - .7, '#fff0b2', 1.02);
+  addFlatSquareBladeCamera(faces, origin, { ...starCenter, z: starCenter.z + .022 }, starSize * .72, .005, starYaw + Math.PI / 2, '#fff8d6', .42);
+  addWeaponBox(faces, origin, { side: 0, forward: .19, z: .50 }, [.036, .045, .036], 0, '#5b3d25', 1.08, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .19, z: .55 }, [.018, .025, .035], 0, '#fff0b2', .88, 'steel');
   renderFaces(faces, 1, true);
 
   const center = projectCameraPoint({ side: origin.side, forward: origin.forward + .18, z: origin.z + .50 });
   if (!center) return;
   const size = Math.max(10, canvas.height * (.045 + (active ? .006 : 0)));
   ctx.save();
-  ctx.globalAlpha = .28 + (active ? .24 : 0);
+  if (active && !settings.reducedMotion) {
+    for (let trail = 3; trail >= 1; trail -= 1) {
+      drawNinjaStarBlade(center.x - trail * canvas.height * .004, center.y + trail * canvas.height * .002, size * (.82 - trail * .06), starYaw - trail * .28, '#d08a4c', .08 + (3 - trail) * .035);
+    }
+  }
+  drawNinjaStarBlade(center.x, center.y, size * .86, starYaw, '#f2dfaa', active ? .34 : .2);
+  ctx.globalAlpha = .24 + (active ? .24 : 0);
   ctx.strokeStyle = '#fff1b0';
   ctx.shadowBlur = 12;
   ctx.shadowColor = '#d08a4c';
   ctx.lineWidth = Math.max(1, canvas.height * .002);
   ctx.beginPath();
-  ctx.arc(center.x, center.y, size * .32, 0, TAU);
+  ctx.arc(center.x, center.y, size * (.32 + recoil * .2), starYaw, starYaw + Math.PI * 1.35);
   ctx.stroke();
   ctx.restore();
 }
@@ -5739,47 +6178,58 @@ function drawWand(now) {
   const attunement = wandColorForSpell();
   const attunementLight = selectedSpellDefinition()?.color || EMERALD_LIGHT;
   const moving = state.weapon.moving;
-  const bob = moving ? Math.sin(state.weapon.bobPhase) * .02 : Math.sin(now / 620) * .008;
+  const anticipation = active ? 1 - clamp(t / .26, 0, 1) : 0;
   const cast = active ? Math.sin(clamp(t / .82, 0, 1) * Math.PI) : 0;
-  const lift = active ? easeOutCubic(clamp(t / .48, 0, 1)) * .16 : 0;
-  const sideOffset = active ? -cast * .07 : 0;
-  const roll = -.16 + cast * .12;
+  const release = active ? easeOutCubic(clamp((t - .34) / .42, 0, 1)) : 0;
+  const castPulse = active ? Math.sin(clamp((t - .43) / .18, 0, 1) * Math.PI) : 0;
+  const bob = moving ? Math.sin(state.weapon.bobPhase) * .02 : Math.sin(now / 620) * .008;
+  const lift = anticipation * .055 + cast * .16 - release * .04;
+  const sideOffset = -anticipation * .08 - cast * .04 + release * .08;
+  const roll = -.16 + anticipation * .13 + cast * .16 - release * .12;
   const faces = [];
   const origin = { side: .42 + sideOffset, forward: 1.25 - cast * .08, z: -.04 + bob + lift };
 
-  // The shaft now drops below the hand toward the ground instead of ending at the grip.
-  addWeaponBox(faces, origin, { side: 0, forward: .02, z: .4 }, [.115, .12, 2.12], roll, '#4a2d20', .98, 'wood');
-  addWeaponBox(faces, origin, { side: 0, forward: .035, z: .12 }, [.2, .17, .24], roll, '#241716', .94, 'leather');
-  addWeaponBox(faces, origin, { side: 0, forward: .03, z: -.68 }, [.17, .16, .12], roll, '#8f6338', .92, 'steel');
+  // Textured shaft, grip, ferrules, and a faceted crystal head.
+  addWeaponBox(faces, origin, { side: 0, forward: .02, z: .4 }, [.086, .095, 2.2], roll, '#4a2d20', .98, 'wood');
+  addWeaponBox(faces, origin, { side: 0, forward: .035, z: .12 }, [.16, .145, .24], roll, '#241716', .94, 'leather');
+  addWeaponBox(faces, origin, { side: 0, forward: .03, z: -.68 }, [.13, .13, .1], roll, '#8f6338', .92, 'steel');
   addWeaponBox(faces, origin, { side: 0, forward: .04, z: .27 }, [.17, .15, .055], roll, '#b07a3f', .94, 'steel');
   addWeaponBox(faces, origin, { side: 0, forward: .04, z: .82 }, [.15, .145, .05], roll, '#8f6338', .9, 'steel');
-  addWeaponBox(faces, origin, { side: 0, forward: .05, z: 1.17 }, [.19, .18, .085], roll, '#b07a3f', 1.02, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .05, z: 1.17 }, [.15, .145, .07], roll, '#b07a3f', 1.02, 'steel');
   addWeaponBox(faces, origin, { side: -.16, forward: .045, z: 1.21 }, [.045, .05, .28], roll, attunement, .9, 'steel');
   addWeaponBox(faces, origin, { side: .16, forward: .045, z: 1.21 }, [.045, .05, .28], roll, attunement, .9, 'steel');
 
-  // The jewel is transformed in staff-local coordinates, so it stays seated on the tip.
-  const gem = { side: .01, forward: .08, z: 1.43 };
+  const gem = { side: .01, forward: .08, z: 1.43 + castPulse * .04 };
   addWeaponBox(faces, origin, { side: gem.side, forward: gem.forward, z: gem.z - .07 }, [.15, .13, .07], roll, '#d09a4f', 1.08, null);
-  addWeaponCrystal(faces, origin, gem, .12, .08, .26, roll, attunement, 1.14, null);
-  addWeaponCrystal(faces, origin, { side: .01, forward: .105, z: 1.55 }, .055, .04, .12, roll, attunementLight || '#8de8d0', 1.2, null);
+  addWeaponCrystal(faces, origin, gem, .105 + castPulse * .016, .07, .3 + castPulse * .045, roll, attunement, 1.14, null);
+  addWeaponCrystal(faces, origin, { side: .01, forward: .105, z: 1.55 + castPulse * .05 }, .055, .04, .12, roll, attunementLight || '#8de8d0', 1.2, null);
   renderFaces(faces, 1, true);
 
-  const tip = projectCameraPoint({ side: origin.side, forward: origin.forward + .18, z: origin.z + 1.58 });
+  const tip = projectCameraPoint({ side: origin.side, forward: origin.forward + .18, z: origin.z + 1.62 + castPulse * .04 });
   if (tip) {
     ctx.save();
-    ctx.globalAlpha = .22 + cast * .5 + Math.sin(now / 130) * .05;
+    ctx.globalAlpha = .22 + cast * .5 + castPulse * .22 + Math.sin(now / 130) * .05;
     ctx.strokeStyle = attunement;
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = 24 + castPulse * 16;
     ctx.shadowColor = attunement;
     ctx.lineWidth = Math.max(1, canvas.height * .004);
-    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(6, canvas.height * (.015 + cast * .014)), 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(6, canvas.height * (.015 + cast * .014 + castPulse * .01)), 0, TAU); ctx.stroke();
     ctx.globalAlpha *= .78;
     ctx.fillStyle = attunementLight;
-    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(2, canvas.height * .0085), 0, TAU); ctx.fill();
-    for (let rune = 0; rune < 3; rune += 1) {
-      const angle = now / 500 + rune * TAU / 3;
-      ctx.globalAlpha = .46;
-      ctx.beginPath(); ctx.arc(tip.x + Math.cos(angle) * canvas.height * .018, tip.y + Math.sin(angle) * canvas.height * .018, Math.max(1, canvas.height * .003), 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(2, canvas.height * (.0085 + castPulse * .004)), 0, TAU); ctx.fill();
+    for (let rune = 0; rune < 4; rune += 1) {
+      const angle = now / (500 - rune * 35) + rune * TAU / 4;
+      const orbitRadius = canvas.height * (.018 + castPulse * .012);
+      ctx.globalAlpha = .42 + castPulse * .2;
+      ctx.beginPath(); ctx.arc(tip.x + Math.cos(angle) * orbitRadius, tip.y + Math.sin(angle) * orbitRadius, Math.max(1, canvas.height * (.003 + castPulse * .0015)), 0, TAU); ctx.fill();
+    }
+    if (active && !settings.reducedMotion) {
+      ctx.globalAlpha = .22 + castPulse * .25;
+      ctx.strokeStyle = attunementLight;
+      ctx.lineWidth = Math.max(1, canvas.height * .002);
+      ctx.beginPath();
+      ctx.arc(tip.x, tip.y, Math.max(8, canvas.height * (.026 + castPulse * .022)), now / 280, now / 280 + Math.PI * 1.35);
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -5809,33 +6259,45 @@ function drawCrossbowArrow() { /* Arrows are rendered from state.projectiles in 
 
 function drawSword(now) {
   const { active, t, definition } = weaponMotion();
+  const combo = state.weapon.comboStep || 1;
   const moving = state.weapon.moving;
   const bob = moving ? Math.sin(state.weapon.bobPhase) * .018 : Math.sin(now / 680) * .006;
-  const rawProgress = active ? clamp(t / definition.duration, 0, 1) : 0;
-  const progress = rawProgress < .5
-    ? 4 * rawProgress * rawProgress * rawProgress
-    : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+  const comboPose = [
+    { start: -.98, end: 1.08, side: .54, endSide: -.48 },
+    { start: -.64, end: 1.28, side: .48, endSide: -.54 },
+    { start: -1.16, end: .84, side: .62, endSide: -.62 },
+  ][Math.min(2, combo - 1)];
 
-  // Sword coordinates are camera-local: negative side is screen-left and
-  // positive z is up. The authored endpoints make the attack unmistakable:
-  // high/right at the start, then low/left at the follow-through.
-  const poseAt = (sample) => ({
-    angle: active ? lerp(-.92, 1.08, sample) : -.14,
-    origin: {
-      side: active ? lerp(.54, -.48, sample) : .42,
-      forward: active ? lerp(1.28, 1.0, sample) : 1.16,
-      z: (active ? lerp(.1, -.34, sample) : -.14) + bob + (active ? Math.sin(sample * Math.PI) * .045 : 0),
-    },
-  });
+  // The swing has a visible wind-up, a fast cutting phase, and a short
+  // follow-through. The existing hitAt value still controls gameplay impact.
+  const poseAt = (sample) => {
+    const anticipation = active ? 1 - clamp(sample / .18, 0, 1) : 0;
+    const strike = active ? easeOutCubic(clamp((sample - .12) / .58, 0, 1)) : 0;
+    const follow = active ? easeOutCubic(clamp((sample - .7) / .2, 0, 1)) : 0;
+    return {
+      angle: active ? lerp(comboPose.start, comboPose.end, strike) + follow * .18 - settle * .08 : -.14,
+      origin: {
+        side: active
+          ? lerp(comboPose.side, comboPose.endSide, strike) + anticipation * .1 + follow * .1
+          : .42,
+        forward: active ? lerp(1.28, 1.0, strike) + anticipation * .04 : 1.16,
+        z: (active ? lerp(.1, -.34, strike) : -.14) + bob + anticipation * .07 + Math.sin(strike * Math.PI) * .045,
+      },
+    };
+  };
+  const progress = active ? clamp(t / definition.duration, 0, 1) : 0;
+  const settle = active ? easeOutCubic(clamp((progress - .82) / .18, 0, 1)) : 0;
   const pose = poseAt(progress);
   const origin = pose.origin;
   const sweepAngle = pose.angle;
   const faces = [];
 
   addWeaponBox(faces, origin, { side: 0, forward: .03, z: .14 }, [.11, .15, .38], sweepAngle, '#3a241b', .98, 'leather');
-  addWeaponBox(faces, origin, { side: 0, forward: .05, z: .35 }, [.34, .16, .075], sweepAngle, '#b8f0e2', 1.02, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .05, z: .35 }, [.3, .13, .065], sweepAngle, '#b8f0e2', 1.02, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .075, z: .35 }, [.18, .045, .025], sweepAngle, '#f4fff0', 1.16, 'steel');
   addWeaponBox(faces, origin, { side: 0, forward: .03, z: -.08 }, [.16, .16, .1], sweepAngle, '#8d633d', .96, 'steel');
-  addSwordBladeCamera(faces, origin, { side: 0, forward: .1, z: .39 }, .17, 1.42, .045, sweepAngle, '#cfe8dc', 1.05);
+  addSwordBladeCamera(faces, origin, { side: 0, forward: .1, z: .39 }, .145, 1.48, .038, sweepAngle, '#cfe8dc', 1.05);
+  addSwordBladeCamera(faces, origin, { side: 0, forward: .132, z: .43 }, .034, 1.31, .014, sweepAngle, '#f4fff0', 1.08);
   addWeaponBox(faces, origin, { side: 0, forward: .08, z: 1.08 }, [.12, .06, .045], sweepAngle, '#f4fff0', 1.12, 'steel');
   renderFaces(faces, 1, true);
 
@@ -5848,19 +6310,32 @@ function drawSword(now) {
   ctx.shadowColor = '#b8f0e2';
   ctx.lineWidth = Math.max(1, canvas.height * .0022);
   ctx.beginPath();
-  ctx.arc(tip.x, tip.y, Math.max(4, canvas.height * (.018 + (active ? .012 : 0))), 0, TAU);
+  ctx.arc(tip.x, tip.y, Math.max(4, canvas.height * (.017 + (active ? .013 : 0) + settle * .004)), 0, TAU);
   ctx.stroke();
 
   if (active && !settings.reducedMotion) {
-    ctx.globalAlpha = .16 + Math.sin(progress * Math.PI) * .28;
+    ctx.globalAlpha = .12 + Math.sin(progress * Math.PI) * .32;
     ctx.lineWidth = Math.max(1, canvas.height * .0042);
     ctx.beginPath();
-    const trailStart = Math.max(0, progress - .36);
-    for (let sample = trailStart; sample <= progress; sample += .04) {
+    const trailStart = Math.max(0, progress - .42);
+    for (let sample = trailStart; sample <= progress; sample += .035) {
       const samplePose = poseAt(sample);
       const sampleTip = projectCameraPoint(weaponLocalPoint(samplePose.origin, 0, .1, .39 + 1.42, samplePose.angle));
       if (!sampleTip) continue;
       if (sample === trailStart) ctx.moveTo(sampleTip.x, sampleTip.y);
+      else ctx.lineTo(sampleTip.x, sampleTip.y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha *= .58;
+    ctx.lineWidth = Math.max(1, canvas.height * .0018);
+    ctx.strokeStyle = '#f4fff0';
+    ctx.beginPath();
+    const highlightStart = Math.max(0, progress - .25);
+    for (let sample = highlightStart; sample <= progress; sample += .035) {
+      const samplePose = poseAt(sample);
+      const sampleTip = projectCameraPoint(weaponLocalPoint(samplePose.origin, 0, .1, .39 + 1.42, samplePose.angle));
+      if (!sampleTip) continue;
+      if (sample === highlightStart) ctx.moveTo(sampleTip.x, sampleTip.y);
       else ctx.lineTo(sampleTip.x, sampleTip.y);
     }
     ctx.stroke();
@@ -5872,31 +6347,60 @@ function drawCrossbow(now) {
   const { active, t } = weaponMotion();
   const moving = state.weapon.moving;
   const bob = moving ? Math.sin(state.weapon.bobPhase) * .016 : Math.sin(now / 730) * .005;
-  const draw = active ? Math.sin(clamp(t / .7, 0, 1) * Math.PI) : 0;
-  const recoil = active && t > .5 ? Math.sin(clamp((t - .5) / .18, 0, 1) * Math.PI) * .2 : 0;
-  const sideOffset = active ? -draw * .09 : 0;
-  const roll = -.13 + draw * .16;
+  const charge = active ? easeOutCubic(clamp(t / .62, 0, 1)) : 0;
+  const snap = active ? easeOutCubic(clamp((t - .62) / .16, 0, 1)) : 0;
+  const recoil = active ? Math.sin(clamp((t - .64) / .2, 0, 1) * Math.PI) : 0;
+  const idleTension = settings.reducedMotion ? .2 : .2 + Math.sin(now / 520) * .045;
+  const tension = active ? Math.max(0, charge * (1 - snap)) : idleTension;
+  const boltTravel = active ? easeOutCubic(clamp((t - .62) / .24, 0, 1)) * .34 : .025;
+  const sideOffset = -charge * .08 + recoil * .09;
+  const roll = -.13 + charge * .16 - snap * .18;
   const faces = [];
   const scale = .68;
-  const origin = { side: .39 + sideOffset, forward: 1.44 - recoil, z: -.01 + bob };
+  const origin = { side: .39 + sideOffset, forward: 1.44 - recoil * .1, z: -.01 + bob + charge * .025 };
 
-  // Long rear stock: the wood continues behind the trigger toward the player.
-  addWeaponBox(faces, origin, { side: 0, forward: -.34, z: .3 * scale }, [.24 * scale, 1.18 * scale, .2 * scale], roll, '#704622', .94, 'wood');
-  addWeaponBox(faces, origin, { side: 0, forward: -.91, z: .3 * scale }, [.28 * scale, .13 * scale, .25 * scale], roll, '#51331f', .98, 'wood');
-  // Raised rail and bolt channel.
-  addWeaponBox(faces, origin, { side: 0, forward: .13, z: .46 * scale }, [.15 * scale, .84 * scale, .1 * scale], roll, '#6d7170', 1, 'steel');
+  // Long rear stock, textured grip, and raised bolt channel.
+  addWeaponBox(faces, origin, { side: 0, forward: -.34, z: .3 * scale }, [.19 * scale, 1.18 * scale, .16 * scale], roll, '#704622', .94, 'wood');
+  addWeaponBox(faces, origin, { side: 0, forward: -.91, z: .3 * scale }, [.22 * scale, .13 * scale, .2 * scale], roll, '#51331f', .98, 'wood');
+  addWeaponBox(faces, origin, { side: 0, forward: .13, z: .46 * scale }, [.12 * scale, .84 * scale, .075 * scale], roll, '#6d7170', 1, 'steel');
   addWeaponBox(faces, origin, { side: 0, forward: .1, z: .52 * scale }, [.035 * scale, .82 * scale, .028 * scale], roll, '#e7d49d', 1, 'steel');
-  // Grip and trigger sit under the back half of the stock.
-  addWeaponBox(faces, origin, { side: 0, forward: -.1, z: .1 * scale }, [.16 * scale, .2 * scale, .38 * scale], roll, '#3e281b', .96, 'leather');
+  addWeaponBox(faces, origin, { side: 0, forward: -.1, z: .1 * scale }, [.13 * scale, .19 * scale, .34 * scale], roll, '#3e281b', .96, 'leather');
   addWeaponBox(faces, origin, { side: 0, forward: -.1, z: .27 * scale }, [.12 * scale, .08 * scale, .16 * scale], roll, '#c5ae73', 1, 'steel');
-  // Bow limbs sit at the front and read separately from the wooden stock.
+
+  // The faceted bow arms flex against the animated string. The string moves
+  // toward the stock during the draw and snaps forward on release.
   addWeaponBox(faces, origin, { side: 0, forward: .47 * scale, z: .46 * scale }, [.76 * scale, .1 * scale, .12 * scale], roll, '#6d7170', 1, 'steel');
   addWeaponBox(faces, origin, { side: -.38 * scale, forward: .47 * scale, z: .46 * scale }, [.18 * scale, .11 * scale, .27 * scale], roll, '#b9b7a0', .92, 'steel');
-  addWeaponBox(faces, origin, { side: .38 * scale, forward: .47 * scale, z: .46 * scale }, [.18 * scale, .11 * scale, .27 * scale], roll, '#b9b7a0', .92, 'steel');
-  // Bowstring flexes during the draw/release cycle; it is not an attack beam.
-  addWeaponBox(faces, origin, { side: 0, forward: .48 * scale - draw * .08, z: .46 * scale }, [.035 * scale, .035 * scale, .48 * scale], roll, '#e7d49d', 1, 'steel');
+  addWeaponBox(faces, origin, { side: .38 * scale, forward: .47 * scale, z: .46 * scale }, [.18 * scale, .11 * scale, .27 * scale], roll, '#b9b7a0', .88, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .48 * scale - tension * .12, z: .46 * scale }, [.028 * scale, .035 * scale, .48 * scale + tension * .12], roll, '#e7d49d', 1.1, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .48 * scale - tension * .12, z: .46 * scale + .23 * scale + tension * .05 }, [.035 * scale, .035 * scale, .05 * scale], roll, '#fff0b2', 1.12, 'steel');
+  addWeaponBox(faces, origin, { side: 0, forward: .16 * scale + boltTravel, z: .52 * scale }, [.035 * scale, .34 * scale, .035 * scale], roll, '#d5b66e', 1.04, 'wood');
+  addWeaponBox(faces, origin, { side: 0, forward: .34 * scale + boltTravel, z: .52 * scale }, [.08 * scale, .09 * scale, .07 * scale], roll, '#f0d38d', 1.1, 'steel');
   renderFaces(faces, 1, true);
-  drawCrossbowArrow();
+
+  const sight = projectCameraPoint({ side: origin.side, forward: origin.forward + .55, z: origin.z + .34 });
+  if (sight) {
+    ctx.save();
+    ctx.globalAlpha = .18 + tension * .34 + recoil * .2;
+    ctx.strokeStyle = '#fff0b2';
+    ctx.shadowBlur = 12 + tension * 12;
+    ctx.shadowColor = '#e7d49d';
+    ctx.lineWidth = Math.max(1, canvas.height * .002);
+    const radius = Math.max(4, canvas.height * (.012 + tension * .008));
+    ctx.beginPath();
+    ctx.arc(sight.x, sight.y, radius, 0, TAU);
+    ctx.moveTo(sight.x - radius * 1.35, sight.y);
+    ctx.lineTo(sight.x + radius * 1.35, sight.y);
+    ctx.stroke();
+    if (active && !settings.reducedMotion) {
+      ctx.globalAlpha = .16 + snap * .35;
+      ctx.strokeStyle = '#f0d38d';
+      ctx.beginPath();
+      ctx.arc(sight.x, sight.y, radius * (1.8 + snap * 1.4), -Math.PI * .4, Math.PI * .65);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 
 function drawWeapon(now) {
@@ -6122,6 +6626,78 @@ function drawBossTransition(now) {
   ctx.restore();
 }
 
+function drawCanvasResourceRow(value, maximum, x, y, width, color, icon, shake, now) {
+  const segmentCount = 10;
+  const iconWidth = Math.max(18, Math.min(26, width * .07));
+  const gap = Math.max(3, Math.round(width * .012));
+  const segmentGap = Math.max(2, Math.round(width * .006));
+  const barX = x + iconWidth + gap;
+  const barWidth = width - iconWidth - gap;
+  const segmentWidth = (barWidth - segmentGap * (segmentCount - 1)) / segmentCount;
+  const shakeAmount = Math.min(6, canvas.width * .0045);
+  const shakeProgress = clamp(shake / .34, 0, 1);
+  const offset = shake > 0 ? Math.sin(now / 28 + (icon === '♥' ? 0 : 1.8)) * shakeAmount * shakeProgress : 0;
+  const filled = clamp(value / Math.max(1, maximum), 0, 1) * segmentCount;
+
+  ctx.save();
+  ctx.translate(offset, 0);
+  ctx.globalAlpha = .96;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `bold ${Math.max(14, canvas.height * .022)}px Georgia, serif`;
+  ctx.fillStyle = color;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = color;
+  ctx.fillText(icon, x + iconWidth * .5, y + 7);
+  ctx.shadowBlur = 0;
+
+  for (let index = 0; index < segmentCount; index += 1) {
+    const segmentX = barX + index * (segmentWidth + segmentGap);
+    const segmentFill = clamp(filled - index, 0, 1);
+    const segmentHeight = 13;
+    const segmentY = y + 1;
+    ctx.fillStyle = 'rgba(15, 8, 4, .84)';
+    ctx.fillRect(segmentX, segmentY, segmentWidth, segmentHeight);
+    ctx.strokeStyle = 'rgba(115, 84, 40, .72)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(Math.floor(segmentX) + .5, segmentY + .5, Math.max(1, Math.floor(segmentWidth) - 1), segmentHeight - 1);
+
+    if (segmentFill <= 0) continue;
+    const innerX = segmentX + 2;
+    const innerY = segmentY + 2;
+    const innerWidth = Math.max(1, (segmentWidth - 4) * segmentFill);
+    const innerHeight = segmentHeight - 4;
+    ctx.fillStyle = color;
+    ctx.fillRect(innerX, innerY, innerWidth, innerHeight);
+    ctx.fillStyle = 'rgba(255, 239, 183, .25)';
+    ctx.fillRect(innerX, innerY, innerWidth, 2);
+    ctx.fillStyle = 'rgba(30, 8, 5, .28)';
+    ctx.fillRect(innerX, innerY + innerHeight - 2, innerWidth, 2);
+  }
+  ctx.restore();
+}
+
+function drawCanvasResourceBars(now) {
+  if (state.menuActive || state.launchTransition) return;
+  const width = canvas.width;
+  const height = canvas.height;
+  const barWidth = Math.min(520, Math.max(230, width * .48));
+  const x = (width - barWidth) / 2;
+  const top = Math.max(18, height * .035);
+  const rowGap = Math.max(5, height * .009);
+
+  ctx.save();
+  ctx.globalAlpha = .92;
+  ctx.fillStyle = 'rgba(12, 6, 3, .34)';
+  ctx.fillRect(x - 10, top - 6, barWidth + 20, 42 + rowGap);
+  ctx.strokeStyle = 'rgba(171, 129, 66, .46)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x - 9.5, top - 5.5, barWidth + 19, 41 + rowGap);
+  drawCanvasResourceRow(state.player.hp, 100, x, top, barWidth, '#b94945', '♥', state.healthBarShake, now);
+  drawCanvasResourceRow(state.stamina, state.maxStamina, x, top + 20 + rowGap, barWidth, '#d0a84d', 'ϟ', state.staminaBarShake, now);
+  ctx.restore();
+}
+
 function drawEffects() { if (state.damageFlash > 0) { ctx.fillStyle = `rgba(156, 43, 32, ${state.damageFlash * .2})`; ctx.fillRect(0, 0, canvas.width, canvas.height); } }
 
 function drawDodgeOverlay(now) {
@@ -6207,8 +6783,9 @@ function drawScene(now) {
   drawParticles();
   drawDamageNumbers();
   if (state.reading) drawHeldScroll(now);
-  else { drawWeapon(now); drawPassiveSpellFocus(now); drawSpellCast(now); drawSpellSwitchControls(now); }
+  else { drawWeapon(now); drawPassiveSpellFocus(now); }
   drawEffects();
+  drawCanvasResourceBars(now);
   drawLaunchTransition(now);
   drawForestTransition(now);
   drawBossTransition(now);
@@ -6224,9 +6801,12 @@ function drawScene(now) {
   }
 }
 
-function spendStamina(amount) {
+function spendStamina(amount, options = {}) {
   if (amount <= 0) return true;
-  if (state.stamina + .001 < amount) return false;
+  if (state.stamina + .001 < amount) {
+    if (options.feedback !== false) state.staminaBarShake = settings.reducedMotion ? .14 : .34;
+    return false;
+  }
   state.stamina = clamp(state.stamina - amount, 0, state.maxStamina);
   state.staminaRegenDelay = Math.max(state.staminaRegenDelay, .72);
   return true;
@@ -6274,6 +6854,8 @@ function tryDodge() {
 }
 
 function updateCombatState(delta) {
+  state.healthBarShake = Math.max(0, state.healthBarShake - delta);
+  state.staminaBarShake = Math.max(0, state.staminaBarShake - delta);
   state.dodgeCooldown = Math.max(0, state.dodgeCooldown - delta);
   state.dodgeInvulnerable = Math.max(0, state.dodgeInvulnerable - delta);
   state.comboTimer = Math.max(0, state.comboTimer - delta);
@@ -6373,6 +6955,7 @@ function damagePlayer(source, options = {}) {
   if (amount <= 0) return { blocked: true };
 
   state.player.hp -= amount;
+  state.healthBarShake = settings.reducedMotion ? .14 : .34;
   state.damageFlash = .95;
   state.shakeTime = settings.reducedMotion ? .13 : .45;
   state.impactBursts.push({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .42, color: '#d16f63', radius: .72, style: 'damage' });
@@ -6829,7 +7412,7 @@ function updateEnemies(delta) {
       if (enemy.telegraph.elapsed >= enemy.telegraph.duration) {
         fireEnemyRangedAttack(enemy);
         enemy.telegraph = null;
-        enemy.cooldown = 1.65 / (profile.attackRate || 1);
+        enemy.cooldown = 1.65 / (enemyAttackRate(enemy));
       }
       continue;
     }
@@ -6870,14 +7453,14 @@ function updateEnemies(delta) {
       else if (distance < preferred - .6) moveEnemy(enemy, -dx, -dy, enemy.speed * profile.speedMultiplier * slow * delta);
       if (visible && distance <= profile.attackDistance && enemy.cooldown <= 0) {
         createGroundHazard(enemy);
-        enemy.cooldown = 1.8 / (profile.attackRate || 1);
+        enemy.cooldown = 1.8 / (enemyAttackRate(enemy));
       }
     } else {
       if (distance > profile.attackDistance - .1) moveEnemy(enemy, dx, dy, enemy.speed * profile.speedMultiplier * slow * delta);
       if (visible && distance <= profile.attackDistance && enemy.cooldown <= 0) {
         enemy.attackTime = .55;
         enemy.attackHit = false;
-        enemy.cooldown = 1.25 / (profile.attackRate || 1);
+        enemy.cooldown = 1.25 / (enemyAttackRate(enemy));
       }
     }
   }
@@ -7151,7 +7734,9 @@ function updateProjectiles(delta) {
       projectile.vy = lerp(projectile.vy, desired.y, steering);
       projectile.vz = lerp(projectile.vz, desired.z, steering);
     }
-    if (projectile.spell) {
+    projectile.age = (projectile.age || 0) + delta;
+    const leavesTrail = projectile.spell || ['ninja-star', 'arrow', 'wand-fireball'].includes(projectile.kind);
+    if (leavesTrail) {
       projectile.trail.unshift({ x: projectile.x, y: projectile.y, z: projectile.z });
       if (projectile.trail.length > 12) projectile.trail.pop();
       if (projectile.spell && projectile.sparks && Math.random() < delta * (settings.reducedMotion ? 3 : 12)) spawnSpellTrailParticle(projectile);
@@ -7298,7 +7883,7 @@ function advanceToPortfolio() {
     const spawn = roomContentPoint(SANCTUARY_ROOM_INDEX, rooms[SANCTUARY_ROOM_INDEX].spawn.x, rooms[SANCTUARY_ROOM_INDEX].spawn.y);
     state.player.x = roomOffsets[SANCTUARY_ROOM_INDEX] + spawn.x;
     state.player.y = spawn.y;
-    state.player.angle = rooms[SANCTUARY_ROOM_INDEX].spawn.angle;
+      state.player.angle = rooms[SANCTUARY_ROOM_INDEX].spawn.angle;
     state.player.pitch = 0;
     state.room = SANCTUARY_ROOM_INDEX;
     state.sanctuaryActive = true;
@@ -7606,8 +8191,9 @@ try {
   textures.bone = createBoneTexture(96, 37);
   textures.steel = createSteelTexture(96, 53);
   textures.leather = createLeatherTexture(96, 71);
+  textures.pipSkin = createPipSkinTexture(128, 97);
   textures.dialogue = createDialogueTexture(128, 83);
-  textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat'), dialogue: ctx.createPattern(textures.dialogue, 'repeat') };
+  textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat'), 'pip-skin': ctx.createPattern(textures.pipSkin, 'repeat'), dialogue: ctx.createPattern(textures.dialogue, 'repeat') };
   updateWeaponSelection(state.weapon.type);
   state.weapon.equipped = false;
   clearLegacyStartupOverlays();

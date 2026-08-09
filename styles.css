@@ -1710,99 +1710,7 @@ button { color: inherit; }
   box-shadow: inset 0 1px 0 #f0d681, inset 0 -2px 0 #5b3c12 !important;
 }
 .status-meta { display: none !important; }
-.spell-status {
-  position: absolute;
-  z-index: 7;
-  top: auto;
-  right: auto;
-  bottom: 104px;
-  left: 28px;
-  display: block;
-  width: max-content;
-  max-width: calc(100% - 56px);
-  color: rgba(226, 202, 153, .9);
-  font-family: "DM Mono", monospace;
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, .92);
-  pointer-events: none;
-}
-.spell-current,
-.spell-status-label,
-#spell-hud-name { display: none !important; }
-.spell-status-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 24px;
-  white-space: nowrap;
-}
-.spell-key {
-  display: grid;
-  place-items: center;
-  min-width: 27px;
-  height: 22px;
-  padding: 0 4px;
-  border: 2px solid #6d542d;
-  border-radius: 0;
-  background: #120b07;
-  color: #f0d38f;
-  font: 800 9px/1 "DM Mono", monospace;
-  letter-spacing: .02em;
-  image-rendering: pixelated;
-  box-shadow: inset 0 0 0 1px #2b1a0e, 2px 2px 0 rgba(0, 0, 0, .72);
-}
-.spell-arrow {
-  display: grid;
-  place-items: center;
-  width: 14px;
-  height: 22px;
-  color: #d6b56d;
-  font: 800 12px/1 "DM Mono", monospace;
-  text-shadow: 1px 1px 0 #160b05;
-}
-@media (max-width: 760px) {
-  .player-status {
-    top: 14px !important;
-    width: calc(100% - 24px) !important;
-  }
-  .status-bar {
-    grid-template-columns: 70px minmax(0, 1fr) 58px !important;
-    gap: 0 8px !important;
-  }
-  .status-label { font-size: 8px !important; }
-  .status-bar strong { font-size: 8px !important; }
-  .status-track { height: 11px !important; }
-  .spell-status {
-    bottom: 68px;
-    left: 14px;
-    max-width: calc(100% - 28px);
-  }
-  .spell-key { min-width: 24px; height: 20px; font-size: 8px; }
-  .spell-arrow { width: 12px; height: 20px; font-size: 10px; }
-}
-
 /* Rooms marked roof:true get a darker, timbered ceiling treatment. */
-
-/* Spell switching is rendered on the canvas beneath the projected in-hand glyph. */
-.spell-status {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  overflow: hidden !important;
-  clip: rect(0 0 0 0) !important;
-  clip-path: inset(50%) !important;
-  white-space: nowrap !important;
-  pointer-events: none !important;
-}
-.spell-key,
-.spell-arrow {
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  min-width: 0 !important;
-  width: auto !important;
-  height: auto !important;
-  padding: 0 !important;
-}
 
 /* Enhanced field-record presentation: the world scroll sprite remains untouched;
    these rules only style the opened reading surface. */
@@ -2271,3 +2179,7 @@ button { color: inherit; }
 .player-status .status-pixel {
   transition: none !important;
 }
+
+
+/* Resource bars are rendered by the canvas so they share the game's pixel/world treatment. */
+.player-status { display: none !important; }
