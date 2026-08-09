@@ -44,6 +44,10 @@ const floorAnnouncementSubtitle = document.getElementById('floor-announcement-su
 const interactionPrompt = document.getElementById('interaction-prompt');
 const promptKey = document.getElementById('prompt-key');
 const promptText = document.getElementById('prompt-text');
+const cockroachTooltip = document.getElementById('cockroach-tooltip');
+const lobbyGuideHud = document.getElementById('lobby-guide-hud');
+const lobbyGuideHudMessage = document.getElementById('lobby-guide-hud-message');
+const lobbyGuideHudHint = document.getElementById('lobby-guide-hud-hint');
 const toast = document.getElementById('toast');
 const readingOverlay = document.getElementById('reading-overlay');
 const scrollRoomLabel = document.getElementById('scroll-room-label');
@@ -452,30 +456,68 @@ for (const y of FOREST_HALL_ROWS) worldMap[y][FOREST_EXIT_WALL_X] = '1';
 // and never turns into a player-facing billboard.
 const LOBBY_WEAPON_PATH_Y = ROOM_DOOR_Y + 1;
 const LOBBY_ARMORY = {
-  xStart: roomOffsets[0] + 6.35,
-  xEnd: roomOffsets[0] + 19.35,
-  backY: 2.25,
-  weaponY: 3.45,
-  aisleY: 4.55,
-  frontY: 5.15,
+  // A compact central armory keeps the four choices visible from the spawn
+  // path without turning the lobby into a row of wall-mounted pickups.
+  xStart: roomOffsets[0] + 8.15,
+  xEnd: roomOffsets[0] + 15.85,
+  backY: 3.25,
+  weaponY: 5.15,
+  aisleY: LOBBY_WEAPON_PATH_Y,
+  frontY: 7.35,
 };
 // Keep the hearth visually to the player's left, outside the direct gate route.
 const LOBBY_CAMPFIRE = {
   x: roomOffsets[0] + 4.75,
   y: 5.8,
 };
-const LOBBY_WEAPON_INTERACTION_RANGE = 1.2;
+const LOBBY_WEAPON_INTERACTION_RANGE = .78;
 // The scroll is positioned after the gate is authored below. Keeping the
 // initialization here limited to stable fields avoids touching LOBBY_GATE before
 // its declaration has been assigned.
 lobbyPortfolioScroll.z = .7;
 lobbyPortfolioScroll.recovered = false;
 const LOBBY_WEAPON_CREATURES = [
-  { id: 'creature-ninja-star', type: 'stars', name: 'NINJA STARS', x: roomOffsets[0] + 8.35, y: LOBBY_ARMORY.weaponY, yaw: 0 },
-  { id: 'creature-crossbow', type: 'crossbow', name: 'CROSSBOW', x: roomOffsets[0] + 11.55, y: LOBBY_ARMORY.weaponY, yaw: 0 },
-  { id: 'creature-ember-wand', type: 'wand', name: 'EMBER WAND', x: roomOffsets[0] + 14.75, y: LOBBY_ARMORY.weaponY, yaw: 0 },
-  { id: 'creature-moonsteel-blade', type: 'blade', name: 'MOONSTEEL BLADE', x: roomOffsets[0] + 17.95, y: LOBBY_ARMORY.weaponY, yaw: 0 },
+  { id: 'creature-ninja-star', type: 'stars', name: 'NINJA STARS', x: roomOffsets[0] + 9.85, y: 5.05, yaw: 0 },
+  { id: 'creature-crossbow', type: 'crossbow', name: 'CROSSBOW', x: roomOffsets[0] + 13.15, y: 5.05, yaw: 0 },
+  // The right-hand pair is pulled forward so both rows share the same depth.
+  { id: 'creature-ember-wand', type: 'wand', name: 'EMBER WAND', x: roomOffsets[0] + 9.85, y: 7.35, yaw: 0 },
+  { id: 'creature-moonsteel-blade', type: 'blade', name: 'MOONSTEEL BLADE', x: roomOffsets[0] + 13.15, y: 7.35, yaw: 0 },
 ];
+
+// Pip stands just behind the first weapon approach so the player has room to
+// notice him, move, and begin the tutorial without being blocked.
+const LOBBY_GUIDE_HOME = {
+  x: roomOffsets[0] + 8.35,
+  y: rooms[0].spawn.y + ROOM_INSET_Y,
+};
+const LOBBY_GUIDE = {
+  id: 'lobby-guide-pip',
+  name: 'PIP THE WAYFINDER',
+  x: LOBBY_GUIDE_HOME.x,
+  y: LOBBY_GUIDE_HOME.y,
+  yaw: Math.PI,
+};
+const LOBBY_GUIDE_INTERACTION_RANGE = 1.15;
+const LOBBY_GATE_SPELL_RANGE = 5.2;
+const LOBBY_GUIDE_WALK_SPEED = 1.34;
+const LOBBY_GUIDE_CATCH_UP_SPEED = 2.7;
+const LOBBY_GUIDE_CATCH_UP_DISTANCE = 2.65;
+const LOBBY_GUIDE_WALK_ANIMATION_MS = 560;
+const LOBBY_GUIDE_TEXT_SPEED = .021;
+const LOBBY_GUIDE_SPEECH_HOLD = 1.35;
+const LOBBY_GUIDE_VOICE_INTERVAL = .115;
+const LOBBY_GUIDE_MESSAGES = [
+  'I’m Pip. Choose a weapon, read the record, and open the gate. I’ll get you started, then the route is yours.',
+];
+const LOBBY_GUIDE_RUN_LINES = {
+  walkLesson: 'Move with W, A, S, and D. Choose a weapon, then follow the path to the record.',
+  weaponWait: 'Choose a weapon at its keeper. I’ll wait by the path.',
+  scrollApproach: 'Read the field record. Press E when you are close.',
+  scrollInstruction: 'The record is read. Cast Archive Key with Q at the sealed gate.',
+  weaponReaction: 'Good choice. The route is ready when you are.',
+  scrollReturn: 'The record is read. Cast Archive Key with Q at the sealed gate.',
+  farewell: 'Go through the forest and find the résumé on the other side. I’ll stay here. Good luck.',
+};
 // The gate belongs on the two-cell-wide east corridor mouth, not in the room's
 // visual center. Its center is the midpoint of the actual opening rows.
 LOBBY_GATE = { id: 'archive-gate', x: roomOffsets[0] + roomWidths[0] + .34, y: LOBBY_WEAPON_PATH_Y, z: 1.12, yaw: 0 };
@@ -489,28 +531,24 @@ const LOBBY_ENTRANCE_SIGN = {
   x: LOBBY_GATE.x - .2,
   y: LOBBY_GATE.y,
   z: 2.72,
-  width: 4.7,
-  height: .78,
+  width: 3.6,
+  height: .66,
   yaw: 0,
   text: "Liam's Portfolio Journey",
 };
 const LOBBY_TREES = [
-  // Keep the clearing open: trees live on the outer gallery edges, away from
-  // the campfire, weapon keepers, scroll approach, and gate lane.
-  { id: 'lobby-tree-west-north', roomIndex: 0, x: roomOffsets[0] + 2.35, y: 2.35, scale: .7, yaw: .12 },
-  { id: 'lobby-tree-west-upper', roomIndex: 0, x: roomOffsets[0] + 2.45, y: 4.25, scale: .64, yaw: -.14 },
-  { id: 'lobby-tree-west-lower', roomIndex: 0, x: roomOffsets[0] + 2.35, y: 7.65, scale: .7, yaw: .18 },
-  { id: 'lobby-tree-west-south', roomIndex: 0, x: roomOffsets[0] + 2.65, y: 9.15, scale: .62, yaw: -.16 },
-  { id: 'lobby-tree-northwest', roomIndex: 0, x: roomOffsets[0] + 6.05, y: 2.2, scale: .58, yaw: .16 },
-  { id: 'lobby-tree-north-center', roomIndex: 0, x: roomOffsets[0] + 12.15, y: 2.15, scale: .62, yaw: -.2 },
-  { id: 'lobby-tree-northeast', roomIndex: 0, x: roomOffsets[0] + 17.2, y: 2.25, scale: .6, yaw: .1 },
-  { id: 'lobby-tree-east-north', roomIndex: 0, x: roomOffsets[0] + 19.65, y: 2.45, scale: .68, yaw: -.18 },
-  { id: 'lobby-tree-east-upper', roomIndex: 0, x: roomOffsets[0] + 19.7, y: 4.35, scale: .62, yaw: .12 },
-  { id: 'lobby-tree-east-lower', roomIndex: 0, x: roomOffsets[0] + 19.7, y: 7.85, scale: .68, yaw: -.16 },
-  { id: 'lobby-tree-east-south', roomIndex: 0, x: roomOffsets[0] + 19.4, y: 9.15, scale: .62, yaw: .14 },
-  { id: 'lobby-tree-southwest', roomIndex: 0, x: roomOffsets[0] + 6.65, y: 9.2, scale: .6, yaw: .16 },
-  { id: 'lobby-tree-south-center', roomIndex: 0, x: roomOffsets[0] + 11.15, y: 9.3, scale: .58, yaw: -.2 },
-  { id: 'lobby-tree-southeast', roomIndex: 0, x: roomOffsets[0] + 15.75, y: 9.2, scale: .62, yaw: .14 },
+  // Keep the spawn-to-armory sightline clear. Trees frame the clearing instead
+  // of occupying the playable center or the stone path.
+  { id: 'lobby-tree-west-north', roomIndex: 0, x: roomOffsets[0] + 2.0, y: 2.1, scale: .62, yaw: .12 },
+  { id: 'lobby-tree-west-south', roomIndex: 0, x: roomOffsets[0] + 2.0, y: 10.1, scale: .68, yaw: -.16 },
+  { id: 'lobby-tree-northwest', roomIndex: 0, x: roomOffsets[0] + 6.1, y: 1.8, scale: .54, yaw: .16 },
+  { id: 'lobby-tree-north-center', roomIndex: 0, x: roomOffsets[0] + 12.0, y: 1.8, scale: .62, yaw: -.2 },
+  { id: 'lobby-tree-northeast', roomIndex: 0, x: roomOffsets[0] + 17.8, y: 1.9, scale: .58, yaw: .1 },
+  { id: 'lobby-tree-east-north', roomIndex: 0, x: roomOffsets[0] + 20.0, y: 2.2, scale: .66, yaw: -.18 },
+  { id: 'lobby-tree-east-south', roomIndex: 0, x: roomOffsets[0] + 20.0, y: 9.9, scale: .68, yaw: .14 },
+  { id: 'lobby-tree-southwest', roomIndex: 0, x: roomOffsets[0] + 6.0, y: 10.2, scale: .58, yaw: .16 },
+  { id: 'lobby-tree-south-center', roomIndex: 0, x: roomOffsets[0] + 12.0, y: 10.3, scale: .62, yaw: -.2 },
+  { id: 'lobby-tree-southeast', roomIndex: 0, x: roomOffsets[0] + 17.8, y: 10.1, scale: .66, yaw: .14 },
 ];
 
 const LOBBY_BUSHES = [
@@ -524,6 +562,38 @@ const LOBBY_BUSHES = [
   { id: 'lobby-bush-south-left', roomIndex: 0, x: roomOffsets[0] + 8.85, y: 9.35, scale: .56, yaw: -.14 },
   { id: 'lobby-bush-south-right', roomIndex: 0, x: roomOffsets[0] + 17.55, y: 9.35, scale: .58, yaw: .16 },
 ];
+
+// Densify the starting clearing with two offset perimeter layers. The original
+// authored positions remain the readable silhouette; these copies add depth while
+// leaving the central path, Pip, and weapons unobstructed.
+LOBBY_TREES.push(...LOBBY_TREES.map((tree, index) => ({
+  ...tree,
+  id: `${tree.id}-depth`,
+  x: tree.x + (index % 2 ? -.36 : .36),
+  y: tree.y + (index % 2 ? .48 : -.48),
+  scale: (tree.scale || 1) * .8,
+})));
+LOBBY_TREES.push(...LOBBY_TREES.slice(0, 10).map((tree, index) => ({
+  ...tree,
+  id: `${tree.id}-outer`,
+  x: tree.x + (index % 2 ? .62 : -.62),
+  y: tree.y + (index % 2 ? -.32 : .32),
+  scale: (tree.scale || 1) * .66,
+})));
+LOBBY_BUSHES.push(...LOBBY_BUSHES.map((bush, index) => ({
+  ...bush,
+  id: `${bush.id}-depth`,
+  x: bush.x + (index % 2 ? -.3 : .3),
+  y: bush.y + (index % 2 ? .38 : -.38),
+  scale: (bush.scale || 1) * .8,
+})));
+LOBBY_BUSHES.push(...LOBBY_BUSHES.slice(0, 9).map((bush, index) => ({
+  ...bush,
+  id: `${bush.id}-outer`,
+  x: bush.x + (index % 2 ? .54 : -.54),
+  y: bush.y + (index % 2 ? -.28 : .28),
+  scale: (bush.scale || 1) * .68,
+})));
 
 const FOREST_HALL_TREES = [];
 const FOREST_HALL_TREE_COUNT = Math.floor((FOREST_HALL_GAP - 2.4) / FOREST_HALL_TREE_SPACING);
@@ -916,7 +986,9 @@ const ENEMY_PROFILES = {
   archon: { scale: 1.08, height: 2.85, aimHeight: 1.92, speedMultiplier: .42, attackRate: .78, attackDistance: 2.7, opacity: 1, color: '#d7c79b' },
 };
 const EMPTY_ENEMY_PROFILE = { scale: .46, height: .98, aimHeight: .78, speedMultiplier: 1, attackRate: 1, attackDistance: ENEMY_ATTACK_DISTANCE, opacity: 0, color: '#000000' };
-function enemyProfile(enemy) { return ENEMY_PROFILES[enemy?.kind] || EMPTY_ENEMY_PROFILE; }
+function enemyProfile(enemy) {
+  return ENEMY_PROFILES[enemy?.kind] || EMPTY_ENEMY_PROFILE;
+}
 
 const MAX_RENDER_WIDTH = 1280;
 const MAX_RENDER_HEIGHT = 720;
@@ -966,6 +1038,36 @@ const state = {
   lastSpell: null,
   selectedSpellId: null,
   tutorialSpell: false,
+  guideStep: 0,
+  guideRun: null,
+  guideAdvanceStarted: false,
+  guideTalkPulse: 0,
+  guideSpeechTarget: '',
+  guideSpeechVisible: '',
+  guideSpeechElapsed: 0,
+  guideSpeechActive: false,
+  guideSpeechHold: 0,
+  guideSpeechVoiceTimer: 0,
+  guideSpeechLastVoiceIndex: -1,
+  guideSpeechCompletion: null,
+  guideSpeechPause: 0,
+  guidePendingSpeech: null,
+  guideSpeechLayout: null,
+  guideWaitingForWeapon: false,
+  guideMovementTriggered: false,
+  guideIntroSpeechStarted: false,
+  guideFarewellStarted: false,
+  guideFarewellComplete: false,
+  guideIntroPhase: 'look',
+  guideIntroElapsed: 0,
+  guideControlsLocked: true,
+  guideWeaponCollected: false,
+  guideWeaponReactionStarted: false,
+  guideScrollReturnStarted: false,
+  guideDeferredRun: null,
+  guideScrollInstructionStarted: false,
+  cockroachTutorialShown: false,
+  guideAutoTimer: -1,
   spellCast: null,
   spellCooldown: 0,
   activeSpellEffects: [],
@@ -1136,6 +1238,27 @@ function createLeatherTexture(size, seed) {
   }
   texture.getContext('2d').putImageData(image, 0, 0); return texture;
 }
+function createDialogueTexture(size, seed) {
+  const texture = document.createElement('canvas'); texture.width = size; texture.height = size;
+  const image = texture.getContext('2d').createImageData(size, size);
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
+    const n = fractalNoise(x / 26, y / 22, seed);
+    const grain = .5 + .5 * Math.sin(x * .19 + n * 5.2);
+    const block = ((Math.floor(x / 8) + Math.floor(y / 8)) % 2) * 4;
+    const base = 31 + n * 32 + grain * 13 + block;
+    const i = (y * size + x) * 4;
+    image.data[i] = clamp(base + 26, 0, 255);
+    image.data[i + 1] = clamp(base + 13, 0, 255);
+    image.data[i + 2] = clamp(base + 2, 0, 255);
+    image.data[i + 3] = 255;
+  }
+  texture.getContext('2d').putImageData(image, 0, 0);
+  const overlay = texture.getContext('2d');
+  overlay.strokeStyle = 'rgba(201, 157, 86, .28)';
+  overlay.lineWidth = 2;
+  for (let x = 8; x < size; x += 32) { overlay.beginPath(); overlay.moveTo(x, 0); overlay.lineTo(x, size); overlay.stroke(); }
+  return texture;
+}
 
 const GROUND_CACHE_SCALE = 8;
 const GROUND_CACHE_WIDTH = WORLD_WIDTH * GROUND_CACHE_SCALE;
@@ -1289,6 +1412,21 @@ function emitAmbientParticles(delta) {
   if (state.doorOfLight?.active && state.room === FINAL_ROOM_INDEX && Math.random() < .82) spawnParticles(state.doorOfLight.x, state.doorOfLight.y, .8, ['#b8f0e2', '#fff8db'], 2, { speed: .72, life: .9, size: .62, upward: .75, spread: TAU, gravity: -.1, drag: .97, glow: 16, shape: 'dot' });
 }
 
+function updateSegmentBar(bar, value, maximum) {
+  if (!bar) return;
+  const normalized = clamp(value / Math.max(1, maximum), 0, 1);
+  const units = normalized * 10;
+  const segments = bar.querySelectorAll('.status-segment');
+  segments.forEach((segment, index) => {
+    const fill = clamp(units - index, 0, 1);
+    segment.classList.toggle('is-full', fill >= .999);
+    segment.classList.toggle('is-partial', fill > .001 && fill < .999);
+    segment.classList.toggle('is-empty', fill <= .001);
+    segment.style.setProperty('--fill', fill.toFixed(3));
+  });
+  bar.parentElement?.setAttribute('aria-valuenow', String(Math.ceil(value)));
+}
+
 function updateCombatHud() {
   const hudNow = state.now || performance.now();
   if (hudNow - state.lastCombatHudAt < 0.05) return;
@@ -1305,9 +1443,7 @@ function updateCombatHud() {
   if (weaponStatus) weaponStatus.textContent = weaponPhase;
   const staminaPercent = clamp(state.stamina / state.maxStamina * 100, 0, 100);
   const staminaNow = Math.ceil(state.stamina);
-  if (staminaValue) staminaValue.textContent = `${staminaNow} / ${state.maxStamina}`;
-  if (staminaBar) staminaBar.style.width = `${staminaPercent}%`;
-  staminaBar?.parentElement?.setAttribute('aria-valuenow', String(staminaNow));
+  updateSegmentBar(staminaBar, state.stamina, state.maxStamina);
   const aimNow = state.now || performance.now();
   const aimActive = !state.menuActive && !state.reading && !state.transition && !state.forestTransition && !state.launchTransition;
   if (!aimActive) state.aimTarget = null;
@@ -1326,7 +1462,8 @@ function updateHud() {
   const recovered = worldItems.reduce((count, item) => count + (item.recovered && item.kind !== 'health-potion' ? 1 : 0), 0);
   const xpSignature = `${state.xp}|${state.level}|${[...state.unlockedSpells].join(',')}|${state.selectedSpellId || ''}`;
   const bossSignature = bossActive ? `${state.finalBoss.hp}|${state.finalBoss.phase}|${state.finalBoss.shield}` : 'none';
-  const signature = `${state.room}|${active}|${recovered}|${ITEM_TOTAL}|${Math.ceil(state.player.hp)}|${xpSignature}|${bossSignature}|${state.doorOfLight?.active ? 1 : 0}`;
+  const guideObjectiveSignature = `${state.guideIntroPhase}|${state.guideControlsLocked ? 1 : 0}|${state.guideWaitingForWeapon ? 1 : 0}|${state.guideWeaponCollected ? 1 : 0}|${lobbyPortfolioScroll.recovered ? 1 : 0}|${state.lobbyGateOpen ? 1 : 0}`;
+  const signature = `${state.room}|${active}|${recovered}|${ITEM_TOTAL}|${Math.ceil(state.player.hp)}|${xpSignature}|${bossSignature}|${state.doorOfLight?.active ? 1 : 0}|${guideObjectiveSignature}`;
   if (signature !== state.hudSignature) {
     state.hudSignature = signature;
     const room = rooms[state.room];
@@ -1335,9 +1472,7 @@ function updateHud() {
     roomCount.textContent = `${String(state.room + 1).padStart(2, '0')} / ${String(rooms.length).padStart(2, '0')}`;
     const hpNow = Math.ceil(state.player.hp);
     const hpPercent = clamp(state.player.hp, 0, 100);
-    hpValue.textContent = `${hpNow} / 100`;
-    hpBar.style.width = `${hpPercent}%`;
-    hpBar.parentElement?.setAttribute('aria-valuenow', String(hpNow));
+    updateSegmentBar(hpBar, state.player.hp, 100);
     if (experienceValue) experienceValue.textContent = `LVL ${state.level} · ${state.xp} XP`;
     if (objectiveLabel && objectiveDetail) {
       if (state.room === SANCTUARY_ROOM_INDEX) {
@@ -1349,6 +1484,27 @@ function updateHud() {
       } else if (state.doorOfLight?.active) {
         objectiveLabel.textContent = 'ENTER THE DOOR OF LIGHT';
         objectiveDetail.textContent = 'The ascension gate is now active. Walk into its light to enter the celestial sanctuary.';
+      } else if (state.room === 0) {
+        if (state.guideIntroPhase === 'look') {
+          objectiveLabel.textContent = 'LISTEN TO PIP';
+          objectiveDetail.textContent = 'Pip is checking the route. WASD movement unlocks when his introduction is complete.';
+        } else if (state.lobbyGateOpen) {
+          objectiveLabel.textContent = 'FIND THE RÉSUMÉ';
+          objectiveDetail.textContent = 'Cross the forest and find the résumé on the other side.';
+        } else if (state.guideWaitingForWeapon || !state.weapon.equipped) {
+          objectiveLabel.textContent = state.guideWeaponCollected ? 'REACH THE FIELD RECORD' : 'CHOOSE A WEAPON';
+          objectiveDetail.textContent = state.guideWeaponCollected ? 'The field record is ahead.' : 'Walk to a weapon keeper and press E.';
+        } else if (!lobbyPortfolioScroll.recovered) {
+          objectiveLabel.textContent = 'READ THE FIELD RECORD';
+          objectiveDetail.textContent = 'Press E at the glowing record.';
+        } else {
+          objectiveLabel.textContent = 'OPEN THE ARCHIVE GATE';
+          objectiveDetail.textContent = 'Cast Archive Key with Q. The record is already in your archive.';
+        }
+      } else if (state.room === STARTING_ROOM_INDEX) {
+        const thresholdCockroach = worldEnemies.find((enemy) => enemy.id === 'threshold-cockroach' && !enemy.dead);
+        objectiveLabel.textContent = thresholdCockroach ? 'CROSS THE FOREST' : 'KEEP GOING';
+        objectiveDetail.textContent = thresholdCockroach ? 'Aim at the cockroach, keep moving, and continue toward the résumé.' : 'The forest is clear. Continue toward the résumé.';
       } else {
         objectiveLabel.textContent = 'RECOVER FIELD RECORDS';
         objectiveDetail.textContent = recovered >= ITEM_TOTAL ? 'All records recovered. Continue toward the lightwell.' : room.subtitle;
@@ -2104,6 +2260,15 @@ function playWeaponSound() { if (state.weapon.type === 'stars') playNinjaStarSou
 function playRecoverySound() { playTone(294, .18, 'sine', .035); playTone(440, .24, 'triangle', .03, .11); playTone(587, .3, 'sine', .022, .21); }
 function playHitSound() { playTone(66, .18, 'square', .035); }
 function playBoneHitSound() { playTone(110, .12, 'triangle', .025); playTone(72, .13, 'square', .018, .05); }
+function playTrollTalk(seed = 0) {
+  // A short cluster of low, nasal syllable-like tones gives the troll a voice
+  // without requiring an external audio asset.
+  const base = 118 + (seed % 3) * 17;
+  playTone(base, .08, 'square', .022);
+  playTone(base * 1.32, .07, 'sawtooth', .018, .075);
+  playTone(base * .82, .11, 'triangle', .02, .14);
+  playTone(base * 1.08, .08, 'square', .014, .25);
+}
 
 function getNearestItem(maxDistance = 1.55) {
   let nearest = null;
@@ -2140,13 +2305,288 @@ function getNearestWeaponCreature(maxDistance = LOBBY_WEAPON_INTERACTION_RANGE) 
   let best = maxDistance;
   for (const display of LOBBY_WEAPON_CREATURES) {
     const distance = Math.hypot(display.x - state.player.x, display.y - state.player.y);
-    if (distance < best) {
+    if (distance < best && hasLineOfSight(state.player.x, state.player.y, display.x, display.y)) {
       best = distance;
       nearest = display;
     }
   }
   return nearest;
 }
+function getNearestLobbyGuide(maxDistance = LOBBY_GUIDE_INTERACTION_RANGE) {
+  // Pip is a diegetic guide, not an interactable menu. Keep this helper for
+  // compatibility with the renderer, but never expose an interaction prompt.
+  if (state.room !== 0 || state.guideRun || state.guideWaitingForWeapon) return null;
+  const distance = Math.hypot(LOBBY_GUIDE.x - state.player.x, LOBBY_GUIDE.y - state.player.y);
+  return distance <= maxDistance ? LOBBY_GUIDE : null;
+}
+function beginLobbyGuideSpeech(message, completion = null) {
+  const nextMessage = message || LOBBY_GUIDE_MESSAGES[0];
+  // Never let a new line overwrite the intentional blank beat after the prior
+  // line. Queue it until the pause has fully elapsed.
+  if (state.guideSpeechPause > 0) {
+    state.guidePendingSpeech = { message: nextMessage, completion };
+    return;
+  }
+  if (state.guideSpeechTarget === nextMessage && (state.guideSpeechActive || state.guideSpeechHold > 0)) return;
+  state.guideSpeechTarget = nextMessage;
+  state.guideSpeechVisible = '';
+  state.guideSpeechElapsed = 0;
+  state.guideSpeechHold = 0;
+  state.guideSpeechVoiceTimer = 0;
+  state.guideSpeechLastVoiceIndex = -1;
+  state.guideSpeechCompletion = completion;
+  state.guideSpeechActive = true;
+  state.guideSpeechLayout = null;
+  state.promptSignature = '';
+}
+function clearLobbyGuideSpeech() {
+  state.guideSpeechTarget = '';
+  state.guideSpeechVisible = '';
+  state.guideSpeechElapsed = 0;
+  state.guideSpeechHold = 0;
+  state.guideSpeechPause = 0;
+  state.guideSpeechVoiceTimer = 0;
+  state.guideSpeechLastVoiceIndex = -1;
+  state.guideSpeechActive = false;
+  state.guideSpeechCompletion = null;
+  state.guidePendingSpeech = null;
+  state.guideSpeechLayout = null;
+  state.promptSignature = '';
+}
+function completeLobbyGuideSpeech() {
+  state.guideSpeechVisible = state.guideSpeechTarget;
+  state.guideSpeechElapsed = state.guideSpeechTarget.length * LOBBY_GUIDE_TEXT_SPEED;
+  state.guideSpeechActive = false;
+  state.guideSpeechHold = LOBBY_GUIDE_SPEECH_HOLD;
+  state.guideSpeechPause = LOBBY_GUIDE_SPEECH_HOLD;
+  state.promptSignature = '';
+}
+function finishLobbyGuideSpeech() {
+  completeLobbyGuideSpeech();
+}
+function updateLobbyGuideSpeech(delta) {
+  if (!state.guideSpeechTarget && state.guideSpeechPause <= 0) return;
+  if (!state.guideSpeechActive) {
+    state.guideSpeechHold = Math.max(0, state.guideSpeechHold - delta);
+    state.guideSpeechPause = Math.max(0, state.guideSpeechPause - delta);
+    if (state.guideSpeechPause > 0 || state.guideSpeechHold > 0) return;
+    const completion = state.guideSpeechCompletion;
+    const pending = state.guidePendingSpeech;
+    state.guidePendingSpeech = null;
+    clearLobbyGuideSpeech();
+    if (completion === 'release-controls' && !state.guideFarewellComplete) {
+      state.guideControlsLocked = false;
+      state.guideFarewellComplete = true;
+      state.guideAdvanceStarted = true;
+      updateHud();
+    }
+    if (pending) beginLobbyGuideSpeech(pending.message, pending.completion);
+    if (state.guideDeferredRun) state.guideAutoTimer = .42;
+    return;
+  }
+
+  state.guideSpeechElapsed += delta;
+  const characterCount = Math.min(
+    state.guideSpeechTarget.length,
+    Math.floor(state.guideSpeechElapsed / LOBBY_GUIDE_TEXT_SPEED),
+  );
+  state.guideSpeechVisible = state.guideSpeechTarget.slice(0, characterCount);
+  state.guideSpeechVoiceTimer = Math.max(0, state.guideSpeechVoiceTimer - delta);
+  if (characterCount > 0 && state.guideSpeechVoiceTimer <= 0 && characterCount > state.guideSpeechLastVoiceIndex) {
+    const voiceIndex = Math.max(0, characterCount - 1);
+    if (state.guideSpeechTarget[voiceIndex] !== ' ') {
+      playTrollTalk(Math.floor(voiceIndex / 5));
+      state.guideSpeechLastVoiceIndex = voiceIndex;
+      state.guideSpeechVoiceTimer = LOBBY_GUIDE_VOICE_INTERVAL;
+    }
+  }
+  if (characterCount >= state.guideSpeechTarget.length) completeLobbyGuideSpeech();
+}
+
+function scheduleLobbyGuideRun(kind) {
+  state.guideDeferredRun = kind;
+  state.guideAutoTimer = state.guideSpeechActive ? -1 : .9;
+}
+function finishLobbyGuideIntro() {
+  if (state.guideIntroPhase !== 'look') return;
+  state.guideIntroPhase = 'complete';
+  state.guideIntroElapsed = 0;
+  state.guideControlsLocked = false;
+  state.guideMovementTriggered = true;
+  LOBBY_GUIDE.yaw = Math.PI;
+  beginLobbyGuideSpeech(LOBBY_GUIDE_RUN_LINES.walkLesson);
+  scheduleLobbyGuideRun('weapons');
+  updateHud();
+  showHitMarker('PIP · NOW WALK WITH WASD', 'shielded');
+}
+function updateLobbyGuideIntro(delta) {
+  if (state.room !== 0 || state.guideIntroPhase !== 'look') return false;
+  if (!state.guideIntroSpeechStarted) {
+    state.guideIntroSpeechStarted = true;
+    beginLobbyGuideSpeech(LOBBY_GUIDE_MESSAGES[0]);
+    scheduleLobbyGuideRun('weapons');
+    showHitMarker('PIP · WATCH AND LISTEN', 'shielded');
+  }
+  state.guideIntroElapsed += delta;
+  const progress = clamp(state.guideIntroElapsed / 2.8, 0, 1);
+  // Pip checks the route, the player, and the route again before committing.
+  LOBBY_GUIDE.yaw = Math.PI + Math.sin(progress * TAU * 1.15) * .82 * (1 - progress * .18);
+  if (progress >= 1) finishLobbyGuideIntro();
+  return true;
+}
+function reactToLobbyWeaponPickup() {
+  state.guideWeaponCollected = true;
+  state.guideWaitingForWeapon = false;
+  // A fast pickup is still a real tutorial event. Stop Pip wherever he is,
+  // react immediately, then continue from that position toward the scroll.
+  if (state.guideRun?.kind === 'weapons') {
+    state.guideRun = null;
+    state.guideDeferredRun = null;
+    state.guideAutoTimer = -1;
+  }
+  if (state.guideWeaponReactionStarted) return;
+  state.guideWeaponReactionStarted = true;
+  beginLobbyGuideSpeech(LOBBY_GUIDE_RUN_LINES.weaponReaction);
+  scheduleLobbyGuideRun('scroll');
+  showHitMarker('PIP · THAT WAS FAST', 'good');
+}
+function triggerLobbyGuideFromMovement() {
+  // The intro state machine starts Pip's conversation exactly once. This hook
+  // remains for movement compatibility but must never restart the conversation.
+  if (state.room !== 0 || state.guideMovementTriggered || state.guideIntroSpeechStarted) return;
+  state.guideMovementTriggered = true;
+}
+function startLobbyGuideWeaponWait() {
+  if (state.room !== 0 || state.guideRun || state.guideWaitingForWeapon) return;
+  state.guideWaitingForWeapon = false;
+  const targetX = LOBBY_ARMORY.xEnd - .58;
+  const targetY = LOBBY_WEAPON_PATH_Y;
+  const distance = Math.hypot(targetX - LOBBY_GUIDE.x, targetY - LOBBY_GUIDE.y);
+  state.guideRun = {
+    kind: 'weapons',
+    startX: LOBBY_GUIDE.x,
+    startY: LOBBY_GUIDE.y,
+    targetX,
+    targetY,
+    elapsed: 0,
+    duration: clamp(distance / LOBBY_GUIDE_WALK_SPEED, 2.8, 8.5),
+  };
+  state.guideDeferredRun = null;
+  state.promptSignature = '';
+  showHitMarker('PIP MOVING', 'shielded');
+}
+function startLobbyGuideRun() {
+  if (state.room !== 0 || state.guideRun) return;
+  state.guideWaitingForWeapon = false;
+  const targetX = lobbyPortfolioScroll.x - 1.0;
+  const targetY = lobbyPortfolioScroll.y - 1.45;
+  const distance = Math.hypot(targetX - LOBBY_GUIDE.x, targetY - LOBBY_GUIDE.y);
+  state.guideRun = {
+    kind: 'scroll',
+    startX: LOBBY_GUIDE.x,
+    startY: LOBBY_GUIDE.y,
+    targetX,
+    targetY,
+    elapsed: 0,
+    duration: clamp(distance / LOBBY_GUIDE_WALK_SPEED, 2.8, 8.5),
+  };
+  state.promptSignature = '';
+}
+function startLobbyGuideScrollReturnRun() {
+  if (state.room !== 0 || state.guideRun || state.guideScrollReturnStarted) return;
+  state.guideScrollReturnStarted = true;
+  // Return to the route centerline, not the scroll's offset reading position.
+  const targetX = lobbyPortfolioScroll.x - .18;
+  const targetY = LOBBY_WEAPON_PATH_Y;
+  const distance = Math.hypot(targetX - LOBBY_GUIDE.x, targetY - LOBBY_GUIDE.y);
+  state.guideRun = {
+    kind: 'scrollReturn',
+    startX: LOBBY_GUIDE.x,
+    startY: LOBBY_GUIDE.y,
+    targetX,
+    targetY,
+    elapsed: 0,
+    duration: clamp(distance / LOBBY_GUIDE_WALK_SPEED, 2.4, 7.2),
+  };
+  state.promptSignature = '';
+}
+function startLobbyGuideScrollInstructionRun() {
+  if (state.room !== 0 || state.guideRun || state.guideScrollInstructionStarted) return;
+  state.guideScrollInstructionStarted = true;
+  const targetX = LOBBY_GATE.x - 1.0;
+  const targetY = LOBBY_WEAPON_PATH_Y;
+  const distance = Math.hypot(targetX - LOBBY_GUIDE.x, targetY - LOBBY_GUIDE.y);
+  state.guideRun = {
+    kind: 'spell',
+    startX: LOBBY_GUIDE.x,
+    startY: LOBBY_GUIDE.y,
+    targetX,
+    targetY,
+    elapsed: 0,
+    duration: clamp(distance / LOBBY_GUIDE_WALK_SPEED, 2.8, 8.5),
+  };
+  state.promptSignature = '';
+}
+function updateLobbyGuide(delta) {
+  if (updateLobbyGuideIntro(delta)) return;
+  state.guideTalkPulse = Math.max(0, state.guideTalkPulse - delta);
+  if (!state.guideRun && state.guideDeferredRun && state.guideAutoTimer >= 0) {
+    state.guideAutoTimer -= delta;
+    if (state.guideAutoTimer <= 0) {
+      const deferred = state.guideDeferredRun;
+      state.guideDeferredRun = null;
+      if (deferred === 'weapons') startLobbyGuideWeaponWait();
+      else if (deferred === 'scroll') startLobbyGuideRun();
+      else if (deferred === 'spell') startLobbyGuideScrollInstructionRun();
+    }
+  }
+  if (!state.guideRun || state.room !== 0) return;
+  const run = state.guideRun;
+  // Speech and movement share the same beat, but Pip must not make the player
+  // wait if they catch him. Advance the scripted walk faster inside the same
+  // short catch-up radius while keeping the route monotonic.
+  const playerGap = Math.hypot(state.player.x - LOBBY_GUIDE.x, state.player.y - LOBBY_GUIDE.y);
+  const catchUpMultiplier = playerGap <= LOBBY_GUIDE_CATCH_UP_DISTANCE ? LOBBY_GUIDE_CATCH_UP_SPEED / LOBBY_GUIDE_WALK_SPEED : 1;
+  run.elapsed += delta * catchUpMultiplier;
+  const progress = clamp(run.elapsed / run.duration, 0, 1);
+  const eased = progress < .5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+  LOBBY_GUIDE.x = lerp(run.startX, run.targetX, eased);
+  LOBBY_GUIDE.y = lerp(run.startY, run.targetY, eased);
+  LOBBY_GUIDE.yaw = LOBBY_GUIDE.x < run.targetX ? 0 : Math.PI;
+  if (progress >= 1) {
+    LOBBY_GUIDE.x = run.targetX;
+    LOBBY_GUIDE.y = run.targetY;
+    LOBBY_GUIDE.yaw = Math.PI;
+    const runKind = run.kind || 'scroll';
+    state.guideRun = null;
+    state.guideTalkPulse = 1.2;
+    state.promptSignature = '';
+    if (runKind === 'farewell') {
+      LOBBY_GUIDE.yaw = Math.atan2(state.player.y - LOBBY_GUIDE.y, state.player.x - LOBBY_GUIDE.x);
+      beginLobbyGuideSpeech(LOBBY_GUIDE_RUN_LINES.farewell, 'release-controls');
+    } else if (runKind === 'weapons') {
+      if (state.guideWeaponCollected) {
+        state.guideWaitingForWeapon = false;
+        reactToLobbyWeaponPickup();
+      } else {
+        state.guideWaitingForWeapon = true;
+        beginLobbyGuideSpeech(LOBBY_GUIDE_RUN_LINES.weaponWait);
+        showHitMarker('CHOOSE A WEAPON', 'shielded');
+      }
+    } else if (runKind === 'scrollReturn') {
+      beginLobbyGuideSpeech(LOBBY_GUIDE_RUN_LINES.scrollReturn);
+      scheduleLobbyGuideRun('spell');
+    } else if (runKind === 'scroll') {
+      beginLobbyGuideSpeech(LOBBY_GUIDE_RUN_LINES.scrollApproach);
+    } else if (runKind === 'spell') {
+      // Pip remains beside the gate, not in its interaction lane.
+    }
+  }
+}
+function noteLobbyPlayerMovement() {
+  if (state.room === 0 && state.weapon.moving) triggerLobbyGuideFromMovement();
+}
+
 function lobbyGateDistance() { return state.room === 0 ? Math.hypot(LOBBY_GATE.x - state.player.x, LOBBY_GATE.y - state.player.y) : Infinity; }
 function weaponDefinition() { return WEAPON_LOADOUTS[state.weapon.type] || WEAPON_LOADOUTS.stars; }
 function learnedSpellDefinitions() { return [...(state.tutorialSpell ? [GATE_TUTORIAL_SPELL] : []), ...SPELL_FORMS.filter((spell) => state.unlockedSpells.has(spell.id))]; }
@@ -2307,7 +2747,7 @@ function castSpell() {
       showToast('Equip a weapon before opening the archive gate.');
       return;
     }
-    if (state.room !== 0 || lobbyGateDistance() > 2.2) {
+    if (state.room !== 0 || lobbyGateDistance() > LOBBY_GATE_SPELL_RANGE) {
       showToast('Archive Key only works at the sealed archive gate.');
       return;
     }
@@ -2982,7 +3422,7 @@ function openReading(item) {
   playRecoverySound();
   showToast(item.gateTutorial ? 'Archive Key learned. Cast it at the gate with Q.' : 'The dungeon waits while you read the field record.', 'good');
 }
-function closeReading() { if (!state.reading) return; state.reading = null; state.readingElapsed = 0; readingOverlay.classList.remove('open', 'intro-scroll'); window.setTimeout(() => { if (!state.reading) readingOverlay.hidden = true; }, 550); }
+function closeReading() { if (!state.reading) return; const wasLobbyScroll = state.reading === lobbyPortfolioScroll; state.reading = null; state.readingElapsed = 0; readingOverlay.classList.remove('open', 'intro-scroll'); window.setTimeout(() => { if (!state.reading) readingOverlay.hidden = true; }, 550); if (wasLobbyScroll) startLobbyGuideScrollReturnRun(); }
 function interactWithLightDoor() {
   if (!state.doorOfLight?.active) return false;
   const distance = Math.hypot(state.doorOfLight.x - state.player.x, state.doorOfLight.y - state.player.y);
@@ -3019,10 +3459,46 @@ function interactWithLobbyGate() {
   }
   return true;
 }
+function startLobbyGuideFarewell() {
+  if (state.guideFarewellStarted) return;
+  state.guideFarewellStarted = true;
+  state.guideFarewellComplete = false;
+  state.guideControlsLocked = true;
+  state.keys.clear();
+  state.weapon.moving = false;
+  state.guideSpeechTarget = '';
+  state.guideSpeechVisible = '';
+  state.guideSpeechActive = false;
+  state.guideSpeechHold = 0;
+  state.guideSpeechCompletion = null;
+  state.guideSpeechPause = 0;
+  state.guidePendingSpeech = null;
+  state.guideDeferredRun = null;
+  state.guideAutoTimer = -1;
+  const facingX = Math.cos(state.player.angle);
+  const facingY = Math.sin(state.player.angle);
+  const desiredDistance = canStand(state.player.x + facingX * 1.15, state.player.y + facingY * 1.15) ? 1.15 : .72;
+  const targetX = state.player.x + facingX * desiredDistance;
+  const targetY = state.player.y + facingY * desiredDistance;
+  const distance = Math.hypot(targetX - LOBBY_GUIDE.x, targetY - LOBBY_GUIDE.y);
+  state.guideRun = {
+    kind: 'farewell',
+    startX: LOBBY_GUIDE.x,
+    startY: LOBBY_GUIDE.y,
+    targetX,
+    targetY,
+    elapsed: 0,
+    duration: clamp(distance / 2.35, .45, 1.25),
+  };
+}
 function updateLobbyGate(delta) {
   if (!state.lobbyGateOpening) return;
   state.lobbyGateProgress = clamp(state.lobbyGateProgress + delta / 1.25, 0, 1);
-  if (state.lobbyGateProgress >= 1) { state.lobbyGateOpening = false; state.lobbyGateOpen = true; showToast('ARCHIVE GATE OPEN · ENTER THE WORLD.', 'good'); }
+  if (state.lobbyGateProgress >= 1) {
+    state.lobbyGateOpening = false;
+    state.lobbyGateOpen = true;
+    startLobbyGuideFarewell();
+  }
 }
 function resumePedestalDistance() {
   return state.room === SANCTUARY_ROOM_INDEX
@@ -3055,6 +3531,9 @@ function equipLobbyWeapon(creature) {
   // Equip by loadout type only. The static display remains in the lobby and is
   // never reused as the player's original/held weapon object.
   setWeapon(creature.type);
+  showToast(`${WEAPON_LOADOUTS[creature.type].label} PICKED UP · THE TROLL IS MOVING.`, 'good');
+  showHitMarker('WEAPON PICKED UP', 'shielded');
+  if (state.room === 0) reactToLobbyWeaponPickup();
   return true;
 }
 
@@ -3102,11 +3581,72 @@ function sampleLight(x, y) {
   if (state.room === SANCTUARY_ROOM_INDEX) return clamp(.92 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 12, 0, 1) * .18, .82, 1.18);
   if (state.room === 0) {
     const lobbyBase = .84 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 10, 0, 1) * .22;
-    const fireWarmth = clamp(1 - Math.hypot(x - LOBBY_CAMPFIRE.x, y - LOBBY_CAMPFIRE.y) / 5.8, 0, 1) * .14;
-    return clamp(lobbyBase + fireWarmth, .7, 1.22);
+    return clamp(lobbyBase, .7, 1.22);
   }
   return clamp(.25 + clamp(1 - Math.hypot(x - state.player.x, y - state.player.y) / 5.4, 0, 1) * .18, .12, 1.1);
 }
+let skyCloudTexture = null;
+function ensureSkyCloudTexture() {
+  if (skyCloudTexture) return skyCloudTexture;
+  skyCloudTexture = document.createElement('canvas');
+  skyCloudTexture.width = 2048;
+  skyCloudTexture.height = 256;
+  const cloud = skyCloudTexture.getContext('2d');
+  cloud.clearRect(0, 0, skyCloudTexture.width, skyCloudTexture.height);
+  // One panorama, with integer-cycle waves, makes the left and right edges
+  // mathematically identical. Repeating it therefore produces no visible seam.
+  for (let band = 0; band < 7; band += 1) {
+    const y = 18 + band * 34;
+    const phase = band * 1.73;
+    const cyclesA = 2 + (band % 3);
+    const cyclesB = 5 + (band % 2);
+    const edgeAt = (x, lower = false) => {
+      const t = x / skyCloudTexture.width;
+      const waveA = Math.sin(TAU * cyclesA * t + phase + (lower ? 1.2 : 0)) * (lower ? 7 : 8);
+      const waveB = Math.sin(TAU * cyclesB * t - phase + (lower ? .6 : 0)) * (lower ? 4 : 4);
+      return y + (lower ? 23 : 0) + waveA + waveB;
+    };
+    cloud.beginPath();
+    for (let x = 0; x <= skyCloudTexture.width; x += 8) {
+      const edge = edgeAt(x);
+      if (x === 0) cloud.moveTo(x, edge); else cloud.lineTo(x, edge);
+    }
+    for (let x = skyCloudTexture.width; x >= 0; x -= 8) cloud.lineTo(x, edgeAt(x, true));
+    cloud.closePath();
+    cloud.fillStyle = band % 2 ? 'rgba(47, 64, 65, .7)' : 'rgba(92, 108, 101, .58)';
+    cloud.fill();
+    cloud.globalAlpha = .32;
+    cloud.fillStyle = band % 2 ? '#afc1b1' : '#d0d3b9';
+    cloud.fillRect(0, y + 2, skyCloudTexture.width, 4);
+    cloud.globalAlpha = 1;
+  }
+  return skyCloudTexture;
+}
+function drawSkyCloudTexture(width, horizon, forestProgress) {
+  const texture = ensureSkyCloudTexture();
+  const textureScale = Math.max(width / 760, 1);
+  const textureWidth = texture.width * textureScale;
+  const textureHeight = Math.min(horizon * .9, texture.height * textureScale);
+  const time = state.now || performance.now();
+  // Deliberate one-way travel: camera yaw is intentionally excluded, so
+  // looking around does not make the clouds swim. The single seamless texture
+  // moves quickly and continuously in one direction instead.
+  const travel = (time * .18) % textureWidth;
+  const vertical = Math.sin(time * .0008) * 2.5 + Math.sin(time * .0017) * 1.2;
+  const offset = -travel;
+  ctx.save();
+  ctx.globalAlpha = .22 + forestProgress * .3;
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(0, vertical);
+  for (let x = offset - textureWidth; x < width + textureWidth; x += textureWidth) {
+    ctx.drawImage(texture, x, 0, textureWidth, textureHeight);
+  }
+  ctx.globalAlpha = .06 + forestProgress * .12;
+  ctx.fillStyle = forestProgress > .2 ? '#102025' : '#b9c9b8';
+  ctx.fillRect(0, 0, width, textureHeight);
+  ctx.restore();
+}
+
 function drawBackground(width, height) {
   const palette = rooms[state.room].palette || ['#090503', '#392719', '#0e0906'];
   const forestProgress = state.room === 0
@@ -3139,6 +3679,8 @@ function drawBackground(width, height) {
     }
     ctx.restore();
   }
+  if (state.room === 0) drawSkyCloudTexture(width, horizon, forestProgress);
+
   if (forestProgress > 0) {
     const darkness = smoothstep(.02, 1, forestProgress) * .16;
     const forestShade = ctx.createLinearGradient(0, 0, 0, horizon);
@@ -3502,7 +4044,17 @@ function drawPortfolioItem3D(item, now) {
 
 /* Low-poly 3D mesh helpers. Coordinates are local side/forward/height triples. */
 function localToWorld(originX, originY, yaw, point) { return { x: originX + Math.cos(yaw) * point.forward - Math.sin(yaw) * point.side, y: originY + Math.sin(yaw) * point.forward + Math.cos(yaw) * point.side, z: point.z }; }
-function transformLocalPoint(enemy, point, yaw) { const world = localToWorld(enemy.x, enemy.y, yaw, point); return cameraPoint(world.x, world.y, world.z); }
+function transformLocalPoint(enemy, point, yaw) {
+  const scale = enemy.meshScale || 1;
+  const baseZ = enemy.meshBaseZ ?? 0;
+  const scaledPoint = {
+    side: point.side * scale,
+    forward: point.forward * scale,
+    z: baseZ + (point.z - baseZ) * scale,
+  };
+  const world = localToWorld(enemy.x, enemy.y, yaw, scaledPoint);
+  return cameraPoint(world.x, world.y, world.z + (enemy.zOffset || 0));
+}
 function makeBoxPoints(center, dimensions, yaw, transform) { const [sideSize, forwardSize, height] = dimensions; const points = []; for (const side of [-1, 1]) for (const forward of [-1, 1]) for (const zSign of [-1, 1]) points.push(transform({ side: center.side + side * sideSize / 2, forward: center.forward + forward * forwardSize / 2, z: center.z + zSign * height / 2 })); return points; }
 function addBoxFaces(faces, points, color, shade = 1, material = null) {
   const indices = [[0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3], [0, 1, 3, 2], [4, 6, 7, 5]];
@@ -3954,41 +4506,7 @@ function lobbyProjectionIsVisible(point, clearance = .08) {
 function drawLobbyLowStone(faces, x, y, color = '#5b5948') {
   addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .11 }, [.34, .34, .22], 0, color, .84, 'stone');
 }
-function drawLobbyArmory(now) {
-  if (state.room !== 0) return;
-  const { xStart, xEnd, backY, frontY } = LOBBY_ARMORY;
-  // Flat ground dressing only: the armory is an open clearing, not a room
-  // inside the room. No tall back panel or vertical bay walls are rendered.
-  drawLobbyGroundPanel(xStart, backY, xEnd, frontY, 'rgba(73, 102, 68, .72)', 'rgba(205, 174, 111, .72)', .88);
-  drawLobbyGroundPanel(xStart + .32, backY + .3, xEnd - .32, frontY - .3, 'rgba(122, 145, 85, .2)', 'rgba(222, 202, 139, .3)', .8);
-
-  const faces = [];
-  // A low perimeter of individual stones gives the area a readable boundary
-  // without creating the wall-like rendering problem from the previous design.
-  for (let x = xStart + .35; x <= xEnd - .35; x += 1.18) {
-    drawLobbyLowStone(faces, x, backY, '#5f604b');
-    drawLobbyLowStone(faces, x, frontY, '#6e694d');
-  }
-  for (let y = backY + .55; y <= frontY - .55; y += 1.05) {
-    drawLobbyLowStone(faces, xStart, y, '#5f604b');
-    drawLobbyLowStone(faces, xEnd, y, '#6e694d');
-  }
-  // Four open posts mark the armory corners. They stop below the weapon meshes
-  // and cannot be mistaken for enclosing walls.
-  for (const [x, y] of [[xStart + .22, backY + .22], [xEnd - .22, backY + .22], [xStart + .22, frontY - .22], [xEnd - .22, frontY - .22]]) {
-    addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .38 }, [.2, .2, .76], 0, '#4b3423', .88, 'wood');
-    addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .8 }, [.32, .32, .12], 0, '#d3aa62', 1.02, 'steel');
-  }
-  renderFaces(faces, .96);
-
-  drawGroundGlow((xStart + xEnd) / 2, LOBBY_ARMORY.aisleY, '#8fd4a0', now, 1.25, .035);
-  drawLobbyStoneSlab(xStart + .3, xEnd - .3, LOBBY_ARMORY.aisleY - .14, LOBBY_ARMORY.aisleY + .14, 2, now, 'rgba(208, 184, 120, .42)');
-  drawLobbyLantern(xStart + .65, backY + .52, now, '#f0d38f');
-  drawLobbyLantern(xEnd - .65, backY + .52, now, '#f0d38f');
-
-  const sign = projectCameraPoint(cameraPoint((xStart + xEnd) / 2, backY + .06, 1.52));
-  // No hovering room labels: let the geometry communicate the space.
-}
+function drawLobbyArmory(now) { /* Weapons and path only; no armory enclosure. */ }
 function drawLobbyLantern(x, y, now, color = '#f0d38f') {
   const faces = [];
   const origin = { x, y };
@@ -3998,77 +4516,15 @@ function drawLobbyLantern(x, y, now, color = '#f0d38f') {
   renderFaces(faces, .98);
   drawGroundGlow(x, y, color, now, .62, .035);
 }
-function drawLobbyCampfire(now) {
-  if (state.room !== 0) return;
-  const fire = LOBBY_CAMPFIRE;
-  const origin = { x: fire.x, y: fire.y };
-  const faces = [];
-  const stoneCount = 9;
-  for (let index = 0; index < stoneCount; index += 1) {
-    const angle = index / stoneCount * TAU;
-    const radius = .62;
-    addBoxLocal(faces, origin, { side: Math.sin(angle) * radius, forward: Math.cos(angle) * radius, z: .12 }, [.32, .25, .24], angle + Math.PI / 2, '#716a50', .9 - (index % 3) * .05, 'stone');
-  }
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .23 }, [.16, .92, .16], .45, '#6a3e24', .92, 'wood');
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .3 }, [.16, .92, .16], -.45, '#7b4827', .86, 'wood');
-  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .57 }, [.28, .24, .46], .08, '#d85f35', 1.04, 'steel');
-  addBoxLocal(faces, origin, { side: -.03, forward: .02, z: .74 }, [.16, .14, .36], -.18, '#f0a24b', 1.12, 'steel');
-  renderFaces(faces, .98);
-  drawGroundGlow(fire.x, fire.y, '#f0a24b', now, 1.16, .035);
-  drawProjectedWorldRing({ x: fire.x, y: fire.y }, .78, '#e7ad67', .4 + Math.sin(now / 180) * .08, 18, .045, Math.max(1, canvas.height * .0025));
-
-  const flame = projectCameraPoint(cameraPoint(fire.x, fire.y, .94));
-  const flameBase = projectCameraPoint(cameraPoint(fire.x, fire.y, .36));
-  if (lobbyProjectionIsVisible(flame, .12) && flameBase) {
-    const pulse = .9 + Math.sin(now / 115) * .08;
-    ctx.save();
-    ctx.globalAlpha = .82 * pulse;
-    ctx.shadowBlur = 26;
-    ctx.shadowColor = '#f0a24b';
-    ctx.fillStyle = '#f7c967';
-    ctx.beginPath();
-    ctx.moveTo(flameBase.x - 9 * pulse, flameBase.y);
-    ctx.quadraticCurveTo(flame.x - 11, flame.y + 12, flame.x, flame.y - 14 * pulse);
-    ctx.quadraticCurveTo(flame.x + 13, flame.y + 10, flameBase.x + 9 * pulse, flameBase.y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#fff1b0';
-    ctx.beginPath();
-    ctx.moveTo(flameBase.x - 4, flameBase.y);
-    ctx.quadraticCurveTo(flame.x - 5, flame.y + 12, flame.x, flame.y - 4);
-    ctx.quadraticCurveTo(flame.x + 6, flame.y + 10, flameBase.x + 4, flameBase.y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Smoke is built from depth-checked projected puffs so it cannot smear across
-  // the sky or draw through the lobby edge walls when the player turns.
-  for (let index = 0; index < 6; index += 1) {
-    const rise = index * .34 + .18;
-    const drift = Math.sin(now / (900 + index * 75) + index * 1.4) * (.08 + index * .035) + Math.sin(now / 1500 + index) * .05;
-    const puff = projectCameraPoint(cameraPoint(fire.x + drift, fire.y + Math.cos(index * 1.8) * .035, .92 + rise));
-    if (!lobbyProjectionIsVisible(puff, .16)) continue;
-    const radius = clamp(canvas.height * (.022 + index * .004) / Math.max(.8, puff.depth), 4, 22);
-    ctx.save();
-    ctx.globalAlpha = (.24 - index * .025) * (.9 + Math.sin(now / 410 + index) * .08);
-    ctx.fillStyle = index % 2 ? '#b9c1af' : '#d6d0b5';
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = '#9fa998';
-    ctx.beginPath();
-    ctx.arc(puff.x - radius * .55, puff.y + radius * .12, radius * .75, 0, TAU);
-    ctx.arc(puff.x + radius * .35, puff.y - radius * .18, radius, 0, TAU);
-    ctx.arc(puff.x + radius * .8, puff.y + radius * .18, radius * .62, 0, TAU);
-    ctx.fill();
-    ctx.restore();
-  }
-  // No hovering camp label; the fire is the landmark.
-}
+function drawLobbyCampfire(now) { /* Campfire intentionally removed. */ }
 function drawLobbyStonePath(now) {
   if (state.room !== 0 || !LOBBY_GATE) return;
-  const startX = roomOffsets[0] + 5.15;
+  const startX = roomOffsets[0] + 3.15;
   const endX = LOBBY_GATE.x - .62;
   const centerY = LOBBY_WEAPON_PATH_Y;
+  const spawnPoint = roomContentPoint(STARTING_ROOM_INDEX - 1, rooms[0].spawn.x, rooms[0].spawn.y);
+  const spawnX = roomOffsets[0] + spawnPoint.x;
+  const spawnY = spawnPoint.y;
   const pathWidth = 1.12;
   const slabLength = .78;
   for (let x = startX, index = 0; x < endX; x += slabLength, index += 1) {
@@ -4078,26 +4534,12 @@ function drawLobbyStonePath(now) {
     const wobble1 = Math.sin((index + 1) * 1.7) * .045;
     drawLobbyStoneSlab(x0, x1, centerY - pathWidth / 2 + wobble0, centerY + pathWidth / 2 + wobble1, index, now);
   }
+  // A short cross-path leads to the central armory, while this branch makes
+  // the authored route visibly terminate at the actual player spawn point.
   drawLobbyBranchPath(LOBBY_ARMORY.xStart + .42, centerY - .46, LOBBY_ARMORY.aisleY, .86, now, 'rgba(178, 153, 102, .72)');
   drawLobbyBranchPath(LOBBY_ARMORY.xEnd - .48, centerY + .46, lobbyPortfolioScroll.y - .48, .72, now, 'rgba(143, 122, 83, .64)');
-  drawLobbyStoneSlab(LOBBY_ARMORY.xStart + .22, LOBBY_ARMORY.xEnd - .22, LOBBY_ARMORY.aisleY - .16, LOBBY_ARMORY.aisleY + .16, 1, now, 'rgba(194, 165, 105, .52)');
-
-  const edgeA = projectLobbyGroundPoint(startX, centerY - pathWidth / 2 - .08);
-  const edgeB = projectLobbyGroundPoint(endX, centerY - pathWidth / 2 - .08);
-  const edgeC = projectLobbyGroundPoint(startX, centerY + pathWidth / 2 + .08);
-  const edgeD = projectLobbyGroundPoint(endX, centerY + pathWidth / 2 + .08);
-  if ([edgeA, edgeB, edgeC, edgeD].every(Boolean)) {
-    ctx.save();
-    ctx.globalAlpha = .27;
-    ctx.strokeStyle = '#c4a66b';
-    ctx.lineWidth = Math.max(2, canvas.height * .005);
-    ctx.setLineDash([2, 12]);
-    ctx.beginPath(); ctx.moveTo(edgeA.x, edgeA.y); ctx.lineTo(edgeB.x, edgeB.y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(edgeC.x, edgeC.y); ctx.lineTo(edgeD.x, edgeD.y); ctx.stroke();
-    ctx.restore();
-  }
-  drawGroundGlow(roomOffsets[0] + 5.35, centerY, '#b8f0e2', now, 1.15, .035);
-  drawProjectedWorldRing({ x: roomOffsets[0] + 5.35, y: centerY }, 1.04, '#b8f0e2', .38 + Math.sin(now / 280) * .06, 28, .05, Math.max(1, canvas.height * .0025));
+  drawLobbyBranchPath(spawnX, centerY, spawnY, .92, now, 'rgba(183, 158, 104, .78)');
+  drawLobbyStoneSlab(spawnX - .42, spawnX + .42, spawnY - .18, spawnY + .18, 3, now, 'rgba(194, 165, 105, .62)');
 }
 function drawForestHallPath(now) {
   if (state.room !== 0) return;
@@ -4183,10 +4625,9 @@ function drawForestHallFog(now) {
 
 function drawWorldRoute(now) {
   if (state.room === 0) {
-    // Keep the spawn courtyard open. Weapon displays remain as the only
-    // intentional lobby dressing; remove the old ground panels, stones,
-    // lanterns, and branching showcase paths.
-    drawLobbyCampfire(now);
+    // The armory and stone path are world geometry, not HUD instructions. The
+    // path now runs from the gate through the center and branches to the spawn.
+    drawLobbyStonePath(now);
     drawForestHallPath(now);
   }
   if (state.room === FINAL_ROOM_INDEX) drawDoorOfLight(now);
@@ -4205,6 +4646,8 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
 
   const faces = [];
   const origin = { x: creature.x, y: creature.y };
+  const bob = settings.reducedMotion ? 0 : Math.sin(now / 420 + creature.x * .7) * .11;
+  const weaponOrigin = { ...origin, zOffset: bob, meshScale: .72, meshBaseZ: .30 };
   // Keep each display fixed in world space. These are not billboards.
   const yaw = creature.yaw ?? 0;
   const type = creature.type;
@@ -4222,45 +4665,56 @@ function drawLobbyWeaponMesh3D(creature, now = state.now || performance.now()) {
     // not a second pedestal. It is 20% of the previous plate size.
     const starYaw = yaw + now / 1800;
     const pedestalStarSize = .072;
-    addFlatSquareBladeWorld(faces, origin, { side: 0, forward: 0, z: .325 }, pedestalStarSize, .005, starYaw, color, 1.16);
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .327 }, [.011, .011, .008], starYaw, '#5b3d25', 1, 'steel');
+    addFlatSquareBladeWorld(faces, weaponOrigin, { side: 0, forward: 0, z: .325 }, pedestalStarSize, .005, starYaw, color, 1.16);
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .327 }, [.011, .011, .008], starYaw, '#5b3d25', 1, 'steel');
     topZ = .47;
     haloRadius = .22;
   } else if (type === 'crossbow') {
     // Small stand-alone crossbow, scaled to sit naturally on the pedestal cap.
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .35 }, [.07, .32, .07], yaw, '#704622', 1, 'wood');
-    addBoxLocal(faces, origin, { side: 0, forward: .14, z: .445 }, [.44, .06, .07], yaw, '#a87843', 1.08, 'wood');
-    addBoxLocal(faces, origin, { side: 0, forward: .17, z: .47 }, [.38, .018, .018], yaw, '#fff0b2', 1.14, 'steel');
-    addBoxLocal(faces, origin, { side: -.23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .96, 'steel');
-    addBoxLocal(faces, origin, { side: .23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .88, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .35 }, [.07, .32, .07], yaw, '#704622', 1, 'wood');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .14, z: .445 }, [.44, .06, .07], yaw, '#a87843', 1.08, 'wood');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: .17, z: .47 }, [.38, .018, .018], yaw, '#fff0b2', 1.14, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: -.23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .96, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: .23, forward: .14, z: .445 }, [.06, .06, .13], yaw, '#b9b7a0', .88, 'steel');
     topZ = .61;
     haloRadius = .27;
   } else if (type === 'wand') {
     // Small upright Ember Wand with its base seated on the pedestal cap.
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .59 }, [.055, .055, .56], yaw, '#4a2d20', 1.02, 'wood');
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .90 }, [.12, .10, .11], yaw, '#d97856', 1.12, 'steel');
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.01 }, [.06, .06, .08], yaw, light, 1.2, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .59 }, [.055, .055, .56], yaw, '#4a2d20', 1.02, 'wood');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .90 }, [.12, .10, .11], yaw, '#d97856', 1.12, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: 1.01 }, [.06, .06, .08], yaw, light, 1.2, 'steel');
     topZ = 1.11;
     haloRadius = .19;
   } else if (type === 'blade') {
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .39 }, [.08, .08, .3], yaw, '#3a241b', .98, 'leather');
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: .57 }, [.36, .08, .06], yaw, color, 1.04, 'steel');
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.05 }, [.13, .04, .9], yaw, '#cfe8dc', 1.06, 'steel');
-    addBoxLocal(faces, origin, { side: 0, forward: 0, z: 1.52 }, [.02, .04, .08], yaw, light, 1.15, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .39 }, [.08, .08, .3], yaw, '#3a241b', .98, 'leather');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: .57 }, [.36, .08, .06], yaw, color, 1.04, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: 1.05 }, [.13, .04, .9], yaw, '#cfe8dc', 1.06, 'steel');
+    addBoxLocal(faces, weaponOrigin, { side: 0, forward: 0, z: 1.52 }, [.02, .04, .08], yaw, light, 1.15, 'steel');
     topZ = 1.58;
     haloRadius = .25;
   } else {
     return;
   }
 
-  renderFaces(faces, .99, true);
+  // Let the armory obey the same depth-tested world pass as every other prop.
+  // This prevents a display from drawing through trees, signs, or the gate.
+  renderFaces(faces, .99);
   drawGroundGlow(creature.x, creature.y, color, now, .44, .035);
-  drawLobbyWeaponHalos(creature, now, bottomZ, topZ, haloRadius, color, light);
+  drawLobbyWeaponHalos(creature, now, .30 + (bottomZ - .30) * .72 + bob, .30 + (topZ - .30) * .72 + bob, haloRadius * .82, color, light);
 
-  const anchor = projectCameraPoint(cameraPoint(creature.x, creature.y, bottomZ + (topZ - bottomZ) * .5));
+  const scaledAnchorZ = .30 + (bottomZ + (topZ - bottomZ) * .5 - .30) * .72 + bob;
+  const anchor = projectCameraPoint(cameraPoint(creature.x, creature.y, scaledAnchorZ));
   if (!anchor) return;
 
+  if (!lobbyProjectionIsVisible(anchor, .08)) return;
   const size = clamp(canvas.height * .065 / Math.max(.8, anchor.depth), 9, 28);
+  drawWorldLabel(
+    { x: anchor.x, y: anchor.y - size * 1.18 },
+    creature.name,
+    'E · EQUIP',
+    light,
+    .84 + Math.sin(now / 260 + creature.x) * .08,
+  );
   ctx.save();
   ctx.globalAlpha = .82;
   ctx.strokeStyle = light;
@@ -4500,6 +4954,102 @@ function drawLobbyBush3D(bush, now) {
   drawGroundGlow(bush.x, bush.y, '#4d9b5d', now, .55 * scale, .035);
 }
 
+function drawLobbyGuide(guide, now) {
+  if (state.room !== 0 || !guide || !objectInView(guide.x, guide.y, 14)) return;
+  const faces = [];
+  const origin = { x: guide.x, y: guide.y };
+  const yaw = guide.yaw ?? 0;
+  const walking = Boolean(state.guideRun);
+  const walkPhase = walking ? now / LOBBY_GUIDE_WALK_ANIMATION_MS : 0;
+  const stride = walking ? Math.sin(walkPhase) : 0;
+  const bob = walking ? Math.abs(Math.sin(walkPhase)) * .012 : 0;
+  const legForward = stride * .045;
+  const armForward = -stride * .035;
+  // Pip is intentionally small—about half the camera eye height—with an
+  // oversized head and ears so the silhouette reads at a glance.
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .085 + bob }, [.18, .16, .13], yaw, '#76502f', .9, 'leather');
+  addBoxLocal(faces, origin, { side: 0, forward: 0, z: .19 + bob }, [.19, .17, .11], yaw, '#4d9a68', 1.02, null);
+  addBoxLocal(faces, origin, { side: -.12, forward: .01, z: .215 + bob }, [.08, .08, .13], yaw - .16, '#3c7e56', .92, null);
+  addBoxLocal(faces, origin, { side: .12, forward: .01, z: .215 + bob }, [.08, .08, .13], yaw + .16, '#3c7e56', .86, null);
+  addBoxLocal(faces, origin, { side: -.045, forward: .095, z: .19 + bob }, [.028, .018, .024], yaw, '#1c2923', .96, 'steel');
+  addBoxLocal(faces, origin, { side: .045, forward: .095, z: .19 + bob }, [.028, .018, .024], yaw, '#1c2923', .96, 'steel');
+  addBoxLocal(faces, origin, { side: -.125, forward: armForward, z: .14 + bob }, [.055, .08, .16], yaw, '#36794e', .9, null);
+  addBoxLocal(faces, origin, { side: .125, forward: -armForward, z: .14 + bob }, [.055, .08, .16], yaw, '#36794e', .86, null);
+  addBoxLocal(faces, origin, { side: -.055, forward: legForward, z: .035 }, [.07, .1, .07], yaw, '#392821', .84, 'leather');
+  addBoxLocal(faces, origin, { side: .055, forward: -legForward, z: .035 }, [.07, .1, .07], yaw, '#392821', .78, 'leather');
+  renderFaces(faces, .99);
+  drawGroundGlow(guide.x, guide.y, '#70d38f', now, .38, .035);
+
+}
+
+function drawLobbyGuideSpeechBubble(guide, now) {
+  if (state.room !== 0 || !guide || !state.guideSpeechTarget || (!state.guideSpeechActive && state.guideSpeechHold <= 0 && state.guideSpeechPause <= 0)) return;
+
+  // Keep Pip's dialogue in the game canvas, but place it in a stable lower
+  // viewport panel. The panel does not move with depth or re-wrap as Pip walks.
+  const message = state.guideSpeechTarget;
+  const typed = state.guideSpeechVisible.length;
+  const fontSize = clamp(canvas.height * .021, 13, 19);
+  const width = clamp(canvas.width * .62, 360, 760);
+  const maxWidth = width - 42;
+  const lineHeight = fontSize * 1.24;
+  const pixel = Math.max(1, Math.round(fontSize * .1));
+  const pattern = textures.patterns?.dialogue || '#261a11';
+
+  ctx.save();
+  ctx.font = `600 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  const lines = [];
+  let line = '';
+  let lineStart = 0;
+  let cursor = 0;
+  for (const word of message.split(' ')) {
+    const wordStart = cursor;
+    cursor += word.length + 1;
+    const candidate = line ? `${line} ${word}` : word;
+    if (ctx.measureText(candidate).width > maxWidth && line) {
+      lines.push({ text: line, start: lineStart, end: wordStart - 1 });
+      line = word;
+      lineStart = wordStart;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push({ text: line, start: lineStart, end: message.length });
+
+  const headerHeight = Math.max(17, fontSize * .9);
+  const height = Math.round(lines.length * lineHeight + headerHeight + 24);
+  const left = Math.round((canvas.width - width) / 2);
+  const top = Math.round(canvas.height - height - Math.max(18, canvas.height * .045));
+
+  ctx.globalAlpha = .95;
+  ctx.fillStyle = pattern;
+  ctx.fillRect(left, top, width, height);
+  ctx.fillStyle = 'rgba(8, 6, 4, .22)';
+  for (let stripe = top + pixel * 2; stripe < top + height; stripe += pixel * 5) ctx.fillRect(left, stripe, width, pixel);
+  ctx.strokeStyle = '#b88b4c';
+  ctx.lineWidth = Math.max(1, pixel);
+  ctx.strokeRect(left + .5, top + .5, width - 1, height - 1);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#d5a150';
+  ctx.font = `700 ${Math.max(10, fontSize * .68)}px "DM Mono", monospace`;
+  ctx.fillText('PIP · WAYFINDER', left + 14, top + headerHeight * .58);
+
+  ctx.fillStyle = '#f2e2ba';
+  ctx.font = `600 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  lines.forEach((entry, index) => {
+    const visible = typed > entry.start ? message.slice(entry.start, Math.min(typed, entry.end)).trimEnd() : '';
+    ctx.fillText(visible || (index === 0 && typed === 0 ? '…' : ''), left + 14, top + headerHeight + 10 + index * lineHeight + lineHeight * .5);
+  });
+  ctx.restore();
+}
+function updateLobbyGuideHud() {
+  // Pip's dialogue is entirely world-space. Keep the old DOM node hidden so
+  // legacy markup cannot recreate a bottom-screen interaction panel.
+  if (lobbyGuideHud) lobbyGuideHud.hidden = true;
+}
+
 function drawWorldObjects(now) {
   const objects = [];
   if (state.room === 0) {
@@ -4514,6 +5064,7 @@ function drawWorldObjects(now) {
       // they do not use the old 2D forest sequence.
       if (objectInView(tree.x, tree.y, FOREST_HALL_GAP + 4)) objects.push({ type: 'forest-tree', ...tree, distance: Math.hypot(tree.x - state.player.x, tree.y - state.player.y) });
     });
+    if (objectInView(LOBBY_GUIDE.x, LOBBY_GUIDE.y, 14)) objects.push({ type: 'lobby-guide', ...LOBBY_GUIDE, distance: Math.hypot(LOBBY_GUIDE.x - state.player.x, LOBBY_GUIDE.y - state.player.y) });
     if (!lobbyPortfolioScroll.recovered && objectInView(lobbyPortfolioScroll.x, lobbyPortfolioScroll.y, 16)) objects.push({ type: 'lobby-scroll', ...lobbyPortfolioScroll, distance: Math.hypot(lobbyPortfolioScroll.x - state.player.x, lobbyPortfolioScroll.y - state.player.y) });
     if (objectInView(LOBBY_ENTRANCE_SIGN.x, LOBBY_ENTRANCE_SIGN.y, 28)) objects.push({ type: 'lobby-entrance-sign', ...LOBBY_ENTRANCE_SIGN, distance: Math.hypot(LOBBY_ENTRANCE_SIGN.x - state.player.x, LOBBY_ENTRANCE_SIGN.y - state.player.y) });
     if (objectInView(LOBBY_GATE.x, LOBBY_GATE.y, 26)) objects.push({ type: 'lobby-gate', ...LOBBY_GATE, distance: Math.hypot(LOBBY_GATE.x - state.player.x, LOBBY_GATE.y - state.player.y) });
@@ -4538,6 +5089,7 @@ function drawWorldObjects(now) {
   for (const object of objects) {
     if (object.type === 'lobby-tree' || object.type === 'forest-tree') drawLobbyTree3D(object, now);
     else if (object.type === 'lobby-bush') drawLobbyBush3D(object, now);
+    else if (object.type === 'lobby-guide') drawLobbyGuide(object, now);
     else if (object.type === 'lobby-scroll') drawLobbyPortfolioScroll(object, now);
     else if (object.type === 'lobby-entrance-sign') drawLobbyEntranceSign(object, now);
     else if (object.type === 'lobby-gate') drawLobbyGate(now);
@@ -4570,6 +5122,7 @@ function drawWorldObjects(now) {
   // visible and interactable even when a tree or gate overlaps their projection.
   if (currentRoomIndex() === 0) {
     for (const keeper of LOBBY_WEAPON_CREATURES) drawLobbyWeaponCreature(keeper, now);
+    drawLobbyGuideSpeechBubble(LOBBY_GUIDE, now);
   }
 }
 function ninjaStarProfile(size) {
@@ -5573,6 +6126,9 @@ function drawScene(now) {
   const height = canvas.height;
   const worldNow = state.reading ? state.readingWorldTime : now;
   ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
   if (state.shakeTime > 0) ctx.translate(Math.sin(worldNow * .09) * state.shakeTime * (settings.reducedMotion ? 2 : 7), Math.cos(worldNow * .11) * state.shakeTime * (settings.reducedMotion ? 1.5 : 5));
   if (state.dodgeTime > 0 && !settings.reducedMotion) {
     const progress = clamp(state.dodgeProgress, 0, 1);
@@ -5617,6 +6173,11 @@ function drawScene(now) {
     ctx.restore();
   }
   drawDodgeOverlay(now);
+  updateLobbyGuideHud();
+  if (new URLSearchParams(window.location.search).has('debug-render')) {
+    const sample = ctx.getImageData(Math.floor(width / 2), Math.floor(height / 2), 1, 1).data;
+    document.title = `RENDER ${canvas.width}x${canvas.height} · ${sample[0]},${sample[1]},${sample[2]},${sample[3]} · room ${state.room}`;
+  }
 }
 
 function spendStamina(amount) {
@@ -5701,6 +6262,12 @@ function updatePlayer(delta) {
   if (state.keys.has('arrowup')) state.player.pitch = clamp(state.player.pitch + PITCH_SPEED * delta, -.48, .48);
   if (state.keys.has('arrowdown')) state.player.pitch = clamp(state.player.pitch - PITCH_SPEED * delta, -.48, .48);
 
+  if (state.room === 0 && state.guideControlsLocked) {
+    state.weapon.moving = false;
+    state.keys.delete('w'); state.keys.delete('a'); state.keys.delete('s'); state.keys.delete('d');
+    return;
+  }
+
   if (state.dodgeTime > 0) {
     movePlayerBy(state.dodgeVx * delta, state.dodgeVy * delta);
     const damping = Math.pow(.045, delta / DODGE_DURATION);
@@ -5738,6 +6305,7 @@ function updatePlayer(delta) {
   movePlayerBy(dx, dy);
   state.player.angle = normalizeAngle(state.player.angle);
   state.weapon.moving = Math.abs(dx) + Math.abs(dy) > .001;
+  noteLobbyPlayerMovement();
   state.weapon.bobPhase += delta * (state.weapon.moving ? (sprint ? 13 : 8) : 2);
   state.footstepTimer -= delta;
   if (state.weapon.moving && state.footstepTimer <= 0) {
@@ -5836,7 +6404,7 @@ function collectHealthPotion(item) {
   spawnParticles(item.x, item.y, .42, ['#d16f63', '#f0ddaf', '#fff1b0'], settings.reducedMotion ? 6 : 16, { speed: 1.1, life: .75, size: .72, upward: .7, spread: TAU, glow: 14 });
   state.impactBursts.push({ x: item.x, y: item.y, z: .42, elapsed: 0, duration: .45, color: '#d16f63', radius: .62, style: 'potion' });
   playRecoverySound();
-  showToast(recoveredAmount > 0 ? `Health potion used · +${recoveredAmount} vitality.` : 'Health potion collected · vitality already full.', 'good');
+  showToast(recoveredAmount > 0 ? `Health potion used · +${recoveredAmount} health.` : 'Health potion collected · health already full.', 'good');
   updateHud();
   return true;
 }
@@ -5866,8 +6434,8 @@ function spawnHealthPotion(x, y, roomIndex, sourceName) {
     title: 'HEALTH POTION',
     kind: 'health-potion',
     icon: '+',
-    tag: 'RECOVERY / VITALITY',
-    summary: 'Restores 30 vitality.',
+    tag: 'RECOVERY / HEALTH',
+    summary: 'Restores 30 health.',
     details: [`Dropped by ${sourceName}.`, 'Drink it from the ground to return to the fight.'],
     color: '#d16f63',
     healAmount: 30,
@@ -5930,6 +6498,27 @@ function resetCurrentLevel() {
   state.weapon.hit = false;
   state.weapon.attackDamage = 0;
   state.weapon.comboStep = 0;
+  if (roomIndex === STARTING_ROOM_INDEX) state.cockroachTutorialShown = false;
+  if (roomIndex === 0) {
+    Object.assign(LOBBY_GUIDE, LOBBY_GUIDE_HOME, { yaw: Math.PI });
+    state.guideMovementTriggered = false;
+    state.guideDeferredRun = null;
+    state.guideAutoTimer = -1;
+    state.guideWaitingForWeapon = false;
+    state.guideScrollInstructionStarted = false;
+    state.guideIntroSpeechStarted = false;
+    state.guideFarewellStarted = false;
+    state.guideFarewellComplete = false;
+    state.guideIntroPhase = 'look';
+    state.guideIntroElapsed = 0;
+    state.guideControlsLocked = true;
+    state.guideWeaponCollected = false;
+    state.guideWeaponReactionStarted = false;
+    state.guideScrollReturnStarted = false;
+    state.guideRun = null;
+    clearLobbyGuideSpeech();
+    state.guideSpeechLayout = null;
+  }
 
   for (let index = worldItems.length - 1; index >= 0; index -= 1) {
     const item = worldItems[index];
@@ -5966,6 +6555,7 @@ let targetPotionSequence = 0;
 function defeatHostile(target) {
   if (target.dead) return;
   target.dead = true;
+  if (target.id === 'threshold-cockroach' && cockroachTooltip) cockroachTooltip.hidden = true;
   target.deathTime = 0;
   state.groundHazards = state.groundHazards.filter((hazard) => hazard.ownerId !== target.id);
   state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: target.boss ? 1.2 : .56, color: target.boss ? '#fff4c5' : (target.color || '#d8c18b'), radius: target.boss ? 2.1 : .82, style: 'defeat' });
@@ -6165,6 +6755,20 @@ function drawEnemyTelegraphs(now) {
     ctx.beginPath(); ctx.arc(0, 0, size * .42, 0, TAU); ctx.stroke();
     ctx.restore();
   }
+}
+
+function updateThresholdCockroachTutorial() {
+  const cockroach = state.room === STARTING_ROOM_INDEX
+    ? worldEnemies.find((enemy) => enemy.id === 'threshold-cockroach' && !enemy.dead)
+    : null;
+  if (!cockroach) {
+    if (cockroachTooltip) cockroachTooltip.hidden = true;
+    return;
+  }
+  // This card remains on-screen for the entire first encounter and disappears
+  // only after the threshold cockroach has actually been defeated.
+  state.cockroachTutorialShown = true;
+  if (cockroachTooltip) cockroachTooltip.hidden = false;
 }
 
 function updateEnemies(delta) {
@@ -6606,9 +7210,17 @@ function updatePrompt(delta = 0) {
     ? Math.hypot(state.doorOfLight.x - state.player.x, state.doorOfLight.y - state.player.y)
     : Infinity;
   const finalDoor = finalDoorDistance <= 1.65;
+  const thresholdCockroach = state.room === STARTING_ROOM_INDEX
+    ? worldEnemies.find((enemy) => enemy.id === 'threshold-cockroach' && !enemy.dead)
+    : null;
   const weaponCreature = getNearestWeaponCreature();
   const scroll = getNearestPromptScroll();
   const lobbyGate = state.room === 0 && !state.lobbyGateOpen && lobbyGateDistance() <= 1.65;
+  const gateSpell = state.room === 0
+    && !state.lobbyGateOpen
+    && state.tutorialSpell
+    && state.weapon.equipped
+    && lobbyGateDistance() <= LOBBY_GATE_SPELL_RANGE;
   let nextKey = null;
   let nextText = '';
 
@@ -6617,10 +7229,13 @@ function updatePrompt(delta = 0) {
   if (finalDoor) {
     nextKey = 'E';
     nextText = 'INTERACT WITH FINAL DOOR';
+  } else if (thresholdCockroach) {
+    nextKey = state.weapon.equipped ? 'CLICK' : 'E';
+    nextText = state.weapon.equipped ? 'TO ATTACK THE COCKROACH' : 'EQUIP A WEAPON TO ATTACK';
   } else if (lobbyGate && !state.weapon.equipped) {
     nextKey = 'E';
     nextText = 'EQUIP A WEAPON BEFORE OPENING GATE';
-  } else if (lobbyGate && state.tutorialSpell) {
+  } else if (gateSpell) {
     nextKey = 'Q';
     nextText = 'CAST ARCHIVE KEY TO OPEN GATE';
   } else if (weaponCreature) {
@@ -6683,6 +7298,8 @@ function tick(delta, now) {
   if (state.transition) { updateBossTransition(delta); state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8); state.shakeTime = Math.max(0, state.shakeTime - delta * 1.8); return; }
   if (state.floorAnnouncement) updateFloorAnnouncement(delta);
   updateLobbyGate(delta);
+  updateLobbyGuide(delta);
+  updateLobbyGuideSpeech(delta);
   updatePlayer(delta);
   updateSanctuaryResume();
   collectTouchItems();
@@ -6691,6 +7308,7 @@ function tick(delta, now) {
   if (state.mouseAttack && state.weapon.swing <= 0 && state.weapon.cooldown <= 0) performAttack();
   updateSpell(delta);
   updateProjectiles(delta);
+  updateThresholdCockroachTutorial();
   updateEnemies(delta);
   updateGroundHazards(delta);
   state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8);
@@ -6708,6 +7326,10 @@ function reportRuntimeError(scope, error) {
   const signature = `${scope}:${message}`;
   state.runtimeErrorCount += 1;
   state.lastRuntimeError = `${scope}: ${message}`;
+  if (new URLSearchParams(window.location.search).has('debug-render')) {
+    document.title = `RENDER ERROR · ${scope} · ${message.split('\n')[0].slice(0, 140)}`;
+    document.documentElement.dataset.renderError = state.lastRuntimeError;
+  }
   if (signature !== runtimeDiagnostics.lastReportedSignature || now - runtimeDiagnostics.lastErrorAt > 2000) {
     console.error(`[Portfolio game] recovered ${scope} error`, error);
     runtimeDiagnostics.lastReportedSignature = signature;
@@ -6822,6 +7444,7 @@ function setKey(event, down) {
   }
   const movementKeys = ['w', 'a', 's', 'd', 'shift', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
   if (!movementKeys.includes(key)) return;
+  if (state.guideControlsLocked && ['w', 'a', 's', 'd'].includes(key)) { event.preventDefault(); return; }
   event.preventDefault();
   if (down) state.keys.add(key); else state.keys.delete(key);
 }
@@ -6947,4 +7570,26 @@ function clearLegacyStartupOverlays() {
   gameShell.classList.remove('menu-active', 'game-launching');
 }
 
-textures.stone = createStoneTexture(256, 13); textures.wood = createWoodTexture(256, 29); buildGroundCache(); textures.bone = createBoneTexture(96, 37); textures.steel = createSteelTexture(96, 53); textures.leather = createLeatherTexture(96, 71); textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat') }; updateWeaponSelection(state.weapon.type); state.weapon.equipped = false; clearLegacyStartupOverlays(); state.lastTime = performance.now(); updateHud(); resizeCanvas(); requestAnimationFrame(gameLoop);
+try {
+  if (cockroachTooltip) cockroachTooltip.hidden = true;
+  resizeCanvas();
+  textures.stone = createStoneTexture(256, 13);
+  textures.wood = createWoodTexture(256, 29);
+  buildGroundCache();
+  textures.bone = createBoneTexture(96, 37);
+  textures.steel = createSteelTexture(96, 53);
+  textures.leather = createLeatherTexture(96, 71);
+  textures.dialogue = createDialogueTexture(128, 83);
+  textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat'), dialogue: ctx.createPattern(textures.dialogue, 'repeat') };
+  updateWeaponSelection(state.weapon.type);
+  state.weapon.equipped = false;
+  clearLegacyStartupOverlays();
+  state.lastTime = performance.now();
+  updateHud();
+  requestAnimationFrame(gameLoop);
+} catch (error) {
+  reportRuntimeError('startup', error);
+  resizeCanvas();
+  drawRecoveryScene(performance.now());
+  requestAnimationFrame(gameLoop);
+}

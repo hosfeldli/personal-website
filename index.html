@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b2a20" />
   <meta name="description" content="Liam Hosfeld's first-person operations, analytics, and technical delivery portfolio archive." />
   <title>Liam Hosfeld</title>
-  <link rel="stylesheet" href="styles.css?v=20260808-ui10" />
+  <link rel="stylesheet" href="styles.css?v=20260809-renderfix1" />
 </head>
 <body>
   <main class="game-shell" aria-label="Liam Hosfeld portfolio game">
@@ -28,8 +28,22 @@
 
     <section class="player-status" aria-label="Player status">
       <div class="status-bars">
-        <div class="status-bar vitality"><span class="status-label">VITALITY</span><strong id="hp-value">100 / 100</strong><div class="status-track" role="progressbar" aria-label="Vitality" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="hp-bar"></span></div></div>
-        <div class="status-bar stamina"><span class="status-label">STAMINA</span><strong id="stamina-value">100 / 100</strong><div class="status-track" role="progressbar" aria-label="Stamina" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="stamina-bar"></span></div></div>
+        <div class="status-bar health" aria-label="Health">
+          <span class="status-symbol" aria-hidden="true">♥</span>
+          <div class="status-track" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+            <div class="status-segments" id="hp-bar">
+              <span class="status-segment" data-segment="0"></span><span class="status-segment" data-segment="1"></span><span class="status-segment" data-segment="2"></span><span class="status-segment" data-segment="3"></span><span class="status-segment" data-segment="4"></span><span class="status-segment" data-segment="5"></span><span class="status-segment" data-segment="6"></span><span class="status-segment" data-segment="7"></span><span class="status-segment" data-segment="8"></span><span class="status-segment" data-segment="9"></span>
+            </div>
+          </div>
+        </div>
+        <div class="status-bar stamina" aria-label="Stamina">
+          <span class="status-symbol" aria-hidden="true">ϟ</span>
+          <div class="status-track" role="progressbar" aria-label="Stamina" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+            <div class="status-segments" id="stamina-bar">
+              <span class="status-segment" data-segment="0"></span><span class="status-segment" data-segment="1"></span><span class="status-segment" data-segment="2"></span><span class="status-segment" data-segment="3"></span><span class="status-segment" data-segment="4"></span><span class="status-segment" data-segment="5"></span><span class="status-segment" data-segment="6"></span><span class="status-segment" data-segment="7"></span><span class="status-segment" data-segment="8"></span><span class="status-segment" data-segment="9"></span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="status-meta"><span id="weapon-hud-label">NINJA STARS</span><span id="weapon-status">READY</span><span id="experience-value">LVL 0 · 0 XP</span></div>
     </section>
@@ -49,7 +63,7 @@
         <strong id="boss-bottom-name">THE OPERATIONS ARCHON</strong>
         <span id="boss-bottom-phase">PHASE I · THE BRIEF</span>
       </div>
-      <div class="boss-bottom-track" aria-label="Operations Archon vitality"><span id="boss-bottom-health"></span></div>
+      <div class="boss-bottom-track" aria-label="Operations Archon health"><span id="boss-bottom-health"></span></div>
     </section>
 
     <section class="objective-panel" id="objective-panel" aria-live="polite">
@@ -73,6 +87,21 @@
       <span class="prompt-key" id="prompt-key">[E]</span>
       <span id="prompt-text"></span>
     </div>
+
+    <section class="cockroach-tooltip" id="cockroach-tooltip" hidden aria-live="polite">
+      <span class="cockroach-tooltip-kicker">FIRST THREAT · THRESHOLD COCKROACH</span>
+      <strong>Aim at the cockroach and click to attack.</strong>
+      <span>Keep moving as it closes in.</span>
+    </section>
+
+    <section class="lobby-guide-hud" id="lobby-guide-hud" hidden aria-live="polite">
+      <div class="lobby-guide-hud-seal" aria-hidden="true">✦</div>
+      <div class="lobby-guide-hud-copy">
+        <span class="lobby-guide-hud-kicker">FIELD GUIDE · PIP THE WAYFINDER</span>
+        <strong id="lobby-guide-hud-message">WASD walks. Move the mouse to look around the field.</strong>
+        <span class="lobby-guide-hud-hint" id="lobby-guide-hud-hint">E · TALK TO PIP</span>
+      </div>
+    </section>
 
     <div class="toast" id="toast" hidden aria-live="polite"></div>
     <div class="hover-tooltip" id="hover-tooltip" role="tooltip" hidden></div>
@@ -210,6 +239,6 @@
     </form>
   </dialog>
 
-  <script src="game.js?v=20260808-ui11"></script>
+  <script src="game.js?v=20260809-dialogue2"></script>
 </body>
 </html>
