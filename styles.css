@@ -51,52 +51,6 @@ button { color: inherit; }
 .interaction-prompt { left: 50%; bottom: 96px; display: flex; align-items: center; gap: 9px; padding: 8px 13px; transform: translateX(-50%); border: 1px solid rgba(215, 189, 135, .56); background: rgba(24, 12, 5, .72); color: var(--parchment-light); box-shadow: 0 5px 22px rgba(0, 0, 0, .35); font-size: 12px; }
 .interaction-prompt[hidden], .toast[hidden], .reading-overlay[hidden] { display: none; }
 
-/* The first-threat instruction is persistent gameplay guidance, not a transient toast. */
-.cockroach-tooltip {
-  position: absolute;
-  z-index: 8;
-  top: 128px;
-  right: 28px;
-  width: min(330px, calc(100% - 56px));
-  padding: 11px 14px 12px;
-  border: 2px solid #987043;
-  border-left: 5px solid #c76545;
-  background:
-    repeating-linear-gradient(0deg, rgba(255, 224, 168, .035) 0 2px, transparent 2px 6px),
-    linear-gradient(145deg, rgba(57, 38, 24, .98), rgba(19, 12, 8, .98));
-  box-shadow: inset 0 0 0 1px rgba(205, 160, 86, .18), 4px 4px 0 rgba(0, 0, 0, .35), 0 10px 26px rgba(0, 0, 0, .42);
-  color: #f3e2b5;
-  pointer-events: none;
-}
-.cockroach-tooltip[hidden] { display: none !important; }
-.cockroach-tooltip-kicker,
-.cockroach-tooltip strong,
-.cockroach-tooltip span:last-child { display: block; }
-.cockroach-tooltip-kicker {
-  margin-bottom: 6px;
-  color: #d8a15d;
-  font: 700 9px/1.2 "DM Mono", monospace;
-  letter-spacing: .09em;
-}
-.cockroach-tooltip strong {
-  color: #fff0c9;
-  font: 700 13px/1.3 Georgia, "Times New Roman", serif;
-}
-.cockroach-tooltip span:last-child {
-  margin-top: 4px;
-  color: #c7b184;
-  font: 11px/1.3 Georgia, "Times New Roman", serif;
-}
-@media (max-width: 760px) {
-  .cockroach-tooltip {
-    top: 116px;
-    right: 14px;
-    width: min(290px, calc(100% - 28px));
-    padding: 9px 11px 10px;
-  }
-  .cockroach-tooltip strong { font-size: 12px; }
-  .cockroach-tooltip span:last-child { font-size: 10px; }
-}
 .prompt-key { min-width: 23px; padding: 3px 5px; border: 1px solid var(--gold); color: var(--gold-light); text-align: center; font-weight: 700; }
 .toast { left: 28px; bottom: 83px; max-width: min(410px, calc(100% - 56px)); padding: 8px 12px; border-left: 2px solid var(--gold); background: rgba(19, 9, 4, .72); color: var(--parchment); font-size: 11px; opacity: 0; transform: translateY(7px); transition: opacity .2s ease, transform .2s ease; }
 .toast.visible { opacity: 1; transform: translateY(0); }
@@ -2221,4 +2175,99 @@ button { color: inherit; }
   .player-status .status-bars { gap: 7px !important; }
   .player-status .status-symbol { flex-basis: 17px; font-size: 16px; }
   .player-status .status-track { height: 14px !important; }
+}
+
+/* Restored piece-by-piece resource degradation without a surrounding box. */
+.player-status {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.player-status::before {
+  display: none !important;
+  content: none !important;
+}
+.player-status .status-bars {
+  gap: 8px !important;
+}
+.player-status .status-bar {
+  gap: 9px !important;
+}
+.player-status .status-track {
+  height: 17px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.player-status .status-segments {
+  display: flex !important;
+  gap: 3px !important;
+  width: 100% !important;
+  height: 17px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.player-status .status-segment {
+  display: block !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 17px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.player-status .status-segment::before {
+  display: none !important;
+  content: none !important;
+}
+.player-status .status-pixels {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 2px !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.player-status .status-pixel {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  transition: none !important;
+}
+.player-status .status-pixel.is-visible {
+  background: var(--resource-color) !important;
+  background-image: none !important;
+  opacity: .96;
+}
+.player-status .status-segment.is-empty .status-pixel {
+  background: transparent !important;
+  opacity: 0;
+}
+
+
+/* Piece visibility is stepped by JavaScript so damage resolves one pixel at a time. */
+.player-status .status-pixel {
+  transition: none !important;
 }

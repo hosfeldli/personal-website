@@ -44,7 +44,6 @@ const floorAnnouncementSubtitle = document.getElementById('floor-announcement-su
 const interactionPrompt = document.getElementById('interaction-prompt');
 const promptKey = document.getElementById('prompt-key');
 const promptText = document.getElementById('prompt-text');
-const cockroachTooltip = document.getElementById('cockroach-tooltip');
 const lobbyGuideHud = document.getElementById('lobby-guide-hud');
 const lobbyGuideHudMessage = document.getElementById('lobby-guide-hud-message');
 const lobbyGuideHudHint = document.getElementById('lobby-guide-hud-hint');
@@ -331,7 +330,7 @@ const FOREST_HALL_END = roomOffsets[STARTING_ROOM_INDEX];
 const FOREST_HALL_CENTER_Y = ROOM_DOOR_Y + 1;
 const FOREST_HALL_GATE_HALF_WIDTH = 1.5;
 const FOREST_HALL_TRIGGER_X = FOREST_HALL_START + FOREST_HALL_GAP * .22;
-const FOREST_HALL_ROWS = [ROOM_DOOR_Y, ROOM_DOOR_Y + 1, ROOM_DOOR_Y + 2];
+const FOREST_HALL_ROWS = [ROOM_DOOR_Y, ROOM_DOOR_Y + 1];
 const FINAL_ROOM_OFFSET = roomOffsets[FINAL_ROOM_INDEX];
 const BOSS_EXIT_POINT = { x: FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH - 3.2, y: 9 };
 const SANCTUARY_ROOM_OFFSET = roomOffsets[SANCTUARY_ROOM_INDEX];
@@ -1417,12 +1416,54 @@ function updateSegmentBar(bar, value, maximum) {
   const normalized = clamp(value / Math.max(1, maximum), 0, 1);
   const units = normalized * 10;
   const segments = bar.querySelectorAll('.status-segment');
+  const pixelCount = 15;
+  const now = performance.now();
+
   segments.forEach((segment, index) => {
     const fill = clamp(units - index, 0, 1);
-    segment.classList.toggle('is-full', fill >= .999);
-    segment.classList.toggle('is-partial', fill > .001 && fill < .999);
-    segment.classList.toggle('is-empty', fill <= .001);
-    segment.style.setProperty('--fill', fill.toFixed(3));
+    const targetPixels = Math.round(fill * pixelCount);
+
+    let pixelGrid = segment.querySelector('.status-pixels');
+    if (!pixelGrid) {
+      pixelGrid = document.createElement('span');
+      pixelGrid.className = 'status-pixels';
+      for (let pixel = 0; pixel < pixelCount; pixel += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'status-pixel';
+        cell.dataset.pixel = String(pixel);
+        pixelGrid.appendChild(cell);
+      }
+      segment.appendChild(pixelGrid);
+    }
+
+    // A stable order makes the segment look like it is breaking apart rather
+    // than randomly blinking. Only one piece is changed per step.
+    const removalOrder = Array.from({ length: pixelCount }, (_, pixel) => pixel)
+      .sort((a, b) => hash2(index, a, 19) - hash2(index, b, 19));
+    const rankByPixel = new Map(removalOrder.map((pixel, rank) => [pixel, rank]));
+
+    if (!Number.isFinite(segment._pixelVisible)) segment._pixelVisible = targetPixels;
+    if (!Number.isFinite(segment._pixelTarget)) segment._pixelTarget = targetPixels;
+    if (!Number.isFinite(segment._pixelStepAt)) segment._pixelStepAt = now;
+
+    segment._pixelTarget = targetPixels;
+    if (segment._pixelVisible !== segment._pixelTarget && now >= segment._pixelStepAt) {
+      segment._pixelVisible += segment._pixelVisible < segment._pixelTarget ? 1 : -1;
+      segment._pixelStepAt = now + .075;
+    }
+
+    const visiblePixels = clamp(segment._pixelVisible, 0, pixelCount);
+    const visible = new Set(removalOrder.slice(0, visiblePixels));
+    segment.classList.toggle('is-full', visiblePixels >= pixelCount);
+    segment.classList.toggle('is-partial', visiblePixels > 0 && visiblePixels < pixelCount);
+    segment.classList.toggle('is-empty', visiblePixels <= 0);
+    segment.style.setProperty('--fill', (visiblePixels / pixelCount).toFixed(3));
+
+    pixelGrid.querySelectorAll('.status-pixel').forEach((cell, pixel) => {
+      const isVisible = visible.has(pixel);
+      cell.classList.toggle('is-visible', isVisible);
+      cell.style.opacity = isVisible ? '.96' : '0';
+    });
   });
   bar.parentElement?.setAttribute('aria-valuenow', String(Math.ceil(value)));
 }
@@ -1443,6 +1484,9 @@ function updateCombatHud() {
   if (weaponStatus) weaponStatus.textContent = weaponPhase;
   const staminaPercent = clamp(state.stamina / state.maxStamina * 100, 0, 100);
   const staminaNow = Math.ceil(state.stamina);
+  // Advance both resource displays continuously so a changed target does not
+  // remove an entire group of pixels in a single HUD update.
+  updateSegmentBar(hpBar, state.player.hp, 100);
   updateSegmentBar(staminaBar, state.stamina, state.maxStamina);
   const aimNow = state.now || performance.now();
   const aimActive = !state.menuActive && !state.reading && !state.transition && !state.forestTransition && !state.launchTransition;
@@ -6555,7 +6599,6 @@ let targetPotionSequence = 0;
 function defeatHostile(target) {
   if (target.dead) return;
   target.dead = true;
-  if (target.id === 'threshold-cockroach' && cockroachTooltip) cockroachTooltip.hidden = true;
   target.deathTime = 0;
   state.groundHazards = state.groundHazards.filter((hazard) => hazard.ownerId !== target.id);
   state.impactBursts.push({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: target.boss ? 1.2 : .56, color: target.boss ? '#fff4c5' : (target.color || '#d8c18b'), radius: target.boss ? 2.1 : .82, style: 'defeat' });
@@ -6755,20 +6798,6 @@ function drawEnemyTelegraphs(now) {
     ctx.beginPath(); ctx.arc(0, 0, size * .42, 0, TAU); ctx.stroke();
     ctx.restore();
   }
-}
-
-function updateThresholdCockroachTutorial() {
-  const cockroach = state.room === STARTING_ROOM_INDEX
-    ? worldEnemies.find((enemy) => enemy.id === 'threshold-cockroach' && !enemy.dead)
-    : null;
-  if (!cockroach) {
-    if (cockroachTooltip) cockroachTooltip.hidden = true;
-    return;
-  }
-  // This card remains on-screen for the entire first encounter and disappears
-  // only after the threshold cockroach has actually been defeated.
-  state.cockroachTutorialShown = true;
-  if (cockroachTooltip) cockroachTooltip.hidden = false;
 }
 
 function updateEnemies(delta) {
@@ -7308,7 +7337,6 @@ function tick(delta, now) {
   if (state.mouseAttack && state.weapon.swing <= 0 && state.weapon.cooldown <= 0) performAttack();
   updateSpell(delta);
   updateProjectiles(delta);
-  updateThresholdCockroachTutorial();
   updateEnemies(delta);
   updateGroundHazards(delta);
   state.damageFlash = Math.max(0, state.damageFlash - delta * 1.8);
@@ -7571,7 +7599,6 @@ function clearLegacyStartupOverlays() {
 }
 
 try {
-  if (cockroachTooltip) cockroachTooltip.hidden = true;
   resizeCanvas();
   textures.stone = createStoneTexture(256, 13);
   textures.wood = createWoodTexture(256, 29);
