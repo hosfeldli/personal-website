@@ -1,0 +1,61 @@
+Audio assets used by The Operations Dungeon
+============================================
+
+arsenal-cz-single.wav
+  Production file: a trimmed single-shot edit of arsenal-cz.wav.
+  Original source: OpenGameArt.org — Gunshot Sounds
+  https://opengameart.org/content/gunshot-sounds
+  Archive: https://opengameart.org/sites/default/files/sounds.zip
+  License: CC BY 3.0. The downloaded archive includes license text crediting
+  Vincent Sevedge. The single-shot edit is used so one trigger press produces
+  one report instead of replaying the archive's multi-shot recording.
+
+shotgun-blast.wav
+  Source: OpenGameArt.org — Gunshot Sounds
+  https://opengameart.org/content/gunshot-sounds
+  Archive: https://opengameart.org/sites/default/files/sounds.zip
+  License: CC BY 3.0. The downloaded archive includes license text crediting
+  Vincent Sevedge.
+
+shotgun-shell-first.mp3
+  Production edit of “First Shell.mp3” from OpenGameArt.org — Shotgun Reload
+  Sound effects.
+  https://opengameart.org/content/shotgun-reload-sound-effects
+  The author states that the sounds may be used without attribution.
+
+shotgun-shell.mp3
+  Production edit of “Subsequent Shells.mp3” from OpenGameArt.org — Shotgun
+  Reload Sound effects.
+  https://opengameart.org/content/shotgun-reload-sound-effects
+  The author states that the sounds may be used without attribution.
+
+shotgun-rack.mp3
+  Original reload/action sample from the same OpenGameArt shotgun source page.
+  It remains in the repository for reference; the active reload now uses the
+  first-shell and subsequent-shell clips once per inserted shell.
+
+dungeon-ambient.ogg
+  Source: OpenGameArt.org — Loopable Dungeon Ambience
+  https://opengameart.org/content/loopable-dungeon-ambience
+  License: CC0, as listed on the source page. It is used as a quiet cave bed
+  beneath the death-metal score.
+
+The game-generated soundtrack uses Web Audio oscillators, waveshaping, bass,
+drums, and noise layers. It is intentionally low-tuned, fast, dissonant, and
+metal-oriented rather than chiptune-oriented.
+
+
+dungeon-metal-loop.ogg
+  Source: OpenGameArt.org — Boss Battle #2 [Symphonic Metal].
+  https://opengameart.org/content/boss-battle-2-symphonic-metal
+  Original archive: https://opengameart.org/sites/default/files/boss_battle_%232_metal_pack.zip
+  License: CC0. The source page notes that the archive filenames are reversed;
+  the included “opening” file is the loop used here.
+
+bfg-electric.mp3
+  Production edit of zapThreeToneUp.mp3 from Kenney’s Digital SFX Set.
+  Source: OpenGameArt.org — 63 Digital sound effects.
+  https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc
+  Original archive: https://opengameart.org/sites/default/files/Digital_SFX_Set.zip
+  License: CC0/free use. The included readme credits Kenney Vleugels
+  (www.kenney.nl) and says attribution is appreciated but not mandatory.

@@ -25,6 +25,9 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.pdf': 'application/pdf',
   '.ico': 'image/x-icon',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8',
 };
@@ -49,7 +52,7 @@ function sendText(res, status, body) {
 }
 
 function resolveStaticFile(pathname) {
-  if (pathname === '/') return path.join(ROOT, 'index.html');
+  if (pathname === '/' || pathname === '/dungeon' || pathname === '/dungeon/') return path.join(ROOT, 'index.html');
   if (PUBLIC_FILES.has(pathname)) return path.join(ROOT, pathname.slice(1));
   if (pathname.startsWith('/assets/')) {
     const resolved = path.normalize(path.join(ROOT, pathname.replace(/^\/+/, '')));

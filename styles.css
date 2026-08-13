@@ -25,7 +25,7 @@ body { color: var(--bone); }
 button, a { font: inherit; }
 button { color: inherit; }
 .game-shell { position: fixed; inset: 0; width: 100%; height: 100dvh; min-height: 320px; overflow: hidden; isolation: isolate; background: #0b0705; }
-#game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
+#game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; touch-action: none; }
 #game-canvas.dragging { cursor: grabbing; }
 .vignette { position: absolute; z-index: 2; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 31%, rgba(18, 8, 3, .16) 64%, rgba(4, 2, 1, .84) 125%); }
 .game-hud, .room-switcher, .interaction-prompt, .toast, .control-ribbon, .touch-controls { position: absolute; z-index: 5; }
@@ -77,7 +77,7 @@ button { color: inherit; }
 .reading-overlay.intro-scroll .scroll-kicker,
 .reading-overlay.intro-scroll .scroll-record-number { color: #176c52; }
 .reading-overlay.intro-scroll .scroll-stamp { border-color: rgba(23, 108, 82, .68); color: rgba(23, 108, 82, .82); }
-.reading-overlay.intro-scroll .scroll-spell { border-color: rgba(23, 108, 82, .68); box-shadow: 0 0 18px rgba(36, 220, 160, .26), inset 0 0 15px rgba(36, 220, 160, .1); }
+.reading-overlay.intro-scroll .scroll-ability { border-color: rgba(23, 108, 82, .68); box-shadow: 0 0 18px rgba(36, 220, 160, .26), inset 0 0 15px rgba(36, 220, 160, .1); }
 
 .scroll-shell { position: relative; width: min(680px, 92vw); max-height: calc(100dvh - 100px); filter: drop-shadow(0 22px 32px rgba(0, 0, 0, .65)); transform: translateY(22px) scale(.95); opacity: 0; }
 .reading-overlay.open .scroll-shell { animation: unfurl-scroll .62s cubic-bezier(.18, .88, .25, 1) forwards; }
@@ -176,35 +176,8 @@ button { color: inherit; }
   .close-scroll { margin-top: 12px; }
 }
 
-/* Unified-world aim marker: intentionally quiet so it does not compete with the dungeon. */
-.aim-reticle {
-  position: absolute;
-  z-index: 6;
-  top: 50%;
-  left: 50%;
-  width: 18px;
-  height: 18px;
-  transform: translate(-50%, -50%);
-  color: rgba(244, 221, 169, .88);
-  font: 700 24px/12px Georgia, serif;
-  text-align: center;
-  text-shadow: 0 0 8px rgba(216, 145, 61, .7);
-  pointer-events: none;
-}
-.aim-reticle::before,
-.aim-reticle::after {
-  content: '';
-  position: absolute;
-  background: rgba(244, 221, 169, .62);
-}
-.aim-reticle::before { top: 8px; left: 0; width: 18px; height: 1px; }
-.aim-reticle::after { top: 0; left: 8px; width: 1px; height: 18px; }
-@media (max-width: 760px) {
-  .aim-reticle { transform: translate(-50%, -50%) scale(.82); }
-}
-
-/* Learned spell card: layered into the original parchment scroll without changing its silhouette. */
-.scroll-spell {
+/* Learned ability card: layered into the original parchment scroll without changing its silhouette. */
+.scroll-ability {
   position: relative;
   display: flex;
   align-items: center;
@@ -217,10 +190,10 @@ button { color: inherit; }
   opacity: 0;
   transform: translateY(8px) scale(.98);
 }
-.reading-overlay.open .scroll-spell.spell-revealed {
-  animation: spell-card-reveal .7s cubic-bezier(.18, .88, .25, 1) .28s forwards;
+.reading-overlay.open .scroll-ability.ability-revealed {
+  animation: ability-card-reveal .7s cubic-bezier(.18, .88, .25, 1) .28s forwards;
 }
-.scroll-spell-seal {
+.scroll-ability-seal {
   display: grid;
   place-items: center;
   flex: 0 0 38px;
@@ -231,14 +204,14 @@ button { color: inherit; }
   color: #8c5727;
   font-size: 23px;
   box-shadow: 0 0 0 4px rgba(223, 186, 111, .16), inset 0 0 12px rgba(104, 59, 20, .15);
-  animation: spell-seal-pulse 1.8s ease-in-out infinite;
+  animation: ability-seal-pulse 1.8s ease-in-out infinite;
 }
-.scroll-spell small,
-.scroll-spell strong,
-.scroll-spell em { display: block; }
-.scroll-spell small { color: #8b5726; font-size: 8px; letter-spacing: .15em; }
-.scroll-spell strong { margin-top: 3px; color: #392416; font-size: 15px; letter-spacing: .04em; }
-.scroll-spell em { margin-top: 3px; color: #684522; font-size: 11px; line-height: 1.35; }
+.scroll-ability small,
+.scroll-ability strong,
+.scroll-ability em { display: block; }
+.scroll-ability small { color: #8b5726; font-size: 8px; letter-spacing: .15em; }
+.scroll-ability strong { margin-top: 3px; color: #392416; font-size: 15px; letter-spacing: .04em; }
+.scroll-ability em { margin-top: 3px; color: #684522; font-size: 11px; line-height: 1.35; }
 .scroll-progress { margin-top: 14px; padding: 10px 12px 9px; border: 1px solid rgba(111, 68, 30, .28); background: rgba(255, 239, 183, .18); opacity: 0; transform: translateY(8px); }
 .reading-overlay.open .scroll-progress { animation: ink-appears .42s ease .44s forwards; }
 .scroll-progress-copy { display: flex; justify-content: space-between; gap: 12px; color: #805024; }
@@ -247,12 +220,12 @@ button { color: inherit; }
 .scroll-progress-track { height: 5px; margin-top: 7px; overflow: hidden; border: 1px solid rgba(112, 67, 29, .4); background: rgba(75, 43, 17, .16); }
 .scroll-progress-track span { display: block; width: 0; height: 100%; background: linear-gradient(90deg, #8a5125, #d19548, #f0d58e); box-shadow: 0 0 8px rgba(183, 112, 43, .5); transition: width .6s cubic-bezier(.18, .88, .25, 1); }
 .scroll-progress p { margin: 6px 0 0; color: #795027; font-size: 9px; }
-@keyframes spell-card-reveal {
+@keyframes ability-card-reveal {
   0% { opacity: 0; transform: translateY(8px) scale(.98); }
   65% { opacity: 1; transform: translateY(-2px) scale(1.015); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes spell-seal-pulse {
+@keyframes ability-seal-pulse {
   0%, 100% { transform: rotate(0deg) scale(1); filter: brightness(.92); }
   50% { transform: rotate(8deg) scale(1.08); filter: brightness(1.18); }
 }
@@ -300,7 +273,7 @@ button { color: inherit; }
 .menu-room-entry,
 .menu-scroll-entry,
 .menu-enemy-entry,
-.menu-spell-entry {
+.menu-ability-entry {
   display: grid;
   align-items: center;
   gap: 10px;
@@ -323,16 +296,16 @@ button { color: inherit; }
 .menu-scroll-entry small,
 .menu-enemy-entry strong,
 .menu-enemy-entry small,
-.menu-spell-entry strong,
-.menu-spell-entry small,
-.menu-scroll-spell b,
-.menu-scroll-spell small {
+.menu-ability-entry strong,
+.menu-ability-entry small,
+.menu-scroll-ability b,
+.menu-scroll-ability small {
   display: block;
 }
 .menu-room-entry strong,
 .menu-scroll-entry strong,
 .menu-enemy-entry strong,
-.menu-spell-entry strong {
+.menu-ability-entry strong {
   color: var(--parchment-light);
   font-size: 11px;
   font-weight: 400;
@@ -340,8 +313,8 @@ button { color: inherit; }
 .menu-room-entry small,
 .menu-scroll-entry small,
 .menu-enemy-entry small,
-.menu-spell-entry small,
-.menu-scroll-spell small {
+.menu-ability-entry small,
+.menu-scroll-ability small {
   margin-top: 3px;
   color: #a99472;
   font-size: 9px;
@@ -350,7 +323,7 @@ button { color: inherit; }
 .menu-room-threats { color: #b98d62; font-size: 9px; line-height: 1.45; }
 .menu-room-threats small { display: inline; margin-left: 4px; color: #887459; }
 .menu-enemy-data,
-.menu-spell-data {
+.menu-ability-data {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
@@ -359,9 +332,9 @@ button { color: inherit; }
   padding-right: 3px;
 }
 .menu-enemy-entry,
-.menu-spell-entry { grid-template-columns: 22px minmax(0, 1fr); }
+.menu-ability-entry { grid-template-columns: 22px minmax(0, 1fr); }
 .enemy-swatch,
-.spell-glyph {
+.ability-glyph {
   display: grid;
   place-items: center;
   width: 19px;
@@ -371,9 +344,9 @@ button { color: inherit; }
   background: color-mix(in srgb, var(--enemy-color, var(--gold)) 18%, transparent);
 }
 .enemy-swatch { background: var(--enemy-color, var(--gold)); box-shadow: 0 0 9px color-mix(in srgb, var(--enemy-color, var(--gold)) 45%, transparent); }
-.spell-glyph { border-color: var(--spell-color, var(--gold)); color: var(--spell-color, var(--gold)); font-size: 13px; }
-.menu-scroll-spell { min-width: 0; color: #c9a76e; }
-.menu-scroll-spell b { color: #d5ae70; font-size: 10px; font-weight: 400; }
+.ability-glyph { border-color: var(--ability-color, var(--gold)); color: var(--ability-color, var(--gold)); font-size: 13px; }
+.menu-scroll-ability { min-width: 0; color: #c9a76e; }
+.menu-scroll-ability b { color: #d5ae70; font-size: 10px; font-weight: 400; }
 .menu-data-card ::-webkit-scrollbar { width: 5px; }
 .menu-data-card ::-webkit-scrollbar-thumb { background: rgba(185, 133, 66, .42); }
 @media (max-width: 760px) {
@@ -383,9 +356,9 @@ button { color: inherit; }
   .menu-room-entry { grid-template-columns: 28px minmax(100px, .8fr) minmax(110px, 1fr); }
   .menu-scroll-entry { grid-template-columns: 23px minmax(110px, 1fr) minmax(115px, 1fr); }
   .menu-enemy-data,
-  .menu-spell-data { grid-template-columns: 1fr; max-height: 260px; }
-  .scroll-spell strong { font-size: 13px; }
-  .scroll-spell em { font-size: 10px; }
+  .menu-ability-data { grid-template-columns: 1fr; max-height: 260px; }
+  .scroll-ability strong { font-size: 13px; }
+  .scroll-ability em { font-size: 10px; }
 }
 @media (max-width: 760px) {
   .scroll-paper { max-height: calc(100dvh - 70px); padding: 25px 25px 20px; }
@@ -397,8 +370,8 @@ button { color: inherit; }
   .scroll-progress-copy strong { font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scroll-spell-seal,
-  .reading-overlay.open .scroll-spell.spell-revealed { animation: none; }
+  .scroll-ability-seal,
+  .reading-overlay.open .scroll-ability.ability-revealed { animation: none; }
 }
 
 /* Weapon reference values stay visible in the loadout atlas. */
@@ -630,27 +603,6 @@ button { color: inherit; }
   font-size: 9px;
   line-height: 1.35;
 }
-.hit-marker {
-  position: absolute;
-  z-index: 7;
-  top: calc(50% + 26px);
-  left: 50%;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  transform: translateX(-50%);
-  color: #fff1b0;
-  text-shadow: 0 0 10px rgba(255, 217, 119, .88);
-  pointer-events: none;
-}
-.hit-marker[hidden] { display: none; }
-.hit-marker span { font-size: 25px; line-height: .9; }
-.hit-marker small { font-size: 8px; letter-spacing: .12em; }
-.hit-marker.miss { color: #bcae91; text-shadow: none; }
-.hit-marker.danger { color: #ef8d71; text-shadow: 0 0 10px rgba(213, 77, 55, .8); }
-.hit-marker.shielded { color: #9debdc; text-shadow: 0 0 10px rgba(108, 224, 194, .8); }
-.hit-marker.crit { color: #fff8d6; transform: translateX(-50%) scale(1.16); }
-
 /* Settings inherits the parchment dialog, with clearer control grouping. */
 .settings-dialog { width: min(520px, calc(100% - 30px)); }
 .settings-list { display: grid; gap: 9px; margin-top: 17px; }
@@ -699,10 +651,6 @@ button { color: inherit; }
   .setting-row input[type='range'] { width: 100%; }
   .setting-check { align-items: start; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .hit-marker,
-}
-
 
 /* Combat resource HUD */
 .stamina-row,
@@ -1087,7 +1035,6 @@ button { color: inherit; }
 .game-shell:not(.menu-active) .objective-panel,
 .game-shell:not(.menu-active) .room-plaque,
 .game-shell:not(.menu-active) .status-meta,
-.game-shell:not(.menu-active) .hit-marker,
 .game-shell:not(.menu-active) .toast,
 .game-shell:not(.menu-active) .touch-controls {
   display: none !important;
@@ -1631,7 +1578,7 @@ button { color: inherit; }
 }
 
 
-/* Final pixel resource bars and bottom-left spell key strip. */
+/* Final pixel resource bars and bottom-left ability key strip. */
 .player-status {
   position: absolute !important;
   z-index: 8 !important;
@@ -1757,8 +1704,8 @@ button { color: inherit; }
 .scroll-actions a { border-color: color-mix(in srgb, var(--scroll-accent) 58%, #754b25); background: color-mix(in srgb, var(--scroll-accent) 7%, transparent); }
 .scroll-actions a:first-child { background: color-mix(in srgb, var(--scroll-accent) 18%, transparent); }
 .scroll-actions a:hover, .scroll-actions a:focus-visible { border-color: var(--scroll-accent); box-shadow: 0 0 12px color-mix(in srgb, var(--scroll-accent) 24%, transparent); }
-.scroll-spell { border-color: color-mix(in srgb, var(--scroll-accent) 48%, rgba(111, 68, 30, .42)); background: linear-gradient(105deg, color-mix(in srgb, var(--scroll-accent) 12%, rgba(255, 239, 183, .32)), rgba(139, 88, 38, .13)); }
-.scroll-spell-seal { border-color: color-mix(in srgb, var(--scroll-accent) 56%, rgba(126, 76, 30, .64)); color: var(--scroll-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--scroll-accent) 13%, transparent), inset 0 0 12px rgba(104, 59, 20, .15), 0 0 16px color-mix(in srgb, var(--scroll-accent) 25%, transparent); }
+.scroll-ability { border-color: color-mix(in srgb, var(--scroll-accent) 48%, rgba(111, 68, 30, .42)); background: linear-gradient(105deg, color-mix(in srgb, var(--scroll-accent) 12%, rgba(255, 239, 183, .32)), rgba(139, 88, 38, .13)); }
+.scroll-ability-seal { border-color: color-mix(in srgb, var(--scroll-accent) 56%, rgba(126, 76, 30, .64)); color: var(--scroll-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--scroll-accent) 13%, transparent), inset 0 0 12px rgba(104, 59, 20, .15), 0 0 16px color-mix(in srgb, var(--scroll-accent) 25%, transparent); }
 @media (max-width: 760px) {
   .scroll-author-line { font-size: 8px; letter-spacing: .05em; }
   .scroll-positioning { max-width: 100%; font-size: 7px; }
@@ -2183,3 +2130,1581 @@ button { color: inherit; }
 
 /* Resource bars are rendered by the canvas so they share the game's pixel/world treatment. */
 .player-status { display: none !important; }
+
+
+/* DOOM-STYLE COMBAT HUD */
+.player-status { display: block !important; position: absolute !important; top: auto !important; right: auto !important; bottom: 26px !important; left: 26px !important; width: min(490px, calc(100% - 52px)) !important; padding: 11px 13px !important; border: 1px solid rgba(180, 73, 55, .62) !important; background: linear-gradient(135deg, rgba(10, 8, 7, .92), rgba(28, 20, 15, .82)) !important; box-shadow: 0 8px 26px rgba(0,0,0,.48), inset 0 0 0 1px rgba(215,163,78,.12) !important; text-align: left !important; }
+.player-status .status-meta { display: grid !important; grid-template-columns: 1.35fr 1fr 1.15fr 1fr; gap: 5px 11px; margin-top: 8px; color: #d7a34e; font: 700 10px/1.2 "DM Mono", monospace; letter-spacing: .06em; }
+.player-status .status-meta span { color: #d7a34e !important; white-space: nowrap; }
+.player-status .status-meta span:nth-child(2) { color: #db5c42 !important; }
+.player-status .status-meta span:nth-child(3) { color: #36e0d0 !important; }
+.player-status .status-meta span:nth-child(4) { color: #9debdc !important; }
+.player-status .status-meta span:nth-child(5) { color: #fff1b0 !important; }
+.player-status .status-meta span:nth-child(6) { color: #cf6d45 !important; }
+@media (max-width: 760px) { .player-status { left: 12px !important; bottom: 72px !important; width: min(330px, calc(100% - 24px)) !important; } .player-status .status-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 8px; } }
+
+/* Interior combat HUD: compact, readable, and intentionally separate from the objective layer. */
+.combat-hud {
+  width: min(470px, calc(100% - 52px)) !important;
+  padding: 12px 14px 10px !important;
+  border: 1px solid rgba(215, 163, 78, .72) !important;
+  border-top: 3px solid #db5c42 !important;
+  background: linear-gradient(155deg, rgba(8, 10, 10, .96), rgba(25, 20, 16, .93)) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .58), inset 0 0 20px rgba(54, 224, 208, .04) !important;
+  font-family: "DM Mono", ui-monospace, monospace;
+}
+.combat-hud-top, .combat-hud-main { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.combat-hud-main { align-items: end; margin-top: 10px; padding: 9px 0; border-top: 1px solid rgba(215, 163, 78, .22); border-bottom: 1px solid rgba(215, 163, 78, .22); }
+.resource-block { display: grid; grid-template-columns: auto 38px; gap: 4px 8px; align-items: center; }
+.resource-label, .weapon-readout > span, .ammo-readout small { color: rgba(240, 221, 175, .68); font-size: 8px; letter-spacing: .12em; }
+.resource-block strong { color: #fff1b0; font-size: 16px; text-align: right; }
+.armor-block strong { color: #36e0d0; }
+.combat-track { grid-column: 1 / -1; height: 6px; overflow: hidden; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); }
+.combat-track span { display: block; width: 100%; height: 100%; background: #db5c42; transition: width .15s ease; }
+.armor-block .combat-track span { background: #36e0d0; }
+.weapon-readout strong { display: block; margin-top: 3px; color: #fff1b0; font-size: 21px; letter-spacing: .04em; }
+.weapon-readout > span:last-child { display: block; margin-top: 3px; color: #db5c42; font-size: 9px; letter-spacing: .12em; }
+.ammo-readout { text-align: right; white-space: nowrap; }
+.ammo-readout strong { color: #fff1b0; font-size: 37px; line-height: .85; }
+.ammo-readout .ammo-divider { color: #db5c42; font-size: 22px; margin: 0 4px; }
+.ammo-readout span:not(.ammo-divider) { color: #36e0d0; font-size: 20px; }
+.ammo-readout small { display: block; margin-top: 5px; }
+.weapon-slots { display: grid; grid-template-columns: minmax(150px, 1fr); gap: 5px; margin-top: 9px; }
+.weapon-slots button { display: grid; grid-template-columns: 17px 1fr; align-items: center; gap: 5px; min-width: 0; padding: 6px 5px; border: 1px solid rgba(215, 163, 78, .26); background: rgba(255,255,255,.035); color: rgba(240,221,175,.62); cursor: pointer; text-align: left; font: inherit; }
+.weapon-slots button b { color: #db5c42; font-size: 11px; }
+.weapon-slots button span { overflow: hidden; font-size: 8px; letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
+.weapon-slots button.is-active { border-color: #36e0d0; background: rgba(54,224,208,.12); color: #fff1b0; box-shadow: inset 0 -2px #36e0d0; }
+.combat-hud-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; margin-top: 9px; color: rgba(240,221,175,.68); font-size: 8px; letter-spacing: .07em; }
+.combat-hud-footer strong { color: #fff1b0; }
+.combat-hud-footer span:nth-child(2) strong, .combat-hud-footer span:nth-child(4) { color: #db5c42; }
+.combat-hud-footer span:nth-child(3) { color: #36e0d0; }
+@media (max-width: 760px) {
+  .combat-hud { left: 12px !important; bottom: 70px !important; width: min(350px, calc(100% - 24px)) !important; padding: 9px 10px 8px !important; }
+  .weapon-readout strong { font-size: 16px; }
+  .ammo-readout strong { font-size: 28px; }
+  .weapon-slots button span { font-size: 7px; }
+  .combat-hud-footer { font-size: 7px; }
+}
+
+/* Final requested combat HUD: only health/shield left and ammo right. */
+.minimal-combat-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  font-family: "DM Mono", ui-monospace, monospace;
+  letter-spacing: .1em;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, .9);
+}
+.minimal-resource-panel {
+  position: absolute;
+  bottom: 26px;
+  min-width: 190px;
+  padding: 9px 11px 10px;
+  border-left: 2px solid rgba(240, 221, 175, .72);
+  background: linear-gradient(90deg, rgba(17, 11, 7, .88), rgba(42, 28, 18, .22));
+}
+.minimal-health-panel { left: 26px; }
+.minimal-weapon-panel {
+  left: 50%;
+  min-width: 210px;
+  transform: translateX(-50%);
+  border-left: 1px solid rgba(185, 133, 66, .72);
+  border-right: 1px solid rgba(185, 133, 66, .72);
+  background: linear-gradient(90deg, rgba(17, 11, 7, .38), rgba(42, 28, 18, .88), rgba(17, 11, 7, .38));
+  text-align: center;
+}
+.minimal-weapon-panel .minimal-resource-row { justify-content: center; }
+.minimal-weapon-status {
+  margin-top: 6px;
+  color: #e0b66d;
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-align: center;
+}
+.minimal-ammo-panel {
+  right: 26px;
+  min-width: 150px;
+  border-left: 0;
+  border-right: 2px solid rgba(185, 133, 66, .78);
+  background: linear-gradient(270deg, rgba(17, 11, 7, .88), rgba(42, 28, 18, .22));
+  text-align: right;
+}
+.minimal-resource-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  color: rgba(240, 221, 175, .84);
+  font-size: 10px;
+  line-height: 1.1;
+}
+.minimal-resource-row strong {
+  color: #fff1b0;
+  font-size: 17px;
+  letter-spacing: .05em;
+}
+.minimal-resource-row strong b { font-weight: 700; }
+.minimal-resource-row strong i {
+  margin: 0 5px;
+  color: #b98542;
+  font-style: normal;
+}
+.minimal-track {
+  width: 190px;
+  height: 8px;
+  margin: 5px 0 9px;
+  overflow: hidden;
+  border: 1px solid rgba(240, 221, 175, .38);
+  background: rgba(17, 11, 7, .78);
+}
+.minimal-track span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: width .16s ease;
+}
+.health-track span { background: linear-gradient(90deg, #773128, #c36b44); }
+.shield-track span { background: linear-gradient(90deg, #8c6335, #d7bd87); }
+@media (max-width: 760px) {
+  .minimal-resource-panel { bottom: 70px; min-width: 145px; padding: 7px 8px 8px; }
+  .minimal-health-panel { left: 12px; }
+  .minimal-weapon-panel { min-width: 165px; }
+  .minimal-ammo-panel { right: 12px; min-width: 125px; }
+  .minimal-resource-row { font-size: 8px; gap: 10px; }
+  .minimal-resource-row strong { font-size: 14px; }
+  .minimal-track { width: 145px; height: 7px; }
+}
+
+
+/* Minimal combat presentation: health and shield stay left, ammo stays right. */
+.game-hud,
+.objective-panel,
+.boss-bottom-hud {
+  display: none !important;
+}
+
+
+/* Stamina was removed from the movement model; retain legacy selectors only for
+   compatibility with old markup, never for the active game HUD. */
+.stamina-row,
+.stamina-track,
+.status-bar.stamina,
+.status-bar.stamina .status-track,
+.status-bar.stamina .status-track span {
+  display: none !important;
+}
+
+/*
+ * FINAL COMMANDER HUD
+ *
+ * One stable four-compartment strip:
+ * [COMMANDER] | [HEALTH] | [CURRENT WEAPON] | [AMMO]
+ * The typewriter changes only the copy. The portrait is the only animated
+ * transmission surface, so the combat HUD never jumps while a line plays.
+ */
+.doom-status-bar {
+  --commander-hud-height: 112px;
+  position: absolute !important;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1.28fr) minmax(170px, .62fr) minmax(230px, .82fr) minmax(150px, .52fr);
+  align-items: stretch;
+  width: 100%;
+  height: var(--commander-hud-height);
+  min-height: var(--commander-hud-height);
+  box-sizing: border-box;
+  padding: 11px 18px 13px;
+  gap: 0;
+  overflow: hidden;
+  border-top: 4px solid #d69b4d;
+  border-bottom: 4px solid #140a05;
+  border-radius: 0 !important;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 231, 174, .035) 0 2px, rgba(0, 0, 0, .1) 2px 5px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .1) 0 3px, transparent 3px 11px),
+    linear-gradient(180deg, #402618 0, #1b0f09 16%, #0c0704 88%, #29160c 100%);
+  box-shadow: 0 -5px 0 #080402, 0 -14px 30px rgba(0, 0, 0, .74), inset 0 2px 0 #f0c26e, inset 0 -2px 0 #704622;
+  font-family: "DM Mono", ui-monospace, monospace;
+  image-rendering: pixelated;
+  pointer-events: none;
+  text-shadow: 2px 2px 0 #080503;
+}
+.game-shell.damage-alert .doom-status-bar {
+  border-top-color: #ff684d;
+  box-shadow: 0 -5px 0 #4a100b, 0 -14px 34px rgba(190, 30, 20, .82), inset 0 2px 0 #ffd0a2, inset 0 -2px 0 #7e2117;
+  animation: doom-damage-hud .12s steps(2, end) 4;
+}
+.game-shell.damage-alert .doom-vitals .doom-stat-block strong,
+.game-shell.damage-alert .doom-ammo > strong { color: #ffd0a2; }
+@keyframes doom-damage-hud {
+  50% { transform: translateY(-4px); filter: saturate(1.5) brightness(1.18); }
+}
+.doom-status-bar::before,
+.doom-status-bar::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 3px;
+  content: '';
+  pointer-events: none;
+}
+.doom-status-bar::before { top: 6px; background: #160b06; box-shadow: 0 1px 0 #b87932; }
+.doom-status-bar::after { bottom: 7px; background: #080403; box-shadow: 0 -1px 0 #946432; }
+
+.doom-status-bar > .narrator-panel,
+.doom-status-bar > .doom-status-compartment {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-right: 3px solid #5e391e;
+  border-radius: 0 !important;
+  background: transparent;
+  box-shadow: inset 2px 0 0 rgba(240, 194, 110, .08), inset -2px 0 0 rgba(0, 0, 0, .68);
+}
+.doom-status-bar > :last-child { border-right: 0; }
+
+/* Keep the first compartment reserved even during the first frame before the
+   commander has selected a line. */
+.doom-status-bar > .narrator-panel[hidden] {
+  display: flex !important;
+  visibility: hidden;
+}
+.doom-status-bar > .narrator-panel {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 15px 6px 9px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.doom-status-bar > .narrator-panel::before {
+  position: absolute;
+  inset: 5px 7px 5px 0;
+  z-index: -1;
+  border: 2px solid #6e451f;
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 214, 140, .055) 0 2px, rgba(0, 0, 0, .11) 2px 5px),
+    #170c07;
+  box-shadow: inset 2px 2px 0 rgba(240, 194, 110, .12), inset -2px -2px 0 rgba(0, 0, 0, .7);
+  content: '';
+  pointer-events: none;
+}
+.doom-status-bar > .narrator-panel.is-speaking::before {
+  border-color: #d6a052;
+  box-shadow: inset 3px 0 0 #53dfcd, inset 2px 2px 0 rgba(240, 194, 110, .16), inset -2px -2px 0 rgba(0, 0, 0, .7);
+}
+.doom-status-bar > .narrator-panel.is-speaking {
+  transform: none !important;
+  animation: none !important;
+}
+.doom-status-bar > .narrator-panel.is-transmitting {
+  transform: none !important;
+  animation: none !important;
+}
+.doom-status-bar > .narrator-panel.is-transmitting::after { display: none !important; }
+.doom-status-bar > .narrator-panel .narrator-portrait {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 3px solid #d6ae68;
+  border-radius: 0 !important;
+  background: #11100c;
+  box-shadow: 3px 3px 0 #080503, inset 0 0 0 3px #07110f;
+  image-rendering: pixelated;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  filter: contrast(1.16) saturate(.9);
+}
+.doom-status-bar > .narrator-panel .narrator-portrait.is-transmitting {
+  animation: commander-portrait-breakup .18s steps(2, end) infinite;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait.is-transmitting canvas {
+  filter: contrast(1.35) saturate(.65) brightness(1.08);
+}
+.narrator-portrait.expression-alert { border-color: #e08a61; background: #261512; }
+.narrator-portrait.expression-worried { border-color: #b98542; background: #1d1912; }
+.narrator-portrait.expression-pleased { border-color: #b9d47f; background: #1c2418; }
+.narrator-portrait.expression-angry { border-color: #e0523f; background: #32110e; }
+.narrator-portrait.expression-command { border-color: #d79245; background: #2b1b0d; }
+.narrator-portrait.expression-recoil { border-color: #c75b46; background: #2c1410; }
+.narrator-portrait.expression-relieved { border-color: #b9d47f; background: #1c2418; }
+.narrator-portrait.expression-focused { border-color: #53dfcd; background: #132421; }
+
+.doom-status-bar > .narrator-panel .narrator-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  animation: none !important;
+  clip-path: none !important;
+}
+.doom-status-bar > .narrator-panel .narrator-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.doom-status-bar > .narrator-panel .narrator-kicker {
+  color: #53dfcd;
+  font: 700 9px/1 "DM Mono", monospace;
+  letter-spacing: .12em;
+}
+.doom-status-bar > .narrator-panel .narrator-speaker {
+  min-width: 0;
+  overflow: hidden;
+  color: #ffe7a2;
+  font: 700 clamp(12px, 1.15vw, 16px)/1 "DM Mono", monospace;
+  letter-spacing: .065em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doom-status-bar > .narrator-panel p {
+  display: block;
+  min-height: 2.5em;
+  max-width: 55ch;
+  margin: 7px 0 0;
+  overflow: hidden;
+  color: #f0dfbd;
+  font: 10px/1.25 "DM Mono", monospace;
+  letter-spacing: 0;
+  white-space: normal;
+  opacity: 1;
+  visibility: visible;
+  animation: none !important;
+  clip-path: none !important;
+}
+
+.doom-status-bar > .doom-status-compartment { padding: 8px 18px; }
+.doom-status-bar > .doom-vitals {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block span,
+.doom-status-bar > .doom-loadout .doom-kicker,
+.doom-status-bar > .doom-ammo .doom-kicker {
+  color: #d79245;
+  font: 700 10px/1 "DM Mono", monospace;
+  letter-spacing: .14em;
+  text-shadow: 2px 2px 0 #090403;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block strong {
+  color: #ffe7a2;
+  font: 700 clamp(22px, 2.35vw, 31px)/1 "DM Mono", monospace;
+  text-shadow: 3px 3px 0 #100603;
+}
+.doom-status-bar > .doom-vitals .doom-stat-track {
+  height: 11px;
+  overflow: hidden;
+  border: 2px solid #8e6336;
+  border-radius: 0;
+  background: #090403;
+  box-shadow: inset 2px 2px 0 #030201, inset -1px -1px 0 #d69b4d;
+}
+.doom-status-bar > .doom-vitals .doom-stat-track span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, #76241f 0 9px, #b64935 9px 14px, #e28a54 14px 18px);
+  transition: width .16s ease;
+}
+.doom-status-bar > .doom-loadout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.doom-status-bar > .doom-loadout > strong {
+  max-width: 100%;
+  margin-top: 7px;
+  overflow: hidden;
+  color: #ffe7a2;
+  font: 700 clamp(13px, 1.35vw, 19px)/1.05 "DM Mono", monospace;
+  letter-spacing: .055em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 3px 3px 0 #100603;
+}
+.doom-status-bar > .doom-loadout .minimal-weapon-status {
+  margin-top: 7px;
+  color: #53dfcd;
+  font: 700 9px/1 "DM Mono", monospace;
+  letter-spacing: .12em;
+  text-shadow: 2px 2px 0 #07100e;
+}
+.doom-status-bar > .doom-ammo {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+  visibility: visible !important;
+  text-align: right;
+}
+.doom-status-bar > .doom-ammo > strong {
+  display: block !important;
+  min-width: 0;
+  margin-top: 7px;
+  overflow: visible;
+  color: #ffe7a2 !important;
+  font: 700 clamp(28px, 3.15vw, 43px)/.86 "DM Mono", monospace;
+  letter-spacing: .02em;
+  opacity: 1 !important;
+  text-shadow: 3px 3px 0 #100603;
+  visibility: visible !important;
+  white-space: nowrap;
+}
+.doom-status-bar > .doom-ammo > strong i { color: #db5c42; font-style: normal; }
+.doom-status-bar > .doom-ammo > strong b { font-weight: 700; }
+
+@keyframes commander-portrait-breakup {
+  0%, 100% { transform: translate(0, 0); filter: contrast(1.16) saturate(.9); }
+  33% { transform: translate(1px, -1px); filter: contrast(1.55) saturate(.55) brightness(1.1); }
+  66% { transform: translate(-1px, 1px); filter: contrast(1.3) saturate(.7); }
+}
+
+@media (max-width: 1000px) {
+  .doom-status-bar {
+    --commander-hud-height: 100px;
+    grid-template-columns: minmax(285px, 1.18fr) minmax(145px, .62fr) minmax(185px, .8fr) minmax(125px, .52fr);
+    padding: 9px 8px 11px;
+  }
+  .doom-status-bar > .narrator-panel { gap: 7px; padding-left: 5px; padding-right: 9px; }
+  .doom-status-bar > .narrator-panel .narrator-portrait { flex-basis: 52px; width: 52px; height: 52px; }
+  .doom-status-bar > .narrator-panel .narrator-kicker { font-size: 8px; }
+  .doom-status-bar > .narrator-panel p { margin-top: 5px; font-size: 8px; }
+  .doom-status-bar > .doom-status-compartment { padding-left: 9px; padding-right: 9px; }
+  .doom-status-bar > .doom-vitals .doom-stat-block span,
+  .doom-status-bar > .doom-loadout .doom-kicker,
+  .doom-status-bar > .doom-ammo .doom-kicker { font-size: 8px; }
+  .doom-status-bar > .doom-loadout > strong { font-size: 13px; }
+  .doom-status-bar > .doom-ammo > strong { font-size: 28px; }
+}
+
+@media (max-width: 620px) {
+  .doom-status-bar {
+    --commander-hud-height: 86px;
+    grid-template-columns: minmax(0, 1.45fr) minmax(88px, .62fr) minmax(105px, .78fr) minmax(82px, .56fr);
+    padding: 6px 4px 8px;
+  }
+  .doom-status-bar > .narrator-panel { gap: 5px; padding: 4px 6px 4px 3px; }
+  .doom-status-bar > .narrator-panel .narrator-portrait { flex-basis: 42px; width: 42px; height: 42px; border-width: 2px; }
+  .doom-status-bar > .narrator-panel .narrator-heading { gap: 4px; }
+  .doom-status-bar > .narrator-panel .narrator-kicker { font-size: 6px; letter-spacing: .08em; }
+  .doom-status-bar > .narrator-panel .narrator-speaker { font-size: 8px; }
+  .doom-status-bar > .narrator-panel p { min-height: 2.3em; margin-top: 4px; font-size: 6.5px; line-height: 1.15; }
+  .doom-status-bar > .doom-status-compartment { padding: 4px 5px; }
+  .doom-status-bar > .doom-vitals { gap: 5px; }
+  .doom-status-bar > .doom-vitals .doom-stat-block span,
+  .doom-status-bar > .doom-loadout .doom-kicker,
+  .doom-status-bar > .doom-ammo .doom-kicker { font-size: 6px; letter-spacing: .08em; }
+  .doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 16px; }
+  .doom-status-bar > .doom-vitals .doom-stat-track { height: 7px; border-width: 1px; }
+  .doom-status-bar > .doom-loadout > strong { margin-top: 4px; font-size: 10px; }
+  .doom-status-bar > .doom-loadout .minimal-weapon-status { margin-top: 4px; font-size: 6px; }
+  .doom-status-bar > .doom-ammo > strong { margin-top: 4px; font-size: 22px; }
+}
+
+@media (max-width: 430px) {
+  .doom-status-bar {
+    --commander-hud-height: 78px;
+    grid-template-columns: minmax(0, 1.25fr) minmax(70px, .58fr) minmax(84px, .68fr) minmax(66px, .5fr);
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .doom-status-bar > .narrator-panel .narrator-portrait { flex-basis: 36px; width: 36px; height: 36px; }
+  .doom-status-bar > .narrator-panel .narrator-kicker { display: none; }
+  .doom-status-bar > .narrator-panel .narrator-speaker { font-size: 7px; }
+  .doom-status-bar > .narrator-panel p { font-size: 5.7px; }
+  .doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 14px; }
+  .doom-status-bar > .doom-loadout > strong { font-size: 8px; }
+  .doom-status-bar > .doom-ammo > strong { font-size: 18px; }
+}
+
+/* Keep mobile controls and prompts above the fixed status strip. */
+@media (max-width: 760px) {
+  .touch-controls { bottom: calc(var(--commander-hud-height, 86px) + 9px) !important; }
+  .interaction-prompt { bottom: calc(var(--commander-hud-height, 86px) + 12px) !important; }
+  .toast { bottom: calc(var(--commander-hud-height, 86px) + 12px) !important; }
+}
+
+/* RETRO PIXEL COMMAND DECK / BOTTOM HUD PASS */
+.doom-status-bar {
+  position: fixed !important;
+  inset: auto 0 0 0 !important;
+  z-index: 100 !important;
+  height: var(--commander-hud-height) !important;
+  min-height: var(--commander-hud-height) !important;
+  border-top: 4px solid #f0c26e;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0 !important;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 227, 164, .07) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 193, 94, .025) 0 2px, transparent 2px 8px),
+    linear-gradient(180deg, #351d12 0%, #180d08 24%, #090504 100%);
+  box-shadow:
+    0 -4px 0 #080402,
+    0 -10px 0 rgba(214, 155, 77, .16),
+    0 -18px 28px rgba(0, 0, 0, .78),
+    inset 0 2px 0 #ffe09a,
+    inset 0 5px 0 #6e421f;
+  image-rendering: pixelated;
+  transform: translateZ(0);
+}
+
+.doom-status-bar::before,
+.doom-status-bar::after {
+  height: 4px;
+  z-index: 3;
+  background: repeating-linear-gradient(90deg, #120804 0 8px, #d08c3e 8px 12px, #3b2012 12px 20px);
+  box-shadow: none;
+}
+.doom-status-bar::before { top: 7px; }
+.doom-status-bar::after { bottom: 7px; opacity: .9; }
+
+.doom-status-bar > .narrator-panel,
+.doom-status-bar > .doom-status-compartment {
+  border-right: 3px solid #754721;
+  box-shadow:
+    inset 2px 0 0 rgba(255, 218, 139, .12),
+    inset -3px 0 0 rgba(0, 0, 0, .8);
+}
+.doom-status-bar > .narrator-panel {
+  padding-left: 12px;
+  filter: contrast(1.08);
+}
+
+.doom-status-bar > .narrator-panel .narrator-portrait {
+  position: relative;
+  isolation: isolate;
+  border: 3px solid #f0c26e;
+  box-shadow: 3px 3px 0 #050302, inset 0 0 0 3px #0a1714;
+}
+
+/* Commander CRT/static: scanlines plus coarse moving interference blocks. */
+.doom-status-bar > .narrator-panel .narrator-portrait::before,
+.doom-status-bar > .narrator-panel .narrator-portrait::after {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: block;
+  pointer-events: none;
+  content: '';
+}
+.doom-status-bar > .narrator-panel .narrator-portrait::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 244, 200, .15) 0 1px, rgba(0, 0, 0, .2) 1px 3px),
+    repeating-linear-gradient(90deg, transparent 0 13px, rgba(83, 223, 205, .1) 13px 15px, transparent 15px 27px);
+  mix-blend-mode: screen;
+  opacity: .62;
+  animation: commander-static-scan .42s steps(4, end) infinite;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait::after {
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(255, 232, 163, .28) 8% 13%, transparent 13% 31%, rgba(83, 223, 205, .22) 31% 35%, transparent 35% 67%, rgba(214, 82, 55, .2) 67% 73%, transparent 73%),
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(255, 255, 255, .12) 7px 9px, transparent 9px 17px);
+  opacity: .22;
+  animation: commander-static-jump .23s steps(2, end) infinite;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait.is-transmitting::before {
+  opacity: .9;
+  animation-duration: .18s;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait.is-transmitting::after {
+  opacity: .5;
+  animation-duration: .11s;
+}
+
+.doom-status-bar > .narrator-panel .narrator-copy,
+.doom-status-bar > .doom-status-compartment {
+  text-shadow: 2px 2px 0 #050302;
+}
+.doom-status-bar > .narrator-panel p {
+  color: #ffe9b0;
+  text-shadow: 1px 1px 0 #080403;
+}
+
+.doom-status-bar > .doom-vitals .doom-stat-track,
+.doom-status-bar > .doom-vitals .doom-stat-track span {
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+.doom-status-bar > .doom-vitals .doom-stat-track span {
+  background: repeating-linear-gradient(90deg, #76241f 0 7px, #b64935 7px 12px, #e28a54 12px 16px);
+}
+
+@keyframes commander-static-scan {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(1px, -1px); }
+  75% { transform: translate(2px, 0); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes commander-static-jump {
+  0%, 100% { transform: translate(0, 0) scaleY(1); }
+  50% { transform: translate(-3px, 1px) scaleY(1.04); }
+}
+
+@media (max-width: 620px) {
+  .doom-status-bar {
+    border-top-width: 3px;
+    box-shadow: 0 -3px 0 #080402, 0 -10px 22px rgba(0, 0, 0, .8), inset 0 2px 0 #f0c26e;
+  }
+}
+
+/* OG DOOM HUD pass: compact, hard-edged, high-contrast status text. */
+.doom-status-bar,
+.doom-status-bar * {
+  font-family: "Courier New", "Lucida Console", monospace !important;
+  text-transform: uppercase;
+}
+.doom-status-bar > .narrator-panel .narrator-kicker,
+.doom-status-bar > .narrator-panel .narrator-speaker,
+.doom-status-bar > .narrator-panel p,
+.doom-status-bar > .doom-status-compartment,
+.doom-status-bar > .doom-status-compartment * {
+  text-shadow: 2px 2px 0 #090403, -1px 0 0 rgba(255, 226, 157, .18);
+}
+.doom-status-bar > .narrator-panel .narrator-heading {
+  gap: 6px;
+}
+.doom-status-bar > .narrator-panel .narrator-kicker {
+  color: #e05a3f;
+  font-size: 9px;
+  letter-spacing: .16em;
+}
+.doom-status-bar > .narrator-panel .narrator-speaker {
+  color: #f2d47e;
+  font-size: clamp(11px, 1.05vw, 15px);
+  letter-spacing: .08em;
+}
+.doom-status-bar > .narrator-panel p {
+  color: #f0dfbd;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: .035em;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block span,
+.doom-status-bar > .doom-loadout .doom-kicker,
+.doom-status-bar > .doom-ammo .doom-kicker {
+  color: #e05a3f;
+  letter-spacing: .16em;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block strong,
+.doom-status-bar > .doom-loadout > strong,
+.doom-status-bar > .doom-ammo > strong {
+  color: #f2d47e;
+  text-shadow: 3px 3px 0 #090403;
+}
+.doom-status-bar > .doom-loadout .minimal-weapon-status {
+  color: #5ed6c2;
+  letter-spacing: .16em;
+}
+
+/* Cinematic presentation: the commander remains visible over black dialogue,
+   while the scripted level reveal removes all gameplay HUD chrome. */
+.game-shell.cinematic-reveal .game-hud,
+.game-shell.cinematic-reveal .minimal-combat-hud,
+.game-shell.cinematic-reveal .boss-bottom-hud,
+.game-shell.cinematic-reveal .objective-panel,
+.game-shell.cinematic-reveal .interaction-prompt,
+.game-shell.cinematic-reveal .lobby-guide-hud,
+.game-shell.cinematic-reveal .toast {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.game-shell.cinematic-dialogue .game-hud,
+.game-shell.cinematic-dialogue .doom-vitals,
+.game-shell.cinematic-dialogue .doom-loadout,
+.game-shell.cinematic-dialogue .doom-ammo,
+.game-shell.cinematic-dialogue .boss-bottom-hud,
+.game-shell.cinematic-dialogue .objective-panel,
+.game-shell.cinematic-dialogue .interaction-prompt,
+.game-shell.cinematic-dialogue .lobby-guide-hud,
+.game-shell.cinematic-dialogue .toast {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.game-shell.cinematic-dialogue .narrator-panel {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.game-shell.cinematic-reveal .minimal-combat-hud,
+.game-shell.cinematic-reveal .game-hud,
+.game-shell.cinematic-reveal .objective-panel,
+.game-shell.cinematic-reveal .boss-bottom-hud,
+.game-shell.cinematic-reveal .interaction-prompt,
+.game-shell.cinematic-reveal .lobby-guide-hud,
+.game-shell.cinematic-reveal .toast { display: none !important; }
+
+/* Quiet field HUD: keep the combat readouts useful without turning the footer
+   into a second focal point. The active game palette is charcoal, parchment,
+   muted brass, and rust—not neon cyan or polished gold. */
+.doom-status-bar {
+  --commander-hud-height: 72px !important;
+  height: var(--commander-hud-height) !important;
+  min-height: var(--commander-hud-height) !important;
+  padding: 6px 14px 7px !important;
+  border-top: 1px solid rgba(185, 133, 66, .42) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, .9) !important;
+  background: linear-gradient(180deg, rgba(24, 16, 11, .94), rgba(10, 8, 6, .96)) !important;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(240, 221, 175, .08) !important;
+  image-rendering: auto;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .9) !important;
+}
+.doom-status-bar::before,
+.doom-status-bar::after {
+  display: none !important;
+}
+.doom-status-bar > .narrator-panel,
+.doom-status-bar > .doom-status-compartment {
+  border-right: 1px solid rgba(185, 133, 66, .22) !important;
+  box-shadow: none !important;
+}
+.doom-status-bar > .narrator-panel::before {
+  inset: 2px 8px 2px 0;
+  border: 1px solid rgba(185, 133, 66, .2) !important;
+  background: rgba(8, 7, 5, .38) !important;
+  box-shadow: none !important;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait {
+  flex-basis: 44px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(185, 133, 66, .48) !important;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .7) !important;
+  filter: saturate(.72) brightness(.82);
+}
+.doom-status-bar > .narrator-panel .narrator-portrait::before,
+.doom-status-bar > .narrator-panel .narrator-portrait::after {
+  display: none !important;
+}
+.doom-status-bar > .narrator-panel .narrator-kicker,
+.doom-status-bar > .doom-vitals .doom-stat-block span,
+.doom-status-bar > .doom-loadout .doom-kicker,
+.doom-status-bar > .doom-ammo .doom-kicker {
+  color: rgba(215, 189, 135, .62) !important;
+  font-size: 8px !important;
+  letter-spacing: .12em;
+}
+.doom-status-bar > .narrator-panel .narrator-speaker,
+.doom-status-bar > .doom-vitals .doom-stat-block strong,
+.doom-status-bar > .doom-loadout > strong,
+.doom-status-bar > .doom-ammo > strong {
+  color: var(--parchment-light) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .9) !important;
+}
+.doom-status-bar > .narrator-panel .narrator-speaker {
+  font-size: 11px;
+}
+.doom-status-bar > .narrator-panel p {
+  color: rgba(215, 189, 135, .7) !important;
+  font-size: 8px;
+  line-height: 1.15;
+}
+.doom-status-bar > .doom-status-compartment {
+  padding: 5px 14px !important;
+}
+.doom-status-bar > .doom-vitals {
+  gap: 5px;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block strong {
+  font-size: 19px;
+}
+.doom-status-bar > .doom-vitals .doom-stat-track {
+  height: 7px;
+  border: 1px solid rgba(152, 59, 48, .55);
+  background: rgba(8, 6, 5, .8);
+  box-shadow: none;
+}
+.doom-status-bar > .doom-vitals .doom-stat-track span {
+  background: #8f3c35 !important;
+  box-shadow: none !important;
+}
+.doom-status-bar > .doom-loadout > strong {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.doom-status-bar > .doom-loadout .minimal-weapon-status {
+  margin-top: 4px;
+  color: rgba(185, 133, 66, .78) !important;
+  font-size: 8px;
+}
+.doom-status-bar > .doom-ammo > strong {
+  margin-top: 4px;
+  font-size: 25px;
+}
+.doom-status-bar > .doom-ammo > strong i {
+  color: rgba(152, 59, 48, .8) !important;
+}
+.game-shell.damage-alert .doom-status-bar {
+  border-top-color: rgba(152, 59, 48, .85) !important;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, .42) !important;
+  animation: none !important;
+}
+
+@media (max-width: 1000px) {
+  .doom-status-bar {
+    --commander-hud-height: 64px !important;
+    padding: 5px 8px 6px !important;
+  }
+  .doom-status-bar > .narrator-panel .narrator-portrait {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  .doom-status-bar > .narrator-panel p { display: none; }
+  .doom-status-bar > .doom-status-compartment { padding: 4px 9px !important; }
+  .doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 16px; }
+  .doom-status-bar > .doom-loadout > strong { font-size: 10px; }
+  .doom-status-bar > .doom-ammo > strong { font-size: 21px; }
+}
+
+@media (max-width: 620px) {
+  .doom-status-bar {
+    --commander-hud-height: 56px !important;
+    grid-template-columns: minmax(0, 1.35fr) minmax(76px, .65fr) minmax(92px, .78fr) minmax(70px, .55fr);
+    padding: 4px 3px 5px !important;
+  }
+  .doom-status-bar > .narrator-panel { gap: 4px; padding: 3px 5px 3px 2px; }
+  .doom-status-bar > .narrator-panel .narrator-portrait {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
+  }
+  .doom-status-bar > .narrator-panel .narrator-speaker { font-size: 7px; }
+  .doom-status-bar > .narrator-panel .narrator-kicker,
+  .doom-status-bar > .doom-vitals .doom-stat-block span,
+  .doom-status-bar > .doom-loadout .doom-kicker,
+  .doom-status-bar > .doom-ammo .doom-kicker { font-size: 6px !important; }
+  .doom-status-bar > .doom-status-compartment { padding: 3px 5px !important; }
+  .doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 13px; }
+  .doom-status-bar > .doom-vitals .doom-stat-track { height: 5px; }
+  .doom-status-bar > .doom-loadout > strong { font-size: 8px; }
+  .doom-status-bar > .doom-loadout .minimal-weapon-status { font-size: 6px; }
+  .doom-status-bar > .doom-ammo > strong { font-size: 17px; }
+}
+
+
+/* Commander transmission overlay: it belongs to the scene, not the footer. */
+.doom-status-bar {
+  grid-template-columns: minmax(170px, .62fr) minmax(230px, .82fr) minmax(150px, .52fr) !important;
+}
+.doom-status-bar > .narrator-panel {
+  position: fixed !important;
+  top: clamp(14px, 3.2vh, 34px) !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: clamp(14px, 3vw, 42px) !important;
+  z-index: 60 !important;
+  display: flex !important;
+  align-items: center;
+  width: min(430px, calc(100vw - 28px));
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 10px 14px 10px 10px !important;
+  gap: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(185, 133, 66, .48) !important;
+  border-left: 3px solid rgba(215, 189, 135, .72) !important;
+  background:
+    linear-gradient(90deg, rgba(13, 10, 7, .97), rgba(24, 16, 10, .93) 76%, rgba(24, 16, 10, .72));
+  box-shadow: 0 9px 28px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 235, 184, .08) !important;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(-18px, -12px, 0) scale(.94);
+  transform-origin: top left;
+  transition: opacity .18s ease, visibility .18s ease, transform .24s cubic-bezier(.2, .85, .25, 1);
+  pointer-events: none;
+}
+.doom-status-bar > .narrator-panel::before {
+  inset: 0 !important;
+  z-index: -1;
+  border: 0 !important;
+  border-right: 1px solid rgba(215, 189, 135, .1) !important;
+  background: repeating-linear-gradient(0deg, rgba(255, 231, 174, .025) 0 1px, transparent 1px 4px) !important;
+}
+.doom-status-bar > .narrator-panel[hidden],
+.game-shell.cinematic-reveal .doom-status-bar > .narrator-panel,
+.game-shell.cinematic-dialogue .doom-status-bar > .narrator-panel {
+  display: flex !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translate3d(-18px, -12px, 0) scale(.94) !important;
+}
+.doom-status-bar > .narrator-panel.is-speaking {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translate3d(0, 0, 0) scale(1) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .58), inset 3px 0 0 #c75b46, inset 0 1px 0 rgba(255, 235, 184, .12) !important;
+}
+.doom-status-bar > .narrator-panel .narrator-portrait {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-color: rgba(215, 189, 135, .72) !important;
+  filter: saturate(.78) brightness(.88);
+}
+.doom-status-bar > .narrator-panel.is-speaking .narrator-portrait {
+  border-color: #d79245 !important;
+  filter: saturate(.95) brightness(1);
+}
+.doom-status-bar > .narrator-panel .narrator-copy {
+  min-width: 0;
+}
+.doom-status-bar > .narrator-panel .narrator-heading {
+  gap: 7px;
+}
+.doom-status-bar > .narrator-panel .narrator-kicker {
+  color: rgba(215, 189, 135, .72) !important;
+  font-size: 8px !important;
+  letter-spacing: .14em;
+}
+.doom-status-bar > .narrator-panel .narrator-speaker {
+  color: #f1dfad !important;
+  font-size: 12px !important;
+}
+.doom-status-bar > .narrator-panel p {
+  max-width: 48ch;
+  margin-top: 6px !important;
+  color: rgba(240, 223, 189, .82) !important;
+  font-size: 8px !important;
+  line-height: 1.25 !important;
+}
+
+@media (max-width: 1000px) {
+  .doom-status-bar {
+    grid-template-columns: minmax(145px, .62fr) minmax(185px, .82fr) minmax(125px, .52fr) !important;
+  }
+  .doom-status-bar > .narrator-panel {
+    width: min(380px, calc(100vw - 24px));
+  }
+}
+@media (max-width: 620px) {
+  .doom-status-bar {
+    grid-template-columns: minmax(76px, .65fr) minmax(92px, .78fr) minmax(70px, .55fr) !important;
+  }
+  .doom-status-bar > .narrator-panel {
+    top: 10px !important;
+    left: 10px !important;
+    width: min(340px, calc(100vw - 20px));
+    padding: 7px 9px 7px 7px !important;
+    gap: 7px;
+  }
+  .doom-status-bar > .narrator-panel .narrator-portrait {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+  .doom-status-bar > .narrator-panel .narrator-speaker { font-size: 9px !important; }
+  .doom-status-bar > .narrator-panel p { font-size: 7px !important; }
+}
+
+
+/* The commander is scene-level UI. Keeping it outside the transformed footer
+   prevents fixed positioning from being resolved against the bottom HUD. */
+.game-shell > .commander-overlay {
+  position: fixed !important;
+  top: clamp(14px, 3.2vh, 34px) !important;
+  left: clamp(14px, 3vw, 42px) !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 90 !important;
+  pointer-events: none !important;
+}
+.game-shell > .commander-overlay > .narrator-panel {
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  align-items: center;
+  width: min(430px, calc(100vw - 28px));
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 10px 14px 10px 10px !important;
+  gap: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(185, 133, 66, .48) !important;
+  border-left: 3px solid rgba(215, 189, 135, .72) !important;
+  background: linear-gradient(90deg, rgba(13, 10, 7, .97), rgba(24, 16, 10, .93) 76%, rgba(24, 16, 10, .72)) !important;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(-18px, -12px, 0) scale(.94);
+  transform-origin: top left;
+  transition: opacity .18s ease, visibility .18s ease, transform .24s cubic-bezier(.2, .85, .25, 1);
+}
+.game-shell > .commander-overlay > .narrator-panel.is-speaking {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translate3d(0, 0, 0) scale(1) !important;
+}
+.game-shell > .commander-overlay > .narrator-panel[hidden],
+.game-shell.cinematic-reveal > .commander-overlay > .narrator-panel,
+.game-shell.cinematic-dialogue > .commander-overlay > .narrator-panel {
+  display: flex !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translate3d(-18px, -12px, 0) scale(.94) !important;
+}
+.game-shell > .commander-overlay > .narrator-panel .narrator-portrait {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+}
+@media (max-width: 620px) {
+  .game-shell > .commander-overlay { top: 10px !important; left: 10px !important; }
+  .game-shell > .commander-overlay > .narrator-panel {
+    width: min(340px, calc(100vw - 20px));
+    padding: 7px 9px 7px 7px !important;
+    gap: 7px;
+  }
+  .game-shell > .commander-overlay > .narrator-panel .narrator-portrait {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* Opening cinematic HUD ignition. The status HUD is deliberately hidden during
+   the weapon/look beats, flickers into focus, then stays readable for the route. */
+.game-shell.cinematic-flicker .game-hud,
+.game-shell.cinematic-flicker .minimal-combat-hud,
+.game-shell.cinematic-hud .game-hud,
+.game-shell.cinematic-hud .minimal-combat-hud {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+}
+.game-shell.cinematic-flicker .game-hud,
+.game-shell.cinematic-flicker .minimal-combat-hud {
+  opacity: 0 !important;
+}
+.game-shell.cinematic-flicker.hud-flicker-on .game-hud,
+.game-shell.cinematic-flicker.hud-flicker-on .minimal-combat-hud {
+  opacity: 1 !important;
+}
+.game-shell.cinematic-hud .game-hud,
+.game-shell.cinematic-hud .minimal-combat-hud {
+  opacity: 1 !important;
+}
+.game-shell.cinematic-hud .objective-panel,
+.game-shell.cinematic-hud .interaction-prompt,
+.game-shell.cinematic-hud .lobby-guide-hud,
+.game-shell.cinematic-hud .toast {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* The startup weapon rises into frame without changing the normal gameplay pose. */
+.game-shell.cinematic-reveal .game-canvas,
+.game-shell.cinematic-flicker .game-canvas {
+  will-change: transform;
+}
+
+/* --------------------------------------------------------------------------
+   Combat visor integration
+   -------------------------------------------------------------------------- */
+.visor-boot-feed {
+  position: absolute;
+  top: clamp(76px, 12vh, 128px);
+  left: clamp(18px, 3.4vw, 54px);
+  z-index: 24;
+  width: clamp(190px, 18vw, 270px);
+  padding: 12px 14px 13px;
+  border-left: 1px solid rgba(139, 236, 205, .62);
+  background: linear-gradient(90deg, rgba(3, 13, 16, .78), rgba(3, 13, 16, .16), transparent);
+  color: rgba(187, 255, 223, .7);
+  font: 600 clamp(8px, .72vw, 11px)/1.85 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-shadow: 0 0 9px rgba(83, 224, 187, .28);
+  pointer-events: none;
+  transform: translateX(0);
+  animation: visor-feed-in .42s ease-out both;
+}
+.visor-boot-feed[hidden] { display: none; }
+.visor-training-feed {
+  position: absolute;
+  top: clamp(252px, 35vh, 360px);
+  left: clamp(18px, 3.4vw, 54px);
+  z-index: 24;
+  width: clamp(220px, 21vw, 310px);
+  padding: 11px 14px 12px;
+  border-left: 1px solid rgba(180, 138, 66, .72);
+  background: linear-gradient(90deg, rgba(19, 12, 9, .86), rgba(19, 12, 9, .22), transparent);
+  color: rgba(225, 200, 135, .78);
+  font: 600 clamp(8px, .72vw, 11px)/1.85 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .07em;
+  text-shadow: 0 0 9px rgba(180, 138, 66, .24);
+  pointer-events: none;
+  animation: visor-feed-in .42s ease-out both;
+}
+.visor-training-feed[hidden] { display: none; }
+.visor-training-feed p {
+  margin: 0;
+  white-space: nowrap;
+  color: rgba(225, 200, 135, .62);
+  transition: color .18s ease, opacity .18s ease, text-shadow .18s ease;
+}
+.visor-training-feed p[data-state="complete"] {
+  color: #b8ffcf;
+  text-shadow: 0 0 10px rgba(112, 255, 190, .38);
+}
+.visor-training-feed p[data-state="complete"] span { color: #e9fff4; }
+.visor-training-feed p[data-state="pending"] span { color: #d99762; }
+.visor-training-hint {
+  margin-top: 5px;
+  color: rgba(139, 236, 205, .58);
+  font-size: .78em;
+  letter-spacing: .045em;
+}
+.visor-feed-header {
+  color: #d8fff0;
+  font-size: .9em;
+  letter-spacing: .15em;
+}
+.visor-feed-rule {
+  width: 100%;
+  height: 1px;
+  margin: 6px 0 7px;
+  background: linear-gradient(90deg, rgba(139, 236, 205, .72), transparent);
+}
+.visor-boot-feed p {
+  margin: 0;
+  white-space: nowrap;
+  opacity: .48;
+  transition: color .18s ease, opacity .18s ease, text-shadow .18s ease;
+}
+.visor-boot-feed p[data-state="complete"] {
+  color: #b8ffcf;
+  opacity: .95;
+  text-shadow: 0 0 10px rgba(112, 255, 190, .38);
+}
+.visor-boot-feed p[data-state="complete"]::after {
+  content: "  ◆";
+  color: #e9fff4;
+}
+.visor-feed-cursor {
+  margin-top: 3px;
+  color: #d8fff0;
+  animation: visor-cursor-blink .7s steps(2, end) infinite;
+}
+
+/* Replace the solid Doom-style footer with HUD elements that sit on the visor
+   glass: open sightline in the center, framed data at the lower edges. */
+.doom-status-bar {
+  --commander-hud-height: 104px !important;
+  position: absolute !important;
+  inset: auto 0 0 !important;
+  z-index: 20;
+  display: grid !important;
+  grid-template-columns: minmax(220px, 1fr) minmax(210px, .72fr) minmax(155px, .48fr) !important;
+  align-items: end;
+  height: var(--commander-hud-height) !important;
+  min-height: var(--commander-hud-height) !important;
+  padding: 0 24px 22px !important;
+  gap: 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.doom-status-bar::before,
+.doom-status-bar::after { display: none !important; }
+.doom-status-bar > .doom-status-compartment {
+  position: relative;
+  min-height: 58px;
+  padding: 10px 14px !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(139, 236, 205, .56) !important;
+  border-bottom: 1px solid rgba(139, 236, 205, .18) !important;
+  background: linear-gradient(180deg, rgba(4, 18, 20, .7), rgba(4, 12, 15, .2)) !important;
+  box-shadow: inset 0 0 18px rgba(52, 191, 158, .05) !important;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.doom-status-bar > .doom-status-compartment::before,
+.doom-status-bar > .doom-status-compartment::after {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  content: "";
+  border-color: rgba(139, 236, 205, .75);
+  border-style: solid;
+  pointer-events: none;
+}
+.doom-status-bar > .doom-status-compartment::before {
+  top: -1px;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+.doom-status-bar > .doom-status-compartment::after {
+  right: 0;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+.doom-status-bar > .doom-vitals { grid-column: 1; }
+.doom-status-bar > .doom-loadout { grid-column: 2; text-align: center; }
+.doom-status-bar > .doom-ammo { grid-column: 3; text-align: right; }
+.doom-status-bar > .doom-vitals .doom-stat-block span,
+.doom-status-bar > .doom-loadout .doom-kicker,
+.doom-status-bar > .doom-ammo .doom-kicker {
+  color: rgba(139, 236, 205, .72) !important;
+  font-size: 8px !important;
+  letter-spacing: .18em;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block strong,
+.doom-status-bar > .doom-loadout > strong,
+.doom-status-bar > .doom-ammo > strong {
+  color: #d8fff0 !important;
+  text-shadow: 0 0 9px rgba(91, 238, 190, .22) !important;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 21px; }
+.doom-status-bar > .doom-vitals .doom-stat-track {
+  height: 5px !important;
+  margin-top: 8px;
+  border: 1px solid rgba(139, 236, 205, .3) !important;
+  background: rgba(1, 8, 11, .72) !important;
+}
+.doom-status-bar > .doom-vitals .doom-stat-track span {
+  background: linear-gradient(90deg, #a84c43, #d8fff0) !important;
+}
+.doom-status-bar > .doom-loadout > strong { font-size: 13px; }
+.doom-status-bar > .doom-loadout .minimal-weapon-status {
+  color: #8beccd !important;
+  font-size: 8px;
+}
+.doom-status-bar > .doom-ammo > strong { font-size: 26px; }
+.doom-status-bar > .doom-ammo > strong i { color: rgba(139, 236, 205, .62) !important; }
+.game-shell.visor-boot-active .doom-status-bar {
+  opacity: .35;
+  filter: saturate(.7);
+}
+.game-shell:not(.visor-boot-active) .visor-boot-feed { display: none; }
+
+@keyframes visor-feed-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes visor-cursor-blink { 50% { opacity: 0; } }
+
+@media (max-width: 760px) {
+  .visor-boot-feed {
+    top: 62px;
+    left: 12px;
+    width: 172px;
+    font-size: 7px;
+    line-height: 1.7;
+  }
+  .visor-training-feed {
+    top: 238px;
+    left: 12px;
+    width: 198px;
+    padding: 8px 9px;
+    font-size: 7px;
+    line-height: 1.7;
+  }
+  .doom-status-bar {
+    grid-template-columns: 1.1fr .9fr .72fr !important;
+    padding: 0 10px 14px !important;
+    gap: 6px !important;
+  }
+  .doom-status-bar > .doom-status-compartment {
+    min-height: 48px;
+    padding: 7px 8px !important;
+  }
+  .doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 16px; }
+  .doom-status-bar > .doom-loadout > strong { font-size: 9px; }
+  .doom-status-bar > .doom-ammo > strong { font-size: 19px; }
+}
+
+/* Keep the actual combat readouts anchored in their normal visor position while
+   the startup graphics appear over the camera. They must never become a
+   full-screen cinematic layer. */
+.game-shell.cinematic-reveal .minimal-combat-hud,
+.game-shell.cinematic-flicker .minimal-combat-hud,
+.game-shell.cinematic-hud .minimal-combat-hud {
+  display: grid !important;
+  position: absolute !important;
+  inset: auto 0 0 !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  transform: none !important;
+}
+.game-shell.visor-boot-active .doom-status-bar {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Startup-only visor graphics fade away while the persistent combat HUD stays
+   fixed at the lower visor edge. */
+.visor-boot-feed,
+.visor-tech-feed {
+  opacity: var(--boot-visibility, 1);
+  transition: opacity .12s linear;
+}
+.visor-tech-feed {
+  position: absolute;
+  top: clamp(76px, 12vh, 128px);
+  right: clamp(18px, 3.4vw, 54px);
+  z-index: 24;
+  width: clamp(250px, 24vw, 370px);
+  padding: 12px 14px 13px;
+  border-right: 1px solid rgba(139, 236, 205, .62);
+  background: linear-gradient(270deg, rgba(3, 13, 16, .78), rgba(3, 13, 16, .16), transparent);
+  color: rgba(187, 255, 223, .65);
+  font: 600 clamp(7px, .62vw, 10px)/1.8 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .035em;
+  text-align: right;
+  text-shadow: 0 0 9px rgba(83, 224, 187, .22);
+  pointer-events: none;
+  overflow: hidden;
+  animation: visor-feed-in-right .48s ease-out both;
+}
+.visor-tech-feed[hidden] { display: none; }
+.visor-tech-feed .visor-feed-header { text-align: right; }
+.visor-tech-feed .visor-feed-rule {
+  margin-left: auto;
+  background: linear-gradient(270deg, rgba(139, 236, 205, .72), transparent);
+}
+.visor-tech-window {
+  position: relative;
+  height: clamp(176px, 26vh, 286px);
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, transparent, #000 9%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 9%, #000 88%, transparent);
+}
+.visor-tech-stream {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: max-content;
+  min-width: 100%;
+  transform: translateY(calc(var(--tech-scroll, 0%) * -1));
+  animation: visor-tech-drift 8.2s linear both;
+}
+.visor-tech-stream p {
+  margin: 0;
+  white-space: nowrap;
+  opacity: .78;
+}
+.visor-tech-stream p:nth-child(3n) { color: rgba(139, 236, 205, .9); }
+.visor-tech-stream p:nth-child(4n) { color: rgba(176, 213, 205, .58); }
+.visor-tech-feed .visor-feed-cursor { text-align: right; }
+
+@keyframes visor-feed-in-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes visor-tech-drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-54%); }
+}
+
+@media (max-width: 760px) {
+  .visor-tech-feed {
+    top: 62px;
+    right: 12px;
+    width: 190px;
+    font-size: 6px;
+    line-height: 1.7;
+  }
+  .visor-tech-window { height: 156px; }
+  .visor-tech-stream { animation-duration: 8.2s; }
+}
+
+/* Final combat visor composition: ammo and weapon controls left, health right. */
+.doom-status-bar {
+  grid-template-columns: minmax(270px, 1fr) minmax(180px, .42fr) !important;
+  align-items: end !important;
+  height: 112px !important;
+  min-height: 112px !important;
+  padding: 0 26px 24px !important;
+  gap: 0 !important;
+  opacity: 1 !important;
+}
+.doom-status-bar > .doom-left-cluster {
+  grid-column: 1;
+  display: grid !important;
+  grid-template-columns: minmax(100px, .42fr) minmax(245px, 1fr);
+  align-items: end;
+  gap: 12px;
+  min-height: 70px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+}
+.doom-status-bar > .doom-vitals {
+  grid-column: 2;
+  justify-self: end;
+  width: min(230px, 22vw);
+  min-height: 58px;
+  padding: 10px 14px !important;
+  text-align: right;
+}
+.doom-status-bar > .doom-left-cluster > .doom-ammo {
+  min-height: 58px;
+  padding: 10px 14px !important;
+  border-top: 1px solid rgba(139, 236, 205, .56) !important;
+  border-bottom: 1px solid rgba(139, 236, 205, .18) !important;
+  background: linear-gradient(180deg, rgba(4, 18, 20, .7), rgba(4, 12, 15, .2)) !important;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.doom-status-bar .doom-ammo > strong {
+  display: block;
+  color: #d8fff0 !important;
+  font-size: 26px;
+  letter-spacing: .04em;
+  text-shadow: 0 0 9px rgba(91, 238, 190, .22) !important;
+}
+.doom-status-bar .doom-ammo > strong i { color: rgba(139, 236, 205, .62) !important; font-style: normal; }
+.doom-status-bar .doom-ammo .minimal-weapon-status {
+  display: block;
+  margin-top: 3px;
+  color: rgba(139, 236, 205, .76) !important;
+  font-size: 7px;
+  letter-spacing: .14em;
+}
+.visor-weapon-selector {
+  position: relative;
+  min-height: 58px;
+  padding: 8px 12px 7px;
+  border-top: 1px solid rgba(139, 236, 205, .46);
+  border-bottom: 1px solid rgba(139, 236, 205, .16);
+  background: linear-gradient(180deg, rgba(4, 18, 20, .62), rgba(4, 12, 15, .14));
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.visor-selector-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(139, 236, 205, .72);
+  font: 600 7px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .16em;
+}
+.visor-selector-heading small { color: rgba(216, 255, 240, .46); font: inherit; }
+.visor-weapon-options {
+  display: flex;
+  gap: 5px;
+  margin-top: 7px;
+}
+.visor-weapon-options button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid rgba(139, 236, 205, .22);
+  background: rgba(1, 8, 11, .42);
+  color: rgba(187, 255, 223, .56);
+  font: 600 7px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.visor-weapon-options button b { color: rgba(139, 236, 205, .9); font-size: 9px; }
+.visor-weapon-options button.is-active {
+  border-color: rgba(184, 255, 207, .85);
+  background: rgba(87, 224, 177, .14);
+  color: #d8fff0;
+  box-shadow: inset 0 -2px rgba(184, 255, 207, .8);
+}
+.visor-current-weapon {
+  display: block;
+  margin-top: 5px;
+  color: #d8fff0;
+  font: 700 9px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .12em;
+  text-align: right;
+}
+.doom-status-bar > .doom-vitals .doom-stat-block strong { font-size: 21px; }
+.doom-status-bar > .doom-vitals .doom-stat-track { margin-top: 8px; }
+
+/* Boot-only HUD fade: it begins visible in place, fades during initialization,
+   and returns to normal gameplay opacity when the boot state is removed. */
+.game-shell.visor-boot-active .doom-status-bar,
+.game-shell.cinematic-reveal .minimal-combat-hud,
+.game-shell.cinematic-flicker .minimal-combat-hud,
+.game-shell.cinematic-hud .minimal-combat-hud {
+  display: grid !important;
+  position: absolute !important;
+  inset: auto 0 0 !important;
+  transform: none !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  opacity: var(--boot-hud-opacity, 1) !important;
+}
+.game-shell.visor-boot-active .visor-boot-feed,
+.game-shell.visor-boot-active .visor-tech-feed {
+  opacity: var(--boot-visibility, 1);
+}
+
+/* The control checks are part of the visor startup HUD. Keep them visible
+   while the diagnostic feed is running; after handoff they remain until all
+   three real player inputs have been confirmed. */
+.game-shell.visor-boot-active .visor-training-feed {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+.visor-training-feed[data-phase="visor-startup"] {
+  border-left-color: rgba(139, 236, 205, .72);
+  color: rgba(187, 255, 223, .78);
+}
+
+/* Damage is now only a directional red hue; remove HUD shaking and the old
+   impact-card styling. */
+.game-shell.damage-alert .doom-status-bar {
+  animation: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.game-shell.damage-alert .doom-status-bar * { animation: none !important; }
+
+@media (max-width: 760px) {
+  .doom-status-bar {
+    height: 104px !important;
+    min-height: 104px !important;
+    padding: 0 10px 14px !important;
+  }
+  .doom-status-bar > .doom-left-cluster {
+    grid-template-columns: minmax(78px, .42fr) minmax(160px, 1fr);
+    gap: 6px;
+  }
+  .doom-status-bar > .doom-vitals { width: min(150px, 27vw); padding: 8px !important; }
+  .doom-status-bar .doom-ammo > strong { font-size: 19px; }
+  .visor-weapon-selector { padding: 7px 8px 6px; }
+  .visor-selector-heading { font-size: 6px; }
+  .visor-selector-heading small { display: none; }
+  .visor-weapon-options { gap: 3px; }
+  .visor-weapon-options button { padding: 3px 4px; font-size: 6px; }
+  .visor-weapon-options button span { display: none; }
+  .visor-current-weapon { font-size: 7px; }
+}
