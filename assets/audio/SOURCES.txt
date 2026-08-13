@@ -52,6 +52,12 @@ dungeon-metal-loop.ogg
   License: CC0. The source page notes that the archive filenames are reversed;
   the included “opening” file is the loop used here.
 
+heavy-boss-battle-2.ogg
+  Source: OpenGameArt.org — Heavy Boss Battle 2.
+  https://opengameart.org/content/heavy-boss-battle-2
+  Original file: https://opengameart.org/sites/default/files/heavy_boss_battle_2_bpm110_0.ogg
+  License: CC0, as listed on the source page.
+
 bfg-electric.mp3
   Production edit of zapThreeToneUp.mp3 from Kenney’s Digital SFX Set.
   Source: OpenGameArt.org — 63 Digital sound effects.

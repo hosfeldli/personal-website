@@ -138,7 +138,7 @@ const visorFeedPrefixes = {
 };
 const loadoutDescription = document.getElementById('loadout-description');
 const weaponOptionButtons = [...document.querySelectorAll('[data-weapon]')];
-const settings = { musicVolume: .72, sfxVolume: .82, reducedMotion: false, pointerLock: true };
+const settings = { musicVolume: .72, sfxVolume: .52, reducedMotion: false, pointerLock: true };
 const EMERALD = '#24dca0';
 const EMERALD_LIGHT = '#c4ffe4';
 const lobbyPortfolioScroll = {
@@ -3137,7 +3137,7 @@ const AUDIO_ASSETS = Object.freeze({
   shotgunShellFirst: 'assets/audio/shotgun-shell-first.mp3',
   shotgunShell: 'assets/audio/shotgun-shell.mp3',
   bfgElectric: 'assets/audio/bfg-electric.mp3',
-  musicTrack: 'assets/audio/source/metal/boss_battle_%232_metal_opening.wav',
+  musicTrack: 'assets/audio/heavy-boss-battle-2.ogg',
   dungeonAmbient: 'assets/audio/dungeon-ambient.ogg',
 });
 const audioBuffers = new Map();
@@ -4533,16 +4533,24 @@ function sealLobbyCourtyard() {
   for (const y of FOREST_HALL_ROWS) worldMap[y][sealX] = '1';
 }
 
+function miniBossEntranceWallX(roomIndex) {
+  // Keep the seal in the final connector cell rather than on the arena's west
+  // boundary. The player is already past this point when the first cutscene
+  // hands control back, so the wall cannot occupy the spawn/approach cell.
+  return Math.max(0, roomOffsets[roomIndex] - 1);
+}
 function setMiniBossDoors(roomIndex, entranceClosed, exitOpen = false) {
   if (!miniBossRoom(roomIndex)) return;
   const offset = roomOffsets[roomIndex];
+  const entranceWallX = miniBossEntranceWallX(roomIndex);
   const width = roomWidths[roomIndex];
   const doorY = roomDoorY(roomIndex);
   const centerY = Math.floor(roomHeights[roomIndex] / 2);
   const doorwayRows = [doorY, doorY + 1];
   const combatRows = [centerY - 1, centerY, centerY + 1];
   for (const y of doorwayRows) {
-    worldMap[y][offset] = entranceClosed ? '1' : '0';
+    worldMap[y][entranceWallX] = entranceClosed ? '1' : '0';
+    worldMap[y][offset] = '0';
     worldMap[y][offset + width - 1] = exitOpen ? '0' : '1';
   }
   // The player fights in the center lane. When the target falls, connect that
@@ -4704,9 +4712,9 @@ function updateMiniBossArenaLock() {
   }
   if (arena.exitOpen || arena.entranceClosed) return;
   const offset = roomOffsets[arena.roomIndex];
-  // Seal immediately after the player clears the physical doorway. The
-  // previous +2.2 threshold made the first arena barrier appear too far forward
-  // and left an unnecessary extra lane behind the player.
+  // Seal only after the player has cleared the physical doorway. The barrier
+  // itself lives one cell back in the connector, behind the player rather than
+  // on the arena's west boundary.
   if (state.player.x < offset + 1.25) return;
   arena.entranceClosed = true;
   announceNarrator(
