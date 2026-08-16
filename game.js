@@ -868,6 +868,23 @@ function findWalkableSpawnPoint(x, y, roomIndex, occupied = []) {
   }
   return original;
 }
+function recoverPlayerFromWall(preferredRoomIndex = null) {
+  if (canStand(state.player.x, state.player.y)) return false;
+  const arenaRoomIndex = state.miniBossArena?.roomIndex;
+  const roomIndex = Number.isInteger(preferredRoomIndex)
+    ? preferredRoomIndex
+    : Number.isInteger(arenaRoomIndex) ? arenaRoomIndex : currentRoomIndex();
+  const occupied = worldEnemies
+    .filter((enemy) => enemy.roomIndex === roomIndex && !enemy.dead)
+    .map((enemy) => ({ x: enemy.x, y: enemy.y }));
+  let safePoint = findWalkableSpawnPoint(state.player.x, state.player.y, roomIndex, occupied);
+  if (!canStand(safePoint.x, safePoint.y)) safePoint = findWalkableSpawnPoint(state.player.x, state.player.y, roomIndex);
+  if (!canStand(safePoint.x, safePoint.y)) return false;
+  state.player.x = safePoint.x;
+  state.player.y = safePoint.y;
+  return true;
+}
+
 const occupiedMonsterSpawns = [];
 for (const enemy of worldEnemies) {
   const safePoint = findWalkableSpawnPoint(enemy.x, enemy.y, enemy.roomIndex, occupiedMonsterSpawns);
@@ -3138,6 +3155,7 @@ const AUDIO_ASSETS = Object.freeze({
   shotgunShell: 'assets/audio/shotgun-shell.mp3',
   bfgElectric: 'assets/audio/bfg-electric.mp3',
   musicTrack: 'assets/audio/heavy-boss-battle-2.ogg',
+  bossMusicTrack: 'assets/audio/boss-battle-6-metal-v1.wav',
   dungeonAmbient: 'assets/audio/dungeon-ambient.ogg',
 });
 const audioBuffers = new Map();
@@ -3223,13 +3241,21 @@ function playAudioBuffer(key, volume = .4, options = {}) {
     return false;
   }
 }
+function ambientTrackKey() {
+  return music.mode === 'boss' ? 'bossMusicTrack' : 'musicTrack';
+}
 function startAmbientTrack() {
   const audio = ensureAudioContext();
-  if (!audio || !music.enabled || music.ambientSource) return;
-  const buffer = audioBuffers.get('musicTrack');
+  if (!audio || !music.enabled) return;
+  const key = ambientTrackKey();
+  if (music.ambientSource && music.ambientKey === key) return;
+  const previousSource = music.ambientSource;
+  const previousGain = music.ambientGain;
+  const fadeDuration = music.mode === 'boss' ? .9 : .7;
+  const buffer = audioBuffers.get(key);
   if (!buffer) {
-    loadAudioBuffer('musicTrack').then((loaded) => {
-      if (!music.playing || !music.enabled) return;
+    loadAudioBuffer(key).then((loaded) => {
+      if (!music.playing || !music.enabled || ambientTrackKey() !== key) return;
       if (loaded) startAmbientTrack();
       else {
         music.usingProceduralFallback = true;
@@ -3243,34 +3269,57 @@ function startAmbientTrack() {
     const source = audio.createBufferSource();
     const filter = audio.createBiquadFilter();
     const gain = audio.createGain();
+    const start = audio.currentTime;
+    const targetVolume = (music.mode === 'boss' ? .5 : .42) * settings.musicVolume;
     source.buffer = buffer;
     source.loop = true;
     filter.type = 'lowpass';
-    filter.frequency.value = music.mode === 'boss' ? 7200 : 9800;
+    filter.frequency.value = music.mode === 'boss' ? 7600 : 9800;
     filter.Q.value = .18;
-    // The downloaded metal loop is the primary soundtrack.
-    gain.gain.value = (music.mode === 'boss' ? .5 : .42) * settings.musicVolume;
+    gain.gain.setValueAtTime(.0001, start);
+    gain.gain.linearRampToValueAtTime(Math.max(.0001, targetVolume), start + fadeDuration);
     source.connect(filter).connect(gain).connect(audio.destination);
-    source.start();
+    source.start(start);
     source.onended = () => {
-      if (music.ambientSource === source) music.ambientSource = null;
+      if (music.ambientSource === source) {
+        music.ambientSource = null;
+        music.ambientGain = null;
+        music.ambientFilter = null;
+        music.ambientKey = null;
+      }
     };
+    if (previousSource && previousGain) {
+      previousGain.gain.cancelScheduledValues(start);
+      previousGain.gain.setTargetAtTime(.0001, start, Math.max(.05, fadeDuration / 4));
+      try { previousSource.stop(start + fadeDuration + .08); } catch { /* Already stopped. */ }
+    }
     music.ambientSource = source;
     music.ambientGain = gain;
     music.ambientFilter = filter;
+    music.ambientKey = key;
   } catch { /* Optional browser audio. */ }
 }
-function stopAmbientTrack() {
+function stopAmbientTrack(fadeDuration = 0) {
   if (!music.ambientSource) return;
+  const source = music.ambientSource;
+  const gain = music.ambientGain;
+  const filter = music.ambientFilter;
   try {
-    music.ambientSource.stop();
-    music.ambientSource.disconnect();
-    music.ambientGain?.disconnect();
-    music.ambientFilter?.disconnect();
+    const audio = ensureAudioContext();
+    const stopAt = audio.currentTime + Math.max(0, fadeDuration);
+    if (gain && fadeDuration > 0) {
+      gain.gain.cancelScheduledValues(audio.currentTime);
+      gain.gain.setTargetAtTime(.0001, audio.currentTime, Math.max(.05, fadeDuration / 4));
+    }
+    source.stop(stopAt + .08);
+    window.setTimeout(() => {
+      try { source.disconnect(); gain?.disconnect(); filter?.disconnect(); } catch { /* Already disconnected. */ }
+    }, (fadeDuration + .15) * 1000);
   } catch { /* Already stopped. */ }
   music.ambientSource = null;
   music.ambientGain = null;
   music.ambientFilter = null;
+  music.ambientKey = null;
 }
 function scheduleMetalGuitar(frequency, time, duration, volume = .035, detune = 0) {
   const audio = ensureAudioContext();
@@ -3425,10 +3474,9 @@ function stopMusic() {
 }
 function setMusicMode(mode) {
   if (!MUSIC_PATTERNS[mode]) return;
-  if (music.mode === mode) return;
+  if (music.mode === mode && (!music.playing || music.ambientKey === ambientTrackKey())) return;
   music.mode = mode;
   music.step = 0;
-  if (music.ambientFilter) music.ambientFilter.frequency.setTargetAtTime(mode === 'boss' ? 7200 : 9800, ensureAudioContext().currentTime, .18);
   if (music.playing) startMusic();
 }
 function toggleMusic() {
@@ -4413,6 +4461,7 @@ function finishForestTransition() {
   if (!transition) return;
   state.player.x = transition.destination.x; state.player.y = transition.destination.y;
   state.player.angle = transition.destination.angle; state.room = STARTING_ROOM_INDEX;
+  recoverPlayerFromWall(STARTING_ROOM_INDEX);
   announceNarrator('threshold-arrival', 'THRESHOLD / ROUTE RESTORED', 'CAMERA RESTORED. CLEAR THE THRESHOLD AND SECURE THE DOCUMENT OF TRUTH.', 'expression-command', 10, { duration: 6.5, priority: 8, force: true });
   setMusicMode('dungeon'); updateHud(); showToast('THRESHOLD CHAMBER · ROUTE RESTORED.', 'danger');
 }
@@ -4462,6 +4511,7 @@ function finishBossTransition() {
   if (!transition) return;
   state.player.x = transition.destination.x; state.player.y = transition.destination.y;
   state.player.angle = transition.destination.angle; state.room = FINAL_ROOM_INDEX; state.finalArenaTime = .01;
+  recoverPlayerFromWall(FINAL_ROOM_INDEX);
   state.finalBoss.alerted = true;
   announceNarrator('archon-entry', 'FINAL ENCOUNTER', 'CAMERA RESTORED. BREAK THE ARCHON. REACH THE EXIT.', 'expression-worried', 5, { duration: 8, priority: 9, force: true });
   state.player.hp = Math.max(1, state.player.hp - 12); state.damageFlash = .7; state.shakeTime = settings.reducedMotion ? .22 : .72;
@@ -4656,23 +4706,23 @@ function beginMiniBossArena(roomIndex, cinematicHome = null) {
   const miniBoss = worldEnemies.find((enemy) => enemy.roomIndex === roomIndex && enemy.miniBoss && !enemy.dead);
   if (!miniBoss || state.miniBossArena?.roomIndex === roomIndex || state.miniBossCutscene) return false;
   const room = rooms[roomIndex];
-  const arenaSpawn = roomContentPoint(roomIndex, room.spawn.x, room.spawn.y);
   const home = cinematicHome || saveCinematicHome();
-  // worldEnemies already stores world-space coordinates. Do not pass them
-  // through roomContentPoint again or the reveal aim point jumps deep into the
-  // room, making the first arena wall appear to be in the wrong place.
+  // Keep the camera/player handoff at the position where the player entered.
+  // The authored room spawn can overlap decorative cover in the first arena,
+  // which previously left the player inside a wall when the cutscene ended.
+  const arrival = canStand(home.x, home.y)
+    ? { x: home.x, y: home.y }
+    : findWalkableSpawnPoint(home.x, home.y, roomIndex);
   const target = { x: miniBoss.x, y: miniBoss.y };
   const destination = {
-    x: roomOffsets[roomIndex] + arenaSpawn.x,
-    y: arenaSpawn.y,
-    // Face the target when control returns. The authored spawn angle points
-    // north, while the first target is east/northeast of the spawn; inheriting
-    // that angle made the opening shots miss and made the HP bar look inert.
-    angle: Math.atan2(target.y - arenaSpawn.y, target.x - (roomOffsets[roomIndex] + arenaSpawn.x)),
+    x: arrival.x,
+    y: arrival.y,
+    angle: Math.atan2(target.y - arrival.y, target.x - arrival.x),
   };
 
   state.miniBossArena = { roomIndex, active: true, entranceClosed: false, exitOpen: false };
   setMiniBossDoors(roomIndex, false, false);
+  setMusicMode('boss');
   // The reveal is entirely inside the destination arena. Switch the logical
   // room before rendering so the boss, walls, lighting, and room metadata all
   // agree with the camera instead of exposing the previous room mid-shot.
@@ -4708,6 +4758,8 @@ function updateMiniBossArenaLock() {
     arena.active = false;
     arena.entranceClosed = true;
     setMiniBossDoors(arena.roomIndex, true, true);
+    recoverPlayerFromWall(arena.roomIndex);
+    setMusicMode('dungeon');
     return;
   }
   if (arena.exitOpen || arena.entranceClosed) return;
@@ -4726,6 +4778,7 @@ function updateMiniBossArenaLock() {
     { duration: 6, priority: 9, force: true },
   );
   setMiniBossDoors(arena.roomIndex, true, false);
+  recoverPlayerFromWall(arena.roomIndex);
   showToast('ARENA SEALED. NO EXIT UNTIL THE TARGET FALLS.', 'danger');
 }
 
@@ -4773,6 +4826,7 @@ function updateMiniBossCutscene(delta) {
     state.player.y = cutscene.destination.y;
     state.player.angle = cutscene.destination.angle;
     state.room = cutscene.roomIndex;
+    recoverPlayerFromWall(cutscene.roomIndex);
     clearCinematicCamera();
     setCinematicUi('');
     state.miniBossCutscene = null;
@@ -10313,6 +10367,7 @@ function movePlayerBy(dx, dy) {
 
 function updatePlayer(delta) {
   if (state.gameComplete || state.miniBossCutscene) return;
+  recoverPlayerFromWall();
   updateCombatState(delta);
   if (state.keys.has('arrowleft')) state.player.angle -= TURN_SPEED * delta;
   if (state.keys.has('arrowright')) state.player.angle += TURN_SPEED * delta;
@@ -10531,6 +10586,7 @@ function resetCurrentLevel() {
   state.player.x = roomOffsets[roomIndex] + respawn.x;
   state.player.y = respawn.y;
   state.player.angle = room.spawn.angle;
+  recoverPlayerFromWall(roomIndex);
   state.player.hp = 100;
   state.groundHazards = [];
   state.projectiles = [];

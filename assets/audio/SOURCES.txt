@@ -52,6 +52,12 @@ dungeon-metal-loop.ogg
   License: CC0. The source page notes that the archive filenames are reversed;
   the included “opening” file is the loop used here.
 
+boss-battle-6-metal-v1.wav
+  Source: OpenGameArt.org — Boss Battle #6 Metal.
+  https://opengameart.org/content/boss-battle-6-metal
+  Original file: https://opengameart.org/sites/default/files/Boss%20Battle%206%20Metal%20V1.wav
+  License: CC0, as listed on the source page.
+
 heavy-boss-battle-2.ogg
   Source: OpenGameArt.org — Heavy Boss Battle 2.
   https://opengameart.org/content/heavy-boss-battle-2
