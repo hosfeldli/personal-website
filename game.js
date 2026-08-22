@@ -7,8 +7,8 @@ const directDungeonStart = true;
  *
  * One connected dungeon map. The browser renders the world with a small
  * software 3D pipeline: fixed-horizon perspective projection,
- * painter-sorted low-poly meshes, raycast walls, procedural materials, and
- * hand-built low-poly weapon meshes and several enemy archetypes.
+ * painter-sorted low-poly world geometry, raycast walls, procedural materials,
+ * sprite-only enemies, and authored first-person weapon sprites.
  */
 
 const canvas = document.getElementById('game-canvas');
@@ -90,6 +90,19 @@ const scrollSummary = document.getElementById('scroll-summary');
 const scrollAuthorLine = document.getElementById('scroll-author-line');
 const scrollRecordStatus = document.getElementById('scroll-record-status');
 const scrollPositioning = document.getElementById('scroll-positioning');
+const scrollPaper = document.getElementById('scroll-paper');
+const scrollFindings = document.getElementById('scroll-findings');
+const scrollBriefing = document.getElementById('scroll-briefing');
+const scrollBriefingKicker = document.getElementById('scroll-briefing-kicker');
+const scrollBriefingTitle = document.getElementById('scroll-briefing-title');
+const scrollBriefingCount = document.getElementById('scroll-briefing-count');
+const scrollBriefingPage = document.getElementById('scroll-briefing-page');
+const scrollBriefingLabel = document.getElementById('scroll-briefing-label');
+const scrollBriefingPageTitle = document.getElementById('scroll-briefing-page-title');
+const scrollBriefingBody = document.getElementById('scroll-briefing-body');
+const scrollBriefingProof = document.getElementById('scroll-briefing-proof');
+const scrollBriefingNext = document.getElementById('scroll-briefing-next');
+const scrollJumpButtons = [...document.querySelectorAll('[data-scroll-jump]')];
 const scrollIntroGrid = document.getElementById('scroll-intro-grid');
 const scrollProofLabel = document.getElementById('scroll-proof-label');
 const scrollProofGrid = document.getElementById('scroll-proof-grid');
@@ -100,6 +113,15 @@ const scrollProgressCaption = document.getElementById('scroll-progress-caption')
 const scrollDetailsLabel = document.getElementById('scroll-details-label');
 const scrollDetailCount = document.getElementById('scroll-detail-count');
 const scrollDetails = document.getElementById('scroll-details');
+const scrollChallenge = document.getElementById('scroll-challenge');
+const scrollChallengeGuide = document.getElementById('scroll-challenge-guide');
+const scrollChallengeTitle = document.getElementById('scroll-challenge-title');
+const scrollChallengePrompt = document.getElementById('scroll-challenge-prompt');
+const scrollChallengeSteps = document.getElementById('scroll-challenge-steps');
+const scrollChallengeFeedback = document.getElementById('scroll-challenge-feedback');
+const scrollTour = document.getElementById('scroll-tour');
+const scrollTourStatus = document.getElementById('scroll-tour-status');
+const scrollTourNext = document.getElementById('scroll-tour-next');
 const scrollCtaTitle = document.getElementById('scroll-cta-title');
 const scrollCtaCopy = document.getElementById('scroll-cta-copy');
 const scrollAbility = document.getElementById('scroll-ability');
@@ -108,10 +130,37 @@ const scrollAbilityName = document.getElementById('scroll-ability-name');
 const scrollAbilityDescription = document.getElementById('scroll-ability-description');
 const scrollTags = document.getElementById('scroll-tags');
 const scrollActions = document.getElementById('scroll-actions');
+const scrollDivider = scrollPaper?.querySelector('.scroll-divider');
+const scrollProgress = scrollPaper?.querySelector('.scroll-progress');
+const scrollCta = document.getElementById('scroll-cta');
+const scrollHeader = scrollPaper?.querySelector('.scroll-header');
+const scrollStamp = scrollPaper?.querySelector('.scroll-stamp');
+const scrollAuthorStatus = scrollAuthorLine?.parentElement;
+const scrollFindingsSection = scrollFindings?.closest('.scroll-findings');
+const scrollEvidenceSection = document.getElementById('scroll-evidence-section');
+const terminalDashboard = document.getElementById('terminal-dashboard');
+const terminalSectorReadout = document.getElementById('terminal-sector-readout');
+const terminalUplinkReadout = document.getElementById('terminal-uplink-readout');
+const terminalAccessReadout = document.getElementById('terminal-access-readout');
+const pseudoTerminal = document.getElementById('pseudo-terminal');
+const pseudoTerminalPath = document.getElementById('pseudo-terminal-path');
+const pseudoTerminalState = document.getElementById('pseudo-terminal-state');
+const pseudoTerminalOutput = document.getElementById('pseudo-terminal-output');
+const pseudoTerminalCompletions = document.getElementById('pseudo-terminal-completions');
+const pseudoTerminalInput = document.getElementById('pseudo-terminal-input');
+const scrollIndex = scrollPaper?.querySelector('.scroll-index');
+const terminalTopbar = scrollPaper?.querySelector('.terminal-topbar');
+const terminalCommandStrip = scrollPaper?.querySelector('.terminal-command-strip');
 const closeScrollButton = document.getElementById('close-scroll');
 const deathOverlay = document.getElementById('death-overlay');
 const deathCause = document.getElementById('death-cause');
 const deathRestart = document.getElementById('death-restart');
+const deathRoom = document.getElementById('death-room');
+const deathKills = document.getElementById('death-kills');
+const deathProgress = document.getElementById('death-progress');
+const deathWeapon = document.getElementById('death-weapon');
+const deathAmmo = document.getElementById('death-ammo');
+const deathTip = document.getElementById('death-tip');
 const helpButton = document.getElementById('help-button');
 const musicButton = document.getElementById('music-button');
 const settingsButton = document.getElementById('settings-button');
@@ -176,7 +225,7 @@ const lobbyPortfolioScroll = {
     'OUTSIDE THE SYSTEM — Baking, plants, drums, and bass guitar. The same habits remain: observe closely, make the next step repeatable, and keep learning.',
     'NEXT — The assault rifle is equipped. Move through the archive and let each room show the work.'
   ],
-  tags: ['TECHNICAL CONSULTANT', 'TMS / LOGISTICS', 'OPERATIONS ANALYTICS', 'INTEGRATIONS', 'AUTOMATION', 'TUTORIAL ABILITY: ARCHIVE KEY'],
+  tags: ['TECHNICAL CONSULTANT', 'TMS / LOGISTICS', 'OPERATIONS ANALYTICS', 'INTEGRATIONS', 'AUTOMATION', 'ARCHIVE ACCESS'],
   color: '#6ce0c2'
 };
 let shieldFeedbackAt = -Infinity;
@@ -226,7 +275,7 @@ const rooms = [
       { id: 'search-quest', title: 'KEY ITEM: SUPPORT SEARCH', kind: 'key', icon: '50K', tag: 'KEY ITEM / 50K RECORDS', x: 3.5, y: 3.5, color: '#6ce0c2', summary: 'A recovered key that opens an SSO search route through more than 50,000 shipper records.', details: ['Made relationship searches useful during live support.', 'The tool shortened the distance between a question and the right record.'] }
     ],
     enemies: [
-      { id: 'requirement-beast', name: 'Requirement Beast', kind: 'beast', attackStyle: 'ground', x: 6.5, y: 4.5, hp: 90, speed: .34, damage: 9, color: '#9b6bd0' },
+      { id: 'requirement-beast', name: 'Requirement Beast', kind: 'beast', attackStyle: 'melee', x: 6.5, y: 4.5, hp: 90, speed: .34, damage: 9, color: '#9b6bd0' },
       { id: 'route-shaman', name: 'Route Shaman', kind: 'seer', attackStyle: 'ranged', x: 12.5, y: 2.5, hp: 78, speed: .25, damage: 11, color: '#c58de6' },
       { id: 'status-moth', name: 'Status Moth', kind: 'moth', x: 12.5, y: 2.5, hp: 55, speed: .56, damage: 5, color: '#dfae65' }
     ]
@@ -264,8 +313,8 @@ const rooms = [
       { id: 'automation-kit', title: 'EQUIPMENT: AUTOMATION KIT', kind: 'kit', icon: 'CODE', tag: 'EQUIPMENT / CRAFT', x: 11.5, y: 5.5, color: '#c58de6', summary: 'Automation and delivery tools that make the path repeatable.', details: ['Python, PowerShell, Perl, Bash, JavaScript, C#, Git, and CI/CD.', 'Prefers modular work that can be operated, explained, and improved.'] }
     ],
     enemies: [
-      { id: 'syntax-beast', name: 'Syntax Beast', kind: 'beast', attackStyle: 'ground', x: 6.5, y: 3.5, hp: 85, speed: .36, damage: 8, color: '#cf9b5e' },
-      { id: 'schema-breaker', name: 'Schema Breaker', kind: 'quake', attackStyle: 'ground', x: 10.5, y: 4.5, hp: 108, speed: .28, damage: 12, color: '#cf8b5e' },
+      { id: 'syntax-beast', name: 'Syntax Beast', kind: 'beast', attackStyle: 'melee', x: 6.5, y: 3.5, hp: 85, speed: .36, damage: 8, color: '#cf9b5e' },
+      { id: 'schema-breaker', name: 'Schema Breaker', kind: 'quake', attackStyle: 'ranged', x: 10.5, y: 4.5, hp: 108, speed: .28, damage: 12, color: '#cf8b5e' },
       { id: 'integration-leech', name: 'Integration Leech', kind: 'leech', x: 9.5, y: 6.5, hp: 62, speed: .48, damage: 6, color: '#7d9bd1' }
     ]
   },
@@ -284,7 +333,7 @@ const rooms = [
     ],
     enemies: [
       { id: 'burnout-imp', name: 'Burnout Imp', kind: 'imp', x: 5.5, y: 5.5, hp: 72, speed: .46, damage: 7, color: '#d16f63' },
-      { id: 'root-quake', name: 'Root Quake', kind: 'quake', attackStyle: 'ground', x: 7.5, y: 2.5, hp: 102, speed: .3, damage: 11, color: '#77915d' },
+      { id: 'root-quake', name: 'Root Quake', kind: 'quake', attackStyle: 'ranged', x: 7.5, y: 2.5, hp: 102, speed: .3, damage: 11, color: '#77915d' },
       { id: 'noise-moth', name: 'Noise Moth', kind: 'moth', x: 10.5, y: 1.5, hp: 58, speed: .58, damage: 5, color: '#c7a359' }
     ]
   },
@@ -328,10 +377,139 @@ rooms.push({
   enemies: [],
 });
 const SANCTUARY_ROOM_INDEX = rooms.length - 1;
+const MISSION_SECTOR_TOTAL = BOSS_ROOM_INDEX + 1;
+const FIELD_REPORT_ROOM_INDEXES = Object.freeze(
+  // Every playable sector has a physical access terminal. The final arena uses
+  // one too: defeating the Archon arms it, but the terminal authorizes the
+  // Lightwell door.
+  rooms.map((room, roomIndex) => roomIndex).filter((roomIndex) => roomIndex <= BOSS_ROOM_INDEX),
+);
+const FIELD_REPORT_TOTAL = FIELD_REPORT_ROOM_INDEXES.length;
+const FIELD_REPORT_TEMPLATE_IDS = Object.freeze({
+  trophy: 'savings-ledger',
+  quests: 'billing-quest',
+  chronicle: 'manhattan-current',
+  character: 'analytics-kit',
+  campfire: 'music-kit',
+  gate: 'sanctum-brief',
+});
+function missionReportId(roomIndex) { return `mission-report-${rooms[roomIndex]?.id || roomIndex}`; }
+const MISSION_REPORT_IDS = new Set(FIELD_REPORT_ROOM_INDEXES.map(missionReportId));
+const SCROLL_CHALLENGES = Object.freeze({
+  threshold: Object.freeze({ type: 'signal-lock', prompt: 'Catch three operating signals to assemble Liam’s delivery loop.', signals: Object.freeze([
+    Object.freeze({ metric: 'DISCOVER', cue: 'Lock the customer signal.', target: [.16, .34], speed: 1.65, meaning: 'Discovery turns an ambiguous request into a requirement the customer and technical team can both test.' }),
+    Object.freeze({ metric: 'VALIDATE', cue: 'Lock the proof signal.', target: [.58, .76], speed: 1.8, meaning: 'Validation checks the real system behavior before a recommendation becomes a production decision.' }),
+    Object.freeze({ metric: 'DELIVER', cue: 'Lock the operating signal.', target: [.36, .54], speed: 1.95, meaning: 'Delivery leaves the customer with a working result, a clear next step, and support after go-live.' }),
+  ]), rewardWeapon: 'shotgun' }),
+  trophy: Object.freeze({ type: 'circuit-link', prompt: 'Rotate the service conduits until the ownership signal reaches the exit port.', stages: Object.freeze([
+    Object.freeze({ metric: 'FIVE ACCOUNTS · ~50% CONTRACT VALUE', cue: 'Connect the service route from IN to OUT.', meaning: 'Liam owns five strategic enterprise accounts representing roughly half of his team’s managed contract value—work that demands continuous discovery, delivery, and production support.' }),
+  ]), circuit: Object.freeze({ columns: 3, rows: 3, source: 3, output: 5, shapes: Object.freeze(['elbow', 'line', 'elbow', 'elbow', 'line', 'elbow', 'elbow', 'line', 'elbow']), start: Object.freeze([0, 3, 0, 1, 1, 2, 2, 0, 0]) }), rewardWeapon: 'plasma' }),
+  quests: Object.freeze({ type: 'packet-sort', prompt: 'Dispatch each live EDI packet to the one system lane that can use it.', packets: Object.freeze([
+    Object.freeze({ metric: '1M+ TRACKING MESSAGES / MONTH', header: 'RX // PRODUCTION TRACKING STREAM', cue: 'Send the raw stream to the history buffer.', target: 'history', lanes: Object.freeze([{ id: 'history', label: 'HISTORY BUFFER' }, { id: 'discard', label: 'DISCARD BIN' }]), meaning: 'More than one million monthly tracking messages needed a durable analytical model, not manual inspection.' }),
+    Object.freeze({ metric: '15 MONTHS · BIGQUERY', header: 'RX // NORMALIZED MESSAGE HISTORY', cue: 'Send the modeled history to the billing rule.', target: 'billing', lanes: Object.freeze([{ id: 'support', label: 'SUPPORT QUEUE' }, { id: 'billing', label: 'BILLING RULE' }]), meaning: 'Fifteen months of history made usage comparable by client, carrier, and billing period.' }),
+    Object.freeze({ metric: '~$40K ANNUALIZED RECOVERY', header: 'RX // VERIFIED AS2 TRAFFIC', cue: 'Dispatch the verified result to the recovery ledger.', target: 'recovery', lanes: Object.freeze([{ id: 'recovery', label: 'RECOVERY LEDGER' }, { id: 'archive', label: 'COLD ARCHIVE' }]), meaning: 'The billing logic converted technical EDI evidence into roughly $40K in annualized revenue recovery.' }),
+  ]), rewardWeapon: 'rail' }),
+  chronicle: Object.freeze({ type: 'memory-relay', prompt: 'Watch the career relay, then repeat the sequence to carry the signal forward.', stages: Object.freeze([
+    Object.freeze({ metric: 'RESEARCH → OPERATIONS → CLOUD → CONSULTING', cue: 'Repeat the four-role relay.', meaning: 'Liam’s path moved from GTRI robotics research, to systems operations, to cloud delivery, and into customer-facing technical consulting—each role expanding the same systems-and-delivery toolkit.' }),
+  ]), sequence: Object.freeze(['research', 'operations', 'cloud', 'consulting']), rewardWeapon: 'rivet' }),
+  character: Object.freeze({ type: 'stack-order', prompt: 'Rebuild the support stack by swapping modules into the order a request actually travels.', stages: Object.freeze([
+    Object.freeze({ metric: '50K+ RECORDS · 30 MINUTES SAVED · ~$40K IDENTIFIED', cue: 'Put the support stack in operating order.', meaning: 'A secure Django, PostgreSQL, and Azure AD search path made more than 50,000 records useful during support; related Power BI analysis surfaced about $40K in annual Azure savings.' }),
+  ]), blocks: Object.freeze([
+    Object.freeze({ id: 'identity', label: 'AZURE AD', detail: 'VERIFY' }),
+    Object.freeze({ id: 'search', label: 'SEARCH', detail: 'LOCATE' }),
+    Object.freeze({ id: 'record', label: 'SHIPPER RECORD', detail: 'RESOLVE' }),
+    Object.freeze({ id: 'handoff', label: 'SUPPORT HANDOFF', detail: 'DELIVER' }),
+  ]), start: Object.freeze([2, 0, 3, 1]), rewardWeapon: 'bfg' }),
+  campfire: Object.freeze({ type: 'switchboard', prompt: 'Bring every integration endpoint online. A switch flips itself and its four neighbors.', stages: Object.freeze([
+    Object.freeze({ metric: '40+ ENDPOINTS · EDI 204 / 990 / 214 / 210 · CI/CD', cue: 'Light the endpoint board.', meaning: 'Liam built reusable guidance across more than forty endpoints, joined the core EDI flow, and helped establish a repeatable Bitbucket CI/CD release path.' }),
+  ]), start: Object.freeze([0, 1, 1, 1, 0, 1, 1, 1, 0]), rewardWeapon: null }),
+  gate: Object.freeze({ type: 'firewall-path', prompt: 'Trace a trusted path across the Lightwell firewall from IN to OUT.', stages: Object.freeze([
+    Object.freeze({ metric: 'SYSTEMS + EVIDENCE + DELIVERY', cue: 'Reach the authorized output port.', meaning: 'The portfolio through-line is technical fluency, evidence-backed decisions, and a clear delivery handoff people can actually use.' }),
+  ]), columns: 4, blocked: Object.freeze([1, 2, 5, 6, 9, 10]), start: 0, output: 15, rewardWeapon: null }),
+});
+const PORTFOLIO_SCROLL_BRIEFINGS = Object.freeze({
+  threshold: Object.freeze({
+    kicker: 'PERSONNEL FILE / START HERE', title: 'MEET LIAM HOSFELD',
+    metrics: Object.freeze([{ value: 'SOLUTIONS', label: 'ENGINEERING + CONSULTING' }, { value: 'ATLANTA', label: 'GEORGIA' }, { value: '3.83', label: 'UGA ENGINEERING GPA' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'ROLE', title: 'SOLUTIONS ENGINEER · TECHNICAL CONSULTANT', body: 'Liam works where customer problems, technical systems, data, and delivery meet.', proof: 'Current focus: cloud TMS consulting, discovery, solution design, implementation support, and production troubleshooting.' }),
+      Object.freeze({ label: 'OPERATING STYLE', title: 'TURN THE SIGNAL INTO A ROUTE', body: 'He leads discovery sessions, status reviews, design workshops, demos, and issue-triage calls—then translates the evidence into an action people can use.', proof: 'The through-line is clarity: understand the requirement, validate the system behavior, and make the next step repeatable.' }),
+      Object.freeze({ label: 'FOUNDATION', title: 'COMPUTER SYSTEMS ENGINEERING', body: 'University of Georgia, B.S. Computer Systems Engineering, May 2025.', proof: 'Graduated with a 3.83 GPA and a foundation spanning software, data, integrations, and physical systems.' }),
+    ]),
+    facts: Object.freeze(['Solutions Engineer and Technical Consultant based in Atlanta, Georgia.', 'B.S. Computer Systems Engineering from the University of Georgia, GPA 3.83.', 'Customer-facing work across discovery, solution design, demos, implementation, and troubleshooting.']),
+    tags: Object.freeze(['SOLUTIONS ENGINEERING', 'TECHNICAL CONSULTING', 'CUSTOMER DISCOVERY', 'UGA ENGINEERING']),
+  }),
+  trophy: Object.freeze({
+    kicker: 'CURRENT ROLE / CUSTOMER OWNERSHIP', title: 'ENTERPRISE DELIVERY',
+    metrics: Object.freeze([{ value: '5', label: 'STRATEGIC ACCOUNTS' }, { value: '~50%', label: 'MANAGED CONTRACT VALUE' }, { value: 'END-TO-END', label: 'CUSTOMER DELIVERY' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'OWNERSHIP', title: 'FIVE STRATEGIC ENTERPRISE ACCOUNTS', body: 'Liam owns five accounts representing approximately half of his team’s managed contract value.', proof: 'His scope covers discovery, status reviews, solution workshops, issue triage, implementation, testing, and production support.' }),
+      Object.freeze({ label: 'COMMUNICATION', title: 'TECHNICAL DEMOS THAT MAP TO THE BUSINESS', body: 'He delivers customer demos and solution walkthroughs with sales and internal stakeholders.', proof: 'The goal is to connect product capabilities, integration approaches, and solution fit to the actual business requirement.' }),
+      Object.freeze({ label: 'DELIVERY', title: 'FROM DESIGN THROUGH ADOPTION', body: 'Liam partners directly with clients and cross-functional teams to validate solutions and resolve production and test issues.', proof: 'That ownership continues into post-go-live adoption across cloud-hosted TMS environments.' }),
+    ]),
+    facts: Object.freeze(['Owns five strategic enterprise accounts representing approximately 50% of team-managed contract value.', 'Leads discovery, solution design workshops, status reviews, demos, and issue triage.', 'Supports implementation, testing, production, and post-go-live adoption.']),
+    tags: Object.freeze(['ENTERPRISE ACCOUNTS', 'TECHNICAL DEMOS', 'SOLUTION DESIGN', 'CLOUD TMS']),
+  }),
+  quests: Object.freeze({
+    kicker: 'CASE FILE / DATA TO REVENUE', title: 'EDI BILLING RECOVERY',
+    metrics: Object.freeze([{ value: '1M+', label: 'MONTHLY MESSAGES' }, { value: '15 MO.', label: 'HISTORICAL ANALYSIS' }, { value: '$40K', label: 'ANNUALIZED REVENUE' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'SYSTEM', title: 'BIGQUERY EDI ANALYTICS PLATFORM', body: 'Liam designed an internal analytics and billing platform combining legacy and Active-platform EDI data.', proof: 'The model supports 15 months of historical analysis across more than one million monthly tracking messages.' }),
+      Object.freeze({ label: 'LOGIC', title: 'BILLABLE AS2 TRANSACTIONS', body: 'He built transaction logic and reporting views by client, carrier, and billing period.', proof: 'The system converted a noisy technical stream into evidence Finance could operate.' }),
+      Object.freeze({ label: 'OUTCOME', title: 'APPROXIMATELY $40K RECOVERED', body: 'The billing workflow enabled approximately $40,000 in annualized revenue recovery.', proof: 'This is the portfolio pattern: model the evidence, validate the logic, and connect the result to a business action.' }),
+    ]),
+    facts: Object.freeze(['Built a BigQuery-based analytics and billing platform for EDI transactions.', 'Modeled 15 months and more than 1,000,000 monthly tracking messages.', 'Created AS2 billing logic that enabled approximately $40K in annualized revenue recovery.']),
+    tags: Object.freeze(['BIGQUERY', 'EDI / AS2', 'BILLING LOGIC', 'REVENUE RECOVERY']),
+  }),
+  chronicle: Object.freeze({
+    kicker: 'CAREER LOG / SYSTEMS TO CONSULTING', title: 'THE ROUTE SO FAR',
+    metrics: Object.freeze([{ value: '2020', label: 'GTRI RESEARCH' }, { value: '2023–25', label: 'CLOUD SERVICES' }, { value: 'NOW', label: 'TECHNICAL CONSULTING' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'CURRENT', title: 'MANHATTAN ASSOCIATES · CONSULTANT', body: 'Liam moved from Cloud Services into customer-facing Cloud TMS consulting in May 2025.', proof: 'Today he combines discovery, integration work, analytics, demos, troubleshooting, and delivery ownership.' }),
+      Object.freeze({ label: 'OPERATIONS', title: 'SOLIANT · SYSTEMS AUTOMATION', body: 'At Soliant Healthcare, he automated multi-device onboarding with Bash and analyzed account utilization.', proof: 'The account audit identified duplicate and inactive licenses tied to approximately $36,000 in annual savings.' }),
+      Object.freeze({ label: 'FOUNDATION', title: 'GTRI · ROBOTIC RESEARCH', body: 'At Georgia Tech Research Institute’s ATAS Lab, Liam built C# UI and integration components.', proof: 'The work supported robotic object detection and manipulation research by unifying control and interface workflows.' }),
+    ]),
+    facts: Object.freeze(['Consultant at Manhattan Associates after two years in Cloud Services.', 'Soliant automation and account analysis produced approximately $36K in annual savings.', 'GTRI research work used C# for robotic object detection and manipulation workflows.']),
+    tags: Object.freeze(['MANHATTAN ASSOCIATES', 'SYSTEMS OPERATIONS', 'C# INTEGRATION', 'CAREER GROWTH']),
+  }),
+  character: Object.freeze({
+    kicker: 'EQUIPMENT FILE / BUILD AND EXPLAIN', title: 'TECHNICAL TOOLKIT',
+    metrics: Object.freeze([{ value: '50K+', label: 'SHIPPER RECORDS' }, { value: '30 MIN', label: 'SAVED PER REQUEST' }, { value: '3 HRS/WK', label: 'REPORTING AUTOMATED' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'APPLICATION', title: 'SECURE SSO SEARCH TOOL', body: 'Liam built a production internal tool with Python, Django, PostgreSQL, and Azure Active Directory.', proof: 'Teams could search more than 50,000 shipper records in seconds, cutting lookup and communication time by about 30 minutes per request.' }),
+      Object.freeze({ label: 'ANALYTICS', title: 'COST AND REPORTING AUTOMATION', body: 'He built a Power BI cost-optimization dashboard and automated internal and client-facing reporting.', proof: 'The work identified about $40K in annual Azure savings and removed roughly three hours of manual reporting each week.' }),
+      Object.freeze({ label: 'STACK', title: 'DATA · CLOUD · INTEGRATIONS · CODE', body: 'SQL, Oracle SQL, BigQuery, Power BI, DAX, Python, JavaScript, Bash, Django, PostgreSQL, Azure, GCP, Linux, and Git.', proof: 'He chooses tools to make investigation, delivery, and operations clearer—not to add technology for its own sake.' }),
+    ]),
+    facts: Object.freeze(['Built an SSO-enabled Python/Django/PostgreSQL tool for 50K+ shipper records.', 'Reduced lookup and communication time by approximately 30 minutes per request.', 'Automated reporting and built analytics across SQL, BigQuery, Power BI, Azure, and GCP.']),
+    tags: Object.freeze(['PYTHON / DJANGO', 'SQL / BIGQUERY', 'POWER BI', 'AZURE / GCP']),
+  }),
+  campfire: Object.freeze({
+    kicker: 'DELIVERY FILE / MAKE KNOWLEDGE REUSABLE', title: 'INTEGRATIONS AT SCALE',
+    metrics: Object.freeze([{ value: '40+', label: 'CUSTOMER ENDPOINTS' }, { value: '4', label: 'EDI TRANSACTION SETS' }, { value: 'CI/CD', label: 'REPEATABLE PUBLISHING' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'DOCUMENTATION', title: 'CLIENT-FACING EDI HUB', body: 'Liam architected a documentation hub for more than forty customer-specific endpoints.', proof: 'It turned scattered integration knowledge into one reusable customer-facing operating path.' }),
+      Object.freeze({ label: 'DELIVERY SYSTEM', title: 'FIRST BITBUCKET CI/CD PIPELINE', body: 'He built the first deployment pipeline for the documentation workflow.', proof: 'The release path standardized guidance across EDI 204, 990, 214, and 210 transaction sets.' }),
+      Object.freeze({ label: 'CUSTOMER OUTCOME', title: 'VALIDATE, RELEASE, SUPPORT', body: 'The work connects technical documentation to client validation, implementation support, and post-go-live troubleshooting.', proof: 'Liam’s value is not just building the artifact—it is helping the customer operate the result.' }),
+    ]),
+    facts: Object.freeze(['Architected a client-facing EDI documentation hub for 40+ customer endpoints.', 'Built the first Bitbucket-based CI/CD pipeline for the documentation workflow.', 'Standardized guidance across EDI 204, 990, 214, and 210 transaction sets.']),
+    tags: Object.freeze(['EDI DOCUMENTATION', 'BITBUCKET CI/CD', 'CUSTOMER ENDPOINTS', 'POST-GO-LIVE SUPPORT']),
+  }),
+  gate: Object.freeze({
+    kicker: 'LIGHTWELL CORE / FINAL AUTHORIZATION', title: 'THE COMPLETE DELIVERY',
+    metrics: Object.freeze([{ value: 'SYSTEMS', label: 'TECHNICAL FOUNDATION' }, { value: 'EVIDENCE', label: 'OPERATING PROOF' }, { value: 'DELIVERY', label: 'USABLE HANDOFF' }]),
+    slides: Object.freeze([
+      Object.freeze({ label: 'SYSTEMS', title: 'UNDERSTAND THE REAL MACHINE', body: 'Liam combines software, data, integration, and cloud experience to see the system behind a customer problem.', proof: 'That technical footing supports better discovery, clearer designs, and faster troubleshooting when the stakes are real.' }),
+      Object.freeze({ label: 'EVIDENCE', title: 'TURN SIGNALS INTO DECISIONS', body: 'He traces the customer need through system behavior and data until the recommendation can be tested.', proof: 'The work spans enterprise delivery, EDI analytics, automation, reporting, and support operations.' }),
+      Object.freeze({ label: 'DELIVERY', title: 'LEAVE A ROUTE PEOPLE CAN RUN', body: 'The point is a result the customer and team can use: implemented, explained, validated, and supported after go-live.', proof: 'Authorize the Lightwell to complete the run and access Liam’s résumé.' }),
+    ]),
+    facts: Object.freeze(['Solutions Engineer and Technical Consultant in Atlanta, Georgia.', 'B.S. in Computer Systems Engineering from the University of Georgia, GPA 3.83.', 'Experience across customer delivery, analytics, integrations, automation, cloud systems, and production support.']),
+    tags: Object.freeze(['SYSTEMS THINKING', 'CUSTOMER DELIVERY', 'OPERATIONS ANALYTICS', 'LIGHTWELL AUTHORIZATION']),
+  }),
+});
 const MINI_BOSS_ENCOUNTERS = [
-  { roomId: 'trophy', id: 'contract-warden', name: 'THE CONTRACT WARDEN', kind: 'warden', x: 8, y: 4.5, hp: 360, speed: .24, damage: 14, color: '#d08a61', miniBoss: true },
-  { roomId: 'chronicle', id: 'legacy-colossus', name: 'THE LEGACY COLOSSUS', kind: 'quake', x: 8, y: 4.5, hp: 430, speed: .2, damage: 16, color: '#7896b8', miniBoss: true },
-  { roomId: 'campfire', id: 'burnout-keeper', name: 'THE BURNOUT KEEPER', kind: 'beast', x: 8, y: 4.5, hp: 500, speed: .22, damage: 18, color: '#c76f57', miniBoss: true },
+  { roomId: 'trophy', id: 'contract-warden', name: 'THE CONTRACT WARDEN', kind: 'warden', bossKit: 'contract', x: 8, y: 4.5, hp: 600, speed: .62, damage: 16, color: '#d08a61', miniBoss: true },
+  { roomId: 'chronicle', id: 'legacy-colossus', name: 'THE LEGACY COLOSSUS', kind: 'quake', bossKit: 'seismic', x: 8, y: 4.5, hp: 700, speed: .5, damage: 19, color: '#7896b8', miniBoss: true },
+  { roomId: 'campfire', id: 'burnout-keeper', name: 'THE BURNOUT KEEPER', kind: 'beast', bossKit: 'burnout', x: 8, y: 4.5, hp: 430, speed: .7, damage: 10, color: '#c76f57', miniBoss: true },
 ];
 for (const encounter of MINI_BOSS_ENCOUNTERS) {
   const room = rooms.find((candidate) => candidate.id === encounter.roomId);
@@ -341,18 +519,54 @@ const MINI_BOSS_ROOM_IDS = new Set(MINI_BOSS_ENCOUNTERS.map((encounter) => encou
 function miniBossRoom(roomIndex) { return MINI_BOSS_ROOM_IDS.has(rooms[roomIndex]?.id); }
 const STARTING_ROOM_INDEX = 0;
 const FINAL_ROOM_INDEX = BOSS_ROOM_INDEX;
+const ROOM_OBJECTIVES = Object.freeze({
+  threshold: Object.freeze({
+    type: 'terminal',
+    label: 'AUTHORIZE THE THRESHOLD TERMINAL',
+    hint: 'Hostiles are optional. Reach the access terminal beside the eastern shield door and run its case program.',
+  }),
+  trophy: Object.freeze({
+    type: 'boss-terminal',
+    targetId: 'contract-warden',
+    label: 'BREAK THE CONTRACT WARDEN · AUTHORIZE TERMINAL',
+    hint: 'Only the Contract Warden is required. Defeat it, then use the arena access terminal to release the eastern shield door.',
+  }),
+  quests: Object.freeze({
+    type: 'terminal',
+    label: 'AUTHORIZE THE ROUTE TERMINAL',
+    hint: 'Hostiles are optional. Reach the terminal at the eastern route and send the case packet to open the shield door.',
+  }),
+  chronicle: Object.freeze({
+    type: 'boss-terminal',
+    targetId: 'legacy-colossus',
+    label: 'SHATTER THE LEGACY COLOSSUS · AUTHORIZE TERMINAL',
+    hint: 'Only the Legacy Colossus is required. Defeat it, then use the arena access terminal to release the eastern shield door.',
+  }),
+  character: Object.freeze({
+    type: 'terminal',
+    label: 'AUTHORIZE THE TOOLKIT TERMINAL',
+    hint: 'Hostiles are optional. Reach the terminal beside the eastern shield door and calibrate the live system.',
+  }),
+  campfire: Object.freeze({
+    type: 'boss-terminal',
+    targetId: 'burnout-keeper',
+    label: 'OUTLAST THE BURNOUT KEEPER · AUTHORIZE TERMINAL',
+    hint: 'Only the Burnout Keeper is required. Defeat it, then use the arena access terminal to release the eastern shield door.',
+  }),
+});
 // Only the entrance, forest corridor, boss arena, and completed sanctuary are
 // open to the sky. Every other authored dungeon room receives a ceiling.
 const OPEN_AIR_ROOM_IDS = new Set(['gate', 'sanctuary']);
 for (const room of rooms) room.roof = !OPEN_AIR_ROOM_IDS.has(room.id);
-for (const room of rooms) room.material = 'stone';
 
 const ROOM_WIDTH = 22;
 const ROOM_HEIGHT = 12;
-const MISSION_ROOM_WIDTH = 33;
-const MISSION_ROOM_HEIGHT = 18;
-const FINAL_ROOM_WIDTH = 30;
-const FINAL_ROOM_HEIGHT = 18;
+const BASE_MISSION_ROOM_WIDTH = 33;
+const BASE_MISSION_ROOM_HEIGHT = 18;
+const MISSION_ROOM_WIDTH = 41;
+const MISSION_ROOM_HEIGHT = 22;
+const FINAL_ROOM_WIDTH = 38;
+const FINAL_ROOM_HEIGHT = 22;
 const ROOM_GAP = 4;
 const ROOM_INSET_X = 3;
 const ROOM_INSET_Y = 2;
@@ -367,40 +581,228 @@ const roomWidths = rooms.map((room, index) => index === BOSS_ROOM_INDEX || index
 const roomHeights = rooms.map((room, index) => index === BOSS_ROOM_INDEX || index === SANCTUARY_ROOM_INDEX
   ? FINAL_ROOM_HEIGHT
   : isMissionRoom(index) ? MISSION_ROOM_HEIGHT : (room.height || ROOM_HEIGHT));
-function roomDoorY(roomIndex) { return rooms[roomIndex]?.id === 'threshold' ? 9 : isMissionRoom(roomIndex) ? 5 : Math.floor(roomHeights[roomIndex] / 2) - 1; }
+function scaleMissionX(value) { return value * (MISSION_ROOM_WIDTH - 1) / (BASE_MISSION_ROOM_WIDTH - 1); }
+function scaleMissionY(value) { return value * (MISSION_ROOM_HEIGHT - 1) / (BASE_MISSION_ROOM_HEIGHT - 1); }
+function roomDoorY(roomIndex) {
+  if (isMissionRoom(roomIndex)) return Math.round(scaleMissionY(9));
+  return Math.floor(roomHeights[roomIndex] / 2) - 1;
+}
+function roomHallRows(roomIndex) {
+  const doorY = roomDoorY(roomIndex);
+  return Array.from({ length: 3 }, (_, index) => doorY - 1 + index)
+    .filter((row) => row > 0 && row < roomHeights[roomIndex] - 1);
+}
 const ROOM_DOOR_Y = roomDoorY(0);
 const roomOffsets = rooms.map((_, index) => rooms.slice(0, index).reduce((offset, __, roomIndex) => offset + roomWidths[roomIndex] + gapAfterRoom(roomIndex), 0));
 const WORLD_WIDTH = roomOffsets[roomOffsets.length - 1] + roomWidths[roomWidths.length - 1];
 const WORLD_HEIGHT = Math.max(...roomHeights);
 const worldMap = Array.from({ length: WORLD_HEIGHT }, () => Array(WORLD_WIDTH).fill('1'));
 const FINAL_ROOM_OFFSET = roomOffsets[FINAL_ROOM_INDEX];
-const BOSS_EXIT_POINT = { x: FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH - 2.4, y: 9 };
+const BOSS_EXIT_POINT = { x: FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH - 2.4, y: FINAL_ROOM_HEIGHT / 2 };
 const SANCTUARY_ROOM_OFFSET = roomOffsets[SANCTUARY_ROOM_INDEX];
 const SANCTUARY_RESUME_PEDESTAL = {
   id: 'sanctuary-resume-pedestal',
   roomIndex: SANCTUARY_ROOM_INDEX,
-  x: SANCTUARY_ROOM_OFFSET + 15,
-  y: 9,
+  x: SANCTUARY_ROOM_OFFSET + FINAL_ROOM_WIDTH / 2,
+  y: FINAL_ROOM_HEIGHT / 2,
   z: .04,
   title: 'LIAM HOSFELD / RÉSUMÉ',
 };
 
-// Physical-looking elevation is kept in the route itself rather than in a
-// second camera axis. These low stone galleries and stepped approaches make
-// the combat rooms feel layered while preserving the direct Doom controls.
-const ELEVATED_SET_PIECES = Object.freeze([
-  { roomIndex: STARTING_ROOM_INDEX, kind: 'stairs', x1: 7.2, x2: 10.4, y1: 11.2, y2: 14.3, height: .58 },
-  { roomIndex: STARTING_ROOM_INDEX, kind: 'platform', x1: 10.4, x2: 15.5, y1: 11.2, y2: 15.4, height: .58 },
-  { roomIndex: STARTING_ROOM_INDEX, kind: 'platform', x1: 21.2, x2: 26.8, y1: 2.2, y2: 5.2, height: .42 },
-  { roomIndex: STARTING_ROOM_INDEX + 1, kind: 'stairs', x1: 9.0, x2: 12.2, y1: 10.2, y2: 13.4, height: .46 },
-  { roomIndex: STARTING_ROOM_INDEX + 1, kind: 'platform', x1: 12.2, x2: 18.6, y1: 10.2, y2: 14.5, height: .46 },
-  { roomIndex: STARTING_ROOM_INDEX + 2, kind: 'stairs', x1: 18.6, x2: 21.8, y1: 4.4, y2: 7.4, height: .52 },
-  { roomIndex: STARTING_ROOM_INDEX + 2, kind: 'platform', x1: 21.8, x2: 27.6, y1: 3.0, y2: 7.4, height: .52 },
-].map((piece) => Object.freeze({
-  ...piece,
-  x1: roomOffsets[piece.roomIndex] + piece.x1,
-  x2: roomOffsets[piece.roomIndex] + piece.x2,
+// Elevation is authored as part of each room. The same blueprint carves the
+// stair corridors, drives collision/pathfinding, and feeds the raycast surface
+// renderer. Mission coordinates use the original 33x18 design grid so the
+// routes remain readable if the rooms are resized again.
+const ELEVATION_BLUEPRINTS = Object.freeze({
+  threshold: Object.freeze([
+    Object.freeze({ id: 'threshold-north-bridge', role: 'route', actual: true, height: 1.4, platform: [12, 4, 14, 7], stairs: Object.freeze([
+      Object.freeze({ bounds: [10, 4, 12, 7], axis: 'x', highAt: 'max', steps: 7 }),
+      Object.freeze({ bounds: [14, 4, 16, 7], axis: 'x', highAt: 'min', steps: 7 }),
+    ]) }),
+    Object.freeze({ id: 'threshold-south-bridge', role: 'route', actual: true, height: 1.4, platform: [27, 14, 29, 17], stairs: Object.freeze([
+      Object.freeze({ bounds: [25, 14, 27, 17], axis: 'x', highAt: 'max', steps: 7 }),
+      Object.freeze({ bounds: [29, 14, 31, 17], axis: 'x', highAt: 'min', steps: 7 }),
+    ]) }),
+    Object.freeze({ id: 'threshold-west-perch', role: 'enemy-perch', actual: true, height: 1, platform: [3, 14, 7, 18], stairs: Object.freeze([]) }),
+    Object.freeze({ id: 'threshold-east-perch', role: 'enemy-perch', actual: true, height: 1, platform: [34, 3, 38, 7], stairs: Object.freeze([]) }),
+  ]),
+  quests: Object.freeze([
+    Object.freeze({ id: 'quests-south-bridge', role: 'route', actual: true, height: 1.4, platform: [12, 14, 14, 17], stairs: Object.freeze([
+      Object.freeze({ bounds: [10, 14, 12, 17], axis: 'x', highAt: 'max', steps: 7 }),
+      Object.freeze({ bounds: [14, 14, 16, 17], axis: 'x', highAt: 'min', steps: 7 }),
+    ]) }),
+    Object.freeze({ id: 'quests-north-bridge', role: 'route', actual: true, height: 1.4, platform: [27, 4, 29, 7], stairs: Object.freeze([
+      Object.freeze({ bounds: [25, 4, 27, 7], axis: 'x', highAt: 'max', steps: 7 }),
+      Object.freeze({ bounds: [29, 4, 31, 7], axis: 'x', highAt: 'min', steps: 7 }),
+    ]) }),
+    Object.freeze({ id: 'quests-west-perch', role: 'enemy-perch', actual: true, height: 1, platform: [3, 3, 7, 7], stairs: Object.freeze([]) }),
+    Object.freeze({ id: 'quests-east-perch', role: 'enemy-perch', actual: true, height: 1, platform: [34, 14, 38, 18], stairs: Object.freeze([]) }),
+  ]),
+  character: Object.freeze([
+    Object.freeze({ id: 'character-west-bridge', role: 'route', actual: true, height: 1.4, platform: [12, 9, 14, 12], stairs: Object.freeze([
+      Object.freeze({ bounds: [10, 9, 12, 12], axis: 'x', highAt: 'max', steps: 7 }),
+      Object.freeze({ bounds: [14, 9, 16, 12], axis: 'x', highAt: 'min', steps: 7 }),
+    ]) }),
+    Object.freeze({ id: 'character-east-bridge', role: 'route', actual: true, height: 1.4, platform: [27, 9, 29, 12], stairs: Object.freeze([
+      Object.freeze({ bounds: [25, 9, 27, 12], axis: 'x', highAt: 'max', steps: 7 }),
+      Object.freeze({ bounds: [29, 9, 31, 12], axis: 'x', highAt: 'min', steps: 7 }),
+    ]) }),
+    Object.freeze({ id: 'character-west-perch', role: 'enemy-perch', actual: true, height: 1, platform: [3, 14, 7, 18], stairs: Object.freeze([]) }),
+    Object.freeze({ id: 'character-center-perch', role: 'enemy-perch', actual: true, height: 1, platform: [17, 3, 20, 6], stairs: Object.freeze([]) }),
+    Object.freeze({ id: 'character-east-perch', role: 'enemy-perch', actual: true, height: 1, platform: [34, 14, 38, 18], stairs: Object.freeze([]) }),
+  ]),
+});
+
+function elevationLocalBounds(roomIndex, bounds, actual = false) {
+  if (actual || !isMissionRoom(roomIndex)) return bounds.slice();
+  return [
+    Math.round(scaleMissionX(bounds[0])), Math.round(scaleMissionY(bounds[1])),
+    Math.round(scaleMissionX(bounds[2])), Math.round(scaleMissionY(bounds[3])),
+  ];
+}
+function elevationStairLandings(bounds, axis, highAt) {
+  const [x1, y1, x2, y2] = bounds;
+  const lowAtMin = highAt === 'max';
+  if (axis === 'x') return {
+    low: lowAtMin ? [x1 - 3, y1 - 1, x1, y2 + 1] : [x2, y1 - 1, x2 + 3, y2 + 1],
+    high: lowAtMin ? [x2 - 1, y1, x2 + 1, y2] : [x1 - 1, y1, x1 + 1, y2],
+  };
+  return {
+    low: lowAtMin ? [x1 - 1, y1 - 3, x2 + 1, y1] : [x1 - 1, y2, x2 + 1, y2 + 3],
+    high: lowAtMin ? [x1, y2 - 1, x2, y2 + 1] : [x1, y1 - 1, x2, y1 + 1],
+  };
+}
+const ELEVATION_ROUTES = Object.freeze(rooms.flatMap((room, roomIndex) => (ELEVATION_BLUEPRINTS[room.id] || []).map((blueprint) => {
+  const platform = elevationLocalBounds(roomIndex, blueprint.platform, blueprint.actual);
+  const stairs = blueprint.stairs.map((stair) => {
+    const bounds = elevationLocalBounds(roomIndex, stair.bounds, blueprint.actual);
+    const landings = elevationStairLandings(bounds, stair.axis, stair.highAt);
+    return Object.freeze({
+      ...stair,
+      bounds: Object.freeze(bounds),
+      steps: stair.steps || 3,
+      baseHeight: stair.baseHeight || 0,
+      lowLanding: Object.freeze(landings.low),
+      highLanding: Object.freeze(landings.high),
+    });
+  });
+  return Object.freeze({
+    ...blueprint,
+    roomIndex,
+    platform: Object.freeze(platform),
+    stairs: Object.freeze(stairs),
+    piers: Object.freeze((blueprint.piers || []).map((bounds) => Object.freeze(elevationLocalBounds(roomIndex, bounds, blueprint.actual)))),
+  });
 })));
+
+const ELEVATED_SET_PIECES = Object.freeze(ELEVATION_ROUTES.flatMap((route) => {
+  const offset = roomOffsets[route.roomIndex];
+  const pieces = [{
+    routeId: route.id,
+    roomIndex: route.roomIndex,
+    kind: 'platform',
+    x1: offset + route.platform[0], x2: offset + route.platform[2],
+    y1: route.platform[1], y2: route.platform[3],
+    height: route.height,
+  }];
+  for (const stair of route.stairs) pieces.push({
+    routeId: route.id,
+    roomIndex: route.roomIndex,
+    kind: 'stairs',
+    x1: offset + stair.bounds[0], x2: offset + stair.bounds[2],
+    y1: stair.bounds[1], y2: stair.bounds[3],
+    height: route.height,
+    baseHeight: stair.baseHeight || 0,
+    axis: stair.axis,
+    reverse: stair.highAt === 'min',
+    steps: stair.steps,
+  });
+  return pieces.map((piece) => Object.freeze(piece));
+}));
+
+function elevationPieceContains(piece, x, y) {
+  return x >= piece.x1 && x < piece.x2 && y >= piece.y1 && y < piece.y2;
+}
+function elevationPieceHeightAt(piece, x, y) {
+  if (!elevationPieceContains(piece, x, y)) return 0;
+  if (piece.kind === 'platform') return piece.height;
+  const span = piece.axis === 'y' ? piece.y2 - piece.y1 : piece.x2 - piece.x1;
+  const value = piece.axis === 'y' ? y - piece.y1 : x - piece.x1;
+  let progress = clamp(value / Math.max(.01, span), 0, 1);
+  if (piece.reverse) progress = 1 - progress;
+  const stepCount = Math.max(1, piece.steps || 3);
+  const stepIndex = progress <= 0 ? 0 : Math.min(stepCount, Math.ceil(progress * stepCount));
+  const baseHeight = piece.baseHeight || 0;
+  return baseHeight + (piece.height - baseHeight) * stepIndex / stepCount;
+}
+function worldFloorHeightAt(x, y) {
+  let height = 0;
+  for (const piece of ELEVATED_SET_PIECES) height = Math.max(height, elevationPieceHeightAt(piece, x, y));
+  return height;
+}
+function stairSideTransitionBlocked(fromX, fromY, toX, toY) {
+  for (const piece of ELEVATED_SET_PIECES) {
+    if (piece.kind !== 'stairs') continue;
+    if (piece.axis === 'x') {
+      const axial = (fromX + toX) * .5;
+      if (axial <= piece.x1 + .03 || axial >= piece.x2 - .03) continue;
+      const crossesSide = (fromY < piece.y1 && toY >= piece.y1)
+        || (toY < piece.y1 && fromY >= piece.y1)
+        || (fromY < piece.y2 && toY >= piece.y2)
+        || (toY < piece.y2 && fromY >= piece.y2);
+      if (crossesSide) return true;
+    } else {
+      const axial = (fromY + toY) * .5;
+      if (axial <= piece.y1 + .03 || axial >= piece.y2 - .03) continue;
+      const crossesSide = (fromX < piece.x1 && toX >= piece.x1)
+        || (toX < piece.x1 && fromX >= piece.x1)
+        || (fromX < piece.x2 && toX >= piece.x2)
+        || (toX < piece.x2 && fromX >= piece.x2);
+      if (crossesSide) return true;
+    }
+  }
+  return false;
+}
+function elevationRiseSurfaceInfo(fromX, fromY, toX, toY) {
+  const worldRise = worldFloorHeightAt(toX, toY) - worldFloorHeightAt(fromX, fromY);
+  if (worldRise <= .004) return { piece: null, rise: 0, normalAxis: Math.abs(toX - fromX) >= Math.abs(toY - fromY) ? 'x' : 'y', shade: .86 };
+  let best = null;
+  for (const piece of ELEVATED_SET_PIECES) {
+    const fromHeight = elevationPieceHeightAt(piece, fromX, fromY);
+    const toHeight = elevationPieceHeightAt(piece, toX, toY);
+    if (Math.abs(toHeight - worldFloorHeightAt(toX, toY)) > .004) continue;
+    const rise = Math.min(worldRise, toHeight - fromHeight);
+    if (rise <= .004 || (best && rise <= best.rise + .001)) continue;
+    const fromInside = elevationPieceContains(piece, fromX, fromY);
+    const toInside = elevationPieceContains(piece, toX, toY);
+    let normalAxis = piece.kind === 'stairs' ? piece.axis : null;
+    if (!fromInside && toInside) {
+      const crossedX = (fromX < piece.x1 && toX >= piece.x1) || (fromX >= piece.x2 && toX < piece.x2);
+      const crossedY = (fromY < piece.y1 && toY >= piece.y1) || (fromY >= piece.y2 && toY < piece.y2);
+      if (crossedX !== crossedY) normalAxis = crossedX ? 'x' : 'y';
+    }
+    if (!normalAxis) normalAxis = Math.abs(toX - fromX) >= Math.abs(toY - fromY) ? 'x' : 'y';
+    const side = piece.kind === 'stairs' && normalAxis !== piece.axis;
+    const directionalShade = normalAxis === 'x' ? .88 : 1;
+    best = {
+      piece,
+      rise,
+      normalAxis,
+      // Doom-style directional contrast makes each corner legible, while the
+      // stair stringer remains darker than its front risers and landing fascia.
+      shade: directionalShade * (side ? .82 : piece.kind === 'platform' ? .9 : 1),
+    };
+  }
+  return best || { piece: null, rise: 0, normalAxis: Math.abs(toX - fromX) >= Math.abs(toY - fromY) ? 'x' : 'y', shade: .86 };
+}
+function elevationTransitionAllowed(fromX, fromY, toX, toY) {
+  if (stairSideTransitionBlocked(fromX, fromY, toX, toY)) return false;
+  const fromHeight = worldFloorHeightAt(fromX, fromY);
+  const toHeight = worldFloorHeightAt(toX, toY);
+  // Stairs remain the only way up. Raised galleries can be dropped from as
+  // genuine one-way ledges instead of becoming invisible collision barriers.
+  return toHeight - fromHeight <= .23 && fromHeight - toHeight <= 1.55;
+}
 
 function roomInset(roomIndex) {
   return isMissionRoom(roomIndex)
@@ -408,15 +810,16 @@ function roomInset(roomIndex) {
     : { x: ROOM_INSET_X, y: ROOM_INSET_Y };
 }
 function roomContentPoint(roomIndex, x, y) {
-  if (rooms[roomIndex]?.id === 'threshold' || roomIndex === BOSS_ROOM_INDEX || roomIndex === SANCTUARY_ROOM_INDEX) return { x, y };
+  if (roomIndex === BOSS_ROOM_INDEX || roomIndex === SANCTUARY_ROOM_INDEX) return { x, y };
   if (isMissionRoom(roomIndex)) {
     // Re-home authored content into the new architecture: low X is the west
     // gallery, high X is the east gallery, and the middle remains a shared
     // combat room. This keeps the portfolio evidence distributed across the
     // world instead of leaving every prop in the old room footprint.
-    const mappedX = x <= 4.5 ? x + 2 : x >= 11.5 ? x + 13 : x + 8;
-    const mappedY = y <= 4.5 ? y + 1.5 : y + 8;
-    return { x: mappedX, y: mappedY };
+    const thresholdAuthored = rooms[roomIndex]?.id === 'threshold';
+    const mappedX = thresholdAuthored ? x : x <= 4.5 ? x + 2 : x >= 11.5 ? x + 13 : x + 8;
+    const mappedY = thresholdAuthored ? y : y <= 4.5 ? y + 1.5 : y + 8;
+    return { x: scaleMissionX(mappedX), y: scaleMissionY(mappedY) };
   }
   const inset = roomInset(roomIndex);
   return { x: x + inset.x, y: y + inset.y };
@@ -428,8 +831,8 @@ const MISSION_ROOM_LAYOUTS = {
   // and exits at the east door, so the world remains one connected journey.
   threshold: {
     chambers: [[2, 2, 8, 7], [2, 10, 9, 16], [12, 2, 20, 7], [12, 10, 20, 16], [23, 2, 30, 7], [23, 10, 30, 16]],
-    route: [[1, 9, 8, 9], [8, 9, 8, 5], [8, 5, 17, 5], [17, 5, 17, 13], [17, 13, 26, 13], [26, 13, 26, 5], [26, 5, 31, 5]],
-    branches: [[8, 5, 11, 5], [17, 13, 21, 13], [26, 5, 30, 5]],
+    route: [[1, 9, 4, 9], [4, 9, 4, 13], [4, 13, 15, 13], [15, 13, 15, 10], [15, 10, 18, 8], [18, 8, 23, 8], [23, 8, 29, 9], [29, 9, 32, 9]],
+    branches: [[8, 13, 8, 5], [8, 5, 14, 5], [26, 9, 26, 5], [26, 5, 30, 5]],
     landmarks: [[10, 3, 1, 4], [21, 10, 1, 4]],
     waypoints: [[4, 8, 1, 2], [12, 4, 1, 2], [20, 12, 1, 2], [28, 4, 1, 2]],
   },
@@ -442,8 +845,8 @@ const MISSION_ROOM_LAYOUTS = {
   },
   quests: {
     chambers: [[2, 2, 8, 7], [2, 10, 8, 16], [11, 2, 19, 7], [11, 10, 20, 16], [22, 2, 29, 7], [22, 10, 30, 16]],
-    route: [[1, 5, 6, 5], [6, 5, 6, 14], [6, 14, 16, 14], [16, 14, 16, 7], [16, 7, 26, 7], [26, 7, 26, 13], [26, 13, 31, 13], [31, 13, 31, 5], [31, 5, 31, 5]],
-    branches: [[6, 5, 3, 5], [16, 7, 20, 7], [26, 13, 30, 13]],
+    route: [[1, 5, 5, 5], [5, 5, 5, 13], [5, 13, 17, 13], [17, 13, 17, 7], [17, 7, 27, 5], [27, 5, 27, 10], [27, 10, 30, 12], [30, 12, 30, 17], [30, 17, 31, 17], [31, 17, 31, 5]],
+    branches: [[5, 13, 3, 14], [12, 13, 12, 5], [17, 5, 21, 5], [27, 10, 31, 10]],
     landmarks: [[9, 3, 2, 1], [20, 14, 2, 1], [29, 8, 2, 1]],
     waypoints: [[4, 9, 1, 2], [8, 9, 1, 2], [14, 10, 1, 2], [18, 10, 1, 2], [24, 10, 1, 2], [28, 10, 1, 2]],
   },
@@ -456,8 +859,8 @@ const MISSION_ROOM_LAYOUTS = {
   },
   character: {
     chambers: [[2, 2, 8, 7], [2, 10, 9, 16], [11, 2, 19, 7], [11, 10, 20, 16], [22, 2, 29, 7], [22, 10, 30, 16]],
-    route: [[1, 5, 7, 5], [7, 5, 7, 13], [7, 13, 19, 13], [19, 13, 19, 5], [19, 5, 28, 5], [28, 5, 28, 14], [28, 14, 31, 14], [31, 14, 31, 5]],
-    branches: [[7, 13, 4, 13], [19, 5, 23, 5], [28, 14, 25, 14]],
+    route: [[1, 5, 4, 5], [4, 5, 4, 9], [4, 9, 7, 9], [7, 9, 12, 9], [12, 9, 12, 7], [12, 7, 15, 7], [15, 7, 15, 11], [15, 11, 23, 13], [23, 13, 29, 13], [29, 13, 32, 13], [32, 13, 32, 5]],
+    branches: [[4, 5, 10, 5], [10, 5, 13, 5], [15, 9, 20, 9], [23, 13, 27, 15]],
     landmarks: [[9, 3, 2, 1], [20, 14, 2, 1], [24, 8, 1, 3]],
     waypoints: [[5, 9, 1, 2], [9, 9, 1, 2], [17, 8, 1, 2], [21, 8, 1, 2], [26, 10, 1, 2], [30, 10, 1, 2]],
   },
@@ -470,10 +873,96 @@ const MISSION_ROOM_LAYOUTS = {
   },
 };
 
+function applyElevationArchitecture(map, roomIndex) {
+  const width = map[0].length;
+  const height = map.length;
+  const routes = ELEVATION_ROUTES.filter((route) => route.roomIndex === roomIndex);
+  if (!routes.length) return;
+  const cellBounds = (bounds) => ({
+    left: clamp(Math.floor(Math.min(bounds[0], bounds[2])), 1, width - 2),
+    right: clamp(Math.ceil(Math.max(bounds[0], bounds[2])) - 1, 1, width - 2),
+    top: clamp(Math.floor(Math.min(bounds[1], bounds[3])), 1, height - 2),
+    bottom: clamp(Math.ceil(Math.max(bounds[1], bounds[3])) - 1, 1, height - 2),
+  });
+  const carve = (left, top, right, bottom) => {
+    const x1 = clamp(Math.min(left, right), 1, width - 2);
+    const x2 = clamp(Math.max(left, right), 1, width - 2);
+    const y1 = clamp(Math.min(top, bottom), 1, height - 2);
+    const y2 = clamp(Math.max(top, bottom), 1, height - 2);
+    for (let y = y1; y <= y2; y += 1) for (let x = x1; x <= x2; x += 1) map[y][x] = '0';
+  };
+  const wall = (x, y) => {
+    if (x > 0 && x < width - 1 && y > 0 && y < height - 1) map[y][x] = '1';
+  };
+  const reservedCells = new Set();
+  const reserve = (bounds) => {
+    const area = cellBounds(bounds);
+    for (let y = area.top; y <= area.bottom; y += 1) for (let x = area.left; x <= area.right; x += 1) reservedCells.add(`${x},${y}`);
+  };
+  for (const route of routes) {
+    reserve(route.platform);
+    for (const stair of route.stairs) {
+      reserve(stair.bounds);
+      reserve(stair.lowLanding);
+      reserve(stair.highLanding);
+      const corridor = cellBounds(stair.bounds);
+      if (stair.axis === 'x') reserve([corridor.left, corridor.top - 1, corridor.right + 1, corridor.bottom + 2]);
+      else reserve([corridor.left - 1, corridor.top, corridor.right + 2, corridor.bottom + 1]);
+    }
+  }
+
+  // Carve the upper galleries, broad staging landings, and a one-cell service
+  // channel beside each run. The channel exposes the textured stair fascia;
+  // movement still enters through the declared low mouth instead of the side.
+  for (const route of routes) {
+    const platform = cellBounds(route.platform);
+    carve(platform.left, platform.top, platform.right, platform.bottom);
+    for (const stair of route.stairs) {
+      const corridor = cellBounds(stair.bounds);
+      carve(corridor.left, corridor.top, corridor.right, corridor.bottom);
+      const lowLanding = cellBounds(stair.lowLanding);
+      const highLanding = cellBounds(stair.highLanding);
+      carve(lowLanding.left, lowLanding.top, lowLanding.right, lowLanding.bottom);
+      carve(highLanding.left, highLanding.top, highLanding.right, highLanding.bottom);
+      if (stair.axis === 'x') carve(corridor.left, corridor.top - 1, corridor.right, corridor.bottom + 1);
+      else carve(corridor.left - 1, corridor.top, corridor.right + 1, corridor.bottom);
+    }
+  }
+
+  // The structural corridor walls sit one tile beyond the exposed fascia. This
+  // prevents the old full-height wall from replacing the actual stair side.
+  for (const route of routes) {
+    for (const stair of route.stairs) {
+      const corridor = cellBounds(stair.bounds);
+      const lowLanding = cellBounds(stair.lowLanding);
+      const highLanding = cellBounds(stair.highLanding);
+      if (stair.axis === 'x') {
+        const left = Math.min(corridor.left, lowLanding.left, highLanding.left);
+        const right = Math.max(corridor.right, lowLanding.right, highLanding.right);
+        for (let x = left; x <= right; x += 1) {
+          for (const y of [corridor.top - 2, corridor.bottom + 2]) if (!reservedCells.has(`${x},${y}`)) wall(x, y);
+        }
+      } else {
+        const top = Math.min(corridor.top, lowLanding.top, highLanding.top);
+        const bottom = Math.max(corridor.bottom, lowLanding.bottom, highLanding.bottom);
+        for (let y = top; y <= bottom; y += 1) {
+          for (const x of [corridor.left - 2, corridor.right + 2]) if (!reservedCells.has(`${x},${y}`)) wall(x, y);
+        }
+      }
+    }
+    for (const pierBounds of route.piers || []) {
+      const pier = cellBounds(pierBounds);
+      for (let y = pier.top; y <= pier.bottom; y += 1) for (let x = pier.left; x <= pier.right; x += 1) wall(x, y);
+    }
+  }
+}
+
 function applyMissionRoomLayout(map, room, roomIndex) {
   const width = map[0].length;
   const height = map.length;
   const profile = MISSION_ROOM_LAYOUTS[room.id] || MISSION_ROOM_LAYOUTS.threshold;
+  const sx = (value) => Math.round(value * (width - 1) / (BASE_MISSION_ROOM_WIDTH - 1));
+  const sy = (value) => Math.round(value * (height - 1) / (BASE_MISSION_ROOM_HEIGHT - 1));
   const wall = (x, y) => {
     if (x > 0 && x < width - 1 && y > 0 && y < height - 1) map[y][x] = '1';
   };
@@ -498,6 +987,13 @@ function applyMissionRoomLayout(map, room, roomIndex) {
   const cover = (x, y, w = 1, h = 1) => {
     for (let yy = y; yy < y + h; yy += 1) for (let xx = x; xx < x + w; xx += 1) wall(xx, yy);
   };
+  const carveAuthored = (x1, y1, x2, y2) => carve(sx(x1), sy(y1), sx(x2), sy(y2));
+  const passageAuthored = (x1, y1, x2, y2, thickness = 2) => passage(sx(x1), sy(y1), sx(x2), sy(y2), thickness);
+  const coverAuthored = (x, y, w = 1, h = 1) => {
+    const x2 = Math.max(sx(x) + 1, sx(x + w));
+    const y2 = Math.max(sy(y) + 1, sy(y + h));
+    cover(sx(x), sy(y), x2 - sx(x), y2 - sy(y));
+  };
   const doorY = roomDoorY(roomIndex);
 
   if (miniBossRoom(roomIndex)) {
@@ -507,16 +1003,13 @@ function applyMissionRoomLayout(map, room, roomIndex) {
     const roomId = room.id;
     const coverSets = {
       trophy: [
-        [4, 3, 2, 2], [4, height - 5, 2, 2], [width - 6, 3, 2, 2], [width - 6, height - 5, 2, 2],
-        [11, 5, 2, 1], [width - 13, height - 6, 2, 1],
+        [7, 4, 2, 1], [Math.floor(width / 2), height - 6, 1, 2], [width - 9, 4, 2, 1],
       ],
       chronicle: [
-        [6, 3, 1, 3], [12, height - 6, 1, 3], [18, 3, 1, 3], [24, height - 6, 1, 3],
-        [9, 7, 2, 1], [width - 11, 9, 2, 1],
+        [9, 4, 1, 2], [Math.floor(width / 2) - 1, height - 6, 2, 1], [width - 10, 5, 1, 2],
       ],
       campfire: [
-        [4, 3, 3, 1], [7, 4, 1, 3], [width - 8, height - 4, 3, 1], [width - 8, height - 7, 1, 3],
-        [14, 5, 2, 1], [width - 16, height - 6, 2, 1],
+        [8, 4, 2, 1], [Math.floor(width / 2), height - 6, 1, 2], [width - 10, 4, 2, 1],
       ],
     }[roomId] || [];
     for (const [x, y, w, h] of coverSets) {
@@ -524,88 +1017,65 @@ function applyMissionRoomLayout(map, room, roomIndex) {
         if (xx > 0 && xx < width - 1 && yy > 0 && yy < height - 1) map[yy][xx] = '1';
       }
     }
-    // Keep the entry/exit corridor and a central boss lane open.
-    for (const y of [doorY, doorY + 1, Math.floor(height / 2), Math.floor(height / 2) + 1]) {
+    // Keep the compact three-wide entry/exit hall and a central boss lane open.
+    const bossHallRows = roomHallRows(roomIndex);
+    for (const y of new Set([...bossHallRows, Math.floor(height / 2) - 1, Math.floor(height / 2), Math.floor(height / 2) + 1])) {
       for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
       map[y][0] = '0'; map[y][width - 1] = '0';
     }
     for (const x of [Math.floor(width / 2) - 1, Math.floor(width / 2)]) {
       for (let y = 1; y < height - 1; y += 1) map[y][x] = '0';
     }
+    // Elevation retaining walls are authored last, so restore the two room
+    // mouths afterward. This keeps gallery structure from clipping a sector
+    // connector when a staircase sits close to the east or west wall.
+    carve(1, bossHallRows[0], 3, bossHallRows[bossHallRows.length - 1]);
+    carve(width - 5, bossHallRows[0], width - 2, bossHallRows[bossHallRows.length - 1]);
+    for (const y of bossHallRows) {
+      map[y][0] = '0';
+      map[y][width - 1] = '0';
+    }
     return;
   }
 
-  // Begin as solid rock, then cut six readable bays. The profile-specific route
-  // is the navigation landmark; the bays give enemies and evidence room to stage
-  // without turning the whole floor into a featureless rectangle.
-  for (let y = 1; y < height - 1; y += 1) for (let x = 1; x < width - 1; x += 1) map[y][x] = '1';
-  profile.chambers.forEach((bounds) => carve(...bounds));
-  const allRouteSegments = [...profile.route, ...profile.branches];
-  for (const [x1, y1, x2, y2] of allRouteSegments) passage(x1, y1, x2, y2, 1);
-
-  // Small shoulders and room-specific landmarks communicate where the player is
-  // in the route. They create sightline breaks, but never seal a combat bay.
-  cover(9, 3, 1, 2); cover(9, 6, 1, 2);
-  cover(9, 12, 1, 2); cover(9, 15, 1, 2);
-  cover(20, 3, 1, 2); cover(20, 6, 1, 2);
-  cover(21, 12, 1, 2); cover(21, 15, 1, 2);
-  cover(30, 3, 1, 2); cover(30, 6, 1, 2);
-  cover(30, 12, 1, 2); cover(30, 15, 1, 2);
-  profile.landmarks.forEach((landmark) => cover(...landmark));
-  // Paired waypoint posts create three readable encounter beats along each
-  // route. They sit outside the two-cell travel lane, acting as visual gates
-  // without turning the optional galleries into dead ends.
-  (profile.waypoints || []).forEach((waypoint) => cover(...waypoint));
-
-  // Door lips sit beside the route so each turn reads as a deliberate room
-  // entrance instead of another opening in a large hall.
-  cover(9, 3, 2, 1); cover(9, 14, 2, 1);
-  cover(19, 3, 2, 1); cover(19, 14, 2, 1);
-  cover(30, 3, 1, 2); cover(30, 14, 1, 2);
-
-  // Low cover alternates by depth, so a player cannot solve every encounter with
-  // the same strafe direction.
-  if (roomIndex % 2 === 0) {
-    cover(4, 3, 2, 1); cover(13, 3, 1, 2); cover(25, 4, 2, 1);
-    cover(4, 13, 2, 1); cover(13, 14, 1, 2); cover(25, 13, 2, 1);
-  } else {
-    cover(6, 5, 1, 2); cover(16, 5, 2, 1); cover(28, 3, 1, 2);
-    cover(6, 12, 1, 2); cover(15, 12, 2, 1); cover(27, 14, 2, 1);
+  // Non-boss sectors are a linear sequence of medium combat rooms. Permanent
+  // three-unit halls connect the rooms; no kill-wall ever appears inside them.
+  // Their different north/south offsets keep each route from feeling copied.
+  for (let y = 1; y < height - 1; y += 1) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
+  const linearSector = {
+    threshold: {
+      dividers: [{ left: 10, right: 16, openingTop: 4 }, { left: 25, right: 31, openingTop: 14 }],
+      cover: [[7, 6, 1, 2], [20, 15, 1, 2], [34, 10, 2, 1]],
+    },
+    quests: {
+      dividers: [{ left: 10, right: 16, openingTop: 14 }, { left: 25, right: 31, openingTop: 4 }],
+      cover: [[6, 10, 2, 1], [20, 15, 1, 2], [34, 8, 1, 2]],
+    },
+    character: {
+      dividers: [{ left: 10, right: 16, openingTop: 9 }, { left: 25, right: 31, openingTop: 9 }],
+      cover: [[7, 5, 1, 2], [20, 15, 2, 1], [34, 6, 1, 2]],
+    },
+  }[room.id] || { dividers: [], cover: [] };
+  for (const divider of linearSector.dividers) {
+    for (let x = divider.left; x < divider.right; x += 1) {
+      for (let y = 1; y < height - 1; y += 1) {
+        if (y < divider.openingTop || y >= divider.openingTop + 3) wall(x, y);
+      }
+    }
   }
-  if (roomIndex === 3 || roomIndex === 5) {
-    cover(3, 3, 2, 1); cover(17, 14, 2, 1); cover(24, 5, 1, 2);
-  }
-  // Combat pockets: offset barricades make each bay a push/peek decision rather
-  // than a straight hallway, while leaving the two-cell route open for dodging.
-  if (roomIndex % 3 === 0) {
-    cover(7, 3, 2, 1); cover(14, 12, 2, 1); cover(24, 3, 1, 2); cover(28, 12, 2, 1);
-  } else if (roomIndex % 3 === 1) {
-    cover(3, 12, 1, 2); cover(11, 3, 2, 1); cover(21, 12, 1, 2); cover(27, 4, 2, 1);
-  } else {
-    cover(7, 6, 1, 2); cover(15, 10, 2, 1); cover(24, 6, 1, 2); cover(28, 10, 2, 1);
-  }
+  for (const [x, y, w, h] of linearSector.cover) cover(x, y, w, h);
 
-  // Protect authored content locally without reopening the entire chamber. The
-  // final reassertion below guarantees the main route remains traversable after
-  // an item footprint or set-dressing piece has been carved.
-  const protectedPoints = [room.spawn, ...room.items, ...room.enemies];
-  for (const point of protectedPoints) {
-    const contentPoint = roomContentPoint(roomIndex, point.x, point.y);
-    carve(Math.floor(contentPoint.x - 1), Math.floor(contentPoint.y - 1), Math.ceil(contentPoint.x + 1), Math.ceil(contentPoint.y + 1));
+  applyElevationArchitecture(map, roomIndex);
+  // Reassert every connector after the stair architecture so a retaining wall
+  // can never clip the intended hallway or make the linear route impassable.
+  for (const divider of linearSector.dividers) carve(divider.left, divider.openingTop, divider.right - 1, divider.openingTop + 2);
+  const hallRows = roomHallRows(roomIndex);
+  carve(1, hallRows[0], 3, hallRows[hallRows.length - 1]);
+  carve(width - 5, hallRows[0], width - 2, hallRows[hallRows.length - 1]);
+  for (const y of hallRows) {
+    map[y][0] = '0';
+    map[y][width - 1] = '0';
   }
-  carve(1, doorY - 1, 3, doorY + 2);
-
-  // Reassert the profile route at two cells wide. This is both a design choice
-  // (comfortable dodging around bends) and a safety net against overlap with
-  // authored props/enemies. Branches remain one cell wide to form optional nooks.
-  for (const [x1, y1, x2, y2] of profile.route) passage(x1, y1, x2, y2, 2);
-  for (const [x1, y1, x2, y2] of profile.branches) passage(x1, y1, x2, y2, 1);
-
-  // The room boundary is a wall everywhere else, but both connector rows must
-  // meet the inter-room corridor at x = width - 1.
-  carve(1, doorY - 1, 3, doorY + 2);
-  carve(width - 5, doorY - 1, width - 2, doorY + 2);
-  for (const y of [doorY, doorY + 1]) map[y][width - 1] = '0';
 }
 function applyDungeonRoomWalls(map, room, roomIndex) {
   if (isMissionRoom(roomIndex)) {
@@ -620,7 +1090,7 @@ function applyDungeonRoomWalls(map, room, roomIndex) {
   const wall = (x, y) => { if (x > 0 && x < width - 1 && y > 0 && y < height - 1) map[y][x] = '1'; };
   const clear = (x, y) => { if (x > 0 && x < width - 1 && y > 0 && y < height - 1) map[y][x] = '0'; };
   const doorY = roomDoorY(roomIndex);
-  for (const y of [doorY, doorY + 1]) for (let x = 1; x < width - 1; x += 1) clear(x, y);
+  for (const y of roomHallRows(roomIndex)) for (let x = 1; x < width - 1; x += 1) clear(x, y);
   // A compact threshold arrangement: one offset shoulder and one side pocket.
   for (let y = 2; y < Math.min(5, height - 2); y += 1) wall(6, y);
   for (let y = Math.max(7, height - 4); y < height - 2; y += 1) wall(width - 7, y);
@@ -640,7 +1110,7 @@ function expandedRoomMap(room, roomIndex) {
     for (let y = 0; y < room.map.length; y += 1) {
       for (let x = 0; x < room.map[y].length; x += 1) map[y + ROOM_INSET_Y][x + ROOM_INSET_X] = room.map[y][x];
     }
-    for (const y of [doorY, doorY + 1]) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
+    for (const y of roomHallRows(roomIndex)) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
     applyDungeonRoomWalls(map, room, roomIndex);
     if (roomIndex === 0) {
       for (let y = 1; y < height - 1; y += 1) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
@@ -650,29 +1120,30 @@ function expandedRoomMap(room, roomIndex) {
 
   if (roomIndex === SANCTUARY_ROOM_INDEX) {
     const centerY = Math.floor(height / 2);
-    for (const y of [doorY, doorY + 1, centerY - 1, centerY]) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
+    for (const y of new Set([...roomHallRows(roomIndex), centerY - 1, centerY, centerY + 1])) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
     for (const x of [5, width - 6]) for (let y = 3; y < height - 3; y += 1) {
       if (![doorY - 1, doorY, doorY + 1, doorY + 2, centerY - 1, centerY].includes(y)) map[y][x] = '1';
     }
     return map.map((row) => row.join(''));
   }
 
-  // Boss arena: broad enough for its patterns, but still divided into side
-  // galleries so the player can use space rather than only backpedal.
+  // The Archon fights in a broad, flat arena. A few isolated pillars break
+  // sightlines without turning the boss fight into corridor navigation.
   const centerY = Math.floor(height / 2);
-  for (let y = 3; y < height - 3; y += 1) {
-    if (![doorY, doorY + 1, centerY - 1, centerY].includes(y)) { map[y][8] = '1'; map[y][width - 9] = '1'; }
+  const arenaPillars = [[8, 5, 1, 2], [13, height - 7, 2, 1], [width - 15, 5, 2, 1], [width - 9, height - 7, 1, 2]];
+  for (const [x, y, w, h] of arenaPillars) {
+    for (let yy = y; yy < y + h; yy += 1) for (let xx = x; xx < x + w; xx += 1) map[yy][xx] = '1';
   }
-  for (let x = 3; x < width - 3; x += 1) if (x < 8 || x > width - 9) { map[4][x] = '1'; map[height - 5][x] = '1'; }
-  for (const y of [doorY, doorY + 1, centerY - 1, centerY]) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
-  for (const x of [8, width - 9]) for (const y of [doorY - 1, doorY, doorY + 1, doorY + 2, centerY - 1, centerY]) map[y][x] = '0';
+  for (const y of new Set([...roomHallRows(roomIndex), centerY - 1, centerY, centerY + 1])) for (let x = 1; x < width - 1; x += 1) map[y][x] = '0';
   // The post-boss exit is on the east wall. Keep a broad, guaranteed route
   // from the center lane to the portal instead of relying on decorative gaps.
-  const exitX = width - 3;
   for (let y = centerY - 1; y <= centerY + 1; y += 1) {
     for (let x = width - 10; x <= width - 2; x += 1) map[y][x] = '0';
   }
-  for (let y = centerY - 1; y <= centerY + 1; y += 1) map[y][width - 1] = '0';
+  // The outer aperture and the dynamic shield share precisely the same
+  // three rows. Leaving the upper arena row open here used to create a thin
+  // route around the final-boss shield.
+  for (const y of roomHallRows(roomIndex)) map[y][width - 1] = '0';
   return map.map((row) => row.join(''));
 }
 
@@ -689,7 +1160,7 @@ for (let roomIndex = 0; roomIndex < rooms.length - 1; roomIndex += 1) {
   if (roomIndex === BOSS_ROOM_INDEX) continue;
   const corridorStart = roomOffsets[roomIndex] + roomWidths[roomIndex];
   const corridorGap = gapAfterRoom(roomIndex);
-  const corridorRows = [roomDoorY(roomIndex), roomDoorY(roomIndex) + 1];
+  const corridorRows = roomHallRows(roomIndex);
   for (const y of corridorRows) {
     worldMap[y][roomOffsets[roomIndex] + roomWidths[roomIndex] - 1] = '0';
     for (let x = corridorStart; x < corridorStart + corridorGap; x += 1) worldMap[y][x] = '0';
@@ -697,6 +1168,38 @@ for (let roomIndex = 0; roomIndex < rooms.length - 1; roomIndex += 1) {
   }
 }
 // Mission rooms connect directly through their east/west door rows.
+
+// Internal color-key walls have been retired. A sector's single access
+// terminal now owns its route authorization, so no side path can become an
+// opaque key hunt or leave the player behind an invisible requirement.
+const KEY_GATES = Object.freeze([]);
+function setKeyGateLocked(gate, locked) {
+  if (!gate || gate.roomIndex < 0) return;
+  for (const y of gate.rows) if (worldMap[y]?.[gate.wallX] !== undefined) worldMap[y][gate.wallX] = locked ? '1' : '0';
+}
+for (const gate of KEY_GATES) setKeyGateLocked(gate, true);
+function keyGateLocked(gate) { return Boolean(gate && !state.objectiveKeys.has(gate.keyId)); }
+function unlockKeyGatesForKey(keyId) {
+  let opened = 0;
+  for (const gate of KEY_GATES) {
+    if (gate.keyId !== keyId) continue;
+    setKeyGateLocked(gate, false);
+    opened += 1;
+  }
+  return opened;
+}
+function nearbyLockedKeyGate(x, y, roomIndex = state.room, maxDistance = 1.45) {
+  return KEY_GATES.find((gate) => gate.roomIndex === roomIndex && keyGateLocked(gate) && Math.hypot(x - (gate.wallX + .5), y - gate.centerY) <= maxDistance) || null;
+}
+function showKeyGateHint(gate) {
+  if (!gate) return false;
+  const now = performance.now();
+  if (now - state.blockedHintAt < 900) return false;
+  state.blockedHintAt = now;
+  showToast(`${gate.title} REQUIRED · FIND THE ${gate.color === '#6ce0c2' ? 'CYAN' : gate.color === '#e7ad67' ? 'AMBER' : 'ORANGE'} KEY SPRITE.`, 'danger');
+  announceNarrator(`key-gate-${gate.id}`, 'COLOR-MATCHED ACCESS WALL', `This wall needs the ${gate.title}. Match the glowing key sprite to the ${gate.title.toLowerCase()} plate mounted in the wall.`, 'expression-focused', 8, { duration: 4.8, priority: 7 });
+  return true;
+}
 
 const SANCTUARY_TREES = [
   { id: 'final-tree-northwest', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 2.8, y: 2.25, scale: .9, yaw: .18 },
@@ -710,7 +1213,11 @@ const SANCTUARY_TREES = [
   { id: 'final-tree-southwest', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 10.2, y: 15.7, scale: .9, yaw: .16 },
   { id: 'final-tree-west-lower', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 2.8, y: 10.6, scale: .84, yaw: -.18 },
   { id: 'final-tree-west', roomIndex: SANCTUARY_ROOM_INDEX, x: SANCTUARY_ROOM_OFFSET + 2.7, y: 6.4, scale: .78, yaw: .12 },
-];
+].map((tree) => ({
+  ...tree,
+  x: SANCTUARY_ROOM_OFFSET + (tree.x - SANCTUARY_ROOM_OFFSET) * FINAL_ROOM_WIDTH / 30,
+  y: tree.y * FINAL_ROOM_HEIGHT / 18,
+}));
 
 const GATE_TUTORIAL_ABILITY = {
   id: 'archive-key',
@@ -729,8 +1236,8 @@ const ABILITY_FORMS = [
   { id: 'gate-light', name: 'Gate Light', glyph: '△', color: '#e9e9e0', threshold: 500, cooldown: 10, description: 'A piercing beam that tears through every hostile target in its path.', effect: 'opens the next answer', kind: 'beam' },
 ];
 const XP_PER_SCROLL = 25;
-// Authored records are templates only. The live world starts empty and records
-// are created at an enemy's position only after that enemy is defeated.
+// Access terminals are fixed in-world route devices. They are spawned once at
+// startup and never wait for a combat-clear event.
 const worldItems = [];
 
 // Additional hostiles populate the combat bays instead of leaving the snake as
@@ -768,7 +1275,7 @@ const extraMissionEnemies = {
     { id: 'toolkit-soldier', name: 'Integration Gunner', kind: 'seer', attackStyle: 'ranged', x: 13.5, y: 4.7, hp: 82, speed: .25, damage: 10, color: '#9d694a' },
   ],
   campfire: [
-    { id: 'garden-beast', name: 'Garden Beast', kind: 'beast', attackStyle: 'ground', x: 4.8, y: 5.8, hp: 98, speed: .34, damage: 10, color: '#77915d' },
+    { id: 'garden-beast', name: 'Garden Beast', kind: 'beast', attackStyle: 'melee', x: 4.8, y: 5.8, hp: 98, speed: .34, damage: 10, color: '#77915d' },
     { id: 'noise-imp', name: 'Noise Imp', kind: 'imp', x: 12.5, y: 6.2, hp: 76, speed: .5, damage: 8, color: '#d16f63' },
     { id: 'ash-zombie', name: 'Ashen Revenant', kind: 'ghoul', x: 6.0, y: 2.3, hp: 88, speed: .4, damage: 9, color: '#9b4b3d' },
     { id: 'ash-soldier', name: 'Cinder Gunner', kind: 'seer', attackStyle: 'ranged', x: 13.6, y: 4.8, hp: 84, speed: .25, damage: 10, color: '#a96747' },
@@ -776,11 +1283,30 @@ const extraMissionEnemies = {
 };
 for (const room of rooms) if (extraMissionEnemies[room.id]) room.enemies.push(...extraMissionEnemies[room.id]);
 
+// Faster, denser rooms use only the three established sprite families. The
+// encounters gain variety from their mix and placement, not from a mismatched
+// second art set.
+const MISSION_REINFORCEMENTS = Object.freeze({
+  threshold: Object.freeze([
+    Object.freeze({ id: 'threshold-rifleman-two', name: 'Threshold Rifleman', kind: 'soldier', x: 28.8, y: 15.2, hp: 52, speed: .55, damage: 7, color: '#6e5937' }),
+    Object.freeze({ id: 'threshold-stinger-two', name: 'Threshold Stinger', kind: 'insectoid', x: 35.6, y: 9.8, hp: 46, speed: .68, damage: 6, color: '#4f6a3d' }),
+  ]),
+  quests: Object.freeze([
+    Object.freeze({ id: 'quest-stinger-two', name: 'Ledger Stinger', kind: 'insectoid', x: 23.6, y: 15.8, hp: 50, speed: .68, damage: 7, color: '#4f6a3d' }),
+    Object.freeze({ id: 'quest-runner-two', name: 'Route Runner', kind: 'zombie', x: 35.4, y: 11.4, hp: 56, speed: .82, damage: 8, color: '#65734d' }),
+  ]),
+  character: Object.freeze([
+    Object.freeze({ id: 'toolkit-rifleman-two', name: 'Toolkit Rifleman', kind: 'soldier', x: 22.4, y: 16.2, hp: 54, speed: .55, damage: 8, color: '#6e5937' }),
+    Object.freeze({ id: 'toolkit-stinger-two', name: 'Toolkit Stinger', kind: 'insectoid', x: 34.8, y: 11.6, hp: 48, speed: .68, damage: 7, color: '#4f6a3d' }),
+  ]),
+});
+for (const room of rooms) if (MISSION_REINFORCEMENTS[room.id]) room.enemies.push(...MISSION_REINFORCEMENTS[room.id].map((enemy) => ({ ...enemy })));
+
 // Use the new OG-Doom front-facing sprite rows for ordinary hostiles. Bosses
 // keep their authored boss presentation, while room enemies are assigned one of
 // three readable combat roles: zombie melee, soldier ranged, or insectoid ranged.
 function enemySpriteKindFromLegacy(kind, index = 0) {
-  if (['archon', 'boss'].includes(kind)) return kind;
+  if (['archon', 'boss', 'zombie', 'soldier', 'insectoid'].includes(kind)) return kind;
   if (['moth', 'leech', 'crawler', 'briar-mantis'].includes(kind)) return 'insectoid';
   if (['seer', 'wraith'].includes(kind)) return 'soldier';
   if (['imp', 'ghoul', 'hound', 'beast', 'quake', 'warden'].includes(kind)) return index % 3 === 1 ? 'soldier' : 'zombie';
@@ -802,16 +1328,31 @@ for (const room of rooms) for (const [index, enemy] of (room.enemies || []).entr
   enemy.speed = Math.max(enemy.speed || 0, enemy.kind === 'zombie' ? .88 : enemy.kind === 'insectoid' ? .68 : .52);
 }
 
+const MISSION_ENEMY_SPAWNS = Object.freeze({
+  threshold: Object.freeze([[5, 16], [36, 5], [18, 15], [34, 12]]),
+  quests: Object.freeze([[7, 11], [5, 5], [36, 16], [18, 16], [20, 7], [33, 7], [36, 5]]),
+  character: Object.freeze([[7, 10], [5, 16], [36, 16], [19, 15], [18.5, 4.5], [34, 8], [36, 5]]),
+});
 const worldEnemies = [];
 for (let roomIndex = 0; roomIndex < rooms.length; roomIndex += 1) {
   const room = rooms[roomIndex];
   const offset = roomOffsets[roomIndex];
   // Portfolio evidence is delivered through room design and narrator
   // transmissions, not collectible scrolls.
-  room.enemies.forEach((enemy, index) => worldEnemies.push({
+  room.enemies.forEach((enemy, index) => {
+    const supportLimit = room.id === 'campfire' ? 1 : 2;
+    if (miniBossRoom(roomIndex) && !enemy.miniBoss && index >= supportLimit) return;
+    const authoredPoint = roomContentPoint(roomIndex, enemy.x, enemy.y);
+    const missionSpawn = MISSION_ENEMY_SPAWNS[room.id]?.[index % (MISSION_ENEMY_SPAWNS[room.id]?.length || 1)];
+    const spawnPoint = enemy.miniBoss
+      ? { x: roomWidths[roomIndex] * .52, y: roomHeights[roomIndex] * .5 }
+      : missionSpawn
+        ? { x: missionSpawn[0], y: missionSpawn[1] }
+        : authoredPoint;
+    worldEnemies.push({
     ...enemy,
-    x: roomContentPoint(roomIndex, enemy.x, enemy.y).x + offset,
-    y: roomContentPoint(roomIndex, enemy.x, enemy.y).y,
+    x: spawnPoint.x + offset,
+    y: spawnPoint.y,
     roomIndex,
     name: enemy.name,
     displayName: enemy.name,
@@ -831,7 +1372,12 @@ for (let roomIndex = 0; roomIndex < rooms.length; roomIndex += 1) {
     deathTime: 0,
     dropTemplates: [],
     miniBoss: Boolean(enemy.miniBoss),
-  }));
+    attackRecovery: 0,
+    attackImpact: 0,
+    vulnerableTimer: 0,
+    bossComboStep: 0,
+  });
+  });
 }
 function isClearForSpawn(x, y, radius = .26) {
   if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(radius)) return false;
@@ -882,6 +1428,7 @@ function recoverPlayerFromWall(preferredRoomIndex = null) {
   if (!canStand(safePoint.x, safePoint.y)) return false;
   state.player.x = safePoint.x;
   state.player.y = safePoint.y;
+  state.player.floorZ = worldFloorHeightAt(safePoint.x, safePoint.y);
   return true;
 }
 
@@ -1015,8 +1562,319 @@ const scrollEnrichment = {
     'The work remains available through the résumé, contact link, and LinkedIn record.'
   ]
 };
-// No collectible records are assigned to enemies. Evidence is surfaced by
-// the room brief, narrator, and the final portfolio handoff.
+
+function recoveredFieldReportCount() {
+  return state.scrollSolvedRooms.size;
+}
+
+function roomObjective(roomIndex) {
+  return ROOM_OBJECTIVES[rooms[roomIndex]?.id] || { type: 'terminal', label: 'AUTHORIZE EXIT TERMINAL', hint: 'Reach the access terminal to release the route.' };
+}
+function terminalForRoom(roomIndex) {
+  const reportId = missionReportId(roomIndex);
+  return worldItems.find((item) => item.id === reportId) || null;
+}
+function terminalRequiredForRoom(roomIndex) {
+  return FIELD_REPORT_ROOM_INDEXES.includes(roomIndex);
+}
+function terminalAuthorizedForRoom(roomIndex) {
+  return state.scrollSolvedRooms.has(roomIndex);
+}
+function objectiveKeysForRoom(roomIndex) {
+  // Compatibility shim for old pickup/reset code. Current objectives do not
+  // place route keys; terminals own all mission authorization.
+  return roomObjective(roomIndex).keys || [];
+}
+function collectedObjectiveKeyCount(roomIndex) {
+  return objectiveKeysForRoom(roomIndex).reduce((count, key) => count + (state.objectiveKeys.has(key.id) ? 1 : 0), 0);
+}
+function livingEnemiesInRoom(roomIndex) {
+  return worldEnemies.filter((enemy) => enemy.roomIndex === roomIndex && !enemy.dead);
+}
+function objectiveBossForRoom(roomIndex) {
+  const objective = roomObjective(roomIndex);
+  return objective.targetId ? worldEnemies.find((enemy) => enemy.roomIndex === roomIndex && enemy.id === objective.targetId) || null : null;
+}
+function terminalPrerequisiteMet(roomIndex) {
+  if (roomIndex === FINAL_ROOM_INDEX) return Boolean(state.finalBoss?.dead);
+  const objective = roomObjective(roomIndex);
+  return objective.type !== 'boss-terminal' || Boolean(objectiveBossForRoom(roomIndex)?.dead);
+}
+function roomObjectiveComplete(roomIndex) {
+  if (terminalRequiredForRoom(roomIndex)) return terminalPrerequisiteMet(roomIndex) && terminalAuthorizedForRoom(roomIndex);
+  const objective = roomObjective(roomIndex);
+  if (objective.type === 'keys') return collectedObjectiveKeyCount(roomIndex) >= objectiveKeysForRoom(roomIndex).length && livingEnemiesInRoom(roomIndex).length === 0;
+  if (objective.type === 'boss') return Boolean(objectiveBossForRoom(roomIndex)?.dead);
+  return livingEnemiesInRoom(roomIndex).length === 0;
+}
+function roomObjectiveProgress(roomIndex) {
+  const objective = roomObjective(roomIndex);
+  if (state.securedRooms.has(roomIndex)) return { label: 'ROUTE OPEN', detail: 'The eastern seal is released. Continue when ready.', remaining: 0 };
+  if (terminalRequiredForRoom(roomIndex)) {
+    if (!terminalPrerequisiteMet(roomIndex)) {
+      const boss = roomIndex === FINAL_ROOM_INDEX ? state.finalBoss : objectiveBossForRoom(roomIndex);
+      const bossName = boss?.displayName || boss?.name || 'arena target';
+      return {
+        label: `DEFEAT ${bossName.toUpperCase()}`,
+        detail: `${bossName} is the only required target. Lesser enemies may be bypassed; its defeat brings the access terminal online.`,
+        remaining: 1,
+      };
+    }
+    if (!terminalAuthorizedForRoom(roomIndex)) {
+      const terminal = terminalForRoom(roomIndex);
+      return {
+        label: 'AUTHORIZE EXIT TERMINAL',
+        detail: terminal
+          ? 'Reach the computer terminal near the eastern shield door, read the case file, and complete its program to open the route.'
+          : 'The access terminal is booting beside the eastern shield door. Move toward the route marker.',
+        remaining: 1,
+      };
+    }
+    return { label: 'RELEASE ROUTE', detail: 'Terminal authorization is complete. The eastern shield door is unlocking.', remaining: 0 };
+  }
+  if (objective.type === 'keys') {
+    const total = objectiveKeysForRoom(roomIndex).length;
+    const collected = collectedObjectiveKeyCount(roomIndex);
+    const missing = objectiveKeysForRoom(roomIndex).filter((key) => !state.objectiveKeys.has(key.id));
+    const enemies = livingEnemiesInRoom(roomIndex).length;
+    return {
+      label: `${objective.label} · ${collected}/${total}`,
+      detail: missing.length
+        ? `Missing ${missing.map((key) => key.title).join(' and ')}. Look in the ${missing.map((key) => key.hint).join(' and ')}.${enemies ? ` ${enemies} chamber threat${enemies === 1 ? '' : 's'} remain.` : ''}`
+        : enemies ? `All keys recovered. Clear the remaining ${enemies} chamber threat${enemies === 1 ? '' : 's'}.` : 'All keys and threats cleared. The eastern seal is releasing.',
+      remaining: total - collected + enemies,
+    };
+  }
+  if (objective.type === 'boss' || objective.type === 'boss-terminal') {
+    const boss = objectiveBossForRoom(roomIndex);
+    return {
+      label: objective.label,
+      detail: boss && !boss.dead ? `${boss.displayName || boss.name} is the only required target; lesser enemies may be bypassed.` : 'Target down. The eastern seal is releasing.',
+      remaining: boss && !boss.dead ? 1 : 0,
+    };
+  }
+  const remaining = livingEnemiesInRoom(roomIndex).length;
+  return {
+    label: `${objective.label} · ${remaining} REMAIN`,
+    detail: remaining ? objective.hint : 'The sector is clear. The eastern seal is releasing.',
+    remaining,
+  };
+}
+
+function fieldReportForRoom(roomIndex) {
+  const reportId = missionReportId(roomIndex);
+  return worldItems.find((item) => item.id === reportId && !item.recovered) || null;
+}
+
+function ensureRoomPerformance(roomIndex) {
+  if (!state.roomPerformance.has(roomIndex)) {
+    state.roomPerformance.set(roomIndex, {
+      startedAt: performance.now(),
+      damageTaken: 0,
+      kills: 0,
+      bestChain: 0,
+    });
+  }
+  return state.roomPerformance.get(roomIndex);
+}
+
+function roomClearGrade(stats) {
+  const damage = stats?.damageTaken || 0;
+  if (damage <= 0) return 'S';
+  if (damage <= 18) return 'A';
+  if (damage <= 40) return 'B';
+  return 'C';
+}
+
+function roomReportTemplate(roomIndex) {
+  const room = rooms[roomIndex];
+  const templateId = FIELD_REPORT_TEMPLATE_IDS[room?.id];
+  const authored = room?.items?.find((item) => item.id === templateId) || room?.items?.[0] || null;
+  if (authored) return authored;
+  return {
+    id: `brief-${room?.id || roomIndex}`,
+    title: `ACCESS TERMINAL: ${room?.shortTitle?.toUpperCase() || 'FIRST CONTACT'}`,
+    kind: 'chronicle',
+    icon: '01',
+    tag: 'MISSION INTEL / OPERATING METHOD',
+    color: room?.color || '#6ce0c2',
+    summary: room?.intro || 'The first route is clear and the archive is ready to open.',
+    details: room?.details || [],
+  };
+}
+
+function findTerminalWallMount(roomIndex, anchor) {
+  const offset = roomOffsets[roomIndex];
+  const width = roomWidths[roomIndex];
+  const height = roomHeights[roomIndex];
+  const localX = clamp(Math.floor(anchor.x - offset), 1, width - 2);
+  const localY = clamp(Math.floor(anchor.y), 1, height - 2);
+  const tested = new Set();
+  // Search a small, player-reachable area beside the authored exit route. The
+  // first real wall found becomes the terminal's mounting surface, so it never
+  // reads as a floating loot card in the middle of the floor.
+  for (let radius = 0; radius <= 6; radius += 1) {
+    for (let dy = -radius; dy <= radius; dy += 1) {
+      for (let dx = -radius; dx <= radius; dx += 1) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+        const cellX = clamp(localX + dx, 1, width - 2);
+        const cellY = clamp(localY + dy, 1, height - 2);
+        const key = `${cellX},${cellY}`;
+        if (tested.has(key)) continue;
+        tested.add(key);
+        const approachX = offset + cellX + .5;
+        const approachY = cellY + .5;
+        if (isWall(approachX, approachY)) continue;
+        for (const [normalX, normalY] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          if (!isWall(approachX + normalX * .62, approachY + normalY * .62)) continue;
+          if (normalX !== 0) {
+            const planeX = normalX > 0 ? Math.floor(approachX) + 1 : Math.floor(approachX);
+            return {
+              approachX, approachY, axis: 'x', planeX,
+              centerY: approachY, width: .88, height: 1.42,
+              // Offset a hair toward the walkable side to avoid z fighting.
+              x: planeX - normalX * .012, y: approachY,
+            };
+          }
+          const planeY = normalY > 0 ? Math.floor(approachY) + 1 : Math.floor(approachY);
+          return {
+            approachX, approachY, axis: 'y', planeY,
+            centerX: approachX, width: .88, height: 1.42,
+            x: approachX, y: planeY - normalY * .012,
+          };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function spawnRoomFieldReport(roomIndex, options = {}) {
+  if (!FIELD_REPORT_ROOM_INDEXES.includes(roomIndex)) return null;
+  const reportId = missionReportId(roomIndex);
+  if (state.collectedRecordIds.has(reportId) && state.scrollSolvedRooms.has(roomIndex)) return null;
+  const existing = worldItems.find((item) => item.id === reportId);
+  if (existing) return existing;
+  const room = rooms[roomIndex];
+  const template = roomReportTemplate(roomIndex);
+  // Terminals are fixed route infrastructure, never a reward dropped by the
+  // final enemy. Every sector places one beside its east exit so the player
+  // can read the route naturally while moving through the room.
+  // Mount the terminal directly beside the exit hardware, just above the
+  // corridor mouth. It remains in the natural line of sight while the gate
+  // fills the actual doorway instead of becoming a scavenger-hunt pickup.
+  const exitSideY = clamp(roomDoorY(roomIndex) - 1.45, 1.5, roomHeights[roomIndex] - 2.5);
+  const point = findWalkableSpawnPoint(
+    roomOffsets[roomIndex] + roomWidths[roomIndex] - 2.15,
+    exitSideY,
+    roomIndex,
+  );
+  const wallMount = findTerminalWallMount(roomIndex, point);
+  const enrichedDetails = [
+    ...(template.details || []),
+    ...(scrollEnrichment[template.id] || []),
+  ];
+  const report = {
+    ...template,
+    id: reportId,
+    recordId: reportId,
+    sourceRecordId: template.id,
+    title: roomIndex === FINAL_ROOM_INDEX
+      ? 'LIGHTWELL ACCESS TERMINAL'
+      : `SECTOR ACCESS TERMINAL · ${room.shortTitle.toUpperCase()}`,
+    kind: 'terminal',
+    icon: 'TERM',
+    tag: roomIndex === FINAL_ROOM_INDEX
+      ? 'LIGHTWELL CORE / FINAL AUTHORIZATION'
+      : `ACCESS TERMINAL / ${room.shortTitle.toUpperCase()}`,
+    summary: template.summary || room.fieldNote || room.intro,
+    details: enrichedDetails.length ? enrichedDetails : (room.details || []),
+    tags: [room.level, room.shortTitle, 'ACCESS TERMINAL', `+${XP_PER_SCROLL} XP`],
+    // Interaction happens from the clear floor cell; the visual itself is
+    // bolted to the adjacent wall through wallMount.
+    x: wallMount?.approachX ?? point.x,
+    y: wallMount?.approachY ?? point.y,
+    wallMount,
+    roomIndex,
+    missionReport: true,
+    terminal: true,
+    finalTerminal: roomIndex === FINAL_ROOM_INDEX,
+    requiresBossClear: roomIndex === FINAL_ROOM_INDEX || roomObjective(roomIndex).type === 'boss-terminal',
+    dropFromEnemy: false,
+    recovered: false,
+    spawnedAt: performance.now(),
+  };
+  worldItems.push(report);
+  if (!options.silent) {
+    spawnParticles(report.x, report.y, worldFloorHeightAt(report.x, report.y) + .45, [report.color || room.color, '#fff1b0'], settings.reducedMotion ? 10 : 26, {
+      speed: 1.2,
+      life: 1.1,
+      size: .8,
+      upward: .9,
+      spread: TAU,
+      glow: 18,
+      trail: true,
+    });
+  }
+  return report;
+}
+
+function registerDefeatMomentum(target) {
+  state.combo = state.comboTimer > 0 ? state.combo + 1 : 1;
+  state.comboTimer = COMBO_WINDOW;
+  state.bestCombo = Math.max(state.bestCombo, state.combo);
+  const stats = ensureRoomPerformance(target.roomIndex);
+  stats.kills += 1;
+  stats.bestChain = Math.max(stats.bestChain, state.combo);
+  return 1 + Math.min(.5, Math.max(0, state.combo - 1) * .08);
+}
+
+function breakCombatMomentum() {
+  state.combo = 0;
+  state.comboTimer = 0;
+}
+
+function handleSectorSecured(roomIndex, origin) {
+  if (roomIndex < 0 || roomIndex > FINAL_ROOM_INDEX || state.securedRooms.has(roomIndex)) return false;
+  if (!roomObjectiveComplete(roomIndex)) return false;
+  state.securedRooms.add(roomIndex);
+  if (miniBossRoom(roomIndex)) {
+    if (state.miniBossArena?.roomIndex === roomIndex) {
+      state.miniBossArena.active = false;
+      state.miniBossArena.entranceClosed = true;
+      state.miniBossArena.exitOpen = true;
+    }
+    setMiniBossDoors(roomIndex, true, true);
+  }
+  if (roomIndex === FINAL_ROOM_INDEX) state.doorOfLight = { ...BOSS_EXIT_POINT, active: true, pulse: 0 };
+  const stats = ensureRoomPerformance(roomIndex);
+  const grade = roomClearGrade(stats);
+  const firstClearReward = !state.clearRewardRooms.has(roomIndex);
+  state.clearRewardRooms.add(roomIndex);
+  const rewardXp = roomIndex === FINAL_ROOM_INDEX || !firstClearReward ? 0 : ({ S: 70, A: 55, B: 45, C: 35 }[grade] || 35);
+  const previousHealth = state.player.hp;
+  const recovery = roomIndex === FINAL_ROOM_INDEX ? 0 : ({ S: 24, A: 20, B: 16, C: 12 }[grade] || 12);
+  state.player.hp = Math.min(100, state.player.hp + recovery);
+  const healthRestored = Math.max(0, Math.round(state.player.hp - previousHealth));
+  if (rewardXp) earnExperience(rewardXp, `${rooms[roomIndex].shortTitle} secured`);
+  announceNarrator(
+    `sector-${rooms[roomIndex].id}-secured`,
+    roomIndex === FINAL_ROOM_INDEX ? 'ASCENSION ROUTE OPEN' : 'ROUTE OPEN',
+    roomIndex === FINAL_ROOM_INDEX
+      ? 'The Lightwell terminal accepted the completed authorization. The eastern lightwell is active.'
+      : 'The access terminal accepted the case program. The eastern shield door is open.',
+    'expression-relieved',
+    4.5,
+    { duration: 4.5, priority: 11, force: true },
+  );
+  showToast(`ROUTE OPEN${healthRestored ? ` · +${healthRestored} HEALTH` : ''}`, 'good');
+  state.hudSignature = '';
+  updateHud();
+  return true;
+}
+
+// Every mission clear now ends with a short archive game. Decoding the report
+// archives the portfolio evidence, grants its weapon reward, and opens the exit.
 function dungeonDifficultyForRoom(roomIndex) {
   const depth = Math.max(0, roomIndex - STARTING_ROOM_INDEX);
   return {
@@ -1034,17 +1892,23 @@ function dungeonDifficultyForRoom(roomIndex) {
 for (const enemy of worldEnemies) {
   if (enemy.boss || enemy.roomIndex >= FINAL_ROOM_INDEX) continue;
   const difficulty = dungeonDifficultyForRoom(enemy.roomIndex);
-  // Give every encounter enough health to survive several deliberate plasma hits.
-  enemy.hp = Math.round(Math.max(enemy.hp, 54) * difficulty.health * 1.42);
+  // More hostiles create the pressure; lower individual health keeps the
+  // rhythm quick and makes weapon unlocks feel immediately powerful.
+  enemy.hp = Math.round(Math.max(enemy.hp, 46) * difficulty.health * 1.18);
+  if (enemy.miniBoss) enemy.hp = Math.round(enemy.hp * (enemy.bossKit === 'burnout' ? .88 : 1.35));
   enemy.maxHp = enemy.hp;
   enemy.damage = Math.round(enemy.damage * difficulty.damage);
+  if (enemy.miniBoss) enemy.damage = enemy.bossKit === 'burnout'
+    ? Math.max(10, Math.round(enemy.damage * .9))
+    : Math.max(12, Math.round(enemy.damage * 1.18));
   enemy.speed *= difficulty.speed;
   enemy.difficultyTier = difficulty.depth;
   enemy.difficultyAttackRate = difficulty.attackRate;
+  if (enemy.miniBoss) enemy.difficultyAttackRate *= enemy.bossKit === 'burnout' ? .72 : 1.02;
 }
 
 const initialEnemyData = worldEnemies.map((enemy) => ({ ...enemy, dropTemplates: [...enemy.dropTemplates] }));
-const BOSS_MAX_HP = 900;
+const BOSS_MAX_HP = 2000;
 const BOSS_PHASES = [
   { name: 'PHASE I · THE BRIEF', threshold: 1, color: '#d99762' },
   { name: 'PHASE II · THE SYSTEM', threshold: .66, color: '#77a9e8' },
@@ -1055,7 +1919,7 @@ const ARCHON_WAVES = [
     label: 'THE FIRST RING',
     entries: [
       { kind: 'zombie', hp: 82, damage: 11, speed: .92, color: '#65734d' },
-      { kind: 'insectoid', hp: 58, damage: 8, speed: .72, color: '#4f6a3d' },
+      { kind: 'insectoid', hp: 54, damage: 7, speed: .76, color: '#4f6a3d' },
     ],
   },
   {
@@ -1064,23 +1928,25 @@ const ARCHON_WAVES = [
       { kind: 'zombie', hp: 96, damage: 13, speed: 1.02, color: '#65734d' },
       { kind: 'soldier', hp: 86, damage: 12, speed: .58, color: '#6e5937' },
       { kind: 'insectoid', hp: 72, damage: 9, speed: .82, color: '#4f6a3d' },
+      { kind: 'soldier', hp: 72, damage: 9, speed: .6, color: '#6e5937' },
     ],
   },
   {
     label: 'THE FINAL DELIVERY',
     entries: [
-      { kind: 'zombie', hp: 108, damage: 14, speed: 1.08, color: '#65734d' },
-      { kind: 'zombie', hp: 100, damage: 13, speed: 1.04, color: '#65734d' },
-      { kind: 'soldier', hp: 96, damage: 13, speed: .64, color: '#6e5937' },
-      { kind: 'insectoid', hp: 82, damage: 10, speed: .9, color: '#4f6a3d' },
+      { kind: 'zombie', hp: 86, damage: 11, speed: 1.02, color: '#65734d' },
+      { kind: 'soldier', hp: 80, damage: 10, speed: .64, color: '#6e5937' },
+      { kind: 'insectoid', hp: 62, damage: 8, speed: .82, color: '#4f6a3d' },
+      { kind: 'zombie', hp: 90, damage: 11, speed: 1.05, color: '#65734d' },
+      { kind: 'soldier', hp: 78, damage: 10, speed: .62, color: '#6e5937' },
     ],
   },
 ];
-const ARCHON_WAVE_MAX_ALIVE = 6;
+const ARCHON_WAVE_MAX_ALIVE = 5;
 const ARCHON_WAVE_SPAWN_POINTS = [
-  { x: 5, y: 3 }, { x: 5, y: 15 }, { x: 12, y: 3 },
-  { x: 12, y: 15 }, { x: 24, y: 3 }, { x: 24, y: 15 },
-  { x: 27, y: 8 }, { x: 8, y: 9 },
+  { x: .14, y: .16 }, { x: .14, y: .82 }, { x: .34, y: .16 },
+  { x: .34, y: .82 }, { x: .69, y: .16 }, { x: .69, y: .82 },
+  { x: .86, y: .46 }, { x: .23, y: .52 },
 ];
 function createFinalBoss() {
   return {
@@ -1088,19 +1954,21 @@ function createFinalBoss() {
     name: 'THE OPERATIONS ARCHON',
     displayName: 'The Operations Archon',
     kind: 'warden',
-    x: FINAL_ROOM_OFFSET + 15,
-    y: 9,
+    x: FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH * .52,
+    y: FINAL_ROOM_HEIGHT * .5,
     hp: BOSS_MAX_HP,
     maxHp: BOSS_MAX_HP,
-    damage: 18,
+    damage: 19,
     attackStyle: 'melee',
     attackDistance: 2.9,
     phase: 1,
-    cooldown: 1.2,
+    cooldown: .7,
     attackTime: 0,
     attackPattern: 0,
     patternTime: 0,
     attackTelegraph: null,
+    attackRecovery: 0,
+    attackImpact: 0,
     hitTime: 0,
     shield: 0,
     dashTime: 0,
@@ -1116,6 +1984,8 @@ function createFinalBoss() {
     waveSpawnCursor: 0,
     waveIds: [],
     summonIds: [],
+    flurryQueue: [],
+    flurryTimer: 0,
     pulse: 0,
     walkPhase: 0,
     dead: false,
@@ -1128,7 +1998,7 @@ function createFinalBoss() {
 
 const lightGrid = new Float32Array(WORLD_WIDTH * WORLD_HEIGHT);
 
-let ITEM_TOTAL = 0;
+let ITEM_TOTAL = FIELD_REPORT_TOTAL;
 const FOV = Math.PI / 3;
 const VERTICAL_FOV = Math.PI / 3;
 const SKY_DISTANCE = 1000;
@@ -1137,7 +2007,7 @@ const MOON_ELEVATION = .34;
 const MAX_DEPTH = 36;
 const BOSS_RENDER_DEPTH = 70;
 const RAY_COUNT = 160;
-const FLOOR_STEP = 6;
+const FLOOR_STEP = 4;
 const RENDER_INTERVAL = 1000 / 36;
 const MAX_PARTICLES = 260;
 const MAX_REDUCED_PARTICLES = 130;
@@ -1145,13 +2015,16 @@ const MAX_PARTICLE_DRAW = 180;
 const MAX_REDUCED_PARTICLE_DRAW = 90;
 const MAX_IMPACT_BURSTS = 48;
 const COMBAT_PARTICLE_DRAW_LIMIT = 54;
-const COMBO_WINDOW = 1.35;
+const COMBO_WINDOW = 6.5;
 const ENEMY_ATTACK_DISTANCE = 2.34;
 const MOVE_SPEED = 2.85;
 const TURN_SPEED = 2.9;
 const EYE_HEIGHT = .58;
 const FLOOR_Z = 0;
-const CEILING_Z = 2.2;
+// Split-level missions rise 1.4 world units. A taller dungeon ceiling keeps
+// those 35-degree stairs and upper decks readable instead of compressing the
+// camera against the roof.
+const CEILING_Z = 3.8;
 const TAU = Math.PI * 2;
 const spriteCache = new Map();
 const textures = {};
@@ -1299,6 +2172,55 @@ function enemySpriteFrame(image, row, frameIndex, attacking = false) {
   return frames[safeRow * 6 + animationFrame] || null;
 }
 
+function fixedSpriteAtlasFrame(image, columns, rows, row, column, cacheKey) {
+  if (!spriteReady(image)) return null;
+  const framesKey = `__${cacheKey}FixedFrames`;
+  if (!image[framesKey]) {
+    const frames = [];
+    for (let frameRow = 0; frameRow < rows; frameRow += 1) {
+      const startY = Math.floor(frameRow * image.naturalHeight / rows);
+      const endY = Math.min(image.naturalHeight, Math.floor((frameRow + 1) * image.naturalHeight / rows));
+      for (let frameColumn = 0; frameColumn < columns; frameColumn += 1) {
+        const startX = Math.floor(frameColumn * image.naturalWidth / columns);
+        const endX = Math.min(image.naturalWidth, Math.floor((frameColumn + 1) * image.naturalWidth / columns));
+        const frame = document.createElement('canvas');
+        frame.width = Math.max(1, endX - startX);
+        frame.height = Math.max(1, endY - startY);
+        const frameContext = frame.getContext('2d');
+        frameContext.imageSmoothingEnabled = false;
+        frameContext.drawImage(image, startX, startY, frame.width, frame.height, 0, 0, frame.width, frame.height);
+        frames.push(frame);
+      }
+    }
+    image[framesKey] = frames;
+  }
+  const safeRow = clamp(Math.floor(row), 0, rows - 1);
+  const safeColumn = clamp(Math.floor(column), 0, columns - 1);
+  return image[framesKey][safeRow * columns + safeColumn] || null;
+}
+function bossAtlasRowForEnemy(enemy) {
+  const rows = {
+    'contract-warden': 0,
+    'legacy-colossus': 1,
+    'burnout-keeper': 2,
+    'operations-archon': 3,
+  };
+  return Object.prototype.hasOwnProperty.call(rows, enemy?.id) ? rows[enemy.id] : -1;
+}
+function bossAtlasSprite(enemy, frameIndex = 0, attacking = false) {
+  const row = bossAtlasRowForEnemy(enemy);
+  if (row < 0) return null;
+  // The Archon's fifth atlas cell is the detached cyan blast, not a body pose.
+  // Cycling it as a boss frame made the body disappear and caused the broken
+  // final animation. Keep the projectile in the projectile renderer and use
+  // only full-body poses here.
+  const attackSequences = [[3, 4, 5], [3, 4, 5], [3, 4, 5], [3, 5, 3]];
+  const idleSequences = [[0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2]];
+  const sequence = attacking ? attackSequences[row] : idleSequences[row];
+  const column = sequence[Math.floor(frameIndex) % sequence.length];
+  return fixedSpriteAtlasFrame(gameSprites.enemyBossAtlas, 6, 4, row, column, 'boss-animation');
+}
+
 function prepareKeyedSpriteSheet(image, columns, rows, cacheKey) {
   const framesKey = `__${cacheKey}Frames`;
   if (!spriteReady(image) || image[framesKey]) return;
@@ -1377,7 +2299,10 @@ const WEAPON_ATLAS_ROWS = 4;
 const WEAPON_ATLAS_SEQUENCES = Object.freeze({
   arsenal: Object.freeze({ fire: [1, 4], reload: [1, 2, 1] }),
   shotgun: Object.freeze({ fire: [1, 4, 5, 6, 7, 1], reload: [6, 7] }),
-  bfg: Object.freeze({ fire: [1, 2, 3, 4], reload: [1, 2, 3, 2, 1] }),
+  plasma: Object.freeze({ fire: [1, 2, 3, 4, 5, 6, 8], reload: [1, 6, 7, 8] }),
+  rail: Object.freeze({ fire: [1, 2, 3, 4, 5, 6, 8], reload: [1, 6, 7, 8] }),
+  rivet: Object.freeze({ fire: [1, 2, 3, 4, 5, 6, 8], reload: [1, 6, 7, 8] }),
+  bfg: Object.freeze({ fire: [1, 2, 3, 4, 5, 6, 8], reload: [1, 6, 7, 8] }),
 });
 // Keep the authored lower arms below the viewport edge. The atlas cells include
 // the hands/arms, so the weapon itself remains visible while the lower clipping
@@ -1386,10 +2311,13 @@ const FIRST_PERSON_ATLAS_BOTTOM = 1.075;
 // Atlas rows: Assault Rifle, Shotgun, Electric Gun, BFG. Columns 0–4 are
 // source firing poses; each weapon selects its own authored timeline. The
 // original cell coordinates are preserved so frame pivots remain stable.
-const WEAPON_ATLAS_ROW_BY_TYPE = Object.freeze({
-  arsenal: 0, // assault rifle
-  shotgun: 1,
-  bfg: 3,    // Electric BFG / BFG-style super weapon
+const WEAPON_ATLAS_CONFIG = Object.freeze({
+  arsenal: Object.freeze({ sprite: 'weaponAtlas', row: 0, rows: 4 }),
+  shotgun: Object.freeze({ sprite: 'weaponAtlas', row: 1, rows: 4 }),
+  plasma: Object.freeze({ sprite: 'weaponAtlas', row: 2, rows: 4 }),
+  bfg: Object.freeze({ sprite: 'weaponAtlas', row: 3, rows: 4 }),
+  rail: Object.freeze({ sprite: 'weaponUnlockAtlas', row: 0, rows: 2 }),
+  rivet: Object.freeze({ sprite: 'weaponUnlockAtlas', row: 1, rows: 2 }),
 });
 
 function isWeaponAtlasBackdrop(r, g, b) {
@@ -1533,19 +2461,16 @@ function prepareKeyedWeaponAtlas(image, columns = WEAPON_ATLAS_COLUMNS, rows = W
   }
   image[framesKey] = keyedFrames;
 }
-function keyedWeaponAtlasFrame(image, frameIndex, frameRow = 0, cacheKey = 'weapon-arsenal') {
+function keyedWeaponAtlasFrame(image, frameIndex, frameRow = 0, cacheKey = 'weapon-arsenal', rows = WEAPON_ATLAS_ROWS) {
   if (!spriteReady(image)) return null;
-  prepareKeyedWeaponAtlas(image, WEAPON_ATLAS_COLUMNS, WEAPON_ATLAS_ROWS, frameRow, cacheKey);
+  prepareKeyedWeaponAtlas(image, WEAPON_ATLAS_COLUMNS, rows, frameRow, cacheKey);
   const frames = image[`__${cacheKey}Frames`];
   return frames?.[Math.floor(frameIndex) % frames.length] || null;
 }
-function weaponAtlasRow(type) {
-  return WEAPON_ATLAS_ROW_BY_TYPE[type] ?? null;
-}
 function weaponAtlasFrame(type, frameIndex) {
-  const row = weaponAtlasRow(type);
-  if (row === null) return null;
-  return keyedWeaponAtlasFrame(gameSprites.weaponAtlas, frameIndex, row, `weapon-${type}`);
+  const config = WEAPON_ATLAS_CONFIG[type];
+  if (!config) return null;
+  return keyedWeaponAtlasFrame(gameSprites[config.sprite], frameIndex, config.row, `weapon-${type}`, config.rows);
 }
 // The generated artwork is not perfectly pivoted inside every source cell.
 // These offsets lock the receiver/hand pivot while preserving the authored
@@ -1571,6 +2496,9 @@ function weaponAtlasFrameIndex(type, progress = 0, reloading = false) {
 }
 const gameSprites = {
   enemySheet: loadGameSprite('assets/sprites/enemies-ogdoom.png?v=20260811-ogdoom-2'),
+  enemyBossAtlas: loadGameSprite('assets/sprites/enemy-bosses-animated-v4-lowres.png?v=20260816-boss-lowres-1'),
+  objectiveKeySheet: loadGameSprite('assets/sprites/objective-keys-industrial-v2.png?v=20260821-industrial-keys-2'),
+  fieldReportSheet: loadGameSprite('assets/sprites/field-report-scroll-animated-v1.png?v=20260816-report-animation-1'),
   enemyPlasmaProjectile: loadGameSprite('assets/sprites/enemy-plasma-projectile-sheet.png?v=20260811-plasma-sheet-1'),
   enemyFireballProjectile: loadGameSprite('assets/sprites/enemy-fireball-projectile-sheet.png?v=20260811-fireball-sheet-1'),
   enemyWardenIdle: loadGameSprite('assets/sprites/enemy-warden-idle.png?v=20260811-warden-key-2'),
@@ -1578,31 +2506,36 @@ const gameSprites = {
   pickupSheet: loadGameSprite('assets/sprites/pickups-green.png?v=20260812-pickups-green-1'),
   narratorGeneralSheet: loadGameSprite('assets/sprites/narrator-general-sheet.png?v=20260812-narrator-general-1'),
   weaponAtlas: loadGameSprite('assets/sprites/weapon-superweapon-animation.png?v=20260812-weapon-sheet-1'),
+  weaponUnlockAtlas: loadGameSprite('assets/sprites/weapon-rail-rivet-animation-v1.png?v=20260816-scroll-arsenal-2'),
   explosionSheet: loadGameSprite('assets/sprites/source/explosion-ogdoom-source.png?v=20260811-explosion-1'),
 };
 const WEAPON_LOADOUTS = {
-  // The atlas has five authored fire poses. These timings let each weapon read
-  // clearly without changing its underlying hitscan damage or ammo behavior.
-  arsenal: { label: 'Arsenal Carbine', description: 'Semi-auto precision carbine. Tap the trigger for high-damage, long-range hitscan shots.', range: 24, damage: 18, aim: .13, cooldown: .09, duration: .18, hitAt: .38, knockback: .1, critChance: .1, critMultiplier: 1.45, magazineSize: 15, reserveAmmo: 45, reloadTime: .95, ammoPerShot: 1, fireMode: 'semi', hitscan: true, impactColor: '#e0b66d', recoilAmount: .22, muzzleDuration: .105 },
-  shotgun: { label: 'Shotgun', description: 'Pump-action shotgun. Fire a tight, heavy spread at close range.', range: 12, damage: 16, minDamage: 3, pellets: 7, spread: .13, aim: .34, cooldown: .58, duration: .64, hitAt: .12, knockback: .24, stagger: .22, critChance: .04, critMultiplier: 1.35, magazineSize: 4, reserveAmmo: 12, reloadTime: 1.1, ammoPerShot: 1, fireMode: 'semi', hitscan: true, impactColor: '#e08a55', recoilAmount: .52, muzzleDuration: .16 },
-  bfg: { label: 'Electric BFG', description: 'Heavy electric launcher. Fires a visible sphere that detonates through nearby hostiles.', range: 24, damage: 132, aim: .16, cooldown: .82, duration: .76, hitAt: .38, knockback: .32, stagger: .35, critChance: .08, critMultiplier: 1.55, magazineSize: 1, reserveAmmo: 3, reloadTime: 2.65, ammoPerShot: 1, fireMode: 'semi', projectile: true, impactColor: '#58f4e4', recoilAmount: .82, muzzleDuration: .22 },
+  arsenal: { label: 'Arsenal Carbine', category: 'AUTO RIFLE', description: 'Reliable starter rifle. Accurate sustained fire keeps pressure on targets without outclassing specialist weapons.', range: 26, damage: 15, aim: .115, cooldown: .13, duration: .15, hitAt: .22, knockback: .09, stagger: .07, critChance: .08, critMultiplier: 1.4, magazineSize: 24, reserveAmmo: 120, reloadTime: 1.05, ammoPerShot: 1, fireMode: 'auto', hitscan: true, impactColor: '#e0b66d', recoilAmount: .18, muzzleDuration: .09 },
+  shotgun: { label: 'Breach Shotgun', category: 'PUMP SHOTGUN', description: 'Close-range room breaker. Nine pellets hit hardest at point blank and strongly stagger targets.', range: 13, damage: 12, minDamage: 5, pellets: 9, spread: .12, pelletWindow: .09, pointBlankRange: 4.4, pointBlankMultiplier: 1.25, aim: .36, cooldown: .7, duration: .62, hitAt: .12, knockback: .38, stagger: .34, critChance: .06, critMultiplier: 1.4, magazineSize: 6, reserveAmmo: 30, reloadTime: 1.1, ammoPerShot: 1, fireMode: 'semi', hitscan: true, impactColor: '#e08a55', recoilAmount: .62, muzzleDuration: .18 },
+  plasma: { label: 'Arc Repeater', category: 'PLASMA AUTO', description: 'Fast cyan plasma bolts for sustained mid-range pressure and reliable crowd control.', range: 25, damage: 26, aim: .2, cooldown: .16, duration: .24, hitAt: .4, knockback: .1, stagger: .13, critChance: .08, critMultiplier: 1.45, magazineSize: 32, reserveAmmo: 128, reloadTime: 1.45, ammoPerShot: 1, fireMode: 'auto', projectile: true, projectileKind: 'arc-repeater', projectileSpeed: 15, aoe: .2, splashMultiplier: .2, impactColor: '#58f4e4', recoilAmount: .18, muzzleDuration: .11 },
+  rail: { label: 'Archive Railgun', category: 'PIERCING RAIL', description: 'Slow, surgical rail shot. Pierces up to three lined-up targets and rewards deliberate aim.', range: 34, damage: 125, aim: .13, cooldown: 1.05, duration: .72, hitAt: .42, knockback: .48, stagger: .46, critChance: .18, critMultiplier: 1.7, magazineSize: 4, reserveAmmo: 20, reloadTime: 1.75, ammoPerShot: 1, fireMode: 'semi', hitscan: true, pierce: 3, impactColor: '#70f4e4', recoilAmount: .78, muzzleDuration: .2 },
+  rivet: { label: 'Rivet Cannon', category: 'HEAVY AUTO', description: 'Hard-kicking industrial repeater. Strong stagger and knockback keep aggressive enemies off balance.', range: 18, damage: 34, aim: .15, cooldown: .22, duration: .26, hitAt: .28, knockback: .24, stagger: .2, critChance: .1, critMultiplier: 1.5, magazineSize: 18, reserveAmmo: 90, reloadTime: 1.55, ammoPerShot: 1, fireMode: 'auto', hitscan: true, impactColor: '#d89b55', recoilAmount: .36, muzzleDuration: .11 },
+  bfg: { label: 'Electric BFG', category: 'SUPERWEAPON', description: 'Rare two-cell superweapon. A heavy plasma core detonates across tightly packed groups.', range: 28, damage: 180, aim: .18, cooldown: 1.25, duration: .82, hitAt: .38, knockback: .44, stagger: .48, critChance: .1, critMultiplier: 1.6, magazineSize: 2, reserveAmmo: 8, reloadTime: 2.25, ammoPerShot: 1, fireMode: 'semi', projectile: true, projectileKind: 'bfg-electric', projectileSpeed: 10.2, aoe: 3.1, splashMultiplier: .55, impactColor: '#58f4e4', recoilAmount: .86, muzzleDuration: .24 },
 };
 const ENEMY_PROFILES = {
   wraith: { scale: .62, height: 1.14, aimHeight: .84, speedMultiplier: 1.22, attackRate: 1.24, attackDistance: 2.2, opacity: .82, hover: .07, color: '#403143' },
   imp: { scale: .48, height: .72, aimHeight: .52, speedMultiplier: 1.42, attackRate: 1.26, attackDistance: 2.12, opacity: 1, color: '#8f3e32', attackColor: '#c44932' },
-  crawler: { scale: .52, height: .44, aimHeight: .28, speedMultiplier: 1.02, attackRate: 1.08, attackDistance: 4.0, preferredDistance: 3.0, attackStyle: 'ground', opacity: 1, color: '#b77754', attackColor: '#d76b49' },
+  crawler: { scale: .52, height: .44, aimHeight: .28, speedMultiplier: 1.12, attackRate: 1.16, attackDistance: 7.2, preferredDistance: 4.8, attackStyle: 'ranged', opacity: 1, color: '#b77754', attackColor: '#d76b49' },
   ghoul: { scale: .58, height: 1.04, aimHeight: .76, speedMultiplier: 1.16, attackRate: 1.2, attackDistance: 2.26, opacity: 1, color: '#566d5c' },
-  beast: { scale: .64, height: .84, aimHeight: .52, speedMultiplier: 1.16, attackRate: 1.22, attackDistance: 4.15, preferredDistance: 3.1, attackStyle: 'ground', opacity: 1, color: '#5f3b30', attackColor: '#ad4937' },
+  beast: { scale: .64, height: .84, aimHeight: .52, speedMultiplier: 1.28, attackRate: 1.3, attackDistance: 2.35, attackStyle: 'melee', opacity: 1, color: '#5f3b30', attackColor: '#ad4937' },
   moth: { scale: .56, height: 1.04, aimHeight: .8, speedMultiplier: 1.38, attackRate: 1.22, attackDistance: 9.2, preferredDistance: 6.1, attackStyle: 'ranged', opacity: .9, hover: .11, color: '#9b7a3e', attackColor: '#d39a43' },
   hound: { scale: .59, height: .72, aimHeight: .45, speedMultiplier: 1.7, attackRate: 1.3, attackDistance: 2.24, opacity: 1, color: '#78382e' },
   'briar-mantis': { scale: .62, height: .96, aimHeight: .62, speedMultiplier: 1.32, attackRate: 1.08, attackDistance: 2.15, opacity: 1, color: '#65734a', attackColor: '#d16b4f' },
   leech: { scale: .47, height: .38, aimHeight: .24, speedMultiplier: 1.12, attackRate: 1.02, attackDistance: 2.04, opacity: 1, color: '#7d9bd1' },
   seer: { scale: .59, height: 1.28, aimHeight: .94, speedMultiplier: .94, attackRate: 1.02, attackDistance: 10.5, preferredDistance: 6.8, attackStyle: 'ranged', opacity: .96, color: '#4c5b60', attackColor: '#58d9cf' },
-  quake: { scale: .72, height: 1.18, aimHeight: .7, speedMultiplier: .62, attackRate: .86, attackDistance: 4.1, preferredDistance: 3.1, attackStyle: 'ground', opacity: 1, color: '#cf8b5e', attackColor: '#d76b49' },
+  quake: { scale: .72, height: 1.18, aimHeight: .7, speedMultiplier: .72, attackRate: .98, attackDistance: 8.2, preferredDistance: 5.2, attackStyle: 'ranged', opacity: 1, color: '#cf8b5e', attackColor: '#d76b49' },
   warden: { scale: 1.52, height: 2.82, aimHeight: 1.34, speedMultiplier: 1.34, attackRate: 1.24, attackDistance: 2.82, opacity: 1, color: '#b47469', attackColor: '#ffb36b' },
   zombie: { scale: .78, height: 1.72, aimHeight: 1.02, speedMultiplier: 1.7, attackRate: 1.3, attackDistance: 1.62, attackDuration: .58, opacity: 1, color: '#65734d', attackColor: '#c44932', spriteRow: 0, attackStyle: 'melee' },
   soldier: { scale: .92, height: 2.02, aimHeight: 1.22, speedMultiplier: 1.02, attackRate: 1.04, attackDistance: 10.5, preferredDistance: 6.2, opacity: 1, color: '#6e5937', attackColor: '#d39a43', spriteRow: 1, attackStyle: 'ranged' },
   insectoid: { scale: .82, height: 1.62, aimHeight: .98, speedMultiplier: 1.42, attackRate: 1.22, attackDistance: 8.5, preferredDistance: 4.8, opacity: 1, color: '#4f6a3d', attackColor: '#58d9cf', spriteRow: 2, attackStyle: 'ranged' },
+  // These advanced roles deliberately reuse the game's established low-res
+  // atlas. Their identity comes from behavior and combat rhythm, not a second
+  // art style with mismatched silhouettes or frame timing.
   archon: { scale: 1.08, height: 2.85, aimHeight: 1.92, speedMultiplier: .42, attackRate: .78, attackDistance: 2.7, opacity: 1, color: '#d7c79b' },
 };
 const EMPTY_ENEMY_PROFILE = { scale: .46, height: .98, aimHeight: .78, speedMultiplier: 1, attackRate: 1, attackDistance: ENEMY_ATTACK_DISTANCE, opacity: 0, color: '#000000' };
@@ -1618,14 +2551,32 @@ const MAX_RENDER_HEIGHT = 720;
 
 const state = {
   room: 0,
-  player: { x: roomOffsets[0] + roomContentPoint(0, rooms[0].spawn.x, rooms[0].spawn.y).x, y: roomContentPoint(0, rooms[0].spawn.x, rooms[0].spawn.y).y, angle: rooms[0].spawn.angle, hp: 100 },
+  player: { x: roomOffsets[0] + roomContentPoint(0, rooms[0].spawn.x, rooms[0].spawn.y).x, y: roomContentPoint(0, rooms[0].spawn.x, rooms[0].spawn.y).y, angle: rooms[0].spawn.angle, floorZ: 0, cameraFloorZ: 0, hp: 100 },
   keys: new Set(),
   moonProgress: 0,
   combo: 0,
   comboTimer: 0,
+  bestCombo: 0,
+  deaths: 0,
+  totalDamageTaken: 0,
+  securedRooms: new Set(),
+  reportReadyRooms: new Set(),
+  scrollSolvedRooms: new Set(),
+  scrollChallengeProgress: new Map(),
+  scrollChallengeSelection: new Map(),
+  terminalGameCursor: new Map(),
+  terminalGameKeyHeld: false,
+  terminalMemoryReplayToken: 0,
+  scrollBriefingProgress: new Map(),
+  scrollTourUnlocked: new Map(),
+  unlockedWeapons: new Set(['arsenal']),
+  clearRewardRooms: new Set(),
+  roomPerformance: new Map(),
   groundHazards: [],
   recoveredItems: new Set(),
   collectedRecordIds: new Set(),
+  objectiveKeys: new Set(),
+  blockedHintAt: -Infinity,
   lastTime: 0,
   dragging: false,
   pointerMoved: false,
@@ -1637,11 +2588,15 @@ const state = {
   attackInputLock: 0,
   mouseLook: false,
   pointerLocked: false,
+  pointerWasLockedBeforeReading: false,
+  terminalShutdown: false,
   zBuffer: new Float32Array(RAY_COUNT),
+  rayDistance: new Float32Array(RAY_COUNT),
   floorBase: new Float32Array(RAY_COUNT),
+  surfaceDepth: new Float32Array(0),
   weapon: { type: 'arsenal', equipped: true, swing: 0, hit: false, cooldown: 0, bobPhase: 0, moving: false, projectile: 0, attackDamage: 0, comboStep: 0, attackHitAt: 0, ammo: 15, reserveAmmo: 45, magazineSize: 15, reloadTime: 1.15, reloadTimer: 0, reloadElapsed: 0, reloadShellsToLoad: 0, reloadShellsLoaded: 0, reloadShellInterval: 0, muzzleFlash: 0, recoil: 0, kickVelocity: 0, kickX: 0, rollKick: 0, viewKick: 0, fovKick: 0, shotPulse: 0, shotTraces: [], lastFireAt: 0, kills: 0, ammoByType: {}, reserveByType: {}, mousePressed: false },
   xp: 0,
-  level: 0,
+  level: 1,
   kills: 0,
   unlockedAbilitys: new Set(),
   lastAbility: null,
@@ -1827,6 +2782,105 @@ function materialRoomAtX(x) {
   const start = roomOffsets[index];
   return x >= start && x < start + roomWidths[index] ? rooms[index] : { material: 'stone', color: '#74736a' };
 }
+function roomWallMaterial(roomIndex) {
+  const room = rooms[clamp(roomIndex, 0, rooms.length - 1)];
+  if (roomIndex === SANCTUARY_ROOM_INDEX) return 'stone';
+  if (room?.id === 'trophy' || room?.id === 'campfire' || room?.id === 'gate') return 'hellTechEmber';
+  if (room?.id === 'chronicle') return 'hellTechCold';
+  if (room?.id === 'character') return 'hellTechOlive';
+  return 'hellTech';
+}
+function wallTextureForRoom(roomIndex) {
+  const material = roomWallMaterial(roomIndex);
+  return textures[material] || textures.hellTech || textures.stone;
+}
+const missionExitGateSpriteCache = new Map();
+function missionExitGateSpriteFrame(roomIndex, now = state.now) {
+  const frame = Math.floor((now || 0) / 165) % 4;
+  const cacheKey = `mission-exit-gate-sprite:${roomIndex}:${frame}`;
+  if (missionExitGateSpriteCache.has(cacheKey)) return missionExitGateSpriteCache.get(cacheKey);
+
+  // A deliberately low-resolution door sprite, inspired by chunky early FPS
+  // bulkheads rather than a smooth sci-fi forcefield. The raycaster maps this
+  // one image across the doorway plane, preserving the world-facing geometry.
+  const texture = document.createElement('canvas');
+  texture.width = 64;
+  texture.height = 96;
+  const paint = texture.getContext('2d');
+  paint.imageSmoothingEnabled = false;
+  const roomAccent = rooms[roomIndex]?.color || '#d76b49';
+  const warning = frame === 1 || frame === 3 ? '#ffc16a' : '#c85b43';
+  const scanY = 16 + frame * 16;
+
+  paint.fillStyle = '#070707'; paint.fillRect(0, 0, 64, 96);
+  paint.fillStyle = '#221b19'; paint.fillRect(2, 0, 60, 96);
+  paint.fillStyle = '#5e4b40'; paint.fillRect(4, 0, 56, 5); paint.fillRect(4, 91, 56, 5);
+  paint.fillStyle = '#92725a'; paint.fillRect(6, 2, 52, 1); paint.fillRect(6, 92, 52, 1);
+  paint.fillStyle = '#302725'; paint.fillRect(4, 5, 8, 86); paint.fillRect(52, 5, 8, 86);
+  paint.fillStyle = '#8d6650'; paint.fillRect(7, 7, 2, 82); paint.fillRect(55, 7, 2, 82);
+  paint.fillStyle = '#140f10'; paint.fillRect(12, 5, 40, 86);
+
+  for (let row = 0; row < 8; row += 1) {
+    const y = 8 + row * 10;
+    paint.fillStyle = row % 2 ? '#2f1618' : '#421c1d';
+    paint.fillRect(14, y, 36, 7);
+    paint.fillStyle = '#7d302b'; paint.fillRect(14, y + 7, 36, 2);
+  }
+  // Heavy vertical struts frame the door without making it look like a UI
+  // overlay. Alternating hard pixels give it old game texture depth.
+  for (let x = 16; x <= 46; x += 10) {
+    paint.fillStyle = x % 20 ? '#a34234' : '#d06445'; paint.fillRect(x, 7, 3, 82);
+    paint.fillStyle = '#e0a45f'; paint.fillRect(x + 1, 10, 1, 22);
+    paint.fillStyle = '#652623'; paint.fillRect(x + 1, 39, 1, 44);
+  }
+  paint.fillStyle = '#120d0e'; paint.fillRect(20, 37, 24, 22);
+  paint.fillStyle = '#715443'; paint.fillRect(22, 39, 20, 18);
+  paint.fillStyle = '#08100d'; paint.fillRect(24, 41, 16, 14);
+  paint.fillStyle = roomAccent; paint.fillRect(26, 44, 12, 2);
+  paint.fillStyle = '#e7bd72'; paint.fillRect(26, 49, 8, 2); paint.fillRect(35, 49, 3, 2);
+  // Animated warning scan retained inside the sprite, never screen-space.
+  paint.fillStyle = warning; paint.fillRect(14, scanY, 36, 1);
+  paint.fillStyle = '#ffdf9a'; paint.fillRect(4, scanY - 1, 4, 3); paint.fillRect(56, scanY - 1, 4, 3);
+  for (let y = 9; y < 88; y += 13) {
+    paint.fillStyle = '#120f0e'; paint.fillRect(3, y, 5, 6); paint.fillRect(56, y, 5, 6);
+    paint.fillStyle = (y / 13 + frame) % 2 ? '#e36b4d' : '#8f392f'; paint.fillRect(4, y + 2, 3, 2); paint.fillRect(57, y + 2, 3, 2);
+  }
+  for (let x = 8; x < 58; x += 9) { paint.fillStyle = '#d7a15e'; paint.fillRect(x, 1, 2, 2); paint.fillRect(x, 93, 2, 2); }
+
+  missionExitGateSpriteCache.set(cacheKey, texture);
+  return texture;
+}
+function missionExitShieldTexture(roomIndex) { return missionExitGateSpriteFrame(roomIndex, state.now); }
+const texturePixelCache = new WeakMap();
+function texturePixels(texture) {
+  if (!texture) return null;
+  if (texturePixelCache.has(texture)) return texturePixelCache.get(texture);
+  const context = texture.getContext?.('2d', { willReadFrequently: true });
+  if (!context) return null;
+  const value = { width: texture.width, height: texture.height, data: context.getImageData(0, 0, texture.width, texture.height).data };
+  texturePixelCache.set(texture, value);
+  return value;
+}
+function sampleWallMaterial(roomIndex, worldX, worldY, worldZ, distance = 0, normalAxis = null) {
+  const pixels = texturePixels(wallTextureForRoom(roomIndex));
+  if (!pixels) return sampleGround(worldX, worldY);
+  // A face whose normal lies on X runs along Y, and vice versa. Passing the
+  // actual edge axis keeps brick/plank direction stable across neighboring rays.
+  const along = normalAxis === 'x'
+    ? worldY
+    : normalAxis === 'y' ? worldX : (Math.abs(fract(worldX) - .5) > Math.abs(fract(worldY) - .5) ? worldY : worldX);
+  const u = ((Math.floor(fract(along) * pixels.width) % pixels.width) + pixels.width) % pixels.width;
+  const v = clamp(Math.floor((1 - fract(worldZ / Math.max(.1, CEILING_Z))) * (pixels.height - 1)), 0, pixels.height - 1);
+  const index = (v * pixels.width + u) * 4;
+  const light = sampleLight(worldX, worldY);
+  const fog = clamp((distance - 3) / 18, 0, .76);
+  const factor = clamp((.3 + light * .68) * (1 - fog * .66), .13, 1.08);
+  return {
+    r: pixels.data[index] * factor,
+    g: pixels.data[index + 1] * factor,
+    b: pixels.data[index + 2] * factor,
+  };
+}
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
@@ -1917,7 +2971,7 @@ function createSteelTexture(size, seed) {
   }
   return texture;
 }
-function createHellTechTexture(size, seed) {
+function createHellTechTexture(size, seed, theme = 'rust') {
   const texture = document.createElement('canvas');
   texture.width = size;
   texture.height = size;
@@ -1936,20 +2990,27 @@ function createHellTechTexture(size, seed) {
     const base = 21 + noise * 27 - seam * 17 - corrosion * 8;
     const ember = circuit * (8 + 12 * fractalNoise(x / 12, y / 35, seed + 41));
     const index = (y * size + x) * 4;
-    image.data[index] = clamp(base + ember * 1.9, 0, 255);
-    image.data[index + 1] = clamp(base + ember * .28, 0, 255);
-    image.data[index + 2] = clamp(base + 5 + noise * 13, 0, 255);
+    const channels = theme === 'cold'
+      ? [base + ember * .35, base + ember * 1.05 + 5, base + ember * 1.45 + 10]
+      : theme === 'olive'
+        ? [base + ember * .85 + 6, base + ember * .72 + 5, base + ember * .2]
+        : theme === 'ember'
+          ? [base + ember * 2.25 + 8, base + ember * .38, base + ember * .12]
+          : [base + ember * 1.9, base + ember * .28, base + 5 + noise * 13];
+    image.data[index] = clamp(channels[0], 0, 255);
+    image.data[index + 1] = clamp(channels[1], 0, 255);
+    image.data[index + 2] = clamp(channels[2], 0, 255);
     image.data[index + 3] = 255;
   }
   context.putImageData(image, 0, 0);
-  context.fillStyle = 'rgba(204, 57, 31, .58)';
+  context.fillStyle = theme === 'cold' ? 'rgba(70, 205, 211, .52)' : theme === 'olive' ? 'rgba(194, 150, 54, .5)' : 'rgba(204, 57, 31, .58)';
   context.shadowBlur = 7;
-  context.shadowColor = '#d9472f';
+  context.shadowColor = theme === 'cold' ? '#46cdd3' : theme === 'olive' ? '#c29636' : '#d9472f';
   for (const [x, y] of [[10, 10], [size - 14, 10], [10, size - 14], [size - 14, size - 14]]) {
     context.fillRect(x - 2, y - 2, 4, 4);
   }
   context.shadowBlur = 0;
-  context.strokeStyle = 'rgba(68, 211, 190, .24)';
+  context.strokeStyle = theme === 'cold' ? 'rgba(91, 217, 232, .3)' : theme === 'olive' ? 'rgba(211, 153, 68, .24)' : 'rgba(68, 211, 190, .24)';
   context.lineWidth = 2;
   for (let y = 22; y < size; y += 43) {
     context.beginPath();
@@ -2133,10 +3194,49 @@ function lobbyGateBlocksPath(x, y) {
   if (state.lobbyGateOpen) return false;
   return gateDepth && gateWidth;
 }
+function missionExitBlocksPath(x, y) {
+  if (!directDungeonStart || state.room < STARTING_ROOM_INDEX || state.room > FINAL_ROOM_INDEX) return false;
+  if (state.securedRooms.has(state.room)) return false;
+  // Keep collision on the exact same world-space doorway as the raycast wall.
+  // The small depth is only the bulkhead thickness; its width is the three
+  // open corridor rows, so there is no invisible margin beyond the shield.
+  const shield = activeMissionExitShieldPlane();
+  if (!shield) return false;
+  return x > shield.x - .22 && x < shield.x + .22
+    && y > shield.minY && y < shield.maxY;
+}
+function missionExitDistance(roomIndex = state.room) {
+  if (roomIndex < STARTING_ROOM_INDEX || roomIndex > FINAL_ROOM_INDEX) return Infinity;
+  const exitX = roomOffsets[roomIndex] + roomWidths[roomIndex] - 1.05;
+  const exitY = roomDoorY(roomIndex) + .5;
+  return Math.hypot(state.player.x - exitX, state.player.y - exitY);
+}
+function showBlockedRouteHint(roomIndex = state.room) {
+  const now = performance.now();
+  if (now - state.blockedHintAt < 1350) return false;
+  state.blockedHintAt = now;
+  const objective = roomObjective(roomIndex);
+  const progress = roomObjectiveProgress(roomIndex);
+  const bossStillActive = objective?.type === 'boss-terminal' && !terminalPrerequisiteMet(roomIndex);
+  const authorization = bossStillActive
+    ? `BOSS SIGNAL ACTIVE · ${objective.hint} The access terminal will release this shield once the target is down.`
+    : 'ACCESS TERMINAL AUTHORIZATION REQUIRED · Find the powered terminal, complete its program, and the shield wall will retract.';
+  showToast(`SHIELD WALL ACTIVE · ${authorization}`, 'danger');
+  announceNarrator(
+    `blocked-route-${rooms[roomIndex]?.id}-${progress.remaining}`,
+    bossStillActive ? 'BOSS SIGNAL ACTIVE' : 'TERMINAL AUTHORIZATION REQUIRED',
+    authorization,
+    'expression-focused',
+    8,
+    { duration: 5.2, priority: 7, force: true },
+  );
+  return true;
+}
 function canStand(x, y) {
   const radius = .17;
-  if (lobbyGateBlocksPath(x, y)) return false;
+  if (lobbyGateBlocksPath(x, y) || missionExitBlocksPath(x, y)) return false;
   if (lobbyGateBlocksPath(x - radius, y - radius) || lobbyGateBlocksPath(x + radius, y - radius) || lobbyGateBlocksPath(x - radius, y + radius) || lobbyGateBlocksPath(x + radius, y + radius)) return false;
+  if (missionExitBlocksPath(x - radius, y - radius) || missionExitBlocksPath(x + radius, y - radius) || missionExitBlocksPath(x - radius, y + radius) || missionExitBlocksPath(x + radius, y + radius)) return false;
   return !isWall(x - radius, y - radius) && !isWall(x + radius, y - radius) && !isWall(x - radius, y + radius) && !isWall(x + radius, y + radius);
 }
 function hasLineOfSight(ax, ay, bx, by) { const distance = Math.hypot(bx - ax, by - ay); const steps = Math.ceil(distance / .12); for (let i = 1; i < steps; i += 1) { const t = i / steps; if (isWall(lerp(ax, bx, t), lerp(ay, by, t))) return false; } return true; }
@@ -2146,10 +3246,10 @@ function allHostiles() {
   return hostiles;
 }
 function hostileById(id) { return allHostiles().find((enemy) => enemy.id === id) || null; }
-function hostileAimHeight(hostile) { return hostile?.boss ? 1.35 : enemyProfile(hostile).aimHeight; }
+function hostileAimHeight(hostile) { return worldFloorHeightAt(hostile?.x || 0, hostile?.y || 0) + (hostile?.boss ? 1.35 : enemyProfile(hostile).aimHeight); }
 function hostileRadius(hostile) { return hostile?.boss ? .92 : Math.max(.22, enemyProfile(hostile).scale * .58); }
 function distanceToAimLine(hostile, direction) {
-  const point = { x: hostile.x - state.player.x, y: hostile.y - state.player.y, z: hostileAimHeight(hostile) - EYE_HEIGHT };
+  const point = { x: hostile.x - state.player.x, y: hostile.y - state.player.y, z: hostileAimHeight(hostile) - playerEyeHeight() };
   const along = point.x * direction.x + point.y * direction.y + point.z * direction.z;
   if (along < 0) return Infinity;
   const nearest = { x: direction.x * along, y: direction.y * along, z: direction.z * along };
@@ -2175,6 +3275,7 @@ function renderCamera() {
     x: roomOffsets[STARTING_ROOM_INDEX] + startPoint.x,
     y: startPoint.y,
     angle: startRoom.spawn.angle,
+    floorZ: worldFloorHeightAt(roomOffsets[STARTING_ROOM_INDEX] + startPoint.x, startPoint.y),
     pitch: 0,
     roll: 0,
     fovKick: 0,
@@ -2189,6 +3290,7 @@ function renderCamera() {
     pitch: Number.isFinite(source.pitch) ? source.pitch : 0,
     roll: Number.isFinite(source.roll) ? source.roll : 0,
     fovKick: Number.isFinite(source.fovKick) ? source.fovKick : 0,
+    floorZ: Number.isFinite(source.floorZ) ? source.floorZ : worldFloorHeightAt(source.x, source.y),
   };
 }
 function cameraFov() {
@@ -2199,7 +3301,9 @@ function cameraFov() {
 function focalX() { return canvas.width / (2 * Math.tan(cameraFov() / 2)); }
 function focalY() { return canvas.height / (2 * Math.tan(VERTICAL_FOV / 2)); }
 function cameraHorizon() { const camera = renderCamera(); return canvas.height * (.5 + (camera.pitch || 0) * 1.18); }
-function projectY(z, forward) { return cameraHorizon() - Math.tan(Math.atan2(z - EYE_HEIGHT, Math.max(.01, forward))) * focalY(); }
+function cameraEyeHeight() { const camera = renderCamera(); return EYE_HEIGHT + (Number.isFinite(camera.cameraFloorZ) ? camera.cameraFloorZ : (camera.floorZ || 0)); }
+function playerEyeHeight() { return EYE_HEIGHT + (state.player.floorZ || 0); }
+function projectY(z, forward) { return cameraHorizon() - Math.tan(Math.atan2(z - cameraEyeHeight(), Math.max(.01, forward))) * focalY(); }
 function cameraPoint(x, y, z) { const camera = renderCamera(); const dx = x - camera.x; const dy = y - camera.y; return { side: -dx * Math.sin(camera.angle) + dy * Math.cos(camera.angle), forward: dx * Math.cos(camera.angle) + dy * Math.sin(camera.angle), z }; }
 function projectCameraPoint(point) {
   if (point.forward <= .04) return null;
@@ -2295,7 +3399,7 @@ function updateCombatHud() {
   const weaponTimer = weaponBusy ? state.weapon.swing : state.weapon.cooldown;
   const weaponTotal = weaponBusy ? definition.duration : Math.max(definition.cooldown || .01, .01);
   const weaponProgress = clamp(1 - weaponTimer / weaponTotal, 0, 1);
-  if (weaponHudLabel) weaponHudLabel.textContent = state.weapon.equipped ? `${definition.label.toUpperCase()} · ${state.weapon.type === 'blade' ? 'MELEE' : state.weapon.type === 'bfg' ? 'ELECTRIC LAUNCHER' : state.weapon.type === 'shotgun' ? 'PUMP-ACTION' : state.weapon.type === 'bfg' ? 'ELECTRIC LAUNCHER' : 'SEMI-AUTO'}` : 'NO WEAPON';
+  if (weaponHudLabel) weaponHudLabel.textContent = state.weapon.equipped ? `${definition.label.toUpperCase()} · ${definition.category || 'FIELD WEAPON'}` : 'NO WEAPON';
   if (weaponStatus) weaponStatus.textContent = state.weapon.reloadTimer > 0 ? `RELOADING ${Math.ceil(state.weapon.reloadTimer * 10) / 10}s` : weaponPhase;
   if (ammoValue) ammoValue.textContent = definition.magazineSize ? `AMMO ${state.weapon.ammo}/${state.weapon.reserveAmmo}` : 'AMMO ∞';
   if (weaponKills) weaponKills.textContent = `KILLS ${state.kills || 0}`;
@@ -2309,7 +3413,14 @@ function updateCombatHud() {
   if (combatMode) combatMode.textContent = state.weapon.reloadTimer > 0 ? 'RELOADING' : weaponPhase;
   if (combatKills) combatKills.textContent = String(state.kills || 0).padStart(2, '0');
   if (combatThreats) combatThreats.textContent = String(threats).padStart(2, '0');
-  weaponSlots.forEach((slot) => slot.classList.toggle('is-active', slot.dataset.weaponSlot === state.weapon.type));
+  weaponSlots.forEach((slot) => {
+    const type = slot.dataset.weaponSlot;
+    const unlocked = state.unlockedWeapons.has(type);
+    slot.classList.toggle('is-active', type === state.weapon.type);
+    slot.classList.toggle('is-locked', !unlocked);
+    slot.disabled = !unlocked;
+    slot.setAttribute('aria-label', unlocked ? `Select ${WEAPON_LOADOUTS[type]?.label || type}` : `${WEAPON_LOADOUTS[type]?.label || type} locked behind an access terminal`);
+  });
   // Advance both resource displays continuously so a changed target does not
   // remove an entire group of pixels in a single HUD update.
   updateSegmentBar(hpBar, state.player.hp, 100);
@@ -2493,8 +3604,8 @@ function narratorTransmissionForState() {
     if (state.lobbyGateOpening) {
       return transmission(
         'lobby-gate-opening',
-        'ARCHIVE KEY',
-        'Archive Key is opening the route. Beyond the forest waits Liam’s Document of Truth—his résumé.',
+        'ARCHIVE SEAL',
+        'The archive seal is opening the route. Beyond the forest waits Liam’s Document of Truth—his résumé.',
         'expression-command',
         10,
       );
@@ -2536,7 +3647,7 @@ function narratorTransmissionForState() {
       return transmission(
         `mini-${miniBoss.id}-critical`,
         'TARGET CRITICAL',
-        `${miniBossName} is below forty-two percent. Keep pressure on it; defeat it to open the exit toward Liam’s résumé.`,
+        `${miniBossName} is below forty-two percent. Keep pressure on it; defeat it to bring the exit terminal online.`,
         'expression-angry',
         6,
       );
@@ -2545,7 +3656,7 @@ function narratorTransmissionForState() {
       return transmission(
         `mini-${miniBoss.id}-sealed`,
         'ARENA SEALED',
-        `${miniBossName} has sealed the arena. The entrance is locked, and the exit stays closed until you defeat it.`,
+        `${miniBossName} has sealed the arena. The entrance is locked; defeat it, then authorize the arena terminal to release the exit.`,
         'expression-command',
         10,
       );
@@ -2553,7 +3664,7 @@ function narratorTransmissionForState() {
     return transmission(
       `mini-${miniBoss.id}-entry`,
       'TARGET ACQUIRED',
-      `That is ${miniBossName}. Cross the threshold; the arena seals behind you, and the exit stays closed until it falls.`,
+      `That is ${miniBossName}. Cross the threshold; the arena seals behind you. Defeat the target, then authorize its terminal to release the exit.`,
       'expression-alert',
       4,
     );
@@ -2790,15 +3901,21 @@ function updateNarratorTypewriter(now) {
   }
 }
 
+function setMissionObjective(label, detail) {
+  if (objectiveLabel) objectiveLabel.textContent = label;
+  if (objectiveDetail) objectiveDetail.textContent = detail;
+}
+
 function updateHud() {
   const active = worldEnemies.filter((enemy) => enemy.roomIndex === state.room && !enemy.dead).length;
   const bossActive = state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead;
   const recovered = worldItems.reduce((count, item) => count + (item.recovered ? 1 : 0), 0);
-  const xpSignature = `${state.xp}|${state.level}|${[...state.unlockedAbilitys].join(',')}|${state.selectedAbilityId || ''}`;
+  const xpSignature = `${state.xp}|${state.level}`;
   const miniBoss = worldEnemies.find((enemy) => enemy.roomIndex === state.room && enemy.miniBoss && !enemy.dead);
   const bossSignature = bossActive ? `${state.finalBoss.hp}|${state.finalBoss.phase}|${state.finalBoss.shield}|${state.finalBoss.waveIndex}|${state.finalBoss.waveState}|${state.finalBoss.waveEnemiesRemaining}` : 'none';
   const guideObjectiveSignature = `${state.guideIntroPhase}|${state.guideControlsLocked ? 1 : 0}|${state.guideWaitingForWeapon ? 1 : 0}|${state.guideWeaponCollected ? 1 : 0}|${lobbyPortfolioScroll.recovered ? 1 : 0}|${state.lobbyGateOpen ? 1 : 0}`;
-  const signature = `${state.room}|${active}|${recovered}|${ITEM_TOTAL}|${Math.ceil(state.player.hp)}|${miniBoss?.id || 'none'}|${xpSignature}|${bossSignature}|${state.doorOfLight?.active ? 1 : 0}|${guideObjectiveSignature}`;
+  const missionSignature = `${state.securedRooms.size}|${state.objectiveKeys.size}|${recoveredFieldReportCount()}|${state.resumeDownloaded ? 1 : 0}`;
+  const signature = `${state.room}|${active}|${recovered}|${ITEM_TOTAL}|${Math.ceil(state.player.hp)}|${miniBoss?.id || 'none'}|${xpSignature}|${bossSignature}|${state.doorOfLight?.active ? 1 : 0}|${guideObjectiveSignature}|${missionSignature}`;
   if (signature !== state.hudSignature) {
     state.hudSignature = signature;
     const room = rooms[state.room];
@@ -2811,39 +3928,46 @@ function updateHud() {
     if (experienceValue) experienceValue.textContent = `LVL ${state.level} · ${state.xp} XP`;
     if (objectiveLabel && objectiveDetail) {
       if (state.room === SANCTUARY_ROOM_INDEX) {
-        objectiveLabel.textContent = state.resumeDownloaded ? 'RÉSUMÉ SECURED' : 'GET THE RÉSUMÉ';
-        objectiveDetail.textContent = state.resumeDownloaded ? 'DOWNLOAD STARTED.' : 'FIND THE PEDESTAL. PRESS E.';
+        setMissionObjective(
+          state.resumeDownloaded ? 'MISSION COMPLETE · RÉSUMÉ SECURED' : 'CLAIM THE DOCUMENT OF TRUTH',
+          state.resumeDownloaded ? 'The résumé is secured and the completed run is archived.' : 'Approach the illuminated pedestal to complete the operation.',
+        );
       } else if (bossActive) {
-        objectiveLabel.textContent = `KILL THE ARCHON · PHASE ${state.finalBoss.phase}`;
-        objectiveDetail.textContent = state.finalBoss.waveActive
-          ? `WAVE ${state.finalBoss.waveIndex} / ${ARCHON_WAVES.length} · ${state.finalBoss.waveEnemiesRemaining} SUPPORT UNITS REMAIN.`
-          : state.finalBoss.shield > 0 ? 'Break the active lattice shield, then keep pressure on the core.' : 'Read the attack rhythm and make the next delivery count.';
+        setMissionObjective(
+          `DEFEAT THE ARCHON · PHASE ${state.finalBoss.phase} / 3`,
+          state.finalBoss.waveActive
+            ? `Clear support wave ${state.finalBoss.waveIndex} of ${ARCHON_WAVES.length}; ${state.finalBoss.waveEnemiesRemaining} units remain.`
+            : state.finalBoss.shield > 0 ? 'Break the lattice shield, then punish the exposed core.' : 'Read the attack rhythm and finish the delivery.',
+        );
       } else if (state.doorOfLight?.active) {
-        objectiveLabel.textContent = 'ENTER THE EXIT';
-        objectiveDetail.textContent = 'THE EXIT IS OPEN. MOVE EAST.';
+        setMissionObjective('ENTER THE ASCENSION GATE', 'The final sector is secure. Move east into the lightwell.');
+      } else if (state.room <= FIELD_REPORT_ROOM_INDEXES[FIELD_REPORT_ROOM_INDEXES.length - 1] && directDungeonStart) {
+        const room = rooms[state.room];
+        const report = fieldReportForRoom(state.room);
+        if (!state.securedRooms.has(state.room)) {
+          const progress = roomObjectiveProgress(state.room);
+          setMissionObjective(progress.label, progress.detail);
+        } else if (report) {
+          setMissionObjective('USE ACCESS TERMINAL', 'The route terminal is online nearby. Approach it and press E to run its case program.');
+        } else {
+          setMissionObjective('SECTOR SECURED · ADVANCE EAST', 'Terminal authorization is stored. Follow the route toward the Document of Truth.');
+        }
       } else if (state.room === 0) {
         if (state.guideIntroPhase === 'look') {
-          objectiveLabel.textContent = 'CLEAR THE THRESHOLD';
-          objectiveDetail.textContent = 'Move through the interior dungeon and eliminate the first threat.';
+          setMissionObjective('CLEAR THE THRESHOLD', 'Move through the interior dungeon and eliminate the first threat.');
         } else if (state.lobbyGateOpen) {
-          objectiveLabel.textContent = 'FOLLOW THE ARCHIVE ROUTE';
-          objectiveDetail.textContent = 'Push through the connected dungeon chambers.';
+          setMissionObjective('FOLLOW THE ARCHIVE ROUTE', 'Push through the connected dungeon chambers.');
         } else if (state.guideWaitingForWeapon || !state.weapon.equipped) {
-          objectiveLabel.textContent = 'READ THE ROOM';
-          objectiveDetail.textContent = 'Start with the signal: separate the requirement from the symptom.';
+          setMissionObjective('READ THE ROOM', 'Start with the signal: separate the requirement from the symptom.');
         } else if (!lobbyPortfolioScroll.recovered) {
-          objectiveLabel.textContent = 'TRACE THE EVIDENCE';
-          objectiveDetail.textContent = 'Read the room, test the path, and leave a result someone else can use.';
+          setMissionObjective('TRACE THE EVIDENCE', 'Read the room, test the path, and leave a result someone else can use.');
         } else {
-          objectiveLabel.textContent = 'OPEN THE ARCHIVE GATE';
-          objectiveDetail.textContent = 'Cast Archive Key with Q. The record is already in your archive.';
+          setMissionObjective('OPEN THE ARCHIVE GATE', 'Approach the seal and press E.');
         }
       } else if (state.room === STARTING_ROOM_INDEX) {
-        objectiveLabel.textContent = 'FOLLOW THE ARCHIVE ROUTE';
-        objectiveDetail.textContent = 'Clear the first chamber, then follow the curving route toward Liam’s Document of Truth.';
+        setMissionObjective('FOLLOW THE ARCHIVE ROUTE', 'Clear the first chamber, then follow the curving route toward Liam’s Document of Truth.');
       } else {
-        objectiveLabel.textContent = 'MAKE THE SIGNAL USEFUL';
-        objectiveDetail.textContent = room.subtitle;
+        setMissionObjective('MAKE THE SIGNAL USEFUL', room.subtitle);
       }
     }
     if (bossPlaque) bossPlaque.hidden = true;
@@ -2885,7 +4009,8 @@ function pushImpactBurst(burst) {
 function spawnPickupEffect(x, y, color) {
   const accent = color || '#e7ad67';
   const count = settings.reducedMotion ? 8 : 22;
-  spawnParticles(x, y, .24, [accent, '#d6b57b', '#fff1b0'], count, {
+  const floorZ = worldFloorHeightAt(x, y);
+  spawnParticles(x, y, floorZ + .24, [accent, '#d6b57b', '#fff1b0'], count, {
     speed: 1.25,
     life: 1.05,
     size: .82,
@@ -2896,7 +4021,7 @@ function spawnPickupEffect(x, y, color) {
     glow: 18,
     trail: true,
   });
-  spawnParticles(x, y, .29, [accent, '#f7e2ac'], settings.reducedMotion ? 3 : 8, {
+  spawnParticles(x, y, floorZ + .29, [accent, '#f7e2ac'], settings.reducedMotion ? 3 : 8, {
     speed: .72,
     life: .82,
     size: 1.25,
@@ -3036,7 +4161,8 @@ function updateParticles(delta) {
     particle.x += particle.vx * delta;
     particle.y += particle.vy * delta;
     particle.z += particle.vz * delta;
-    if (particle.z < .015) { particle.z = .015; particle.vz *= -.24; particle.vx *= .84; particle.vy *= .84; }
+    const floorZ = worldFloorHeightAt(particle.x, particle.y) + .015;
+    if (particle.z < floorZ) { particle.z = floorZ; particle.vz *= -.24; particle.vx *= .84; particle.vy *= .84; }
     active.push(particle);
   }
   state.particles = active;
@@ -3055,7 +4181,7 @@ function drawParticles() {
     const point = projectCameraPoint(camera);
     if (!point) continue;
     const ray = clamp(Math.floor(point.x / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
-    if (camera.forward > state.zBuffer[ray] + .05) continue;
+    if (camera.forward > Math.min(state.zBuffer[ray] || Infinity, surfaceDepthAt(ray, point.y)) + .05) continue;
     const fade = clamp(particle.life / particle.maxLife, 0, 1);
     const radius = Math.max(.7, canvas.height * .008 * particle.size / Math.max(.7, camera.forward));
     const rgb = hexToRgb(particle.color);
@@ -3611,13 +4737,14 @@ function setCinematicUi(phase = '') {
   gameShell.classList.toggle('cinematic-hud', phase === 'hud');
 }
 function saveCinematicHome() {
-  return { x: state.player.x, y: state.player.y, angle: state.player.angle, room: state.room };
+  return { x: state.player.x, y: state.player.y, angle: state.player.angle, floorZ: state.player.floorZ || 0, room: state.room };
 }
 function restoreCinematicHome(home) {
   if (!home) return;
   state.player.x = home.x;
   state.player.y = home.y;
   state.player.angle = home.angle;
+  state.player.floorZ = home.floorZ || worldFloorHeightAt(home.x, home.y);
   state.room = home.room;
 }
 
@@ -3756,10 +4883,10 @@ function sampleCinematicRoute(route, progress) {
     angle: Math.atan2(look.y - previous.y, look.x - previous.x),
   };
 }
-function setCinematicCamera(point, options={}) { const previous=state.cinematicCamera||{}; state.cinematicCamera={active:true,x:point.x,y:point.y,angle:point.angle??previous.angle??state.player.angle,pitch:options.pitch??previous.pitch??0,roll:options.roll??previous.roll??0,fovKick:options.fovKick??previous.fovKick??0}; }
+function setCinematicCamera(point, options={}) { const previous=state.cinematicCamera||{}; state.cinematicCamera={active:true,x:point.x,y:point.y,angle:point.angle??previous.angle??state.player.angle,floorZ:options.floorZ??point.floorZ??worldFloorHeightAt(point.x,point.y),pitch:options.pitch??previous.pitch??0,roll:options.roll??previous.roll??0,fovKick:options.fovKick??previous.fovKick??0}; }
 function clearCinematicCamera() { state.cinematicCamera=null; }
 function previewBootElapsed(preview) {
-  return Math.max(0, preview.elapsed - (preview.elevatorDuration || 0));
+  return Math.max(0, preview.elapsed - (preview.elevatorDuration || 0) - (preview.tourDuration || 0));
 }
 function visorTutorialComplete() {
   const tutorial = state.visorTutorial;
@@ -3782,7 +4909,7 @@ function updateVisorTutorialFeed(preview = state.levelPreview) {
       ? tutorial.mouseEngaged ? ' MOUSE LINK ..... ENGAGED / HOLD HEADING' : ' MOUSE LINK ..... CLICK TO ENGAGE'
       : ' LOOK ........ MOVE MOUSE',
     fire: activeStep === 'fire' ? ' FIRE ........ PRIMARY CLICK' : ' FIRE ........ PRIMARY CLICK',
-    weapon: activeStep === 'weapon' ? ' LOADOUT ..... PRESS 1–3 / SWITCH' : ' LOADOUT ..... PRESS 1–3',
+    weapon: activeStep === 'weapon' ? ' LOADOUT ..... PRESS 1–6 / SWITCH' : ' LOADOUT ..... PRESS 1–6',
   };
   for (const [key, line] of Object.entries(visorTutorialLines)) {
     if (!line) continue;
@@ -3799,7 +4926,7 @@ function updateVisorTutorialFeed(preview = state.levelPreview) {
       : activeStep === 'fire'
         ? 'PRIMARY CLICK TO TEST FIRE CONTROL'
         : activeStep === 'weapon'
-          ? 'PRESS 1–3 TO CYCLE THE LOADOUT'
+          ? 'PRESS 1–6 TO SELECT UNLOCKED WEAPONS'
           : 'CONTROL LINK CONFIRMED';
     visorTrainingHint.textContent = hint;
   }
@@ -3842,7 +4969,7 @@ function updateVisorBootFeed(preview) {
     optics: tutorial.mouseEngaged ? 'MOUSE LINK' : bootElapsed >= 1.25 ? 'ENGAGE MOUSE' : 'OFFLINE',
     motion: phases.motion ? 'LOOK PASS' : preview.phase === 'hud-flicker' ? 'MOVE MOUSE' : 'CAMERA LOCKED',
     range: phases.range ? 'FIRE PASS' : bootElapsed >= 4.1 ? 'PRIMARY CLICK' : 'WAITING',
-    threat: phases.threat ? 'LOADOUT PASS' : bootElapsed >= 5.45 ? 'PRESS 1–3' : 'UNLINKED',
+    threat: phases.threat ? 'LOADOUT PASS' : bootElapsed >= 5.45 ? 'PRESS 1–6' : 'UNLINKED',
     combat: phases.combat ? 'READY' : progress >= .9 ? 'CHECKS PENDING' : 'LOCKED',
   };
   for (const [key, line] of Object.entries(visorFeedLines)) {
@@ -3863,18 +4990,27 @@ function updateVisorBootFeed(preview) {
   }
 }
 function beginLevelPreview() {
+  const home = saveCinematicHome();
+  const routeTarget = {
+    x: roomOffsets[STARTING_ROOM_INDEX] + roomWidths[STARTING_ROOM_INDEX] - 3.2,
+    y: roomDoorY(STARTING_ROOM_INDEX) + .5,
+  };
+  const openingRoute = smoothCinematicRoute(cinematicPath(home, routeTarget));
   state.visorTutorial = { look: false, fire: false, weapon: false, active: true, step: 'look', mouseEngaged: false };
   state.levelPreview = {
     elapsed: 0,
-    elevatorDuration: 6.2,
-    bootDuration: 8.2,
-    duration: 14.4,
-    weaponDuration: 2.4,
-    lookLeftDuration: 1.5,
-    lookRightDuration: 1.5,
-    hudFlickerDuration: 2.8,
+    liftDuration: 6.25,
+    elevatorDuration: 6.25,
+    tourDuration: 0,
+    bootDuration: 4.6,
+    duration: 10.85,
+    weaponDuration: 1.55,
+    lookLeftDuration: .8,
+    lookRightDuration: .8,
+    hudFlickerDuration: 1.45,
     phase: 'elevator-approach',
-    home: saveCinematicHome(),
+    home,
+    route: openingRoute.length > 1 ? openingRoute : [{ x: home.x, y: home.y }],
   };
   updateVisorTutorialFeed(state.levelPreview);
   state.keys.clear();
@@ -3913,7 +5049,7 @@ function aimCinematicCamera(camera, target, strength = .7) {
   if (!target) return camera;
   camera.angle = normalizeAngle(lerp(camera.angle, Math.atan2(target.y - camera.y, target.x - camera.x), strength));
   const distance = Math.max(.25, Math.hypot(target.x - camera.x, target.y - camera.y));
-  camera.pitch = clamp(camera.pitch + Math.atan2((target.z || .58) - EYE_HEIGHT, distance) * .12, -.12, .12);
+  camera.pitch = clamp(camera.pitch + Math.atan2((target.z || .58) - (EYE_HEIGHT + (camera.floorZ || 0)), distance) * .12, -.12, .12);
   return camera;
 }
 
@@ -3922,12 +5058,13 @@ function updateLevelPreview(delta) {
   if (!preview) return;
   preview.elapsed += delta;
   const elevatorEnd = preview.elevatorDuration;
+  const tourEnd = elevatorEnd + (preview.tourDuration || 0);
   const bootElapsed = previewBootElapsed(preview);
   const weaponEnd = preview.weaponDuration;
   const leftEnd = weaponEnd + preview.lookLeftDuration;
   const rightEnd = leftEnd + preview.lookRightDuration;
   const progress = clamp(preview.elapsed / preview.duration, 0, 1);
-  const camera = { x: preview.home.x, y: preview.home.y, angle: preview.home.angle, pitch: .025 };
+  const camera = { x: preview.home.x, y: preview.home.y, angle: preview.home.angle, floorZ: preview.home.floorZ || 0, pitch: .025 };
 
   if (state.visorTutorial?.active) updateVisorTutorialFeed(preview);
 
@@ -3935,31 +5072,47 @@ function updateLevelPreview(delta) {
     // Keep the logical player at the Threshold Chamber while the cinematic
     // camera moves through the visual lift and takes one deliberate step out.
     state.room = STARTING_ROOM_INDEX;
-    preview.phase = preview.elapsed < .85 ? 'elevator-approach'
-      : preview.elapsed < 1.75 ? 'elevator-close'
-        : preview.elapsed < 3.05 ? 'elevator-travel'
-          : preview.elapsed < 4.35 ? 'elevator-open'
+    preview.phase = preview.elapsed < .72 ? 'elevator-approach'
+      : preview.elapsed < 1.3 ? 'elevator-close'
+        : preview.elapsed < 3.55 ? 'elevator-travel'
+          : preview.elapsed < 5.0 ? 'elevator-open'
             : 'elevator-step-out';
-    const stepOut = smoothstep(4.35, elevatorEnd, preview.elapsed);
-    const forward = stepOut * 1.45;
+    const stepOut = smoothstep(5.0, elevatorEnd, preview.elapsed);
+    const forward = stepOut * 1.72;
     camera.x += Math.cos(preview.home.angle) * forward;
     camera.y += Math.sin(preview.home.angle) * forward;
     camera.pitch = preview.phase === 'elevator-step-out'
       ? lerp(.012, -.006, stepOut)
-      : lerp(.05, .018, smoothstep(0, 1, preview.elapsed / 4.35));
-    camera.roll = Math.sin(preview.elapsed * 3.2) * .003 * (1 - stepOut);
+      : lerp(.05, .012, smoothstep(0, 1, preview.elapsed / 3.9));
+    const liftRumble = preview.phase === 'elevator-travel' ? .012 : .004;
+    camera.roll = Math.sin(preview.elapsed * 9.2) * liftRumble * (1 - stepOut);
+  } else if (preview.elapsed < tourEnd) {
+    preview.phase = 'world-tour';
+    const tourProgress = clamp((preview.elapsed - elevatorEnd) / Math.max(.01, preview.tourDuration || 0), 0, 1);
+    const tourCamera = sampleCinematicRoute(preview.route, tourProgress);
+    camera.x = tourCamera.x;
+    camera.y = tourCamera.y;
+    camera.angle = tourCamera.angle;
+    camera.floorZ = worldFloorHeightAt(camera.x, camera.y);
+    camera.pitch = lerp(-.018, .028, Math.sin(tourProgress * Math.PI));
+    camera.roll = settings.reducedMotion ? 0 : Math.sin(tourProgress * Math.PI * 2) * .012;
+    state.room = clamp(roomIndexAtX(camera.x), STARTING_ROOM_INDEX, FINAL_ROOM_INDEX);
   } else if (bootElapsed < weaponEnd) {
+    state.room = STARTING_ROOM_INDEX;
     preview.phase = 'weapon-lift';
     camera.pitch = lerp(.055, .012, smoothstep(0, 1, bootElapsed / weaponEnd));
   } else if (bootElapsed < leftEnd) {
+    state.room = STARTING_ROOM_INDEX;
     preview.phase = 'look-left';
     const local = clamp((bootElapsed - weaponEnd) / preview.lookLeftDuration, 0, 1);
     camera.angle = normalizeAngle(preview.home.angle - lerp(0, .62, smoothstep(0, 1, local)));
   } else if (bootElapsed < rightEnd) {
+    state.room = STARTING_ROOM_INDEX;
     preview.phase = 'look-right';
     const local = clamp((bootElapsed - leftEnd) / preview.lookRightDuration, 0, 1);
     camera.angle = normalizeAngle(preview.home.angle - .62 + lerp(0, 1.24, smoothstep(0, 1, local)));
   } else {
+    state.room = STARTING_ROOM_INDEX;
     preview.phase = 'hud-flicker';
     const local = clamp((bootElapsed - rightEnd) / preview.hudFlickerDuration, 0, 1);
     if (gameShell) gameShell.classList.toggle('hud-flicker-on', Math.floor(bootElapsed * 14) % 2 === 0 || local > .84);
@@ -3967,8 +5120,8 @@ function updateLevelPreview(delta) {
 
   setCinematicCamera(camera, {
     pitch: camera.pitch,
-    roll: Math.sin(preview.elapsed * 2.1) * .006,
-    fovKick: preview.phase === 'weapon-lift' ? .065 : .018,
+    roll: Number.isFinite(camera.roll) ? camera.roll : Math.sin(preview.elapsed * 2.1) * .006,
+    fovKick: preview.phase === 'world-tour' ? -.045 : preview.phase === 'weapon-lift' ? .065 : .018,
   });
   setCinematicUi(preview.phase === 'hud-flicker' ? 'flicker' : 'reveal');
   updateVisorBootFeed(preview);
@@ -4180,12 +5333,12 @@ function addOpeningElevatorBox(faces, home, center, dimensions, yaw, color, shad
   addBoxFaces(faces, points, color, shade, material);
 }
 function drawOpeningElevator3D(preview, now) {
-  if (!preview || preview.elapsed >= preview.elevatorDuration) return;
+  if (!preview || preview.elapsed >= (preview.liftDuration || preview.elevatorDuration)) return;
   const home = preview.home;
   if (!home) return;
   const elapsed = preview.elapsed;
-  const open = elapsed < 3.05 ? 0 : elapsed < 4.35 ? smoothstep(3.05, 4.35, elapsed) : 1;
-  const stepOut = smoothstep(4.35, preview.elevatorDuration, elapsed);
+  const open = elapsed < 3.55 ? 0 : elapsed < 5.0 ? smoothstep(3.55, 5.0, elapsed) : 1;
+  const stepOut = smoothstep(5.0, preview.liftDuration || preview.elevatorDuration, elapsed);
   const opacity = 1 - stepOut * .72;
   const faces = [];
   const width = 3.65;
@@ -4251,10 +5404,11 @@ function drawOpeningElevator3D(preview, now) {
   }
 }
 function drawOpeningElevatorIntro(preview, now) {
-  if (!preview || preview.elapsed >= preview.elevatorDuration) return;
-  const progress = clamp(preview.elapsed / preview.elevatorDuration, 0, 1);
-  const open = preview.elapsed < 3.05 ? 0 : preview.elapsed < 4.35 ? smoothstep(3.05, 4.35, preview.elapsed) : 1;
-  const stepOut = smoothstep(4.35, preview.elevatorDuration, preview.elapsed);
+  if (!preview || preview.elapsed >= (preview.liftDuration || preview.elevatorDuration)) return;
+  const liftDuration = preview.liftDuration || preview.elevatorDuration;
+  const progress = clamp(preview.elapsed / liftDuration, 0, 1);
+  const open = preview.elapsed < 3.55 ? 0 : preview.elapsed < 5.0 ? smoothstep(3.55, 5.0, preview.elapsed) : 1;
+  const stepOut = smoothstep(5.0, liftDuration, preview.elapsed);
   const detail = preview.phase === 'elevator-travel'
     ? 'DESCENDING'
     : preview.phase === 'elevator-step-out'
@@ -4283,16 +5437,88 @@ function drawOpeningElevatorIntro(preview, now) {
   ctx.restore();
 }
 
+function drawOpeningSpritePremonition(preview, now) {
+  if (!preview || preview.phase !== 'elevator-travel') return;
+  const start = 1.28;
+  const end = 3.48;
+  const progress = clamp((preview.elapsed - start) / Math.max(.01, end - start), 0, 1);
+  if (progress <= 0 || progress >= 1) return;
+  const visions = [
+    { id: 'contract-warden', name: 'THE CONTRACT WARDEN', role: 'BREAK THE SHIELD', color: '#58d9cf' },
+    { id: 'burnout-keeper', name: 'THE BURNOUT KEEPER', role: 'SURVIVE THE HUNT', color: '#e85b39' },
+    { id: 'operations-archon', name: 'THE OPERATIONS ARCHON', role: 'FINISH THE DELIVERY', color: '#e7ad67' },
+  ];
+  const visionIndex = clamp(Math.floor(progress * visions.length), 0, visions.length - 1);
+  const vision = visions[visionIndex];
+  const local = progress * visions.length - visionIndex;
+  const sprite = bossAtlasSprite({ id: vision.id }, local > .58 ? 1 : 0, local > .42);
+  if (!sprite) return;
+  const width = canvas.width;
+  const height = canvas.height;
+  const reveal = Math.pow(Math.sin(local * Math.PI), 1.1);
+  const glitch = Math.sin(now * .075 + visionIndex * 1.7) > .35 ? 1 : .64;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.globalAlpha = reveal * .28;
+  const warning = ctx.createRadialGradient(width * .5, height * .5, 0, width * .5, height * .5, height * .72);
+  warning.addColorStop(0, `${vision.color}aa`);
+  warning.addColorStop(.55, 'rgba(92, 21, 18, .3)');
+  warning.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = warning;
+  ctx.fillRect(0, 0, width, height);
+  const drawHeight = height * .86 * (1 + local * .035);
+  const drawWidth = drawHeight * sprite.width / sprite.height;
+  const jitter = settings.reducedMotion ? 0 : Math.sin(now * .035) * 5 + (glitch < .8 ? 9 : 0);
+  ctx.globalAlpha = reveal * glitch * .78;
+  ctx.drawImage(sprite, width * .5 - drawWidth / 2 + jitter, height * .08, drawWidth, drawHeight);
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = reveal * .28;
+  ctx.fillStyle = vision.color;
+  for (let stripe = 0; stripe < 5; stripe += 1) {
+    const y = height * (.2 + stripe * .13) + Math.sin(now * .02 + stripe) * 8;
+    ctx.fillRect(width * .08, y, width * .84, Math.max(1, height * .002));
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = reveal * .9;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff1c4';
+  ctx.font = `700 ${Math.max(12, height * .024)}px "Courier New", monospace`;
+  ctx.fillText(vision.name, width * .5, height * .78);
+  ctx.fillStyle = vision.color;
+  ctx.font = `700 ${Math.max(9, height * .014)}px "Courier New", monospace`;
+  ctx.fillText(`${vision.role}  //  SIGNAL ${visionIndex + 1}/3`, width * .5, height * .825);
+  ctx.restore();
+}
+
+function drawOpeningWorldTour(preview, now) {
+  if (!preview || preview.phase !== 'world-tour') return;
+  const progress = clamp((preview.elapsed - preview.elevatorDuration) / Math.max(.01, preview.tourDuration || 0), 0, 1);
+  const detail = progress < .34 ? 'VERTICAL ROUTE DETECTED' : progress < .72 ? 'SIDE CHAMBERS ACTIVE' : 'EASTERN SEAL LOCATED';
+  drawCinematicGrade(progress, '#6ce0c2', 'THRESHOLD CHAMBER / LIVE ROUTE', detail, now, .08, .12);
+  const width = canvas.width;
+  const height = canvas.height;
+  const pulse = Math.sin(now / 120) * .08;
+  ctx.save();
+  ctx.globalAlpha = .52 + pulse;
+  ctx.strokeStyle = '#6ce0c2';
+  ctx.lineWidth = Math.max(1, height * .002);
+  ctx.beginPath();
+  ctx.moveTo(width * .48, height * .76); ctx.lineTo(width * .5, height * .72); ctx.lineTo(width * .52, height * .76);
+  ctx.stroke();
+  ctx.fillStyle = '#fff1c4';
+  ctx.font = `700 ${Math.max(8, height * .011)}px "Courier New", monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('FIND THE RAMP · CLAIM THE HIGH ROUTE · CHECK BOTH FLANKS', width * .5, height * .82);
+  ctx.restore();
+}
+
 function drawLevelPreview() {
   const preview = state.levelPreview;
   if (!preview) return;
-  const progress = clamp(preview.elapsed / preview.duration, 0, 1);
-  const label = preview.phase === 'pedestal-hold' || preview.phase === 'fade'
-    ? 'SANCTUARY / DOCUMENT OF TRUTH'
-    : 'VISOR BOOT / SYSTEM IGNITION';
-  drawVisorBootOverlay(preview);
-  drawIntroHypeOverlay(preview, state.now || performance.now());
   drawOpeningElevatorIntro(preview, state.now || performance.now());
+  drawOpeningSpritePremonition(preview, state.now || performance.now());
+  drawOpeningWorldTour(preview, state.now || performance.now());
   if (preview.fade > 0) {
     ctx.save();
     ctx.fillStyle = `rgba(0, 0, 0, ${clamp(preview.fade, 0, 1)})`;
@@ -4460,6 +5686,7 @@ function finishForestTransition() {
   const transition = state.forestTransition;
   if (!transition) return;
   state.player.x = transition.destination.x; state.player.y = transition.destination.y;
+  state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
   state.player.angle = transition.destination.angle; state.room = STARTING_ROOM_INDEX;
   recoverPlayerFromWall(STARTING_ROOM_INDEX);
   announceNarrator('threshold-arrival', 'THRESHOLD / ROUTE RESTORED', 'CAMERA RESTORED. CLEAR THE THRESHOLD AND SECURE THE DOCUMENT OF TRUTH.', 'expression-command', 10, { duration: 6.5, priority: 8, force: true });
@@ -4497,7 +5724,7 @@ function drawForestTransition() {
 function beginBossTransition() {
   if (state.transition || state.room === FINAL_ROOM_INDEX || state.gameComplete) return;
   const finalSpawn = roomContentPoint(FINAL_ROOM_INDEX, rooms[FINAL_ROOM_INDEX].spawn.x, rooms[FINAL_ROOM_INDEX].spawn.y);
-  state.transition = { elapsed: 0, duration: 12.5, teleported: false, revealStarted: false, targetRoom: FINAL_ROOM_INDEX, home: saveCinematicHome(), destination: { x: roomOffsets[FINAL_ROOM_INDEX] + finalSpawn.x, y: finalSpawn.y, angle: rooms[FINAL_ROOM_INDEX].spawn.angle } };
+  state.transition = { elapsed: 0, duration: 7.5, teleported: false, revealStarted: false, targetRoom: FINAL_ROOM_INDEX, home: saveCinematicHome(), destination: { x: roomOffsets[FINAL_ROOM_INDEX] + finalSpawn.x, y: finalSpawn.y, angle: rooms[FINAL_ROOM_INDEX].spawn.angle } };
   state.transition.route = cinematicTransitionRoute({ x: state.transition.home.x, y: state.transition.home.y }, state.transition.destination);
   setCinematicCamera({ x: state.player.x, y: state.player.y, angle: state.player.angle }, { pitch: .02, fovKick: .02 });
   setCinematicUi('dialogue');
@@ -4510,7 +5737,9 @@ function finishBossTransition() {
   const transition = state.transition;
   if (!transition) return;
   state.player.x = transition.destination.x; state.player.y = transition.destination.y;
+  state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
   state.player.angle = transition.destination.angle; state.room = FINAL_ROOM_INDEX; state.finalArenaTime = .01;
+  ensureRoomPerformance(FINAL_ROOM_INDEX);
   recoverPlayerFromWall(FINAL_ROOM_INDEX);
   state.finalBoss.alerted = true;
   announceNarrator('archon-entry', 'FINAL ENCOUNTER', 'CAMERA RESTORED. BREAK THE ARCHON. REACH THE EXIT.', 'expression-worried', 5, { duration: 8, priority: 9, force: true });
@@ -4596,22 +5825,28 @@ function setMiniBossDoors(roomIndex, entranceClosed, exitOpen = false) {
   const width = roomWidths[roomIndex];
   const doorY = roomDoorY(roomIndex);
   const centerY = Math.floor(roomHeights[roomIndex] / 2);
-  const doorwayRows = [doorY, doorY + 1];
+  const doorwayRows = roomHallRows(roomIndex);
   const combatRows = [centerY - 1, centerY, centerY + 1];
   for (const y of doorwayRows) {
     worldMap[y][entranceWallX] = entranceClosed ? '1' : '0';
     worldMap[y][offset] = '0';
-    worldMap[y][offset + width - 1] = exitOpen ? '0' : '1';
+    // The doorway stays physically open in the tile map while its dynamic
+    // shield gate is active. Closing this cell hid the raycast gate behind a
+    // normal wall in boss arenas, making the required exit seal invisible.
+    // activeMissionExitShieldPlane owns both the visible bulkhead and collision.
+    worldMap[y][offset + width - 1] = '0';
   }
   // The player fights in the center lane. When the target falls, connect that
   // lane to the actual east doorway so the exit is reachable from the kill area.
   for (const y of combatRows) {
-    worldMap[y][offset + width - 1] = exitOpen ? '0' : '1';
+    // Preserve the arena's side wall outside the true three-row door. This
+    // prevents a high-side bypass while leaving the shield aperture readable.
+    if (!doorwayRows.includes(y)) worldMap[y][offset + width - 1] = '1';
   }
   if (exitOpen) {
-    // Three cells wide: the player can reach the unlocked doorway from any
-    // position in the central combat lane without catching a wall corner.
-    for (let y = Math.min(doorY, centerY) - 1; y <= Math.max(doorY + 1, centerY + 1); y += 1) {
+    // The full three-wide connector reaches the central combat lane without a
+    // corner snag or a one-tile bypass around the encounter seal.
+    for (let y = Math.min(doorwayRows[0], centerY) - 1; y <= Math.max(doorwayRows[doorwayRows.length - 1], centerY + 1); y += 1) {
       for (let x = width - 4; x <= width - 1; x += 1) worldMap[y][offset + x] = '0';
     }
   }
@@ -4636,8 +5871,8 @@ function beginRouteOverview() {
   if (route.length < 2) return false;
   state.routeOverview = {
     elapsed: 0,
-    duration: 22,
-    overviewDuration: 3.4,
+    duration: 10.5,
+    overviewDuration: 2.3,
     phase: 'map-overview',
     routeProgress: 0,
     home,
@@ -4730,14 +5965,15 @@ function beginMiniBossArena(roomIndex, cinematicHome = null) {
   state.miniBossCutscene = {
     roomIndex,
     elapsed: 0,
-    duration: 6.6,
-    scanStart: 1.1,
-    lockStart: 4.25,
+    duration: 4.6,
+    scanStart: .8,
+    lockStart: 2.9,
     phase: 'approach',
     home,
     destination,
     target,
     miniBossName: miniBoss.name,
+    bossKit: miniBoss.bossKit,
   };
   setCinematicCamera({ x: destination.x, y: destination.y, angle: destination.angle }, { pitch: .018, fovKick: .02 });
   setCinematicUi('dialogue');
@@ -4754,10 +5990,13 @@ function updateMiniBossArenaLock() {
   if (!arena?.active || state.room !== arena.roomIndex) return;
   const remainingMiniBoss = worldEnemies.some((enemy) => enemy.roomIndex === arena.roomIndex && enemy.miniBoss && !enemy.dead);
   if (!remainingMiniBoss) {
-    arena.exitOpen = true;
     arena.active = false;
     arena.entranceClosed = true;
-    setMiniBossDoors(arena.roomIndex, true, true);
+    // Boss rooms deliberately retain their combat requirement, but the route
+    // still belongs to the terminal. Keep the eastern door shut until its
+    // authorization program is complete.
+    arena.exitOpen = terminalAuthorizedForRoom(arena.roomIndex);
+    setMiniBossDoors(arena.roomIndex, true, arena.exitOpen);
     recoverPlayerFromWall(arena.roomIndex);
     setMusicMode('dungeon');
     return;
@@ -4824,6 +6063,7 @@ function updateMiniBossCutscene(delta) {
   if (progress >= 1) {
     state.player.x = cutscene.destination.x;
     state.player.y = cutscene.destination.y;
+    state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
     state.player.angle = cutscene.destination.angle;
     state.room = cutscene.roomIndex;
     recoverPlayerFromWall(cutscene.roomIndex);
@@ -4832,10 +6072,15 @@ function updateMiniBossCutscene(delta) {
     state.miniBossCutscene = null;
     const targetEnemy = worldEnemies.find((candidate) => candidate.roomIndex === cutscene.roomIndex && candidate.miniBoss && !candidate.dead);
     if (targetEnemy) {
+      const fightTips = {
+        contract: 'Break the audit shield, use the ledge to cross its firing lane, then punish the reload.',
+        seismic: 'Stay out of the fault lines. Its stone armor opens only after each seismic commitment.',
+        burnout: 'This one has no ranged attack. Sidestep the lunge and do not stand still through the claw chain.',
+      };
       announceNarrator(
         `mini-${targetEnemy.id}-arrival`,
         'TARGET ACQUIRED',
-        `${targetEnemy.displayName || targetEnemy.name} is ahead. Clear the arena and keep the archive route open.`,
+        fightTips[targetEnemy.bossKit] || `${targetEnemy.displayName || targetEnemy.name} is ahead. Clear the arena and keep the archive route open.`,
         'expression-alert',
         4,
         { duration: 5.5, priority: 8, force: true },
@@ -4847,7 +6092,8 @@ function updateMiniBossCutscene(delta) {
 function drawMiniBossCutscene() {
   const shot = state.miniBossCutscene;
   if (!shot) return;
-  drawCinematicTransitionFrame(shot, `${shot.miniBossName} / TROPHY ROOM`, '#d99762', state.now || performance.now());
+  const accent = shot.bossKit === 'seismic' ? '#7896b8' : shot.bossKit === 'burnout' ? '#e85b39' : '#58d9cf';
+  drawCinematicTransitionFrame(shot, `${shot.miniBossName} / ${rooms[shot.roomIndex]?.shortTitle?.toUpperCase() || 'ARENA'}`, accent, state.now || performance.now());
 }
 function tryBeginMiniBossEntry(roomIndex) {
   if (!miniBossRoom(roomIndex) || roomIndex < STARTING_ROOM_INDEX) return false;
@@ -4879,17 +6125,9 @@ function updateRoomFromPlayer() {
   }
   if (tryBeginMiniBossEntry(next)) return;
   if (next !== state.room) {
-    const previousRoom = state.room;
     state.room = next;
-    if (
-      next === firstMiniBossRoomIndex() + 1
-      && previousRoom === firstMiniBossRoomIndex()
-      && firstMiniBossDefeated()
-    ) {
-      // The map overview is a separate trigger: it starts only when the player
-      // crosses into the area beyond the first cleared mini-boss room.
-      beginRouteOverview();
-    } else if (next !== FINAL_ROOM_INDEX && next !== SANCTUARY_ROOM_INDEX) {
+    if (next <= FINAL_ROOM_INDEX) ensureRoomPerformance(next);
+    if (next !== FINAL_ROOM_INDEX && next !== SANCTUARY_ROOM_INDEX) {
       const room = rooms[next];
       announceNarrator(
         `room-entry-${room.id}`,
@@ -5070,6 +6308,9 @@ function playBladeSound() {
 function playWeaponSound() {
   if (state.weapon.type === 'arsenal') playGunshotReport();
   else if (state.weapon.type === 'shotgun') playShotgunBlast();
+  else if (state.weapon.type === 'plasma') { playNoiseSweep(.1, .014, 'bandpass', 2600, 760, 0, 1.15); playTone(180, .07, 'square', .008); }
+  else if (state.weapon.type === 'rail') { playElectricalDischarge(); playLowThump(38, .2, .04); }
+  else if (state.weapon.type === 'rivet') { playGunshotReport(); playMetallicAction(.06, .014); }
   else if (state.weapon.type === 'bfg') playElectricalDischarge();
   else if (state.weapon.type === 'stars') playNinjaStarSound();
   else if (state.weapon.type === 'blade') playBladeSound();
@@ -5195,7 +6436,8 @@ function getNearestItem(maxDistance = 1.55) {
   let best = maxDistance;
   const activeRoom = currentRoomIndex();
   for (const item of worldItems) {
-    if (item.recovered || ['ammo-pickup', 'ammo-arsenal', 'ammo-shotgun', 'ammo-bfg'].includes(item.kind) || item.roomIndex !== activeRoom) continue;
+    if (item.recovered || item.kind === 'ammo-pickup' || item.kind?.startsWith('ammo-') || item.kind?.startsWith('health-') || item.roomIndex !== activeRoom) continue;
+    if (Math.abs(worldFloorHeightAt(item.x, item.y) - state.player.floorZ) > .34) continue;
     const distance = Math.hypot(item.x - state.player.x, item.y - state.player.y);
     if (distance < best) { best = distance; nearest = item; }
   }
@@ -5211,6 +6453,7 @@ function getNearestPromptScroll(maxDistance = 1.55) {
   let best = maxDistance;
   for (const item of worldItems) {
     if (item.recovered || item.roomIndex !== currentRoomIndex() || item.kind !== 'scroll') continue;
+    if (Math.abs(worldFloorHeightAt(item.x, item.y) - state.player.floorZ) > .34) continue;
     const distance = Math.hypot(item.x - state.player.x, item.y - state.player.y);
     if (distance < best) {
       best = distance;
@@ -5516,6 +6759,16 @@ function ensureWeaponAmmo(type = state.weapon.type) {
     state.weapon.reloadTime = definition.reloadTime;
   }
 }
+function refillUnlockedWeaponAmmo() {
+  for (const type of state.unlockedWeapons) {
+    const definition = WEAPON_LOADOUTS[type];
+    if (!definition?.magazineSize) continue;
+    state.weapon.ammoByType[type] = definition.magazineSize;
+    state.weapon.reserveByType[type] = definition.reserveAmmo;
+  }
+  if (!state.unlockedWeapons.has(state.weapon.type)) state.weapon.type = 'arsenal';
+  ensureWeaponAmmo(state.weapon.type);
+}
 function syncWeaponAmmo() {
   const type = state.weapon.type;
   const definition = WEAPON_LOADOUTS[type];
@@ -5628,7 +6881,7 @@ function selectAbility(abilityId, announce = true) {
   state.promptSignature = '';
   state.hudSignature = '';
   if (announce) showToast(`${ability.name} selected.`, 'good');
-  spawnParticles(state.player.x, state.player.y, EYE_HEIGHT, ability.color, settings.reducedMotion ? 3 : 8, { speed: .8, life: .42, size: .75, glow: 10, upward: .4 });
+  spawnParticles(state.player.x, state.player.y, playerEyeHeight(), ability.color, settings.reducedMotion ? 3 : 8, { speed: .8, life: .42, size: .75, glow: 10, upward: .4 });
   updateHud();
   return true;
 }
@@ -5654,8 +6907,12 @@ function updateWeaponSelection(type) {
   if (loadoutDescription) loadoutDescription.textContent = WEAPON_LOADOUTS[type].description;
   return true;
 }
-function setWeapon(type) {
-  if (!WEAPON_LOADOUTS[type]) return;
+function setWeapon(type, force = false) {
+  if (!WEAPON_LOADOUTS[type]) return false;
+  if (!force && !state.unlockedWeapons.has(type)) {
+    showToast(`${WEAPON_LOADOUTS[type].label.toUpperCase()} IS SEALED IN AN ACCESS TERMINAL.`, 'danger');
+    return false;
+  }
   const previousType = state.weapon.type;
   syncWeaponAmmo();
   updateWeaponSelection(type);
@@ -5673,11 +6930,13 @@ function setWeapon(type) {
     markVisorTutorial('weapon');
     if (!state.levelPreview) {
       const color = WEAPON_LOADOUTS[type].impactColor;
-      pushImpactBurst({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .24, color, radius: .22 });
+      pushImpactBurst({ x: state.player.x, y: state.player.y, z: playerEyeHeight(), elapsed: 0, duration: .24, color, radius: .22 });
       showToast(`${WEAPON_LOADOUTS[type].label} equipped.`, 'good');
       playWeaponEquipSound(type);
     }
   }
+  updateCombatHud();
+  return true;
 }
 
 function currentAbilityDefinition() {
@@ -5692,49 +6951,36 @@ function newlyUnlockedAbilitys(previousXp, nextXp) {
   return ABILITY_FORMS.filter((ability) => previousXp < ability.threshold && nextXp >= ability.threshold);
 }
 function earnExperience(amount, source = 'field work') {
-  const previousXp = state.xp;
+  const previousLevel = state.level;
   state.xp += amount;
-  const unlocked = newlyUnlockedAbilitys(previousXp, state.xp);
-  for (const ability of unlocked) state.unlockedAbilitys.add(ability.id);
-  state.level = levelForXp(state.xp);
-  if (unlocked.length) {
-    state.lastAbility = unlocked[unlocked.length - 1];
-    state.selectedAbilityId = state.lastAbility.id;
-    spawnParticles(state.player.x, state.player.y, EYE_HEIGHT, state.lastAbility.color, 22, { speed: 1.8, life: 1.05, size: 1.2, glow: 16, upward: .8, trail: true });
-    showToast(`Level ${state.level}: ${unlocked.map((ability) => ability.name).join(', ')} unlocked.`, 'good');
-    playAbilitySound();
+  state.level = Math.floor(state.xp / 150) + 1;
+  if (state.level > previousLevel) {
+    spawnParticles(state.player.x, state.player.y, playerEyeHeight(), ['#6ce0c2', '#fff1b0'], 18, { speed: 1.5, life: .9, size: 1, glow: 14, upward: .7, trail: true });
+    showToast(`FIELD RANK ${state.level} REACHED.`, 'good');
   } else if (source !== 'scroll') {
     showToast(`+${amount} XP from ${source}.`, 'good');
   }
   updateHud();
-  return unlocked;
+  return [];
 }
 function updateScrollProgress() {
   if (!scrollProgressLabel || !scrollProgressValue || !scrollProgressBar || !scrollProgressCaption) return;
-  const nextAbility = ABILITY_FORMS.find((ability) => state.xp < ability.threshold);
-  if (!nextAbility) {
-    scrollProgressLabel.textContent = 'ABILITYBOOK COMPLETE';
-    scrollProgressValue.textContent = `${state.xp} XP · ALL ABILITYS LEARNED`;
-    scrollProgressBar.style.width = '100%';
-    scrollProgressCaption.textContent = 'Every recorded route is now available to cast.';
-    return;
-  }
-  const abilityIndex = ABILITY_FORMS.indexOf(nextAbility);
-  const previousThreshold = abilityIndex > 0 ? ABILITY_FORMS[abilityIndex - 1].threshold : 0;
-  const progress = clamp((state.xp - previousThreshold) / (nextAbility.threshold - previousThreshold), 0, 1);
-  scrollProgressLabel.textContent = 'PROGRESS TO NEXT ABILITY';
-  scrollProgressValue.textContent = `${state.xp} / ${nextAbility.threshold} XP`;
+  const previousThreshold = Math.floor(state.xp / 150) * 150;
+  const nextThreshold = previousThreshold + 150;
+  const progress = clamp((state.xp - previousThreshold) / 150, 0, 1);
+  scrollProgressLabel.textContent = 'FIELD EXPERIENCE';
+  scrollProgressValue.textContent = `${state.xp} XP · RANK ${state.level}`;
   scrollProgressBar.style.width = `${progress * 100}%`;
-  scrollProgressCaption.textContent = `${nextAbility.name} unlocks at ${nextAbility.threshold} XP.`;
+  scrollProgressCaption.textContent = `${nextThreshold - state.xp} XP to field rank ${state.level + 1}.`;
 }
-function updateAbilityCard(gained, unlocked = null) {
+function updateAbilityCard(gained) {
   scrollAbility?.classList.remove('ability-revealed');
   if (scrollAbility) void scrollAbility.offsetWidth;
   scrollAbility?.classList.add('ability-revealed');
-  if (scrollAbilitySeal) scrollAbilitySeal.textContent = unlocked?.glyph || '✦';
-  if (scrollRewardKicker) scrollRewardKicker.textContent = unlocked ? 'NEW ABILITY UNLOCKED' : 'XP RECOVERED';
-  if (scrollAbilityName) scrollAbilityName.textContent = unlocked ? unlocked.name : `+${gained} XP`;
-  if (scrollAbilityDescription) scrollAbilityDescription.textContent = unlocked ? `${unlocked.description} Use Q to cast it.` : 'Bank XP from completed case studies and defeated enemies to unlock abilities at each threshold.';
+  if (scrollAbilitySeal) scrollAbilitySeal.textContent = '✦';
+  if (scrollRewardKicker) scrollRewardKicker.textContent = 'ARCHIVE REWARD';
+  if (scrollAbilityName) scrollAbilityName.textContent = gained ? `+${gained} XP` : 'ALREADY ARCHIVED';
+  if (scrollAbilityDescription) scrollAbilityDescription.textContent = 'Access terminals improve your run rank and preserve Liam’s proof without adding another combat control.';
 }
 function grantScrollXP(item) {
   const recordId = item.recordId || item.id;
@@ -5744,15 +6990,15 @@ function grantScrollXP(item) {
     return;
   }
   state.collectedRecordIds.add(recordId);
-  const unlocked = earnExperience(XP_PER_SCROLL, 'scroll');
-  updateAbilityCard(XP_PER_SCROLL, unlocked[0] || null);
-  if (!unlocked.length) showToast(`+${XP_PER_SCROLL} XP banked. ${state.xp} XP total.`, 'good');
+  earnExperience(XP_PER_SCROLL, 'scroll');
+  updateAbilityCard(XP_PER_SCROLL);
+  showToast(`+${XP_PER_SCROLL} XP banked. ${state.xp} XP total.`, 'good');
 }
 function chooseAbilityTarget() {
   return findAimTarget(14, .32) || worldEnemies.filter((enemy) => enemy.roomIndex === state.room && !enemy.dead).sort((a, b) => Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y))[0] || (state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead ? state.finalBoss : null);
 }
 function makeProjectile(kind, origin, velocity, options = {}) {
-  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, ability: options.ability || false, abilityKind: options.abilityKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, stun: options.stun || 0, stagger: options.stagger || 0, knockback: options.knockback || 0, critChance: options.critChance || 0, critMultiplier: options.critMultiplier || 1.65, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0, spriteSheet: options.spriteSheet || null, spriteFrameCount: options.spriteFrameCount || 8, spriteFps: options.spriteFps || 12, spriteWorldHeight: options.spriteWorldHeight || .42, age: 0 });
+  state.projectiles.push({ kind, x: origin.x, y: origin.y, z: origin.z, vx: velocity.x, vy: velocity.y, vz: velocity.z || 0, spin: Math.random() * TAU, radius: options.radius || .1, damage: options.damage || 0, color: options.color || '#e7ad67', lifetime: options.lifetime || 2.5, maxLifetime: options.lifetime || 2.5, homing: options.homing || 0, targetId: options.targetId || null, source: options.source || 'player', sourceId: options.sourceId || null, sourceName: options.sourceName || null, ability: options.ability || false, abilityKind: options.abilityKind || null, trail: [], origin: { ...origin }, aoe: options.aoe || 0, splashMultiplier: options.splashMultiplier || .42, stun: options.stun || 0, stagger: options.stagger || 0, knockback: options.knockback || 0, critChance: options.critChance || 0, critMultiplier: options.critMultiplier || 1.65, beam: options.beam || false, collisionHeight: options.collisionHeight || .55, chainTargets: options.chainTargets || 0, trailSize: options.trailSize || 1, orbit: options.orbit || 0, sparks: options.sparks || 0, spriteSheet: options.spriteSheet || null, spriteFrameCount: options.spriteFrameCount || 8, spriteFps: options.spriteFps || 12, spriteWorldHeight: options.spriteWorldHeight || .42, age: 0 });
 }
 function playerAimDirection() {
   return { x: Math.cos(state.player.angle), y: Math.sin(state.player.angle), z: 0 };
@@ -5763,14 +7009,14 @@ function leftHandAbilityOrigin(direction) {
   return {
     x: state.player.x + leftX * .48 + direction.x * .3,
     y: state.player.y + leftY * .48 + direction.y * .3,
-    z: EYE_HEIGHT - .3 + direction.z * .12,
+    z: playerEyeHeight() - .3 + direction.z * .12,
   };
 }
 function abilityProjectileOrigin(direction) {
   return {
     x: state.player.x + direction.x * .34,
     y: state.player.y + direction.y * .34,
-    z: EYE_HEIGHT + direction.z * .08,
+    z: playerEyeHeight() + direction.z * .08,
   };
 }
 function castAbility() {
@@ -5801,15 +7047,15 @@ function castAbility() {
   if (state.abilityCooldown > 0) { showToast(`${ability.name} is recharging.`); return; }
   state.abilityCooldown = ability.cooldown;
   state.abilityCast = { ability, elapsed: 0, duration: .72, source: 'ability-focus' };
-  spawnParticles(state.player.x, state.player.y, EYE_HEIGHT, ability.color, settings.reducedMotion ? 5 : 12, { speed: 1.1, life: .55, size: .8, glow: 14, upward: .45, trail: true });
-  pushImpactBurst({ x: state.player.x, y: state.player.y, z: EYE_HEIGHT, elapsed: 0, duration: .32, color: ability.color, radius: .28 });
+  spawnParticles(state.player.x, state.player.y, playerEyeHeight(), ability.color, settings.reducedMotion ? 5 : 12, { speed: 1.1, life: .55, size: .8, glow: 14, upward: .45, trail: true });
+  pushImpactBurst({ x: state.player.x, y: state.player.y, z: playerEyeHeight(), elapsed: 0, duration: .32, color: ability.color, radius: .28 });
   const direction = playerAimDirection();
   const origin = abilityProjectileOrigin(direction);
   spawnAbilityParticles(ability, origin, direction);
   const target = chooseAbilityTarget();
   if (ability.kind === 'reveal') {
     state.revealTimer = 7;
-    pushImpactBurst({ x: state.player.x, y: state.player.y, z: .58, elapsed: 0, duration: 1.2, color: ability.color, radius: 3.4, style: 'radar' });
+    pushImpactBurst({ x: state.player.x, y: state.player.y, z: state.player.floorZ + .58, elapsed: 0, duration: 1.2, color: ability.color, radius: 3.4, style: 'radar' });
     state.activeAbilityEffects.push({ kind: 'reveal', elapsed: 0, duration: 1.75, color: ability.color, rings: 4 });
   } else if (ability.kind === 'homing') {
     makeProjectile('ability-orb', origin, { x: direction.x * 5.4, y: direction.y * 5.4, z: direction.z * 5.4 }, { color: ability.color, damage: 72, radius: .18, lifetime: 3, homing: 4.2, targetId: target?.id, trailSize: 1.65, orbit: 2, sparks: 5, ability: true, abilityKind: ability.kind });
@@ -5822,7 +7068,7 @@ function castAbility() {
     state.player.hp = clamp(state.player.hp + 35, 0, 100);
     state.enemySlowTimer = 4;
     state.activeAbilityEffects.push({ kind: 'echo', elapsed: 0, duration: 1.7, color: ability.color, rings: 5 });
-    pushImpactBurst({ x: state.player.x, y: state.player.y, z: .6, elapsed: 0, duration: 1.1, color: ability.color, radius: 2.2 });
+    pushImpactBurst({ x: state.player.x, y: state.player.y, z: state.player.floorZ + .6, elapsed: 0, duration: 1.1, color: ability.color, radius: 2.2 });
   } else if (ability.kind === 'fireball') {
     makeProjectile('ability-fireball', origin, { x: direction.x * 6.2, y: direction.y * 6.2, z: direction.z * 6.2 }, { color: ability.color, damage: 105, radius: .2, lifetime: 2.5, aoe: 1.65, trailSize: 2.35, orbit: 2, sparks: 9, ability: true, abilityKind: ability.kind });
   } else if (ability.kind === 'bloom') {
@@ -5830,7 +7076,7 @@ function castAbility() {
     for (const enemy of allHostiles()) if (Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) < 3.2) damageHostile(enemy, 64, { stun: 1.1 });
     state.activeAbilityEffects.push({ kind: 'bloom', elapsed: 0, duration: 1.8, color: ability.color, rings: 8 });
   } else if (ability.kind === 'beam') {
-    const beamEnd = { x: state.player.x + direction.x * 12, y: state.player.y + direction.y * 12, z: EYE_HEIGHT + direction.z * 12 };
+    const beamEnd = { x: state.player.x + direction.x * 12, y: state.player.y + direction.y * 12, z: playerEyeHeight() + direction.z * 12 };
     state.activeAbilityEffects.push({ kind: 'beam', elapsed: 0, duration: .9, color: ability.color, start: origin, end: beamEnd, rings: 5 });
     for (const enemy of allHostiles()) {
       if (distanceToAimLine(enemy, direction) < .68 && hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y)) {
@@ -6187,14 +7433,14 @@ function abilityCameraPointVisible(point, clearance = .06) {
   if (!point || point.depth <= .04) return false;
   if (!state.zBuffer?.length) return true;
   const ray = clamp(Math.floor(point.x / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
-  return point.depth <= state.zBuffer[ray] + clearance;
+  return point.depth <= Math.min(state.zBuffer[ray] || Infinity, surfaceDepthAt(ray, point.y)) + clearance;
 }
 
 function bottomLeftAbilityCameraAnchor(now) {
   const bob = state.weapon.moving ? Math.sin(state.weapon.bobPhase) * .026 : Math.sin(now / 520) * .014;
   // Camera-local placement keeps the ability in the lower-left view without
   // bringing back the hand or a separate DOM/UI ability slot.
-  return { side: -.62, forward: 1.18, z: EYE_HEIGHT - .4 + bob };
+  return { side: -.62, forward: 1.18, z: cameraEyeHeight() - .4 + bob };
 }
 
 function drawFloatingAbilityParticles(ability, center, size, now, alpha = 1, active = true, ignoreWorldDepth = false) {
@@ -6301,47 +7547,923 @@ function drawPassiveAbilityFocus(now) {
 }
 function playAbilitySound() { playTone(220, .16, 'sine', .022); playTone(440, .26, 'triangle', .024, .08); playTone(660, .32, 'sine', .018, .17); }
 
-function actionForItem(item) { if (item.intro) return '<a href="mailto:liam.hosfeld@gmail.com">CONTACT LIAM ↗</a><a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">DOWNLOAD RÉSUMÉ ↧</a><a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">OPEN LINKEDIN ↗</a>'; if (item.id === 'contact-raven') return '<a href="mailto:liam.hosfeld@gmail.com">SEND A RAVEN ↗</a>'; if (item.id === 'resume-scroll') return '<a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">TAKE THE RÉSUMÉ ↧</a>'; if (item.id === 'linkedin-key') return '<a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">TURN THE LINKEDIN KEY ↗</a>'; return ''; }
+function actionForItem(item) { if (item.intro) return '<a href="mailto:liam.hosfeld@gmail.com">CONTACT LIAM ↗</a><a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">DOWNLOAD RÉSUMÉ ↧</a><a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">OPEN LINKEDIN ↗</a>'; if (item.id === 'contact-raven') return '<a href="mailto:liam.hosfeld@gmail.com">SEND A RAVEN ↗</a>'; if (item.id === 'resume-scroll') return '<a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Operations-Analytics-Resume.pdf">TAKE THE RÉSUMÉ ↧</a>'; if (item.id === 'linkedin-key') return '<a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">TURN THE LINKEDIN KEY ↗</a>'; if (item.missionReport) return '<a href="assets/Liam_Hosfeld_Resume.pdf" download="Liam-Hosfeld-Resume.pdf">DOWNLOAD LIAM’S RÉSUMÉ ↧</a><a href="https://www.linkedin.com/in/liam-hosfeld" target="_blank" rel="noreferrer">VIEW LIAM ON LINKEDIN ↗</a>'; return ''; }
+function scrollBriefingForItem(item) {
+  if (!item?.missionReport) return null;
+  return PORTFOLIO_SCROLL_BRIEFINGS[rooms[item.roomIndex]?.id] || null;
+}
+const SCROLL_TOUR_SECTIONS = Object.freeze([
+  Object.freeze({ id: 'scroll-title', label: 'OVERVIEW', page: 0 }),
+  Object.freeze({ id: 'scroll-briefing', label: 'ABOUT LIAM', page: 1 }),
+  Object.freeze({ id: 'scroll-intro-grid', label: 'IMPACT', page: 2 }),
+  Object.freeze({ id: 'scroll-proof-grid', label: 'EVIDENCE', page: 3 }),
+  Object.freeze({ id: 'scroll-challenge', label: 'CASE GAME', page: 4 }),
+]);
+const SCROLL_TOUR_PAGE_NODES = Object.freeze([
+  Object.freeze([]),
+  Object.freeze([scrollBriefing]),
+  Object.freeze([scrollIntroGrid]),
+  Object.freeze([scrollProofLabel, scrollProofGrid]),
+  Object.freeze([scrollDivider, scrollChallenge]),
+]);
+const SCROLL_CHALLENGE_COMPLETE_NODES = Object.freeze([
+  scrollAbility, scrollProgress, document.getElementById('scroll-evidence-section'), scrollDetails, scrollTags, scrollCta, scrollActions,
+]);
+// A discovered mission terminal is a fixed computer display, not a document
+// with a scrollbar. Each screen owns one job and the command bar moves between
+// them only after its predecessor is understood or completed.
+const TERMINAL_SCREEN_LABELS = Object.freeze(['STATUS', 'PROFILE', 'IMPACT', 'CASE FILE', 'ACCESS PROGRAM']);
+const TERMINAL_SCREEN_GROUPS = Object.freeze([
+  Object.freeze([terminalDashboard, scrollHeader, scrollStamp, scrollTitle, scrollSummary, scrollAuthorStatus, scrollPositioning, scrollFindingsSection]),
+  Object.freeze([scrollBriefing]),
+  Object.freeze([scrollIntroGrid]),
+  Object.freeze([scrollProofLabel, scrollProofGrid]),
+  Object.freeze([scrollDivider, scrollChallenge]),
+]);
+const TERMINAL_SUPPRESSED_NODES = Object.freeze([
+  scrollProgress, scrollEvidenceSection, scrollDetails, scrollTags, scrollCta, scrollAbility, scrollActions,
+]);
+const TERMINAL_CHROME_NODES = Object.freeze([
+  terminalTopbar, scrollIndex, scrollTour, terminalCommandStrip, closeScrollButton,
+]);
+function scrollUsesForcedPagination(item = state.reading) { return Boolean(item?.missionReport); }
+function unlockedScrollTourPage(item = state.reading) {
+  if (!item || !scrollUsesForcedPagination(item)) return SCROLL_TOUR_SECTIONS.length - 1;
+  return clamp(state.scrollTourUnlocked.get(item.roomIndex) || 0, 0, SCROLL_TOUR_SECTIONS.length - 1);
+}
+function scrollTourPageForTarget(id) {
+  return SCROLL_TOUR_SECTIONS.find((section) => section.id === id)?.page ?? 0;
+}
+function configureScrollTourPages(item = state.reading) {
+  if (!scrollPaper) return;
+  const paginated = scrollUsesForcedPagination(item);
+  const terminal = Boolean(item?.missionReport);
+  const unlocked = unlockedScrollTourPage(item);
+  const solved = Boolean(item && state.scrollSolvedRooms.has(item.roomIndex));
+  scrollPaper.classList.toggle('is-forced-pager', paginated && !terminal);
+  scrollPaper.classList.toggle('is-terminal-console', terminal);
+  scrollPaper.dataset.tourUnlocked = String(unlocked);
+  if (terminal) {
+    const currentScreen = clamp(Number(scrollPaper.dataset.terminalScreen || scrollPaper.dataset.tourStep || 0), 0, TERMINAL_SCREEN_GROUPS.length - 1);
+    scrollPaper.dataset.terminalScreen = String(currentScreen);
+    TERMINAL_SCREEN_GROUPS.forEach((nodes, page) => {
+      nodes.forEach((node) => node?.classList.toggle('terminal-screen-hidden', page !== currentScreen));
+    });
+    TERMINAL_SUPPRESSED_NODES.forEach((node) => node?.classList.add('terminal-screen-hidden'));
+    TERMINAL_CHROME_NODES.forEach((node) => node?.classList.add('terminal-screen-hidden'));
+    pseudoTerminal?.classList.remove('terminal-screen-hidden');
+    SCROLL_TOUR_PAGE_NODES.flat().forEach((node) => node?.classList.remove('scroll-page-locked'));
+    SCROLL_CHALLENGE_COMPLETE_NODES.forEach((node) => node?.classList.remove('scroll-challenge-complete-gated'));
+  } else {
+    delete scrollPaper.dataset.terminalScreen;
+    TERMINAL_SCREEN_GROUPS.flat().forEach((node) => node?.classList.remove('terminal-screen-hidden'));
+    TERMINAL_SUPPRESSED_NODES.forEach((node) => node?.classList.remove('terminal-screen-hidden'));
+    TERMINAL_CHROME_NODES.forEach((node) => node?.classList.remove('terminal-screen-hidden'));
+    pseudoTerminal?.classList.add('terminal-screen-hidden');
+    SCROLL_TOUR_PAGE_NODES.forEach((nodes, page) => {
+      nodes.forEach((node) => node?.classList.toggle('scroll-page-locked', paginated && page > unlocked));
+    });
+    SCROLL_CHALLENGE_COMPLETE_NODES.forEach((node) => node?.classList.toggle('scroll-challenge-complete-gated', paginated && !solved));
+  }
+  scrollJumpButtons.forEach((button) => {
+    const page = scrollTourPageForTarget(button.dataset.scrollJump);
+    const locked = paginated && page > unlocked;
+    button.disabled = locked;
+    button.setAttribute('aria-disabled', String(locked));
+    button.classList.toggle('is-active', terminal && page === Number(scrollPaper.dataset.terminalScreen || 0));
+  });
+}
+function unlockScrollTourPage(item, page) {
+  if (!scrollUsesForcedPagination(item)) return;
+  const current = unlockedScrollTourPage(item);
+  state.scrollTourUnlocked.set(item.roomIndex, Math.max(current, clamp(page, 0, SCROLL_TOUR_SECTIONS.length - 1)));
+  configureScrollTourPages(item);
+}
+function pseudoTerminalLine(text, index, tone = '') {
+  return `<p class="pseudo-terminal-line ${tone}" style="--terminal-line:${index}">${escapeHtml(text)}</p>`;
+}
+let pseudoTerminalOptions = [];
+let pseudoTerminalSelection = 0;
+function terminalCommandOptions(item = state.reading) {
+  if (!item?.missionReport) return [];
+  const screen = clamp(Number(scrollPaper?.dataset.terminalScreen || 0), 0, TERMINAL_SCREEN_LABELS.length - 1);
+  const unlocked = unlockedScrollTourPage(item);
+  const briefingComplete = scrollBriefingComplete(item);
+  const programComplete = state.scrollSolvedRooms.has(item.roomIndex);
+  const screens = [
+    { command: 'status', key: '1', label: 'STATUS', detail: 'sector and portfolio overview', available: true },
+    { command: 'profile', key: '2', label: 'PROFILE', detail: 'background, role, and working approach', available: true },
+    { command: 'impact', key: '3', label: 'IMPACT', detail: 'outcomes and verified evidence', available: briefingComplete },
+    { command: 'case', key: '4', label: 'CASE FILE', detail: 'case-study evidence and methods', available: unlocked >= 2 },
+    { command: 'program', key: '5', label: 'ACCESS PROGRAM', detail: programComplete ? 'route authorization complete' : 'run the active access game', available: unlocked >= 3 },
+  ];
+  let options = screens.filter((option) => option.available);
+  if (screen === 1 && !briefingComplete) {
+    options = [{ command: 'next', key: 'ENTER', label: 'ACKNOWLEDGE RECORD', detail: 'archive the active record and continue', available: true, primary: true }, ...options.filter((option) => ['status', 'profile'].includes(option.command))];
+  }
+  if (screen === 4 && programComplete) {
+    options = [{ command: 'exit', key: 'ENTER', label: 'RETURN TO FIELD', detail: 'shut down this terminal and continue', available: true, primary: true }, screens[0]];
+  } else if (screen === 4) {
+    options = [screens[4], screens[0]];
+  }
+  if (!options.some((option) => option.command === 'exit')) {
+    options.push({ command: 'exit', key: '0', label: 'EXIT', detail: 'suspend this terminal session', available: true });
+  }
+  const preferredCommand = screen === 0
+    ? 'profile'
+    : screen === 1
+      ? (briefingComplete ? 'impact' : 'next')
+      : screen === 2
+        ? 'case'
+        : screen === 3
+          ? 'program'
+          : screen === 4 && !programComplete
+            ? 'program'
+            : '';
+  const preferred = options.find((option) => option.command === preferredCommand && option.available);
+  if (preferred) {
+    preferred.primary = true;
+    options = [preferred, ...options.filter((option) => option !== preferred)];
+  }
+  return options;
+}
+function renderPseudoTerminalCompletions() {
+  if (!pseudoTerminalCompletions) return;
+  if (!pseudoTerminalOptions.length) {
+    pseudoTerminalCompletions.innerHTML = '';
+    return;
+  }
+  pseudoTerminalSelection = clamp(pseudoTerminalSelection, 0, pseudoTerminalOptions.length - 1);
+  const options = pseudoTerminalOptions.map((option, index) => {
+    const selected = index === pseudoTerminalSelection;
+    return `<button type="button" class="pseudo-terminal-option${selected ? ' is-selected' : ''}${option.primary ? ' is-primary' : ''}" aria-current="${selected ? 'true' : 'false'}" data-terminal-command="${escapeHtml(option.command)}"><span><kbd>${escapeHtml(option.key || '')}</kbd>${selected ? '>' : ' '} ${escapeHtml(option.label || option.command)}</span><small>${escapeHtml(option.detail)}</small></button>`;
+  }).join('');
+  pseudoTerminalCompletions.innerHTML = `<div class="pseudo-terminal-command-help"><strong>NEXT ACTION / COMMANDS</strong><span>↑↓ SELECT · ENTER RUN · TAB COMPLETE · 1–5 OPEN · 0 EXIT</span></div>${options}`;
+}
+function terminalGameControlHint(type) {
+  const hints = {
+    'circuit-link': 'ARROWS / WASD select · ENTER rotates · 1–9 direct',
+    'packet-sort': 'ARROWS / WASD select lane · ENTER routes · 1–4 direct',
+    'memory-relay': 'ARROWS / WASD select pad · ENTER repeats · R replays',
+    'stack-order': 'ARROWS / WASD select module · ENTER chooses / swaps',
+    switchboard: 'ARROWS / WASD select endpoint · ENTER toggles · 1–9 direct',
+    'firewall-path': 'ARROWS / WASD select node · ENTER extends route',
+    'impact-dial': '← → tune control · ENTER confirms',
+    'route-flow': 'HOLD SPACE or ENTER to route the active packet',
+    'timeline-flow': 'HOLD SPACE or ENTER to route the active packet',
+    'signal-lock': 'ENTER or SPACE locks the moving signal',
+  };
+  return hints[type] || 'ARROWS select · ENTER confirms';
+}
+function terminalGameCursorKey(item, challenge) {
+  return `${item?.roomIndex ?? 'unknown'}:${challenge?.type || 'program'}`;
+}
+function terminalGameButtons(challenge) {
+  if (!scrollChallengeSteps || !challenge) return [];
+  const selectorByType = {
+    'circuit-link': '[data-circuit-tile]',
+    'packet-sort': '[data-packet-lane]',
+    'memory-relay': '[data-memory-key]',
+    'stack-order': '[data-stack-block]',
+    switchboard: '[data-switch-cell]',
+    'firewall-path': '[data-firewall-cell]',
+    'route-flow': '[data-flow-hold]',
+    'timeline-flow': '[data-flow-hold]',
+    'signal-lock': '[data-challenge-lock]',
+    'impact-dial': '[data-dial-confirm]',
+  };
+  return [...scrollChallengeSteps.querySelectorAll(selectorByType[challenge.type] || 'button')];
+}
+function terminalGameCursor(item, challenge, count) {
+  if (!count) return 0;
+  const key = terminalGameCursorKey(item, challenge);
+  return clamp(Number(state.terminalGameCursor.get(key) || 0), 0, count - 1);
+}
+function renderTerminalGameCursor(item = state.reading, challenge = scrollChallengeForItem(item)) {
+  const buttons = terminalGameButtons(challenge);
+  if (!item?.missionReport || !buttons.length) return;
+  const selected = terminalGameCursor(item, challenge, buttons.length);
+  buttons.forEach((button, index) => {
+    const active = index === selected;
+    button.classList.toggle('is-terminal-key-selected', active);
+    button.setAttribute('aria-current', active ? 'true' : 'false');
+    button.tabIndex = active ? 0 : -1;
+    const numericShortcut = !['route-flow', 'timeline-flow'].includes(challenge.type);
+    if (numericShortcut && index < 9 && !button.disabled) button.dataset.terminalKey = String(index + 1);
+    else delete button.dataset.terminalKey;
+  });
+}
+function moveTerminalGameCursor(item, challenge, deltaX = 0, deltaY = 0, columns = 1) {
+  const buttons = terminalGameButtons(challenge);
+  if (!buttons.length) return null;
+  const current = terminalGameCursor(item, challenge, buttons.length);
+  const rows = Math.ceil(buttons.length / columns);
+  const currentColumn = current % columns;
+  const currentRow = Math.floor(current / columns);
+  let nextColumn = clamp(currentColumn + deltaX, 0, columns - 1);
+  let nextRow = clamp(currentRow + deltaY, 0, rows - 1);
+  let next = Math.min(buttons.length - 1, nextRow * columns + nextColumn);
+  if (buttons[next]?.disabled) next = current;
+  state.terminalGameCursor.set(terminalGameCursorKey(item, challenge), next);
+  renderTerminalGameCursor(item, challenge);
+  buttons[next]?.focus({ preventScroll: true });
+  playMechanicalClick(0, .006);
+  return buttons[next];
+}
+function handleTerminalGameKey(event, down) {
+  const item = state.reading;
+  const challenge = scrollChallengeForItem(item);
+  const programActive = Boolean(item?.missionReport
+    && challenge
+    && !state.scrollSolvedRooms.has(item.roomIndex)
+    && Number(scrollPaper?.dataset.terminalScreen || 0) === TERMINAL_SCREEN_GROUPS.length - 1);
+  if (!programActive) return false;
+  const key = event.key.toLowerCase();
+  const type = challenge.type;
+  if (!down) {
+    if (state.terminalGameKeyHeld && (key === ' ' || key === 'spacebar' || key === 'enter')) {
+      state.terminalGameKeyHeld = false;
+      cancelScrollFlowHold(true);
+      return true;
+    }
+    return ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' ', 'spacebar', 'enter', 'r', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key);
+  }
+  const memoryProgram = type === 'memory-relay' ? state.scrollChallengeSelection.get(item.roomIndex) : null;
+  if (memoryProgram?.replaying && key !== 'r') return true;
+  const columns = type === 'circuit-link' ? challenge.circuit.columns
+    : type === 'packet-sort' ? 2
+      : ['memory-relay', 'stack-order'].includes(type) ? 4
+      : ['switchboard'].includes(type) ? 3
+        : type === 'firewall-path' ? challenge.columns : 1;
+  if (type === 'impact-dial' && (key === 'arrowleft' || key === 'arrowright')) {
+    const dial = scrollChallengeSteps?.querySelector('[data-impact-dial]');
+    if (!dial) return true;
+    const step = Number(dial.step || 1);
+    const next = clamp(Number(dial.value) + (key === 'arrowleft' ? -step : step), Number(dial.min), Number(dial.max));
+    dial.value = String(next);
+    dial.dispatchEvent(new Event('input', { bubbles: true }));
+    return true;
+  }
+  const arrows = { arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0], arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1] };
+  if (arrows[key]) {
+    moveTerminalGameCursor(item, challenge, arrows[key][0], arrows[key][1], columns);
+    return true;
+  }
+  if (type === 'memory-relay' && key === 'r') {
+    scrollChallengeSteps?.querySelector('[data-memory-replay]')?.click();
+    return true;
+  }
+  if (/^[1-9]$/.test(key)) {
+    if (['route-flow', 'timeline-flow'].includes(type)) return true;
+    const buttons = terminalGameButtons(challenge);
+    const index = Number(key) - 1;
+    const button = buttons[index];
+    if (button && !button.disabled) {
+      state.terminalGameCursor.set(terminalGameCursorKey(item, challenge), index);
+      renderTerminalGameCursor(item, challenge);
+      button.focus({ preventScroll: true });
+      button.click();
+    }
+    return true;
+  }
+  if (event.repeat && !['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)) return true;
+  if (![' ', 'spacebar', 'enter'].includes(key)) return false;
+  if (['route-flow', 'timeline-flow'].includes(type)) {
+    const button = terminalGameButtons(challenge)[0];
+    if (!button || state.terminalGameKeyHeld) return true;
+    state.terminalGameKeyHeld = true;
+    startScrollFlowHold(button);
+    return true;
+  }
+  if (type === 'signal-lock') {
+    scrollChallengeSteps?.querySelector('[data-challenge-lock]')?.click();
+    return true;
+  }
+  if (type === 'impact-dial') {
+    scrollChallengeSteps?.querySelector('[data-dial-confirm]')?.click();
+    return true;
+  }
+  const buttons = terminalGameButtons(challenge);
+  const button = buttons[terminalGameCursor(item, challenge, buttons.length)];
+  if (button && !button.disabled) button.click();
+  return true;
+}
+const TERMINAL_SHORTCUT_COMMANDS = Object.freeze({
+  '0': 'exit', '1': 'status', '2': 'profile', '3': 'impact', '4': 'case', '5': 'program',
+});
+function handleTerminalShellKey(event, down) {
+  const item = state.reading;
+  if (!item?.missionReport) return false;
+  const programActive = !state.scrollSolvedRooms.has(item.roomIndex)
+    && Number(scrollPaper?.dataset.terminalScreen || 0) === TERMINAL_SCREEN_GROUPS.length - 1;
+  if (programActive) return false;
+  const key = event.key.toLowerCase();
+  const commandButton = event.target.closest?.('[data-terminal-command]');
+  if (!down) return ['arrowup', 'arrowdown', 'enter', '0', '1', '2', '3', '4', '5'].includes(key);
+  if (commandButton && (key === 'enter' || key === ' ' || key === 'spacebar')) {
+    commandButton.click();
+    return true;
+  }
+  if (TERMINAL_SHORTCUT_COMMANDS[key]) {
+    runPseudoTerminalCommand(TERMINAL_SHORTCUT_COMMANDS[key]);
+    return true;
+  }
+  if (key === 'arrowdown' || key === 'arrowup') {
+    selectPseudoTerminalOption(key === 'arrowdown' ? 1 : -1);
+    return true;
+  }
+  if (key === 'enter') {
+    runPseudoTerminalCommand(pseudoTerminalOptions[pseudoTerminalSelection]?.command);
+    return true;
+  }
+  return false;
+}
+function renderPseudoTerminal(item = state.reading) {
+  if (!pseudoTerminal || !pseudoTerminalOutput || !pseudoTerminalInput || !item?.missionReport) return;
+  const room = rooms[item.roomIndex] || {};
+  const briefing = scrollBriefingForItem(item);
+  const screen = clamp(Number(scrollPaper?.dataset.terminalScreen || 0), 0, TERMINAL_SCREEN_LABELS.length - 1);
+  const briefingProgress = state.scrollBriefingProgress.get(item.roomIndex) || 0;
+  const briefingComplete = scrollBriefingComplete(item);
+  const solved = state.scrollSolvedRooms.has(item.roomIndex);
+  const program = scrollChallengeForItem(item);
+  const programStage = (state.scrollChallengeProgress.get(item.roomIndex) || []).length;
+  const unlocked = unlockedScrollTourPage(item);
+  const flow = TERMINAL_SCREEN_LABELS.map((label, index) => `${index === screen ? '>' : index <= unlocked ? '✓' : '·'}${index + 1} ${label}`).join('  ');
+  const lines = [
+    `LIAM HOSFELD FIELD TERMINAL // SECTOR ${String(item.roomIndex + 1).padStart(2, '0')}`,
+    `HOST: ${room.shortTitle || 'UNKNOWN SECTOR'}  ·  DISPLAY ${screen + 1}/${TERMINAL_SCREEN_LABELS.length}: ${TERMINAL_SCREEN_LABELS[screen]}`,
+    `ROUTE: ${flow}`,
+    '────────────────────────────────────────────────────────────────',
+  ];
+  let prompt = 'type a command, or use ↑ ↓ then enter';
+  if (screen === 0) {
+    lines.push('$ status --full', '', `ACCESS NODE: ${item.finalTerminal ? 'LIGHTWELL RELAY' : 'SHIELD-GATE RELAY'}`, `ROUTE STATE: ${solved ? 'AUTHORIZED' : 'PENDING ACCESS PROGRAM'}`, '', 'PORTFOLIO RECORD', briefing?.title || 'Technical consulting, analytics, integrations, and operational systems.', item.summary || 'Field record synchronized.', '', 'WHAT THIS TERMINAL CONTAINS', 'profile  — background, working style, and career focus', 'impact   — concrete results and operating evidence', 'case     — methods and case-study proof', 'program  — a short field executable that unlocks the route', '', 'Select PROFILE below. Tab completes the highlighted command; Enter runs it.');
+    prompt = 'select profile to begin';
+  } else if (screen === 1) {
+    lines.push('$ cat /portfolio/profile/*', '');
+    for (const [index, page] of (briefing?.slides || []).entries()) {
+      const read = index < briefingProgress;
+      const current = index === Math.min(briefingProgress, Math.max(0, (briefing?.slides.length || 1) - 1));
+      lines.push(`${read ? '[READ]' : current ? '[ACTIVE]' : '[QUEUED]'} ${String(index + 1).padStart(2, '0')} / ${page.label}`, page.title, page.body, `evidence: ${page.proof}`, '');
+    }
+    if (briefingComplete) {
+      lines.push('PROFILE ARCHIVE COMPLETE. IMPACT DATA IS NOW AVAILABLE.', 'Select IMPACT below to review the outcomes.');
+      prompt = 'select impact';
+    } else {
+      lines.push(`RECORD ${briefingProgress + 1}/${briefing?.slides.length || 1} AWAITS ACKNOWLEDGEMENT.`, 'Select ACKNOWLEDGE RECORD below when you are ready to continue.');
+      prompt = 'select acknowledge record';
+    }
+  } else if (screen === 2) {
+    lines.push('$ impact --summary', '');
+    for (const metric of briefing?.metrics || []) lines.push(`${String(metric.label).padEnd(25, ' ')} ${metric.value}`);
+    lines.push('', 'OPERATING NOTES');
+    for (const fact of (briefing?.facts?.length ? briefing.facts : (item.details || []))) lines.push(`• ${fact}`);
+    lines.push('', 'These outcomes connect technical delivery to useful business action.', 'Select CASE FILE below for the work behind the numbers.');
+    prompt = 'select case';
+  } else if (screen === 3) {
+    lines.push('$ cat /portfolio/case-file/*', '');
+    for (const [index, slide] of (briefing?.slides || []).entries()) {
+      lines.push(`CASE ${String(index + 1).padStart(2, '0')} // ${slide.label}`, slide.title, `approach: ${slide.body}`, `result: ${slide.proof}`, '');
+    }
+    lines.push('CASE EVIDENCE LOADED. Select ACCESS PROGRAM below to run the route authorization executable.');
+    prompt = 'select access program';
+  } else {
+    lines.push(`$ run ${program?.type || 'access'} --sector ${String(item.roomIndex + 1).padStart(2, '0')}`, '');
+    if (solved) {
+      lines.push(item.finalTerminal ? 'LIGHTWELL AUTHORIZATION STORED.' : 'SHIELD-GATE AUTHORIZATION STORED.', 'ROUTE UNLOCKED. Select RETURN TO FIELD to shut down this terminal.', 'Other displays remain available from the command list.');
+      prompt = 'select return to field';
+    } else {
+      lines.push(`PROGRAM STAGE ${programStage + 1}/${Math.max(1, scrollChallengeEntries(program).length)} ACTIVE.`, 'Complete the field executable below to authorize the route.', `TERMINAL KEYS: ${terminalGameControlHint(program?.type)}`, 'The command list remains available if you need to revisit a record.');
+      prompt = 'field executable is accepting input';
+    }
+  }
+  lines.push('', '── END OF DISPLAY ──');
+  const previousScreen = pseudoTerminal.dataset.screen;
+  const screenChanged = previousScreen !== String(screen);
+  const previousScroll = pseudoTerminalOutput.scrollTop;
+  const previousCommand = pseudoTerminalOptions[pseudoTerminalSelection]?.command;
+  pseudoTerminal.dataset.screen = String(screen);
+  pseudoTerminalOutput.innerHTML = lines.map((line, index) => pseudoTerminalLine(line || ' ', index, index === 0 ? 'is-system' : '')).join('');
+  pseudoTerminalOptions = terminalCommandOptions(item);
+  const primaryIndex = pseudoTerminalOptions.findIndex((option) => option.primary && option.available);
+  const preservedIndex = screenChanged ? -1 : pseudoTerminalOptions.findIndex((option) => option.command === previousCommand);
+  pseudoTerminalSelection = preservedIndex >= 0 ? preservedIndex
+    : primaryIndex >= 0 ? primaryIndex
+      : Math.max(0, pseudoTerminalOptions.findIndex((option) => option.available));
+  renderPseudoTerminalCompletions();
+  pseudoTerminalInput.value = '';
+  pseudoTerminalInput.placeholder = prompt;
+  if (pseudoTerminalPath) pseudoTerminalPath.textContent = `portfolio/${TERMINAL_SCREEN_LABELS[screen].toLowerCase().replace(/\s+/g, '-')}`;
+  if (pseudoTerminalState) pseudoTerminalState.textContent = solved ? 'AUTHORIZED' : screen === 4 ? 'PROGRAM MODE' : 'ONLINE';
+  scrollPaper?.classList.toggle('terminal-program-active', screen === 4 && !solved);
+  window.requestAnimationFrame(() => {
+    if (state.reading !== item) return;
+    pseudoTerminalOutput.scrollTop = screenChanged ? 0 : previousScroll;
+    if (screen < TERMINAL_SCREEN_GROUPS.length - 1 || solved) pseudoTerminalInput.focus({ preventScroll: true });
+    if (screen === TERMINAL_SCREEN_GROUPS.length - 1 && !solved) {
+      pseudoTerminalInput.blur();
+      renderTerminalGameCursor(item, program);
+      const controls = terminalGameButtons(program);
+      controls[terminalGameCursor(item, program, controls.length)]?.focus({ preventScroll: true });
+    }
+  });
+}
+function setTerminalScreen(index = 0, move = false) {
+  const item = state.reading;
+  if (!item?.missionReport || !scrollPaper) return false;
+  const safeIndex = clamp(index, 0, TERMINAL_SCREEN_GROUPS.length - 1);
+  if (safeIndex > unlockedScrollTourPage(item)) {
+    if (move) showToast(`COMPLETE ${TERMINAL_SCREEN_LABELS[unlockedScrollTourPage(item)]} BEFORE OPENING THE NEXT DISPLAY.`, 'danger');
+    return false;
+  }
+  if (safeIndex !== TERMINAL_SCREEN_GROUPS.length - 1) {
+    state.terminalGameKeyHeld = false;
+    cancelScrollFlowHold(false);
+  }
+  scrollPaper.dataset.terminalScreen = String(safeIndex);
+  scrollPaper.dataset.tourStep = String(safeIndex);
+  configureScrollTourPages(item);
+  renderPseudoTerminal(item);
+  if (scrollTourStatus) {
+    const nextLabel = safeIndex >= TERMINAL_SCREEN_GROUPS.length - 1
+      ? 'RETURN TO STATUS'
+      : `OPEN ${TERMINAL_SCREEN_LABELS[safeIndex + 1]}`;
+    scrollTourStatus.textContent = `DESKTOP · ${String(safeIndex + 1).padStart(2, '0')}/${String(TERMINAL_SCREEN_GROUPS.length).padStart(2, '0')} · NEXT: ${nextLabel}`;
+  }
+  if (scrollTourNext) {
+    const briefingPending = safeIndex === 1 && !scrollBriefingComplete(item);
+    const challengePending = safeIndex === TERMINAL_SCREEN_GROUPS.length - 1 && !state.scrollSolvedRooms.has(item.roomIndex);
+    scrollTourNext.disabled = challengePending;
+    scrollTourNext.textContent = challengePending
+      ? 'RUN ACTIVE PROGRAM TO AUTHORIZE EXIT'
+      : briefingPending
+        ? 'READ NEXT PERSONNEL FILE →'
+        : safeIndex >= TERMINAL_SCREEN_GROUPS.length - 1
+          ? 'TERMINAL COMPLETE · RETURN TO STATUS'
+          : `OPEN ${TERMINAL_SCREEN_LABELS[safeIndex + 1]} →`;
+  }
+  if (move) {
+    scrollPaper.classList.remove('terminal-screen-swap');
+    void scrollPaper.offsetWidth;
+    scrollPaper.classList.add('terminal-screen-swap');
+  }
+  return true;
+}
+function setScrollTourStep(index = 0, move = false) {
+  if (!scrollPaper) return;
+  const safeIndex = clamp(index, 0, SCROLL_TOUR_SECTIONS.length - 1);
+  const item = state.reading;
+  if (item?.missionReport) return setTerminalScreen(safeIndex, move);
+  const section = SCROLL_TOUR_SECTIONS[safeIndex];
+  if (scrollUsesForcedPagination(item) && section.page > unlockedScrollTourPage(item)) {
+    if (move) showToast(`FINISH ${SCROLL_TOUR_SECTIONS[unlockedScrollTourPage(item)].label} BEFORE OPENING THE NEXT RECORD.`, 'danger');
+    return false;
+  }
+  scrollPaper.dataset.tourStep = String(safeIndex);
+  configureScrollTourPages(item);
+  if (scrollTourStatus) scrollTourStatus.textContent = item?.missionReport
+    ? `TERMINAL PAGE · ${safeIndex + 1} / ${SCROLL_TOUR_SECTIONS.length} · ${section.label}`
+    : `GUIDED RECORD · ${safeIndex + 1} / ${SCROLL_TOUR_SECTIONS.length} · ${section.label}`;
+  if (scrollTourNext) {
+    const briefingPending = section.page === 1 && !scrollBriefingComplete(item);
+    const challengePending = section.page === SCROLL_TOUR_SECTIONS.length - 1 && item && !state.scrollSolvedRooms.has(item.roomIndex);
+    scrollTourNext.disabled = Boolean(challengePending);
+    scrollTourNext.textContent = challengePending
+      ? item?.missionReport ? 'RUN THE COMPUTER GAME TO AUTHORIZE EXIT' : 'COMPLETE CASE GAME TO RELEASE RECORD'
+      : briefingPending
+        ? item?.missionReport ? 'OPEN NEXT PERSONNEL FILE ↓' : 'READ NEXT PERSONNEL RECORD ↓'
+        : safeIndex >= SCROLL_TOUR_SECTIONS.length - 1
+          ? item?.missionReport ? 'TERMINAL COMPLETE · RETURN TO START ↑' : 'REPORT COMPLETE · RETURN TO OVERVIEW ↑'
+          : `CONTINUE: ${SCROLL_TOUR_SECTIONS[safeIndex + 1].label} ↓`;
+  }
+  if (!move) return;
+  const target = document.getElementById(section.id);
+  if (!target || target.hidden || target.classList.contains('scroll-page-locked')) return;
+  const top = Math.max(0, target.offsetTop - 60);
+  scrollPaper.scrollTo({ top, behavior: settings.reducedMotion ? 'auto' : 'smooth' });
+  target.classList.remove('scroll-slide-focus');
+  void target.offsetWidth;
+  target.classList.add('scroll-slide-focus');
+  return true;
+}
+function advanceScrollTour(item = state.reading) {
+  if (!item) return;
+  const current = Number(scrollPaper?.dataset.tourStep || 0);
+  const section = SCROLL_TOUR_SECTIONS[current];
+  if (!scrollUsesForcedPagination(item)) {
+    setScrollTourStep(current >= SCROLL_TOUR_SECTIONS.length - 1 ? 0 : current + 1, true);
+    return;
+  }
+  if (section.page === 1 && !scrollBriefingComplete(item)) {
+    scrollBriefingNext?.click();
+    return;
+  }
+  if (section.page >= SCROLL_TOUR_SECTIONS.length - 1) {
+    if (!state.scrollSolvedRooms.has(item.roomIndex)) showToast('COMPLETE THE CASE GAME TO RELEASE THE FINAL RECORD.', 'danger');
+    else setScrollTourStep(0, true);
+    return;
+  }
+  const next = section.page + 1;
+  unlockScrollTourPage(item, next);
+  setScrollTourStep(next, true);
+}
+function scrollBriefingComplete(item) {
+  const briefing = scrollBriefingForItem(item);
+  if (!briefing) return true;
+  return (state.scrollBriefingProgress.get(item.roomIndex) || 0) >= briefing.slides.length;
+}
+function renderTerminalDashboard(item) {
+  if (!terminalDashboard || !item?.missionReport) return;
+  const room = rooms[item.roomIndex] || {};
+  const solved = state.scrollSolvedRooms.has(item.roomIndex);
+  const bossLocked = item.requiresBossClear && !terminalPrerequisiteMet(item.roomIndex);
+  const challenge = scrollChallengeForItem(item);
+  const currentStage = (state.scrollChallengeProgress.get(item.roomIndex) || []).length;
+  terminalDashboard.dataset.state = solved ? 'authorized' : bossLocked ? 'boss-lock' : 'ready';
+  if (terminalSectorReadout) terminalSectorReadout.textContent = `${String(item.roomIndex + 1).padStart(2, '0')} // ${(room.shortTitle || 'SECTOR').toUpperCase()}`;
+  if (terminalUplinkReadout) terminalUplinkReadout.textContent = bossLocked
+    ? 'BOSS SIGNAL DETECTED'
+    : solved ? 'SHIELD LINK RELEASED' : 'FIELDNET SECURE';
+  if (terminalAccessReadout) terminalAccessReadout.textContent = solved
+    ? item.finalTerminal ? 'LIGHTWELL AUTHORIZED' : 'EXIT AUTHORIZED'
+    : bossLocked ? 'TARGET ELIMINATION REQUIRED'
+      : `PROGRAM STAGE ${currentStage + 1}/${Math.max(1, scrollChallengeEntries(challenge).length)}`;
+}
+function renderScrollBriefing(item) {
+  if (!scrollBriefing) return;
+  const briefing = scrollBriefingForItem(item);
+  if (!briefing) {
+    scrollBriefing.hidden = true;
+    return;
+  }
+  const progress = state.scrollBriefingProgress.get(item.roomIndex) || 0;
+  const complete = progress >= briefing.slides.length;
+  const pageIndex = Math.min(progress, briefing.slides.length - 1);
+  const page = briefing.slides[pageIndex];
+  scrollBriefing.hidden = false;
+  scrollBriefing.classList.toggle('is-complete', complete);
+  if (scrollBriefingKicker) scrollBriefingKicker.textContent = complete ? 'PERSONNEL FILE / ARCHIVED' : briefing.kicker;
+  if (scrollBriefingTitle) scrollBriefingTitle.textContent = briefing.title;
+  if (scrollBriefingCount) scrollBriefingCount.textContent = complete ? `${briefing.slides.length} / ${briefing.slides.length} · READ` : `${pageIndex + 1} / ${briefing.slides.length}`;
+  if (scrollBriefingLabel) scrollBriefingLabel.textContent = page.label;
+  if (scrollBriefingPageTitle) scrollBriefingPageTitle.textContent = page.title;
+  if (scrollBriefingBody) scrollBriefingBody.textContent = page.body;
+  if (scrollBriefingProof) scrollBriefingProof.textContent = page.proof;
+  if (scrollBriefingNext) {
+    scrollBriefingNext.disabled = complete;
+    scrollBriefingNext.textContent = complete
+      ? 'ABOUT LIAM ARCHIVED · CASE SIGNAL AVAILABLE BELOW'
+      : pageIndex === briefing.slides.length - 1 ? 'ARCHIVE PERSONNEL FILE' : 'NEXT PERSONNEL RECORD';
+  }
+  if (scrollBriefingPage) {
+    scrollBriefingPage.classList.remove('page-enter');
+    void scrollBriefingPage.offsetWidth;
+    scrollBriefingPage.classList.add('page-enter');
+  }
+}
+function scrollChallengeForItem(item) {
+  if (!item?.missionReport) return null;
+  return SCROLL_CHALLENGES[rooms[item.roomIndex]?.id] || null;
+}
+function updateScrollRewardForChallenge(item, challenge, solved) {
+  if (!challenge) return;
+  const weapon = challenge.rewardWeapon ? WEAPON_LOADOUTS[challenge.rewardWeapon] : null;
+  if (scrollRewardKicker) scrollRewardKicker.textContent = solved ? 'ARCHIVE REWARD ACTIVE' : 'ARCHIVE REWARD LOCKED';
+  if (scrollAbilitySeal) scrollAbilitySeal.textContent = solved ? '✓' : '◆';
+  if (scrollAbilityName) scrollAbilityName.textContent = weapon ? weapon.label.toUpperCase() : 'FULL FIELD RESUPPLY';
+  if (scrollAbilityDescription) scrollAbilityDescription.textContent = solved
+    ? weapon ? `Weapon unlocked and equipped. Use its numbered slot at any time.` : 'Health and every unlocked weapon reserve have been restored.'
+    : scrollBriefingComplete(item)
+      ? 'Stabilize the case signal below to claim this proof, unlock its reward, and open the next route.'
+      : 'Read every About Liam personnel record first. The case signal wakes only after the portfolio briefing is complete.';
+}
+function scrollChallengeEntries(challenge) {
+  return challenge?.signals || challenge?.dials || challenge?.nodes || challenge?.packets || challenge?.stages || [];
+}
+function formatScrollDialValue(dial, value) {
+  const numeric = Number(value);
+  if (dial.displayScale) return `${Math.round(numeric / dial.displayScale)}${dial.displaySuffix || ''}`;
+  return `${numeric}${dial.suffix || ''}`;
+}
+function terminalProgramState(roomIndex, type, create) {
+  const saved = state.scrollChallengeSelection.get(roomIndex);
+  if (saved?.type === type) return saved;
+  const next = { type, ...create() };
+  state.scrollChallengeSelection.set(roomIndex, next);
+  return next;
+}
+const CIRCUIT_DIRECTIONS = Object.freeze([
+  Object.freeze({ key: 'n', x: 0, y: -1, opposite: 's' }),
+  Object.freeze({ key: 'e', x: 1, y: 0, opposite: 'w' }),
+  Object.freeze({ key: 's', x: 0, y: 1, opposite: 'n' }),
+  Object.freeze({ key: 'w', x: -1, y: 0, opposite: 'e' }),
+]);
+const CIRCUIT_BASE_CONNECTIONS = Object.freeze({
+  line: Object.freeze(['n', 's']),
+  elbow: Object.freeze(['n', 'e']),
+  tee: Object.freeze(['n', 'e', 'w']),
+});
+function circuitConnections(shape, rotation = 0) {
+  const base = CIRCUIT_BASE_CONNECTIONS[shape] || CIRCUIT_BASE_CONNECTIONS.line;
+  return base.map((direction) => {
+    const index = CIRCUIT_DIRECTIONS.findIndex((entry) => entry.key === direction);
+    return CIRCUIT_DIRECTIONS[(index + rotation % 4 + 4) % 4].key;
+  });
+}
+function circuitIsLinked(challenge, rotations) {
+  const circuit = challenge.circuit;
+  if (!circuit) return false;
+  const { columns, rows, source, output, shapes } = circuit;
+  const sourceX = source % columns;
+  const sourceY = Math.floor(source / columns);
+  const outputX = output % columns;
+  const outputY = Math.floor(output / columns);
+  const sourceLinks = circuitConnections(shapes[source], rotations[source]);
+  if (!sourceLinks.includes('w')) return false;
+  const visited = new Set([source]);
+  const queue = [source];
+  while (queue.length) {
+    const index = queue.shift();
+    const x = index % columns;
+    const y = Math.floor(index / columns);
+    const links = circuitConnections(shapes[index], rotations[index]);
+    if (x === outputX && y === outputY && links.includes('e')) return true;
+    for (const direction of CIRCUIT_DIRECTIONS) {
+      if (!links.includes(direction.key)) continue;
+      const nx = x + direction.x;
+      const ny = y + direction.y;
+      if (nx < 0 || ny < 0 || nx >= columns || ny >= rows) continue;
+      const neighbor = ny * columns + nx;
+      if (visited.has(neighbor)) continue;
+      const neighborLinks = circuitConnections(shapes[neighbor], rotations[neighbor]);
+      if (!neighborLinks.includes(direction.opposite)) continue;
+      visited.add(neighbor);
+      queue.push(neighbor);
+    }
+  }
+  return false;
+}
+function terminalProgramTitle(type) {
+  return ({
+    'signal-lock': 'TUNE SIGNAL PROGRAM',
+    'circuit-link': 'SERVICE CIRCUIT PROGRAM',
+    'packet-sort': 'PACKET DISPATCH PROGRAM',
+    'memory-relay': 'CAREER RELAY PROGRAM',
+    'stack-order': 'SUPPORT STACK PROGRAM',
+    switchboard: 'ENDPOINT SWITCHBOARD',
+    'firewall-path': 'LIGHTWELL FIREWALL',
+  })[type] || 'ACCESS PROGRAM';
+}
+function terminalProgramGuide(type) {
+  return ({
+    'signal-lock': 'ENTER / SPACE · STOP THE PULSE IN THE LIT BAND',
+    'circuit-link': 'ARROWS / WASD + ENTER · ROTATE A CONTINUOUS CONDUIT',
+    'packet-sort': 'ARROWS / WASD + ENTER · ROUTE TO THE MATCHING LANE',
+    'memory-relay': 'WATCH · THEN ARROWS / WASD + ENTER · R REPLAYS',
+    'stack-order': 'ARROWS / WASD + ENTER · SELECT TWO MODULES TO SWAP',
+    switchboard: 'ARROWS / WASD + ENTER · BRING EVERY ENDPOINT ONLINE',
+    'firewall-path': 'ARROWS / WASD + ENTER · TRACE ADJACENT SAFE NODES',
+  })[type] || 'TERMINAL PROGRAM';
+}
+function terminalInsights(entries, progress) {
+  return entries.slice(0, progress.length).map((entry) => `<article><strong>${escapeHtml(entry.metric)}</strong><p>${escapeHtml(entry.meaning)}</p></article>`).join('');
+}
+function circuitTileMarkup(shape, rotation, index) {
+  const links = circuitConnections(shape, rotation);
+  return `<button type="button" class="circuit-tile" data-circuit-tile="${index}" aria-label="Rotate conduit ${index + 1}"><i class="circuit-core"></i>${links.map((direction) => `<i class="circuit-trace is-${direction}"></i>`).join('')}</button>`;
+}
+function replayMemoryRelay(challenge) {
+  const item = state.reading;
+  if (!item || scrollChallengeForItem(item) !== challenge) return;
+  const buttons = [...scrollChallengeSteps.querySelectorAll('[data-memory-key]')];
+  const replayButton = scrollChallengeSteps.querySelector('[data-memory-replay]');
+  const program = terminalProgramState(item.roomIndex, challenge.type, () => ({ input: [], shown: true, replaying: false }));
+  const token = ++state.terminalMemoryReplayToken;
+  program.replaying = true;
+  buttons.forEach((button) => { button.disabled = true; });
+  if (replayButton) replayButton.disabled = true;
+  if (scrollChallengeFeedback) scrollChallengeFeedback.textContent = 'WATCH: copy the four-pad sequence when the relay finishes.';
+  challenge.sequence.forEach((key, index) => {
+    window.setTimeout(() => {
+      if (token !== state.terminalMemoryReplayToken || state.reading !== item || state.scrollSolvedRooms.has(item.roomIndex)) return;
+      const button = buttons.find((entry) => entry.dataset.memoryKey === key);
+      button?.classList.add('is-flashing');
+      window.setTimeout(() => {
+        if (token === state.terminalMemoryReplayToken) button?.classList.remove('is-flashing');
+      }, settings.reducedMotion ? 80 : 230);
+    }, (settings.reducedMotion ? 130 : 480) * index + 120);
+  });
+  const finishAfter = (settings.reducedMotion ? 130 : 480) * challenge.sequence.length + 180;
+  window.setTimeout(() => {
+    if (token !== state.terminalMemoryReplayToken || state.reading !== item || state.scrollSolvedRooms.has(item.roomIndex)) return;
+    program.replaying = false;
+    buttons.forEach((button) => { button.disabled = false; });
+    if (replayButton) replayButton.disabled = false;
+    if (scrollChallengeFeedback) scrollChallengeFeedback.textContent = 'YOUR TURN: select pads with arrows or WASD, then press Enter. Press R to replay.';
+    renderTerminalGameCursor(item, challenge);
+    const selected = terminalGameButtons(challenge)[terminalGameCursor(item, challenge, buttons.length)];
+    selected?.focus({ preventScroll: true });
+  }, finishAfter);
+}
+function renderScrollChallenge(item) {
+  if (!scrollChallenge || !scrollChallengeSteps || !scrollChallengeFeedback) return;
+  renderTerminalDashboard(item);
+  const challenge = scrollChallengeForItem(item);
+  if (!challenge) {
+    scrollChallenge.hidden = true;
+    return;
+  }
+  const roomIndex = item.roomIndex;
+  const solved = state.scrollSolvedRooms.has(roomIndex);
+  const progress = state.scrollChallengeProgress.get(roomIndex) || [];
+  scrollChallenge.hidden = false;
+  scrollChallenge.classList.toggle('is-solved', solved);
+  scrollChallenge.classList.toggle('is-locked', !scrollBriefingComplete(item));
+  scrollChallenge.classList.remove('is-wrong');
+  scrollChallengeSteps.className = `scroll-challenge-steps challenge-${challenge.type || 'signal-lock'}`;
+  if (!scrollBriefingComplete(item)) {
+    if (scrollChallengeTitle) scrollChallengeTitle.textContent = 'PERSONNEL BRIEFING REQUIRED';
+    if (scrollChallengePrompt) scrollChallengePrompt.textContent = 'Read and archive every About Liam record above before the case signal can be tuned.';
+    scrollChallengeSteps.innerHTML = '<button type="button" disabled>PROGRAM LOCKED</button>';
+    scrollChallengeFeedback.textContent = item.missionReport
+      ? 'Read the personnel files first. The terminal program unlocks only after its evidence is archived.'
+      : 'The record presents Liam’s work before the interactive signal unlocks its weapon and route.';
+  } else if (solved) {
+    const entries = scrollChallengeEntries(challenge);
+    if (scrollChallengeTitle) scrollChallengeTitle.textContent = item.missionReport
+      ? `PROGRAM COMPLETE · ${item.finalTerminal ? 'LIGHTWELL OPEN' : 'SHIELD GATE OPEN'}`
+      : 'CASE SIGNAL STABLE · ROUTE OPEN';
+    if (scrollChallengePrompt) scrollChallengePrompt.textContent = item.missionReport
+      ? item.finalTerminal
+        ? 'The final handoff is authorized. The Lightwell door is now active.'
+        : 'The evidence is archived, the program has accepted the result, and the shield gate is authorized.'
+      : 'The data now reads as an operating story, not just a number.';
+    scrollChallengeSteps.innerHTML = `<div class="case-signal-insights is-complete">${entries.map((entry) => `<article><strong>${escapeHtml(entry.metric)}</strong><p>${escapeHtml(entry.meaning)}</p></article>`).join('')}</div>`;
+    scrollChallengeFeedback.textContent = item.missionReport
+      ? item.finalTerminal ? 'Lightwell authorized. The final door has released.' : 'Terminal authorized. Weapon claimed; shield gate released.'
+      : 'Signal archived. Weapon claimed and eastern route released.';
+  } else {
+    const entries = scrollChallengeEntries(challenge);
+    const current = entries[progress.length];
+    if (scrollChallengeTitle) scrollChallengeTitle.textContent = `${terminalProgramTitle(challenge.type)} · ${progress.length + 1}/${entries.length}`;
+    if (scrollChallengePrompt) scrollChallengePrompt.textContent = `${challenge.prompt} ${current.cue}`;
+    if (scrollChallengeGuide) scrollChallengeGuide.textContent = terminalProgramGuide(challenge.type);
+    const insights = terminalInsights(entries, progress);
+    if (challenge.type === 'circuit-link') {
+      const program = terminalProgramState(roomIndex, challenge.type, () => ({ rotations: [...challenge.circuit.start] }));
+      const { columns, source, output, shapes } = challenge.circuit;
+      scrollChallengeSteps.innerHTML = `<div class="circuit-link-game"><div class="circuit-ports"><span>IN</span><strong>ROTATE TO LINK</strong><span>OUT</span></div><div class="circuit-grid" style="--circuit-columns:${columns}">${shapes.map((shape, index) => `<span class="circuit-slot ${index === source ? 'is-source' : ''} ${index === output ? 'is-output' : ''}">${circuitTileMarkup(shape, program.rotations[index], index)}</span>`).join('')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'This is a conduit puzzle: rotate tiles until a continuous bright line runs from the IN port to the OUT port.';
+    } else if (challenge.type === 'packet-sort') {
+      scrollChallengeSteps.innerHTML = `<div class="packet-sort-game"><div class="packet-belt"><span>LIVE PACKET</span><strong>${escapeHtml(current.header)}</strong><i aria-hidden="true"></i></div><div class="packet-metric">${escapeHtml(current.metric)}</div><div class="packet-lanes">${current.lanes.map((lane) => `<button type="button" class="packet-lane" data-packet-lane="${escapeHtml(lane.id)}"><small>ROUTE TO</small><strong>${escapeHtml(lane.label)}</strong></button>`).join('')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'Read the packet header, select the matching lane, then press Enter to dispatch.';
+    } else if (challenge.type === 'memory-relay') {
+      const program = terminalProgramState(roomIndex, challenge.type, () => ({ input: [], shown: false, replaying: false }));
+      const labels = { research: 'GTRI', operations: 'OPS', cloud: 'CLOUD', consulting: 'CONSULT' };
+      const shouldReplay = !program.shown;
+      program.shown = true;
+      scrollChallengeSteps.innerHTML = `<div class="memory-relay-game"><div class="memory-readout"><span>WATCH THE RELAY</span><strong data-memory-progress>${program.input.length} / ${challenge.sequence.length} COPIED</strong><button type="button" class="memory-replay" data-memory-replay>REPLAY SIGNAL</button></div><div class="memory-pad">${challenge.sequence.map((key, index) => `<button type="button" class="memory-key key-${index + 1}" data-memory-key="${key}"><small>${String(index + 1).padStart(2, '0')}</small><strong>${labels[key]}</strong></button>`).join('')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'A classic signal-memory relay. Watch the four flashes, then tap those same pads in order. Replay is always available.';
+      if (shouldReplay) window.setTimeout(() => replayMemoryRelay(challenge), 90);
+    } else if (challenge.type === 'stack-order') {
+      const program = terminalProgramState(roomIndex, challenge.type, () => ({ order: [...challenge.start], selected: null }));
+      const blocks = Object.fromEntries(challenge.blocks.map((block) => [block.id, block]));
+      scrollChallengeSteps.innerHTML = `<div class="stack-order-game"><div class="stack-order-readout"><span>REQUEST PATH</span><strong>CLICK TWO MODULES TO SWAP</strong></div><div class="stack-modules">${program.order.map((id, index) => { const block = blocks[id]; return `<button type="button" class="stack-module ${program.selected === id ? 'is-selected' : ''}" data-stack-block="${escapeHtml(id)}"><small>${String(index + 1).padStart(2, '0')}</small><strong>${escapeHtml(block.label)}</strong><span>${escapeHtml(block.detail)}</span></button>`; }).join('')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'Select one module with Enter, select a second, then press Enter to swap them into the correct support sequence.';
+    } else if (challenge.type === 'switchboard') {
+      const program = terminalProgramState(roomIndex, challenge.type, () => ({ cells: [...challenge.start] }));
+      scrollChallengeSteps.innerHTML = `<div class="switchboard-game"><div class="switchboard-readout"><span>INTEGRATION ENDPOINTS</span><strong>${program.cells.filter(Boolean).length} / 9 ONLINE</strong></div><div class="switch-grid">${program.cells.map((on, index) => `<button type="button" class="switch-cell ${on ? 'is-on' : ''}" data-switch-cell="${index}" aria-label="Toggle endpoint ${index + 1}"><i></i><span>${String(index + 1).padStart(2, '0')}</span></button>`).join('')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'Select an endpoint and press Enter to flip it plus its direct neighbors. Bring all nine online.';
+    } else if (challenge.type === 'firewall-path') {
+      const program = terminalProgramState(roomIndex, challenge.type, () => ({ path: [challenge.start] }));
+      const total = challenge.columns * challenge.columns;
+      scrollChallengeSteps.innerHTML = `<div class="firewall-path-game"><div class="firewall-readout"><span>TRUSTED ROUTE</span><strong>IN → OUT</strong></div><div class="firewall-grid" style="--firewall-columns:${challenge.columns}">${Array.from({ length: total }, (_, index) => { const blocked = challenge.blocked.includes(index); const used = program.path.includes(index); const currentNode = program.path.at(-1) === index; const marker = index === challenge.start ? 'IN' : index === challenge.output ? 'OUT' : blocked ? '×' : String(index + 1).padStart(2, '0'); return `<button type="button" class="firewall-node ${blocked ? 'is-blocked' : ''} ${used ? 'is-used' : ''} ${currentNode ? 'is-current' : ''}" data-firewall-cell="${index}" ${blocked ? 'disabled' : ''}>${marker}</button>`; }).join('')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'Begin at IN. Select an adjacent safe node and press Enter to extend the route until you reach OUT.';
+    } else if (challenge.type === 'impact-dial') {
+      const saved = state.scrollChallengeSelection.get(roomIndex)?.dialValue;
+      const start = clamp(Number.isFinite(Number(saved)) ? Number(saved) : current.min, current.min, current.max);
+      scrollChallengeSteps.innerHTML = `<div class="impact-dial-game"><div class="case-signal-readout"><small>IMPACT CONTROL</small><strong>${escapeHtml(current.metric)}</strong></div><div class="impact-dial-value" data-dial-output>${escapeHtml(formatScrollDialValue(current, start))}</div><input type="range" data-impact-dial min="${current.min}" max="${current.max}" step="${current.step}" value="${start}" aria-label="${escapeHtml(current.cue)}"><div class="impact-dial-target"><span>FIELD TARGET</span><strong>${escapeHtml(formatScrollDialValue(current, current.target))}</strong></div><button type="button" class="case-signal-lock" data-dial-confirm>CONFIRM IMPACT</button>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = 'Tune the live control to the marked operating value, then commit the setting. The target is visible: this is calibration, not a quiz.';
+    } else if (['route-flow', 'timeline-flow'].includes(challenge.type)) {
+      scrollChallengeSteps.innerHTML = `<div class="case-route-game"><div class="case-route-nodes">${entries.map((node, index) => `<button type="button" class="case-route-node ${index < progress.length ? 'is-complete' : index === progress.length ? 'is-active' : 'is-locked'}" ${index === progress.length ? 'data-flow-hold data-hold-ms="680"' : 'disabled'}><small>${String(index + 1).padStart(2, '0')}</small><strong>${escapeHtml(node.metric)}</strong><span>${index < progress.length ? 'ROUTED ✓' : index === progress.length ? `HOLD · ${escapeHtml(node.action)}` : 'AWAITING DATA'}</span><i class="case-route-charge" aria-hidden="true"></i></button>`).join('<i aria-hidden="true">→</i>')}</div>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = progress.length ? 'Hold the illuminated relay until its packet locks. The decoded stage remains below.' : 'Hold the illuminated relay to send the first packet. Every completed stage explains what the data changed.';
+    } else {
+      const [targetStart, targetEnd] = current.target;
+      scrollChallengeSteps.innerHTML = `<div class="case-signal-game"><div class="case-signal-readout"><small>LIVE CASE METRIC</small><strong>${escapeHtml(current.metric)}</strong></div><div class="case-signal-track" data-signal-track><span class="case-signal-target" style="left:${targetStart * 100}%;width:${(targetEnd - targetStart) * 100}%"></span><i class="case-signal-cursor" data-signal-cursor style="--signal-speed:${current.speed}s"></i></div><button type="button" class="case-signal-lock" data-challenge-lock>LOCK SIGNAL</button>${insights ? `<div class="case-signal-insights">${insights}</div>` : ''}</div>`;
+      scrollChallengeFeedback.textContent = progress.length ? 'Previous signal decoded below. Catch the moving pulse inside the illuminated band.' : 'Catch the moving pulse inside the illuminated band. Misses simply restart the sweep.';
+    }
+  }
+  updateScrollRewardForChallenge(item, challenge, solved);
+  if (item.missionReport) renderPseudoTerminal(item);
+}
+function completeScrollChallenge(item, challenge) {
+  const roomIndex = item.roomIndex;
+  state.terminalGameKeyHeld = false;
+  cancelScrollFlowHold(false);
+  state.scrollSolvedRooms.add(roomIndex);
+  state.scrollChallengeSelection.delete(roomIndex);
+  state.reportReadyRooms.delete(roomIndex);
+  item.recovered = true;
+  state.recoveredItems.add(item.id);
+  if (challenge.rewardWeapon) {
+    state.unlockedWeapons.add(challenge.rewardWeapon);
+    ensureWeaponAmmo(challenge.rewardWeapon);
+    setWeapon(challenge.rewardWeapon, true);
+  } else {
+    state.player.hp = 100;
+    for (const type of state.unlockedWeapons) {
+      const loadout = WEAPON_LOADOUTS[type];
+      if (!loadout?.magazineSize) continue;
+      state.weapon.ammoByType[type] = loadout.magazineSize;
+      state.weapon.reserveByType[type] = loadout.reserveAmmo;
+    }
+    ensureWeaponAmmo(state.weapon.type);
+  }
+  handleSectorSecured(roomIndex, item);
+  renderScrollChallenge(item);
+  unlockScrollTourPage(item, TERMINAL_SCREEN_GROUPS.length - 1);
+  configureScrollTourPages(item);
+  setTerminalScreen(TERMINAL_SCREEN_GROUPS.length - 1, true);
+  showToast(challenge.rewardWeapon ? `${WEAPON_LOADOUTS[challenge.rewardWeapon].label.toUpperCase()} UNLOCKED · ROUTE OPEN.` : 'FIELD RESUPPLY COMPLETE · ROUTE OPEN.', 'good');
+  playTone(440, .16, 'square', .02); playTone(660, .24, 'triangle', .024, .08);
+}
+function rejectScrollChallenge(item, message) {
+  scrollChallenge?.classList.remove('is-wrong');
+  void scrollChallenge?.offsetWidth;
+  scrollChallenge?.classList.add('is-wrong');
+  if (scrollChallengeFeedback) scrollChallengeFeedback.textContent = message;
+  playLowThump(48, .12, .02);
+  window.setTimeout(() => { if (state.reading === item) renderScrollChallenge(item); }, settings.reducedMotion ? 900 : 1500);
+}
+function acceptScrollChallengeEntry(item, challenge, entry) {
+  if (!item || !challenge || !entry || state.scrollSolvedRooms.has(item.roomIndex)) return;
+  const progress = state.scrollChallengeProgress.get(item.roomIndex) || [];
+  const entries = scrollChallengeEntries(challenge);
+  const next = [...progress, progress.length];
+  state.scrollChallengeProgress.set(item.roomIndex, next);
+  state.scrollChallengeSelection.delete(item.roomIndex);
+  if (scrollChallengeFeedback) scrollChallengeFeedback.textContent = entry.meaning;
+  playTone(520, .1, 'square', .018); playTone(780, .18, 'triangle', .018, .05);
+  if (next.length >= entries.length) completeScrollChallenge(item, challenge);
+  else renderScrollChallenge(item);
+}
 function openReading(item) {
+  state.pointerWasLockedBeforeReading = document.pointerLockElement === canvas;
+  if (state.pointerWasLockedBeforeReading) document.exitPointerLock?.();
   state.reading = item;
+  state.terminalShutdown = false;
+  state.terminalGameKeyHeld = false;
+  state.terminalMemoryReplayToken += 1;
   state.readingElapsed = 0;
   state.readingWorldTime = state.now;
+  scrollPaper?.classList.remove('terminal-program-active');
   state.keys.clear();
   state.mouseAttack = false;
+  state.mouseLook = false;
   state.weapon.swing = 0;
   state.weapon.projectile = 0;
-  let unlocked = null;
-  if (item.gateTutorial) {
-    if (!state.tutorialAbility) {
-      state.tutorialAbility = true;
-      state.selectedAbilityId = GATE_TUTORIAL_ABILITY.id;
-      unlocked = GATE_TUTORIAL_ABILITY;
-      updateHud();
-    }
-    updateAbilityCard(0, unlocked || GATE_TUTORIAL_ABILITY);
-  } else {
-    grantScrollXP(item);
-  }
+  gameShell?.classList.toggle('terminal-active', Boolean(item.missionReport));
+  grantScrollXP(item);
 
   const itemX = Number.isFinite(item.x) ? item.x : state.player.x;
   const itemY = Number.isFinite(item.y) ? item.y : state.player.y;
   const itemColor = item.color || '#6ce0c2';
   const room = rooms[item.roomIndex ?? 0];
+  const briefing = scrollBriefingForItem(item);
   const recordId = item.recordId || item.id;
-  const tags = item.tags || [item.tag, room.shortTitle, `+${XP_PER_SCROLL} XP`];
-  spawnParticles(itemX, itemY, .55, [itemColor, '#fff1b0'], settings.reducedMotion ? 12 : 30, { speed: 1.35, life: 1, size: .8, upward: .68, glow: 18, trail: true });
+  const tags = briefing?.tags || item.tags || [item.tag, room.shortTitle, `+${XP_PER_SCROLL} XP`];
+  const details = [...(briefing?.facts || []), ...(item.details || [])];
+  const featuredMetrics = item.featuredMetrics?.length ? item.featuredMetrics : briefing?.metrics;
+  spawnParticles(itemX, itemY, worldFloorHeightAt(itemX, itemY) + .55, [itemColor, '#fff1b0'], settings.reducedMotion ? 12 : 30, { speed: 1.35, life: 1, size: .8, upward: .68, glow: 18, trail: true });
   scrollRoomLabel.textContent = item.intro ? '· FIELD LOBBY' : `· ${room.level}`;
-  if (scrollRecordNumber) scrollRecordNumber.textContent = item.intro ? 'ENTRY SCROLL' : 'CASE STUDY';
+  if (scrollRecordNumber) scrollRecordNumber.textContent = item.intro
+    ? 'ENTRY SCROLL'
+    : item.missionReport ? `ACCESS TERMINAL // ${String((item.roomIndex || 0) + 1).padStart(2, '0')}` : 'CASE STUDY';
   if (readingOverlay) readingOverlay.style.setProperty('--scroll-accent', itemColor);
   if (scrollAuthorLine) scrollAuthorLine.textContent = item.intro ? 'LIAM HOSFELD · TECHNICAL CONSULTANT · ATLANTA, GA' : `LIAM HOSFELD · ${room.shortTitle.toUpperCase()}`;
-  if (scrollRecordStatus) scrollRecordStatus.textContent = `${state.collectedRecordIds.has(recordId) ? 'ARCHIVED SIGNAL' : 'NEW SIGNAL'} · ${(item.kind || 'FIELD NOTE').toUpperCase()}`;
+  if (scrollRecordStatus) scrollRecordStatus.textContent = item.missionReport
+    ? `${state.scrollSolvedRooms.has(item.roomIndex) ? 'AUTHORIZATION STORED' : 'PROGRAM READY'} · ${item.finalTerminal ? 'LIGHTWELL LINKED' : 'SHIELD GATE LINKED'}`
+    : `${state.collectedRecordIds.has(recordId) ? 'ARCHIVED SIGNAL' : 'NEW SIGNAL'} · ${(item.kind || 'FIELD NOTE').toUpperCase()}`;
   if (scrollPositioning) scrollPositioning.textContent = item.intro
     ? 'BEST FIT: OPERATIONS ANALYTICS · TMS DELIVERY · INTEGRATIONS · AUTOMATION · PROJECT ANALYSIS'
-    : `FIELD USE: ${item.tag || room.subtitle || 'SELECTED EVIDENCE'} · READ THE SIGNAL, THEN FOLLOW THE ROUTE`;
+    : item.missionReport
+      ? `READ → RUN PROGRAM → UNLOCK SHIELD GATE · ${briefing?.title || room.shortTitle}`
+      : briefing ? `ABOUT LIAM → PROOF → METHOD → OUTCOME · ${briefing.title}` : `PROBLEM → METHOD → OUTCOME · ${item.tag || room.subtitle || 'SELECTED EVIDENCE'}`;
+  if (scrollFindings) {
+    const findings = featuredMetrics?.length
+      ? featuredMetrics.slice(0, 3).map((metric) => ({ label: metric.label, value: metric.value }))
+      : [
+          { label: 'RESULT', value: item.summary },
+          { label: 'WHAT I DID', value: details[0] || 'Verified portfolio evidence archived in this field report.' },
+          { label: 'HOW', value: details[1] || 'Investigate the signal, clarify the requirement, and make the next action repeatable.' },
+        ];
+    scrollFindings.innerHTML = findings.map((finding) => `<article><small>${escapeHtml(finding.label)}</small><strong>${escapeHtml(finding.value)}</strong></article>`).join('');
+  }
   scrollTitle.textContent = item.title;
   scrollSummary.textContent = item.summary;
   if (scrollIntroGrid) {
-    const metrics = item.featuredMetrics || [
+    const metrics = featuredMetrics || [
       { value: `+${XP_PER_SCROLL}`, label: 'archive experience' },
       { value: room.level, label: 'field classification' },
       { value: String(item.details?.length || 0), label: 'evidence points' },
@@ -6352,13 +8474,16 @@ function openReading(item) {
     scrollIntroGrid.innerHTML = metrics.map((metric, index) => `<div class="scroll-metric" style="--delay:${.12 + index * .06}s"><strong>${escapeHtml(metric.value)}</strong><span>${escapeHtml(metric.label)}</span></div>`).join('');
   }
   if (scrollProofGrid) {
-    const proof = item.featuredWork || [];
+    const briefingProof = briefing?.slides.map((slide, index) => ({
+      index: String(index + 1).padStart(2, '0'), label: slide.label, title: slide.title,
+      result: slide.proof, method: slide.body, tools: briefing.tags.join(' · '),
+    })) || [];
+    const proof = item.featuredWork?.length ? item.featuredWork : briefingProof;
     scrollProofLabel.hidden = proof.length === 0;
     scrollProofGrid.hidden = proof.length === 0;
     scrollProofGrid.innerHTML = proof.map((card, index) => `<article class="scroll-proof-card" style="--delay:${.2 + index * .07}s"><div class="scroll-proof-meta"><span>${escapeHtml(card.index)}</span><small>${escapeHtml(card.label)}</small></div><h3>${escapeHtml(card.title)}</h3><strong>${escapeHtml(card.result)}</strong><p>${escapeHtml(card.method)}</p><em>${escapeHtml(card.tools)}</em></article>`).join('');
   }
-  const details = item.details || [];
-  if (scrollDetailsLabel) scrollDetailsLabel.textContent = item.intro ? 'FIELD NOTES / THE FULL ROUTE' : 'FIELD NOTES / EVIDENCE';
+  if (scrollDetailsLabel) scrollDetailsLabel.textContent = item.intro ? 'FIELD NOTES / THE FULL ROUTE' : item.missionReport ? 'ARCHIVE DATA / VERIFIED FACTS' : briefing ? 'RÉSUMÉ EVIDENCE / VERIFIED FACTS' : 'FIELD NOTES / EVIDENCE';
   if (scrollDetailCount) scrollDetailCount.textContent = `${details.length} EVIDENCE POINT${details.length === 1 ? '' : 'S'}`;
   scrollDetails.innerHTML = details.map((detail, index) => `<li style="--delay:${.18 + index * .06}s">${escapeHtml(detail)}</li>`).join('');
   scrollTags.innerHTML = tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
@@ -6367,16 +8492,78 @@ function openReading(item) {
     ? 'Bring Liam a difficult operational system, a noisy data trail, or a process worth automating. He turns the signal into a route people can run.'
     : 'Liam connects technical evidence to business action across TMS delivery, analytics, integrations, automation, and cross-functional work.';
   scrollActions.innerHTML = actionForItem(item);
+  renderTerminalDashboard(item);
+  renderScrollBriefing(item);
+  renderScrollChallenge(item);
   updateScrollProgress();
   readingOverlay.hidden = false;
   readingOverlay.classList.toggle('intro-scroll', Boolean(item.intro));
-  readingOverlay.classList.remove('open');
+  readingOverlay.classList.toggle('terminal-record', Boolean(item.missionReport));
+  readingOverlay.classList.toggle('terminal-booting', Boolean(item.missionReport));
+  readingOverlay.classList.remove('open', 'terminal-shutting-down');
+  if (scrollPaper) {
+    scrollPaper.scrollTop = 0;
+    if (item.missionReport) scrollPaper.dataset.terminalScreen = '0';
+  }
+  configureScrollTourPages(item);
+  setScrollTourStep(0, false);
   void readingOverlay.offsetWidth;
   readingOverlay.classList.add('open');
+  if (item.missionReport) {
+    window.setTimeout(() => {
+      if (state.reading === item) readingOverlay.classList.remove('terminal-booting');
+    }, settings.reducedMotion ? 80 : 820);
+  }
   playRecoverySound();
-  showToast(item.gateTutorial ? 'Archive Key learned. Cast it at the gate with Q.' : 'The dungeon waits while you read the field record.', 'good');
+  showToast(
+    item.gateTutorial
+      ? 'Archive route learned. Press E at the gate.'
+      : item.missionReport ? 'ACCESS TERMINAL ONLINE · READ THE FILES, RUN THE PROGRAM, THEN OPEN THE SHIELD GATE.' : 'The dungeon waits while you read the field record.',
+    'good',
+  );
 }
-function closeReading() { if (!state.reading) return; const wasLobbyScroll = state.reading === lobbyPortfolioScroll; state.reading = null; state.readingElapsed = 0; readingOverlay.classList.remove('open', 'intro-scroll'); window.setTimeout(() => { if (!state.reading) readingOverlay.hidden = true; }, 550); if (wasLobbyScroll) startLobbyGuideScrollReturnRun(); }
+function closeReading(force = false) {
+  if (!state.reading) return;
+  const item = state.reading;
+  if (item.missionReport && !force) {
+    if (state.terminalShutdown) return;
+    state.terminalShutdown = true;
+    state.terminalGameKeyHeld = false;
+    state.terminalMemoryReplayToken += 1;
+    cancelScrollFlowHold(false);
+    pseudoTerminalInput?.blur();
+    readingOverlay.classList.remove('terminal-booting');
+    readingOverlay.classList.add('terminal-shutting-down');
+    window.setTimeout(() => {
+      if (state.reading === item) closeReading(true);
+    }, settings.reducedMotion ? 80 : 680);
+    return;
+  }
+  cancelScrollFlowHold(false);
+  const restorePointerLock = state.pointerWasLockedBeforeReading && settings.pointerLock;
+  const wasLobbyScroll = item === lobbyPortfolioScroll;
+  const unfinishedReport = item.missionReport && !state.scrollSolvedRooms.has(item.roomIndex);
+  if (unfinishedReport) {
+    item.recovered = false;
+    state.recoveredItems.delete(item.id);
+  }
+  state.reading = null;
+  state.pointerWasLockedBeforeReading = false;
+  state.readingElapsed = 0;
+  state.terminalShutdown = false;
+  scrollPaper?.classList.remove('terminal-program-active');
+  gameShell?.classList.remove('terminal-active');
+  readingOverlay.classList.remove('open', 'intro-scroll', 'terminal-record', 'terminal-booting', 'terminal-shutting-down');
+  window.setTimeout(() => { if (!state.reading) readingOverlay.hidden = true; }, 550);
+  if (unfinishedReport) showToast('TERMINAL AUTHORIZATION INCOMPLETE · RETURN WHEN READY.');
+  if (wasLobbyScroll) startLobbyGuideScrollReturnRun();
+  if (restorePointerLock) {
+    try {
+      const request = canvas.requestPointerLock?.();
+      if (request?.catch) request.catch(() => {});
+    } catch (error) { /* Pointer lock remains optional when a browser denies re-entry. */ }
+  }
+}
 function interactWithLightDoor() {
   if (!state.doorOfLight?.active) return false;
   const distance = Math.hypot(state.doorOfLight.x - state.player.x, state.doorOfLight.y - state.player.y);
@@ -6407,8 +8594,8 @@ function openLobbyGate() {
   state.lobbyGateOpening = true;
   announceNarrator(
     'lobby-gate-opening',
-    'ARCHIVE KEY / ROUTE OPENING',
-    'Archive Key is opening the route. Liam sent you beyond the forest to secure his Document of Truth—his résumé.',
+    'ARCHIVE SEAL / ROUTE OPENING',
+    'The archive seal is opening the route. Liam sent you beyond the forest to secure his Document of Truth—his résumé.',
     'expression-command',
     10,
     { duration: 7, priority: 8, force: true },
@@ -6522,14 +8709,52 @@ function recoverNearby() {
     return;
   }
   const item = getNearestItem();
+  if (item?.missionReport) {
+    if (!terminalPrerequisiteMet(item.roomIndex)) {
+      const boss = item.roomIndex === FINAL_ROOM_INDEX ? state.finalBoss : objectiveBossForRoom(item.roomIndex);
+      const bossName = boss?.displayName || boss?.name || 'arena target';
+      showToast(`TERMINAL LOCKED · DEFEAT ${bossName.toUpperCase()} FIRST.`, 'danger');
+      announceNarrator(
+        `terminal-locked-${rooms[item.roomIndex]?.id}`,
+        'ACCESS TERMINAL LOCKED',
+        `${bossName} still controls this terminal. Defeat the boss, then return here to authorize the eastern route.`,
+        'expression-focused',
+        8,
+        { duration: 4.8, priority: 8, force: true },
+      );
+      return;
+    }
+    item.recovered = true;
+    state.recoveredItems.add(item.id);
+    openReading(item);
+    updateHud();
+    return;
+  }
+  if (!state.securedRooms.has(state.room) && missionExitDistance(state.room) <= 2.1) {
+    showBlockedRouteHint(state.room);
+    return;
+  }
   if (!item) { showToast('Move closer to a weapon keeper, supply cache, or the gate.'); return; }
-  if (['ammo-pickup', 'ammo-arsenal', 'ammo-shotgun', 'ammo-bfg'].includes(item.kind)) { collectCombatPickup(item); return; }
+  if (item.kind === OBJECTIVE_KEY_KIND) { collectObjectiveKey(item); return; }
+  if (item.kind === 'ammo-pickup' || item.kind?.startsWith('ammo-') || item.kind?.startsWith('health-')) { collectCombatPickup(item); return; }
   item.recovered = true; state.recoveredItems.add(item.id); openReading(item); updateHud();
 }
 
 function castRay(angle) {
   const rayDirX = Math.cos(angle); const rayDirY = Math.sin(angle);
   const camera = renderCamera();
+  const shield = activeMissionExitShieldPlane();
+  let shieldDistance = Infinity;
+  let shieldHitY = 0;
+  if (shield && Math.abs(rayDirX) > .00001) {
+    const candidateDistance = (shield.x - camera.x) / rayDirX;
+    const candidateY = camera.y + rayDirY * candidateDistance;
+    if (candidateDistance > .003 && candidateDistance < MAX_DEPTH
+      && candidateY >= shield.minY && candidateY <= shield.maxY) {
+      shieldDistance = candidateDistance;
+      shieldHitY = candidateY;
+    }
+  }
   let mapX = Math.floor(camera.x); let mapY = Math.floor(camera.y);
   const deltaDistX = Math.abs(rayDirX) < .00001 ? 1e30 : Math.abs(1 / rayDirX);
   const deltaDistY = Math.abs(rayDirY) < .00001 ? 1e30 : Math.abs(1 / rayDirY);
@@ -6542,10 +8767,32 @@ function castRay(angle) {
     else { sideDistY += deltaDistY; mapY += stepY; side = 1; distance = sideDistY - deltaDistY; }
     if (mapY < 0 || mapY >= WORLD_HEIGHT || mapX < 0 || mapX >= WORLD_WIDTH || worldMap[mapY][mapX] === '1') {
       distance = Math.max(.001, Math.abs(distance));
+      if (shieldDistance < distance) {
+        return {
+          distance: shieldDistance,
+          hitX: shield.x,
+          hitY: shieldHitY,
+          wallX: clamp((shieldHitY - shield.minY) / Math.max(.01, shield.maxY - shield.minY), 0, .999),
+          vertical: true,
+          dynamicShield: true,
+          shieldRoomIndex: shield.roomIndex,
+        };
+      }
       const hitX = camera.x + rayDirX * distance; const hitY = camera.y + rayDirY * distance;
       const wallX = side === 0 ? hitY - Math.floor(hitY) : hitX - Math.floor(hitX);
       return { distance, hitX, hitY, wallX: clamp(wallX, 0, .999), vertical: side === 0 };
     }
+  }
+  if (shieldDistance < MAX_DEPTH) {
+    return {
+      distance: shieldDistance,
+      hitX: shield.x,
+      hitY: shieldHitY,
+      wallX: clamp((shieldHitY - shield.minY) / Math.max(.01, shield.maxY - shield.minY), 0, .999),
+      vertical: true,
+      dynamicShield: true,
+      shieldRoomIndex: shield.roomIndex,
+    };
   }
   return { distance: MAX_DEPTH, hitX: camera.x + rayDirX * MAX_DEPTH, hitY: camera.y + rayDirY * MAX_DEPTH, wallX: 0, vertical: false };
 }
@@ -6764,7 +9011,7 @@ function drawBackground(width, height) {
   const moonWorld = {
     x: renderCamera().x + Math.cos(MOON_AZIMUTH) * SKY_DISTANCE,
     y: renderCamera().y + Math.sin(MOON_AZIMUTH) * SKY_DISTANCE,
-    z: EYE_HEIGHT + Math.sin(MOON_ELEVATION) * SKY_DISTANCE,
+    z: cameraEyeHeight() + Math.sin(MOON_ELEVATION) * SKY_DISTANCE,
   };
   const moonCamera = cameraPoint(moonWorld.x, moonWorld.y, moonWorld.z);
   const moonVisible = moonCamera.forward > .1 && Math.abs(moonCamera.side / moonCamera.forward) < Math.tan(FOV * .66);
@@ -6810,7 +9057,7 @@ function ensureCeilingBuffer(height) {
 function ceilingDistanceAtScreenY(y) {
   const verticalAngle = -Math.atan((y - cameraHorizon()) / focalY());
   const denominator = Math.tan(verticalAngle);
-  return denominator > .01 ? (CEILING_Z - EYE_HEIGHT) / denominator : MAX_DEPTH;
+  return denominator > .01 ? (CEILING_Z - cameraEyeHeight()) / denominator : MAX_DEPTH;
 }
 
 function roofRoomIndexAtX(x) {
@@ -6836,12 +9083,14 @@ function drawRoomRoof(width, height) {
     const camera = renderCamera();
     const angle = camera.angle + (ray / RAY_COUNT - .5) * cameraFov();
     const directionX = Math.cos(angle); const directionY = Math.sin(angle);
+    const correction = Math.max(.18, Math.cos(angle - camera.angle));
     for (let row = 0; row < ceilingBufferHeight; row += 1) {
       const screenY = row * FLOOR_STEP + FLOOR_STEP * .5;
       if (screenY >= horizon) continue;
       const distance = ceilingRowDistances[row];
-      const worldX = camera.x + directionX * distance;
-      const worldY = camera.y + directionY * distance;
+      const rayDistance = distance / correction;
+      const worldX = camera.x + directionX * rayDistance;
+      const worldY = camera.y + directionY * rayDistance;
       const sampledRoomIndex = roofRoomIndexAtX(worldX);
       if (sampledRoomIndex < 0 || !rooms[sampledRoomIndex]?.roof || isWall(worldX, worldY)) continue;
       const surface = sampleGround(worldX, worldY);
@@ -6870,27 +9119,40 @@ function drawRoomRoof(width, height) {
   ctx.restore();
 }
 function drawWalls(width, height) {
-  const textureTech = textures.hellTech;
   for (let ray = 0; ray < RAY_COUNT; ray += 1) {
-    const camera = renderCamera(); const cameraX = ray / RAY_COUNT - .5; const angle = camera.angle + cameraX * cameraFov(); const hit = castRay(angle); const corrected = hit.distance * Math.cos(angle - camera.angle);
-    const top = projectY(CEILING_Z, corrected); const base = projectY(FLOOR_Z, corrected); const x = ray * width / RAY_COUNT; const room = materialRoomAtX(hit.hitX); const texture = textureTech;
+    const camera = renderCamera(); const cameraX = ray / RAY_COUNT - .5; const angle = camera.angle + cameraX * cameraFov(); const hit = castRay(angle); const correction = Math.max(.18, Math.cos(angle - camera.angle)); const corrected = hit.distance * correction;
+    const floorSampleX = hit.hitX - Math.cos(angle) * .025;
+    const floorSampleY = hit.hitY - Math.sin(angle) * .025;
+    const wallFloorZ = worldFloorHeightAt(floorSampleX, floorSampleY);
+    const top = projectY(CEILING_Z, corrected); const base = projectY(wallFloorZ, corrected); const x = ray * width / RAY_COUNT;
+    const hitRoomIndex = hit.dynamicShield ? hit.shieldRoomIndex : roomIndexAtX(floorSampleX);
+    const texture = hit.dynamicShield ? missionExitShieldTexture(hit.shieldRoomIndex) : wallTextureForRoom(hitRoomIndex);
     state.zBuffer[ray] = corrected; state.floorBase[ray] = base;
+    state.rayDistance[ray] = hit.distance;
+    const topRow = clamp(Math.floor(top / FLOOR_STEP), 0, floorBufferHeight - 1);
+    const bottomRow = clamp(Math.ceil(base / FLOOR_STEP), 0, floorBufferHeight);
+    for (let row = topRow; row < bottomRow; row += 1) writeSurfaceDepth(ray, row, corrected);
     if (base <= 0 || top >= height) continue;
     const sourceX = Math.floor(hit.wallX * texture.width); ctx.drawImage(texture, sourceX, 0, 1, texture.height, x, top, width / RAY_COUNT + 1, base - top);
     const light = sampleLight(hit.hitX, hit.hitY); const fog = clamp((corrected - 3) / 17, 0, .72); const darkness = clamp(1 - light * .8 + fog * .44, .08, .9);
-    const wallShade = state.room === SANCTUARY_ROOM_INDEX ? `rgba(37, 111, 105, ${darkness * .16})` : state.room === 0 ? `rgba(55, 16, 16, ${darkness * .42})` : `rgba(8, 3, 3, ${darkness})`; ctx.fillStyle = wallShade; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top);
-    const roomAccent = ['rgba(116, 35, 28, .12)', 'rgba(145, 43, 29, .13)', 'rgba(116, 23, 20, .16)', 'rgba(137, 27, 35, .14)', 'rgba(68, 88, 86, .1)', 'rgba(126, 31, 22, .15)'][clamp(roomIndexAtX(hit.hitX), 0, 5)];
-    if (roomAccent) { ctx.fillStyle = roomAccent; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top); }
+    // The locked gate is an authored sprite, not a dark wall texture. Keep
+    // its red/orange warning bars bright enough to read across a boss arena.
+    const wallShade = hit.dynamicShield
+      ? `rgba(12, 0, 0, ${.1 + fog * .18})`
+      : state.room === SANCTUARY_ROOM_INDEX ? `rgba(37, 111, 105, ${darkness * .16})` : state.room === 0 ? `rgba(55, 16, 16, ${darkness * .42})` : `rgba(8, 3, 3, ${darkness})`;
+    ctx.fillStyle = wallShade; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top);
+    const roomAccent = ['rgba(116, 35, 28, .12)', 'rgba(145, 43, 29, .13)', 'rgba(116, 23, 20, .16)', 'rgba(137, 27, 35, .14)', 'rgba(68, 88, 86, .1)', 'rgba(126, 31, 22, .15)'][clamp(hitRoomIndex, 0, 5)];
+    if (!hit.dynamicShield && roomAccent) { ctx.fillStyle = roomAccent; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top); }
     const warmth = clamp(torchInfluence(hit.hitX, hit.hitY) * .035, 0, .08); if (warmth > .005) { ctx.fillStyle = `rgba(196, 112, 43, ${warmth})`; ctx.fillRect(x, top, width / RAY_COUNT + 1, base - top); }
+    const terminalDecal = terminalWallDecalForHit(hit);
+    if (terminalDecal) drawWallTerminalDecal(terminalDecal, hit, x, width / RAY_COUNT, top, base, corrected, state.now);
     if (hit.vertical) { ctx.fillStyle = 'rgba(24, 10, 3, .13)'; ctx.fillRect(x, top, 1, base - top); }
   }
 }
-function groundDistanceAtScreenY(y) { const verticalAngle = -Math.atan((y - cameraHorizon()) / focalY()); const denominator = -Math.tan(verticalAngle); return denominator > .01 ? EYE_HEIGHT / denominator : MAX_DEPTH; }
 let floorBuffer = null;
 let floorBufferContext = null;
 let floorBufferImage = null;
 let floorBufferHeight = 0;
-let floorRowDistances = null;
 
 function ensureFloorBuffer(height) {
   const nextHeight = Math.ceil(height / FLOOR_STEP);
@@ -6901,33 +9163,161 @@ function ensureFloorBuffer(height) {
   floorBufferContext = floorBuffer.getContext('2d', { alpha: true });
   floorBufferImage = floorBufferContext.createImageData(RAY_COUNT, nextHeight);
   floorBufferHeight = nextHeight;
-  floorRowDistances = new Float32Array(nextHeight);
+}
+
+function beginWorldDepthFrame(height) {
+  ensureFloorBuffer(height);
+  const size = RAY_COUNT * floorBufferHeight;
+  if (state.surfaceDepth.length !== size) state.surfaceDepth = new Float32Array(size);
+  state.surfaceDepth.fill(Infinity);
+}
+function writeSurfaceDepth(ray, row, depth) {
+  if (row < 0 || row >= floorBufferHeight || ray < 0 || ray >= RAY_COUNT) return;
+  const index = row * RAY_COUNT + ray;
+  if (depth < state.surfaceDepth[index]) state.surfaceDepth[index] = depth;
+}
+function surfaceDepthAt(ray, screenY) {
+  if (!state.surfaceDepth.length || !floorBufferHeight) return state.zBuffer[ray] || Infinity;
+  const row = clamp(Math.floor(screenY / FLOOR_STEP), 0, floorBufferHeight - 1);
+  return state.surfaceDepth[row * RAY_COUNT + ray] || Infinity;
+}
+function writeHeightfieldSpan(data, ray, startRow, endRow, depth, color) {
+  const top = clamp(Math.floor(startRow), 0, floorBufferHeight);
+  const bottom = clamp(Math.ceil(endRow), 0, floorBufferHeight);
+  for (let row = top; row < bottom; row += 1) {
+    const depthIndex = row * RAY_COUNT + ray;
+    if (depth > state.surfaceDepth[depthIndex] + .015) continue;
+    const index = depthIndex * 4;
+    data[index] = clamp(Math.round(color.r), 0, 255);
+    data[index + 1] = clamp(Math.round(color.g), 0, 255);
+    data[index + 2] = clamp(Math.round(color.b), 0, 255);
+    data[index + 3] = 255;
+    state.surfaceDepth[depthIndex] = depth;
+  }
+}
+function refineElevationRise(camera, directionX, directionY, nearDistance, farDistance, lowHeight) {
+  let low = nearDistance;
+  let high = farDistance;
+  for (let iteration = 0; iteration < 7; iteration += 1) {
+    const middle = (low + high) * .5;
+    const middleHeight = worldFloorHeightAt(camera.x + directionX * middle, camera.y + directionY * middle);
+    if (middleHeight > lowHeight + .004) high = middle;
+    else low = middle;
+  }
+  const lowX = camera.x + directionX * low;
+  const lowY = camera.y + directionY * low;
+  const highX = camera.x + directionX * high;
+  const highY = camera.y + directionY * high;
+  return {
+    distance: high,
+    lowX, lowY, highX, highY,
+    lowHeight: worldFloorHeightAt(lowX, lowY),
+    highHeight: worldFloorHeightAt(highX, highY),
+  };
+}
+function refineElevationDrop(camera, directionX, directionY, nearDistance, farDistance, highHeight) {
+  let inside = nearDistance;
+  let outside = farDistance;
+  for (let iteration = 0; iteration < 7; iteration += 1) {
+    const middle = (inside + outside) * .5;
+    const middleHeight = worldFloorHeightAt(camera.x + directionX * middle, camera.y + directionY * middle);
+    if (middleHeight < highHeight - .004) outside = middle;
+    else inside = middle;
+  }
+  const highX = camera.x + directionX * inside;
+  const highY = camera.y + directionY * inside;
+  return {
+    distance: inside,
+    highX,
+    highY,
+    highHeight: worldFloorHeightAt(highX, highY),
+  };
+}
+function writeHeightfieldRiser(data, ray, startRow, endRow, depth, edge, surfaceInfo) {
+  const top = clamp(Math.floor(startRow), 0, floorBufferHeight);
+  const bottom = clamp(Math.ceil(endRow), 0, floorBufferHeight);
+  const eye = cameraEyeHeight();
+  const horizon = cameraHorizon();
+  const focal = focalY();
+  const roomIndex = surfaceInfo.piece?.roomIndex ?? roomIndexAtX(edge.highX);
+  for (let row = top; row < bottom; row += 1) {
+    const depthIndex = row * RAY_COUNT + ray;
+    if (depth > state.surfaceDepth[depthIndex] + .015) continue;
+    const screenY = (row + .5) * FLOOR_STEP;
+    const worldZ = clamp(eye + (horizon - screenY) * depth / focal, edge.lowHeight, edge.highHeight);
+    const sampled = sampleWallMaterial(roomIndex, edge.highX, edge.highY, worldZ, depth, surfaceInfo.normalAxis);
+    const shade = surfaceInfo.shade || 1;
+    const index = depthIndex * 4;
+    data[index] = clamp(Math.round(sampled.r * shade), 0, 255);
+    data[index + 1] = clamp(Math.round(sampled.g * shade), 0, 255);
+    data[index + 2] = clamp(Math.round(sampled.b * shade), 0, 255);
+    data[index + 3] = 255;
+    state.surfaceDepth[depthIndex] = depth;
+  }
+}
+function heightfieldGroundColor(worldX, worldY, depth) {
+  const surface = sampleGround(worldX, worldY);
+  const light = sampleLight(worldX, worldY);
+  const fog = clamp((depth - 4) / 22, 0, .72);
+  const factor = clamp((.25 + light * .75) * (1 - fog * .58), .12, 1.18);
+  return { r: surface.r * factor, g: surface.g * factor, b: surface.b * factor };
 }
 
 function drawFloor(width, height) {
   ensureFloorBuffer(height);
   const data = floorBufferImage.data;
   data.fill(0);
-  for (let row = 0; row < floorBufferHeight; row += 1) {
-    floorRowDistances[row] = clamp(groundDistanceAtScreenY(row * FLOOR_STEP + FLOOR_STEP * .5), .35, MAX_DEPTH);
-  }
+  const camera = renderCamera();
   for (let ray = 0; ray < RAY_COUNT; ray += 1) {
-    const startRow = clamp(Math.floor(state.floorBase[ray] / FLOOR_STEP), 0, floorBufferHeight);
-    const camera = renderCamera();
     const angle = camera.angle + (ray / RAY_COUNT - .5) * cameraFov();
     const directionX = Math.cos(angle); const directionY = Math.sin(angle);
-    for (let row = startRow; row < floorBufferHeight; row += 1) {
-      const distance = floorRowDistances[row];
+    const correction = Math.max(.18, Math.cos(angle - camera.angle));
+    const wallDistance = Math.min(MAX_DEPTH, state.rayDistance[ray] || MAX_DEPTH);
+    let clipRow = floorBufferHeight;
+    let distance = .08;
+    let previousDistance = distance;
+    let previousFloor = worldFloorHeightAt(camera.x + directionX * distance, camera.y + directionY * distance);
+    while (distance < wallDistance) {
       const worldX = camera.x + directionX * distance;
       const worldY = camera.y + directionY * distance;
-      const surface = sampleGround(worldX, worldY);
-      const light = sampleLight(worldX, worldY);
-      const factor = clamp(.25 + light * .75, .12, 1.18);
-      const index = (row * RAY_COUNT + ray) * 4;
-      data[index] = clamp(Math.round(surface.r * factor), 0, 255);
-      data[index + 1] = clamp(Math.round(surface.g * factor), 0, 255);
-      data[index + 2] = clamp(Math.round(surface.b * factor), 0, 255);
-      data[index + 3] = 255;
+      if (isWall(worldX, worldY)) break;
+      const floorZ = worldFloorHeightAt(worldX, worldY);
+      const corrected = Math.max(.025, distance * correction);
+      const surfaceRow = projectY(floorZ, corrected) / FLOOR_STEP;
+
+      if (floorZ > previousFloor + .004 && surfaceRow < clipRow) {
+        const edge = refineElevationRise(camera, directionX, directionY, previousDistance, distance, previousFloor);
+        const edgeDepth = Math.max(.025, edge.distance * correction);
+        const riserTop = projectY(edge.highHeight, edgeDepth) / FLOOR_STEP;
+        const riserBottom = Math.min(clipRow, projectY(edge.lowHeight, edgeDepth) / FLOOR_STEP);
+        const surfaceInfo = elevationRiseSurfaceInfo(edge.lowX, edge.lowY, edge.highX, edge.highY);
+        writeHeightfieldRiser(data, ray, riserTop, riserBottom, edgeDepth, edge, surfaceInfo);
+        clipRow = Math.min(clipRow, riserTop);
+      } else if (floorZ < previousFloor - .004) {
+        // A downward edge is a backface, so its vertical wall stays hidden by
+        // the nearer upper floor. Refine the boundary and extend that top cap
+        // to the exact silhouette to avoid a transparent crack between samples.
+        const edge = refineElevationDrop(camera, directionX, directionY, previousDistance, distance, previousFloor);
+        const edgeDepth = Math.max(.025, edge.distance * correction);
+        const edgeRow = projectY(edge.highHeight, edgeDepth) / FLOOR_STEP;
+        if (edgeRow < clipRow) {
+          writeHeightfieldSpan(
+            data,
+            ray,
+            edgeRow,
+            clipRow,
+            edgeDepth,
+            heightfieldGroundColor(edge.highX, edge.highY, edgeDepth),
+          );
+          clipRow = edgeRow;
+        }
+      } else if (surfaceRow < clipRow) {
+        writeHeightfieldSpan(data, ray, surfaceRow, clipRow, corrected, heightfieldGroundColor(worldX, worldY, corrected));
+        clipRow = surfaceRow;
+      }
+      previousFloor = floorZ;
+      previousDistance = distance;
+      distance += clamp(.035 + distance * .012, .04, .16);
     }
   }
   floorBufferContext.putImageData(floorBufferImage, 0, 0);
@@ -6946,15 +9336,26 @@ function projectVerticalBounds(x, y, zCenter, worldHeight) {
 }
 
 const PICKUP_SPRITE_INDEX = Object.freeze({
+  'health-small': 0,
+  'health-large': 1,
   'ammo-arsenal': 2,
   'ammo-shotgun': 3,
   'ammo-bfg': 4,
+  'ammo-plasma': 4,
+  'ammo-rail': 3,
+  'ammo-rivet': 2,
 });
 const PICKUP_BALANCE = Object.freeze({
+  'health-small': { title: 'FIELD DRESSING', color: '#79cf7d', amount: 18, icon: '+' },
+  'health-large': { title: 'TRAUMA KIT', color: '#a8ed91', amount: 35, icon: '✚' },
   'ammo-arsenal': { title: 'RIFLE MAGAZINE', color: '#d7a34e', amount: 30, icon: '▣' },
   'ammo-shotgun': { title: 'SHOTGUN SHELLS', color: '#e08a55', amount: 6, icon: '▥' },
+  'ammo-plasma': { title: 'ARC CELL', color: '#58f4e4', amount: 24, icon: 'ϟ' },
+  'ammo-rail': { title: 'RAIL SLUGS', color: '#70f4e4', amount: 3, icon: '▰' },
+  'ammo-rivet': { title: 'RIVET BELT', color: '#d89b55', amount: 12, icon: '▤' },
   'ammo-bfg': { title: 'BFG ENERGY CELL', color: '#4cdbff', amount: 1, icon: 'ϟ' },
 });
+const OBJECTIVE_KEY_KIND = 'objective-key';
 function pickupSpriteFrame(item) {
   const index = PICKUP_SPRITE_INDEX[item.kind];
   if (!Number.isInteger(index) || !spriteReady(gameSprites.pickupSheet)) return null;
@@ -6981,6 +9382,45 @@ function pickupSpriteFrame(item) {
   return pixelated;
 }
 function pickupDefinition(kind) { return PICKUP_BALANCE[kind] || PICKUP_BALANCE['ammo-arsenal']; }
+function objectiveKeyColorIndex(value) {
+  const color = String(value?.color || value || '').toLowerCase();
+  if (color === '#d99762' || color === '#c76f57') return 1;
+  if (color === '#e7ad67' || color === '#e0b66d') return 2;
+  if (color === '#c58de6') return 3;
+  return 0;
+}
+function pixelatedKeyAtlasSprite(row, column, cacheKey, targetHeight = 64) {
+  if (spriteCache.has(cacheKey)) return spriteCache.get(cacheKey);
+  const source = keyedSpriteFrame(gameSprites.objectiveKeySheet, 4, 2, row * 4 + column, 'objective-key-sheet');
+  if (!source) return null;
+  const ratio = source.width / Math.max(1, source.height);
+  // Reduce the generated plate to a deliberate low-res working canvas before
+  // scaling it back up. This gives pickups and wall sockets the same chunky
+  // pixel language as the established enemy sprites.
+  const pixelHeight = row === 0 ? 34 : 30;
+  const pixelWidth = Math.max(12, Math.round(pixelHeight * ratio));
+  const lowRes = document.createElement('canvas');
+  lowRes.width = pixelWidth;
+  lowRes.height = pixelHeight;
+  const lowResPaint = lowRes.getContext('2d');
+  lowResPaint.imageSmoothingEnabled = false;
+  lowResPaint.drawImage(source, 0, 0, pixelWidth, pixelHeight);
+  const sprite = document.createElement('canvas');
+  sprite.height = targetHeight;
+  sprite.width = Math.max(24, Math.round(targetHeight * ratio));
+  const paint = sprite.getContext('2d');
+  paint.imageSmoothingEnabled = false;
+  paint.drawImage(lowRes, 0, 0, sprite.width, sprite.height);
+  spriteCache.set(cacheKey, sprite);
+  return sprite;
+}
+function objectiveKeySprite(item) {
+  const cacheKey = `objective-key:${item.id}`;
+  return pixelatedKeyAtlasSprite(0, objectiveKeyColorIndex(item), cacheKey, 72);
+}
+function keyGateSprite(gate) {
+  return pixelatedKeyAtlasSprite(1, objectiveKeyColorIndex(gate), `key-gate:${gate.id}`, 72);
+}
 function showPickupFeedback(item, amount) {
   const definition = pickupDefinition(item.kind);
   state.pickupFeedback = { label: definition.title, amount, color: definition.color, kind: item.kind };
@@ -7005,13 +9445,14 @@ function spawnStaticCombatPickups() {
   // Supplies are landmarks, not a trail of free refills. Most resources now
   // come from exploration and the occasional meaningful combat drop.
   const staticLayout = [
-    [1, 'ammo-arsenal', .42, .52],
-    [2, 'ammo-shotgun', .78, .72],
-    [3, 'ammo-arsenal', .78, .72],
-    [4, 'ammo-shotgun', .28, .72],
-    [5, 'ammo-arsenal', .72, .3],
-    [6, 'ammo-bfg', .5, .5],
-    [7, 'ammo-shotgun', .28, .72],
+    [0, 'health-small', .18, .24], [0, 'ammo-arsenal', .68, .72],
+    [1, 'health-small', .18, .24], [1, 'ammo-shotgun', .68, .72],
+    [2, 'health-large', .5, .78], [2, 'ammo-plasma', .78, .28],
+    [3, 'health-small', .18, .72], [3, 'ammo-rail', .7, .25],
+    [4, 'health-large', .5, .78], [4, 'ammo-rivet', .76, .3],
+    [5, 'health-small', .18, .24], [5, 'ammo-bfg', .72, .72],
+    [6, 'health-large', .5, .78], [6, 'ammo-bfg', .72, .28],
+    [7, 'health-large', .22, .72], [7, 'ammo-bfg', .72, .3],
   ];
   for (const [roomIndex, kind, xRatio, yRatio] of staticLayout) {
     const room = rooms[roomIndex];
@@ -7027,6 +9468,45 @@ function spawnStaticCombatPickups() {
 }
 
 spawnStaticCombatPickups();
+
+function spawnObjectiveKeys() {
+  for (let roomIndex = STARTING_ROOM_INDEX; roomIndex < FINAL_ROOM_INDEX; roomIndex += 1) {
+    const objective = roomObjective(roomIndex);
+    if (objective.type !== 'keys') continue;
+    const occupied = [];
+    for (const key of objective.keys) {
+      const point = findWalkableSpawnPoint(roomOffsets[roomIndex] + scaleMissionX(key.localX), scaleMissionY(key.localY), roomIndex, occupied);
+      occupied.push(point);
+      worldItems.push({
+        id: key.id,
+        title: key.title,
+        kind: OBJECTIVE_KEY_KIND,
+        icon: 'KEY',
+        tag: 'ROUTE KEY / EXIT SEAL',
+        summary: `A physical route key linked to the eastern seal in ${rooms[roomIndex].shortTitle}.`,
+        color: key.color,
+        x: point.x,
+        y: point.y,
+        roomIndex,
+        objectiveKey: true,
+        recovered: false,
+        spawnedAt: performance.now(),
+        bobPhase: occupied.length * 1.7,
+      });
+    }
+  }
+}
+
+spawnObjectiveKeys();
+
+function spawnMissionTerminals() {
+  for (let roomIndex = STARTING_ROOM_INDEX; roomIndex <= FINAL_ROOM_INDEX; roomIndex += 1) {
+    const terminal = spawnRoomFieldReport(roomIndex, { silent: true });
+    if (terminal) state.reportReadyRooms.add(roomIndex);
+  }
+}
+
+spawnMissionTerminals();
 
 function makeItemSprite(item) {
   const key = `item:${item.id}`;
@@ -7092,6 +9572,24 @@ function projectBillboard(x, y, zCenter, worldHeight) {
   const top = projectY(zCenter + worldHeight / 2, point.forward);
   return { x: canvas.width / 2 + point.side * focalX() / point.forward, top, bottom, height: bottom - top, depth: point.forward };
 }
+function spriteVisibleSpans(ray, top, bottom, depth) {
+  const clippedTop = clamp(top, 0, canvas.height);
+  const clippedBottom = clamp(bottom, 0, canvas.height);
+  if (clippedBottom <= clippedTop) return [];
+  const spans = [];
+  let openStart = null;
+  let cursor = clippedTop;
+  while (cursor < clippedBottom - .01) {
+    const nextBoundary = Math.min(clippedBottom, (Math.floor(cursor / FLOOR_STEP) + 1) * FLOOR_STEP);
+    const sampleY = (cursor + nextBoundary) * .5;
+    const visible = depth <= surfaceDepthAt(ray, sampleY) + .045;
+    if (visible && openStart === null) openStart = cursor;
+    if (!visible && openStart !== null) { spans.push([openStart, cursor]); openStart = null; }
+    cursor = nextBoundary > cursor + .001 ? nextBoundary : cursor + FLOOR_STEP;
+  }
+  if (openStart !== null) spans.push([openStart, clippedBottom]);
+  return spans;
+}
 function drawBillboard(sprite, projection, opacity = 1) {
   if (!projection || projection.height <= 0) return;
   const destWidth = projection.height * sprite.width / sprite.height;
@@ -7109,7 +9607,12 @@ function drawBillboard(sprite, projection, opacity = 1) {
       0,
       sprite.width - 1
     );
-    ctx.drawImage(sprite, sourceX, 0, 1, sprite.height, screenX, projection.top, 1, projection.height);
+    for (const [spanTop, spanBottom] of spriteVisibleSpans(ray, projection.top, projection.bottom, projection.depth)) {
+      const sourceY = clamp((spanTop - projection.top) / projection.height * sprite.height, 0, sprite.height);
+      const sourceHeight = clamp((spanBottom - spanTop) / projection.height * sprite.height, 0, sprite.height - sourceY);
+      if (sourceHeight <= 0) continue;
+      ctx.drawImage(sprite, sourceX, sourceY, 1, sourceHeight, screenX, spanTop, 1, spanBottom - spanTop);
+    }
   }
   ctx.restore();
 }
@@ -7134,7 +9637,12 @@ function drawSpriteSheetBillboard(sprite, projection, frame = 0, frameCount = 8,
       sourceFrameX,
       sourceFrameX + sourceWidth - 1,
     );
-    ctx.drawImage(sprite, sourceX, 0, 1, sprite.height, screenX, projection.top, 1, projection.height);
+    for (const [spanTop, spanBottom] of spriteVisibleSpans(ray, projection.top, projection.bottom, projection.depth)) {
+      const sourceY = clamp((spanTop - projection.top) / projection.height * sprite.height, 0, sprite.height);
+      const sourceHeight = clamp((spanBottom - spanTop) / projection.height * sprite.height, 0, sprite.height - sourceY);
+      if (sourceHeight <= 0) continue;
+      ctx.drawImage(sprite, sourceX, sourceY, 1, sourceHeight, screenX, spanTop, 1, spanBottom - spanTop);
+    }
   }
   ctx.restore();
   return true;
@@ -7223,7 +9731,8 @@ function drawKeyedProjectileBillboard(image, projection, frame = 0, cacheKey, op
   return drawBillboard(keyedFrame, projection, opacity);
 }
 
-/* Portfolio records are world meshes, never camera-facing cards. */
+/* Legacy record geometry remains for archive compatibility; live records use
+   the authored animated scroll atlas below. */
 function portfolioItemFaces(item) {
   const faces = [];
   const yaw = Math.atan2(renderCamera().y - item.y, renderCamera().x - item.x);
@@ -7245,10 +9754,170 @@ function portfolioItemFaces(item) {
   }
   return faces;
 }
+function fieldReportSpriteFrame(item, now) {
+  const image = gameSprites.fieldReportSheet;
+  if (!spriteReady(image)) return null;
+  const distance = Math.hypot(item.x - state.player.x, item.y - state.player.y);
+  const interactionLoop = distance <= 3.1 || state.revealTimer > 0;
+  const phaseSeed = String(item.id || item.title || 'field-report')
+    .split('')
+    .reduce((total, character) => total + character.charCodeAt(0), 0);
+  const frameDuration = interactionLoop ? 145 : 235;
+  const frame = (Math.floor(now / frameDuration) + phaseSeed) % 4;
+  const atlasIndex = (interactionLoop ? 4 : 0) + frame;
+  return fixedSpriteAtlasFrame(
+    image,
+    4,
+    2,
+    Math.floor(atlasIndex / 4),
+    atlasIndex % 4,
+    'field-report-animation',
+  );
+}
+// Mission intel is now delivered from physical access terminals.  Keep the
+// art intentionally tiny before scaling it up: the hard pixel grid makes the
+// console read like a classic FPS pickup instead of a floating UI card.
+function terminalSpriteFrame(item, now) {
+  const color = item.color || '#6ce0c2';
+  const phaseSeed = String(item.id || item.title || 'access-terminal')
+    .split('')
+    .reduce((total, character) => total + character.charCodeAt(0), 0);
+  const near = Math.hypot(item.x - state.player.x, item.y - state.player.y) <= 3.4 || state.revealTimer > 0;
+  const frame = (Math.floor(now / (near ? 115 : 250)) + phaseSeed) % 4;
+  const cacheKey = `access-terminal-sprite:${color}:${frame}`;
+  if (spriteCache.has(cacheKey)) return spriteCache.get(cacheKey);
+
+  const sprite = document.createElement('canvas');
+  // Deliberately tiny source art: every visible part of the cabinet is a
+  // whole pixel at source resolution before the raycaster enlarges it.
+  sprite.width = 36;
+  sprite.height = 48;
+  const paint = sprite.getContext('2d');
+  paint.imageSmoothingEnabled = false;
+  const accent = hexToRgb(color);
+  const ink = '#090b0a';
+  const steel = '#4b4039';
+  const steelLight = '#887463';
+  const steelDark = '#1b1918';
+  const screen = '#06110d';
+  const lit = `rgb(${accent.r}, ${accent.g}, ${accent.b})`;
+  const dim = `rgba(${accent.r}, ${accent.g}, ${accent.b}, .42)`;
+
+  // Classic FPS wall console: broad bolted frame, deep green CRT, function
+  // keys, a vented base, and a small amber service light. No smooth shapes.
+  paint.fillStyle = '#080908'; paint.fillRect(2, 2, 32, 44);
+  paint.fillStyle = steelDark; paint.fillRect(3, 3, 30, 42);
+  paint.fillStyle = steel; paint.fillRect(5, 4, 26, 39);
+  paint.fillStyle = steelLight; paint.fillRect(6, 5, 24, 2);
+  paint.fillStyle = '#2a2725'; paint.fillRect(6, 40, 24, 2);
+  paint.fillStyle = ink; paint.fillRect(7, 8, 22, 19);
+  paint.fillStyle = screen; paint.fillRect(8, 9, 20, 17);
+  paint.fillStyle = dim;
+  for (let row = 0; row < 5; row += 1) {
+    const width = [14, 10, 16, 7, 12][row];
+    paint.fillRect(10, 11 + row * 2, width, 1);
+  }
+  // Blocky moving signal. It is only four frames, on purpose, so the monitor
+  // has the restrained flicker of an early 90s game prop.
+  paint.fillStyle = frame === 3 ? '#ffe1a0' : lit;
+  paint.fillRect(10 + ((frame * 5 + phaseSeed) % 15), 22, 3, 1);
+  paint.fillStyle = '#b96b43'; paint.fillRect(6, 10, 2, 4); paint.fillRect(28, 20, 2, 4);
+  paint.fillStyle = steelDark; paint.fillRect(7, 28, 22, 5);
+  paint.fillStyle = '#6d5b50';
+  for (let column = 0; column < 9; column += 1) paint.fillRect(9 + column * 2, 29 + (column % 3 === 1 ? 1 : 0), 1, 1);
+  paint.fillStyle = '#282322'; paint.fillRect(6, 34, 24, 6);
+  paint.fillStyle = '#171514';
+  for (let vent = 0; vent < 5; vent += 1) paint.fillRect(9 + vent * 4, 35, 2, 3);
+  paint.fillStyle = steelLight; paint.fillRect(5, 41, 26, 1);
+  paint.fillStyle = '#b95e43'; paint.fillRect(5, 5, 2, 2); paint.fillRect(29, 5, 2, 2); paint.fillRect(5, 40, 2, 2); paint.fillRect(29, 40, 2, 2);
+  paint.fillStyle = lit; paint.fillRect(29, 29, 2, 2); paint.fillRect(5, 29, 1, 2);
+  spriteCache.set(cacheKey, sprite);
+  return sprite;
+}
+function terminalWallDecalForHit(hit) {
+  if (hit?.dynamicShield) return null;
+  const roomIndex = renderRoomIndex();
+  for (const item of worldItems) {
+    if (!item.missionReport || item.recovered || item.roomIndex !== roomIndex || !item.wallMount) continue;
+    const mount = item.wallMount;
+    if (mount.axis === 'x') {
+      if (!hit.vertical || Math.abs(hit.hitX - mount.planeX) > .035 || Math.abs(hit.hitY - mount.centerY) > mount.width * .5) continue;
+    } else if (hit.vertical || Math.abs(hit.hitY - mount.planeY) > .035 || Math.abs(hit.hitX - mount.centerX) > mount.width * .5) continue;
+    return item;
+  }
+  return null;
+}
+function drawWallTerminalDecal(item, hit, x, stripWidth, wallTop, wallBase, corrected, now) {
+  const mount = item?.wallMount;
+  if (!mount) return;
+  const along = mount.axis === 'x' ? hit.hitY : hit.hitX;
+  const center = mount.axis === 'x' ? mount.centerY : mount.centerX;
+  const sourceX = clamp(Math.floor((along - (center - mount.width * .5)) / mount.width * 36), 0, 35);
+  const sprite = terminalSpriteFrame(item, now);
+  if (!sprite) return;
+  const floor = worldFloorHeightAt(mount.approachX, mount.approachY);
+  const panelBottom = projectY(floor + .24, corrected);
+  const panelTop = projectY(floor + .24 + mount.height, corrected);
+  const clippedTop = clamp(panelTop, wallTop, wallBase);
+  const clippedBottom = clamp(panelBottom, wallTop, wallBase);
+  if (clippedBottom <= clippedTop + .15) return;
+  const sourceY = clamp((clippedTop - panelTop) / Math.max(.001, panelBottom - panelTop) * sprite.height, 0, sprite.height - 1);
+  const sourceHeight = clamp((clippedBottom - clippedTop) / Math.max(.001, panelBottom - panelTop) * sprite.height, .1, sprite.height - sourceY);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, sourceX, sourceY, 1, sourceHeight, x, clippedTop, stripWidth + 1, clippedBottom - clippedTop);
+  ctx.restore();
+}
 function drawPortfolioItem3D(item, now) {
-  renderFaces(portfolioItemFaces(item), .96);
-  const projection = projectVerticalBounds(item.x, item.y, .62, 1.2);
+  if (item.missionReport && item.wallMount) return;
+  if (item.missionReport) {
+    const color = item.color || '#6ce0c2';
+    const pulse = .74 + Math.sin(now / 170 + (item.bobPhase || 0)) * .16;
+    drawGroundGlow(item.x, item.y, color, now, .64, .04);
+  }
+  const sprite = item.missionReport ? terminalSpriteFrame(item, now) : fieldReportSpriteFrame(item, now);
+  if (!sprite) return;
+  const worldHeight = item.missionReport ? 1.62 : 1.12;
+  const bob = item.missionReport ? 0 : Math.sin(now / 310 + (item.bobPhase || 0)) * .045;
+  const baseZ = worldFloorHeightAt(item.x, item.y);
+  const projection = projectVerticalBounds(item.x, item.y, baseZ + worldHeight / 2 + .05 + bob, worldHeight);
   if (!projection) return;
+  drawBillboard(sprite, projection, .98);
+  if (item.missionReport) {
+    const color = item.color || '#6ce0c2';
+    const pulse = .62 + Math.sin(now / 160) * .18;
+    const beamTop = projectCameraPoint(cameraPoint(item.x, item.y, baseZ + 2.02));
+    const beamBottom = projectCameraPoint(cameraPoint(item.x, item.y, baseZ + .26));
+    if (beamTop && beamBottom) {
+      const gradient = ctx.createLinearGradient(0, beamTop.y, 0, beamBottom.y);
+      gradient.addColorStop(0, 'rgba(108, 224, 194, 0)');
+      gradient.addColorStop(.45, 'rgba(108, 224, 194, .38)');
+      gradient.addColorStop(1, 'rgba(108, 224, 194, 0)');
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = gradient;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = color;
+      ctx.lineWidth = Math.max(2, projection.height * .026);
+      ctx.beginPath();
+      ctx.moveTo(beamTop.x, beamTop.y);
+      ctx.lineTo(beamBottom.x, beamBottom.y);
+      ctx.stroke();
+      const diamondY = projection.top - projection.height * .18;
+      const diamond = Math.max(4, projection.height * .075);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(1, projection.height * .014);
+      ctx.beginPath();
+      ctx.moveTo(projection.x, diamondY - diamond);
+      ctx.lineTo(projection.x + diamond, diamondY);
+      ctx.lineTo(projection.x, diamondY + diamond);
+      ctx.lineTo(projection.x - diamond, diamondY);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
   if (state.revealTimer > 0) {
     ctx.save();
     ctx.globalAlpha = .55 + Math.sin(now / 120) * .15;
@@ -7324,8 +9993,9 @@ function paintFace(face) {
 function renderFaces(faces, opacity = 1, ignoreWall = false) {
   const projected = [];
   for (const face of faces) {
-    const points = face.points.map(projectCameraPoint); if (points.some((point) => !point)) continue; const depth = points.reduce((sum, point) => sum + point.depth, 0) / points.length; const screenX = points.reduce((sum, point) => sum + point.x, 0) / points.length; const ray = clamp(Math.floor(screenX / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
-    if (!ignoreWall && depth > state.zBuffer[ray] + .06) continue; projected.push({ ...face, projected: points, depth });
+    const points = face.points.map(projectCameraPoint); if (points.some((point) => !point)) continue; const depth = points.reduce((sum, point) => sum + point.depth, 0) / points.length; const screenX = points.reduce((sum, point) => sum + point.x, 0) / points.length; const screenY = points.reduce((sum, point) => sum + point.y, 0) / points.length; const ray = clamp(Math.floor(screenX / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
+    const sceneDepth = Math.min(state.zBuffer[ray] || Infinity, surfaceDepthAt(ray, screenY));
+    if (!ignoreWall && depth > sceneDepth + .06) continue; projected.push({ ...face, projected: points, depth });
   }
   projected.sort((a, b) => b.depth - a.depth); ctx.save(); ctx.globalAlpha = opacity; for (const face of projected) paintFace(face); ctx.restore();
 }
@@ -7653,35 +10323,47 @@ function enemyHitVisualState(enemy) {
 function drawPixelEnemySprite(enemy) {
   const baseProfile = enemyProfile(enemy);
   const profile = enemy.miniBoss ? { ...baseProfile, scale: baseProfile.scale * 1.35, height: baseProfile.height * 1.35, aimHeight: baseProfile.aimHeight * 1.25 } : baseProfile;
-  const camera = cameraPoint(enemy.x, enemy.y, profile.aimHeight);
+  const baseZ = worldFloorHeightAt(enemy.x, enemy.y);
+  const camera = cameraPoint(enemy.x, enemy.y, baseZ + profile.aimHeight);
   if (camera.forward <= .1 || Math.abs(Math.atan2(camera.side, camera.forward)) > cameraFov() * .76) return;
 
-  const attacking = enemy.attackTime > 0;
+  const attacking = enemy.attackTime > 0 || Boolean(enemy.attackTelegraph) || (enemy.attackImpact || 0) > 0 || (enemy.attackRecovery || 0) > 0 || Boolean(enemy.flurryQueue?.length);
   const animationClock = Number.isFinite(enemy.animationTime) ? enemy.animationTime : 0;
-  const attackDuration = enemy.attackDuration || (enemy.attackStyle === 'ranged' ? .72 : .68);
-  const animationFrame = attacking
-    ? clamp(Math.floor((attackDuration - enemy.attackTime) / (attackDuration / 3)), 0, 2)
-    : enemy.moving ? Math.floor(animationClock * 8.5) % 3 : 0;
+  const attackDuration = enemy.attackTelegraph?.duration || enemy.attackDuration || (enemy.attackStyle === 'ranged' ? .72 : .68);
+  const attackElapsed = enemy.attackTelegraph
+    ? enemy.attackTelegraph.elapsed || 0
+    : Math.max(0, attackDuration - (enemy.attackTime || 0));
+  const telegraphProgress = clamp(attackElapsed / Math.max(.01, attackDuration), 0, 1);
+  const animationFrame = (enemy.attackImpact || 0) > 0
+    ? 1
+    : (enemy.attackRecovery || 0) > 0
+      ? 2
+      : attacking
+        ? (telegraphProgress > .82 ? 1 : 0)
+        : Math.floor(animationClock * (enemy.moving ? 8.5 : 3.2)) % 3;
   const hitShake = 0; // Enemy sprites never receive a screen-space combat rectangle.
   const profileRow = profile.spriteRow;
   const sheetSprite = Number.isInteger(profileRow)
     ? enemySpriteFrame(gameSprites.enemySheet, profileRow, animationFrame, attacking)
     : null;
-  const authoredSprite = enemy.kind === 'warden'
+  const bossSprite = bossAtlasSprite(enemy, animationFrame, attacking);
+  const authoredSprite = bossSprite || (enemy.kind === 'warden'
     ? (attacking && spriteReady(gameSprites.enemyWardenAttack) ? gameSprites.enemyWardenAttack : gameSprites.enemyWardenIdle)
-    : sheetSprite;
+    : sheetSprite);
 
   if (authoredSprite) {
     // Match the previous procedural silhouette's projected scale while using
     // the authored sprite's own aspect ratio. This remains a world billboard,
     // so it is perspective-scaled and clipped by the wall depth buffer.
-    const spriteWorldHeight = profile.height * .68;
+    const spriteWorldHeight = bossSprite
+      ? (enemy.boss ? 3.18 : 2.42)
+      : profile.height * .68;
     const hover = profile.hover || (enemy.kind === 'insectoid' ? .055 : .018);
     const breathing = Math.sin(animationClock * (enemy.moving ? 9.5 : 3.2) + enemy.walkPhase) * hover;
     const attackLift = attacking ? Math.sin(clamp((attackDuration - (enemy.attackTime || 0)) / attackDuration, 0, 1) * Math.PI) * .045 : 0;
     // Keep feet grounded while allowing hovering, breathing, and attack
     // anticipation to move the silhouette in world space.
-    const projection = projectVerticalBounds(enemy.x, enemy.y, spriteWorldHeight / 2 + breathing + attackLift, spriteWorldHeight);
+    const projection = projectVerticalBounds(enemy.x, enemy.y, baseZ + spriteWorldHeight / 2 + breathing + attackLift, spriteWorldHeight);
     if (!projection || projection.height <= 0) return;
     const hit = enemyHitVisualState(enemy);
     projection.x += hit.offset * focalX() / Math.max(.1, projection.depth);
@@ -7717,6 +10399,11 @@ function drawPixelEnemySprite(enemy) {
     ctx.restore();
     return;
   }
+
+  // Sprite-only rule: while an authored image is still loading, the actor is
+  // omitted for that frame. Never replace it with the retired procedural mesh
+  // or a code-drawn imitation.
+  return;
 
   const point = projectCameraPoint(cameraPoint(enemy.x, enemy.y, profile.aimHeight));
   if (!point) return;
@@ -7778,7 +10465,8 @@ function drawEnemyPresence(enemy, projection, now) {
   ctx.restore();
 }
 function drawEnemyVitals(enemy, projection, now) {
-  if (!projection || enemy.dead || (!enemy.hitFlash && projection.depth > 5.5)) return;
+  if (!enemy.miniBoss && !enemy.boss) return;
+  if (!projection || enemy.dead || (!enemy.hitFlash && projection.depth > 9.5)) return;
   const ratio = clamp((enemy.hp || 0) / Math.max(1, enemy.maxHp || enemy.hp || 1), 0, 1);
   const width = clamp(projection.height * .48, 24, 92);
   const height = Math.max(3, Math.round(canvas.height * .006));
@@ -7798,33 +10486,22 @@ function drawEnemy3D(enemy) {
   // the retired classic skeleton mesh for an authored enemy archetype.
   if (!ENEMY_PROFILES[enemy?.kind]) return;
   const profile = enemyProfile(enemy);
-  const camera = cameraPoint(enemy.x, enemy.y, profile.aimHeight);
+  const baseZ = worldFloorHeightAt(enemy.x, enemy.y);
+  const camera = cameraPoint(enemy.x, enemy.y, baseZ + profile.aimHeight);
   const isArchon = Boolean(enemy.boss);
   if (camera.forward <= .1 || (!isArchon && Math.abs(Math.atan2(camera.side, camera.forward)) > cameraFov() * .72)) return;
   if (!isArchon && camera.forward > MAX_DEPTH + 3) return;
   const aliveOpacity = enemy.dead ? clamp(1 - enemy.deathTime / .75, 0, 1) : 1;
-  const presenceProjection = projectVerticalBounds(enemy.x, enemy.y, profile.height / 2, profile.height);
+  const presenceProjection = projectVerticalBounds(enemy.x, enemy.y, baseZ + profile.height / 2, profile.height);
   drawEnemyPresence(enemy, presenceProjection, state.now || performance.now());
 
-  const usesAuthoredSprite = Number.isInteger(profile.spriteRow) || (enemy.kind === 'warden' && spriteReady(gameSprites.enemyWardenIdle));
-  if (usesAuthoredSprite) {
-    drawPixelEnemySprite(enemy);
-  } else {
-    const faces = enemyFaces(enemy);
-    if (faces.length) renderFaces(faces, aliveOpacity);
-  }
-  const projection = projectVerticalBounds(enemy.x, enemy.y, profile.height / 2, profile.height);
+  const usesAuthoredSprite = Number.isInteger(profile.spriteRow)
+    || bossAtlasRowForEnemy(enemy) >= 0
+    || enemy.kind === 'warden';
+  if (!usesAuthoredSprite) return;
+  drawPixelEnemySprite(enemy);
+  const projection = projectVerticalBounds(enemy.x, enemy.y, baseZ + profile.height / 2, profile.height);
   drawEnemyVitals(enemy, projection, state.now || performance.now());
-  if (projection && enemy.hitFlash > 0 && !usesAuthoredSprite) {
-    const hit = enemyHitVisualState(enemy);
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = hit.alpha * .58;
-    ctx.strokeStyle = hit.color;
-    ctx.lineWidth = Math.max(1, projection.height * .018);
-    ctx.strokeRect(projection.x - projection.height * .24, projection.top, projection.height * .48, projection.height);
-    ctx.restore();
-  }
 }
 function renderRoomIndex() { const index = roomIndexAtX(renderCamera().x); return index >= 0 ? index : state.room; }
 function objectInView(x, y, maxDistance = MAX_DEPTH + 1) {
@@ -7841,7 +10518,7 @@ function treeFootprintIsClear(tree) {
   return !isWall(tree.x, tree.y);
 }
 function drawGroundGlow(x, y, color = '#d7a34e', now = 0, radius = .6, alpha = .04) {
-  const point = projectCameraPoint(cameraPoint(x, y, .035));
+  const point = projectCameraPoint(cameraPoint(x, y, worldFloorHeightAt(x, y) + .035));
   if (!point || point.forward <= .08) return;
   const screenRadius = Math.max(3, canvas.height * radius / Math.max(.5, point.forward) * .22);
   const pulse = .82 + Math.sin(now * .004 + x * 1.7 + y) * .12;
@@ -7865,7 +10542,7 @@ function drawGroundGlow(x, y, color = '#d7a34e', now = 0, radius = .6, alpha = .
 }
 
 function projectLobbyGroundPoint(x, y, z = .045) {
-  return projectCameraPoint(cameraPoint(x, y, z));
+  return projectCameraPoint(cameraPoint(x, y, worldFloorHeightAt(x, y) + z));
 }
 function drawLobbyGroundPanel(xStart, yStart, xEnd, yEnd, fill, stroke, alpha = .9) {
   const points = [
@@ -7951,7 +10628,7 @@ function drawLobbyBranchPath(x, yStart, yEnd, width, now, fill = null) {
 function lobbyProjectionIsVisible(point, clearance = .08) {
   if (!point || point.depth <= .04) return false;
   const ray = clamp(Math.floor(point.x / canvas.width * RAY_COUNT), 0, RAY_COUNT - 1);
-  return !state.zBuffer?.length || point.depth <= state.zBuffer[ray] + clearance;
+  return !state.zBuffer?.length || point.depth <= Math.min(state.zBuffer[ray] || Infinity, surfaceDepthAt(ray, point.y)) + clearance;
 }
 function drawLobbyLowStone(faces, x, y, color = '#5b5948') {
   addBoxLocal(faces, { x, y }, { side: 0, forward: 0, z: .11 }, [.34, .34, .22], 0, color, .84, 'stone');
@@ -7977,8 +10654,6 @@ function drawLobbyArmory(now) {
     'rgba(214, 139, 67, .72)',
     .78,
   );
-  drawProjectedWorldRing(origin, 3.05, '#d76b49', .26 + pulse * .08, 32, .045, Math.max(1, canvas.height * .002));
-  drawProjectedWorldRing(origin, 2.58, '#e7ad67', .28 + pulse * .1, 4, .05, Math.max(1, canvas.height * .002));
 
   post(LOBBY_ARMORY.xStart, LOBBY_ARMORY.backY, 1.5);
   post(LOBBY_ARMORY.xEnd, LOBBY_ARMORY.backY, 1.5);
@@ -8039,7 +10714,6 @@ function drawLobbyCampfire(now) {
   }
   renderFaces(faces, .98);
   drawGroundGlow(x, y, '#d76b49', now, 1.18, .085);
-  drawProjectedWorldRing({ x, y }, .62 + pulse * .07, '#e7ad67', .4 + pulse * .18, 18, .045, Math.max(1, canvas.height * .002));
   const flame = projectCameraPoint(cameraPoint(x, y, .64));
   const flameBase = projectCameraPoint(cameraPoint(x, y, .18));
   if (!flame || !flameBase) return;
@@ -8169,9 +10843,61 @@ function drawForestHallFog(now) {
   }
 }
 
+function drawFloorChevron(x, y, color, alpha = 1, angle = 0) {
+  if (isWall(x, y)) return;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  const worldPoint = (forward, side) => {
+    const pointX = x + forward * cosine - side * sine;
+    const pointY = y + forward * sine + side * cosine;
+    return projectCameraPoint(cameraPoint(pointX, pointY, worldFloorHeightAt(pointX, pointY) + .025));
+  };
+  const points = [worldPoint(-.34, -.28), worldPoint(.26, 0), worldPoint(-.34, .28)];
+  if (points.some((point) => !point)) return;
+  const depth = cameraPoint(x, y, worldFloorHeightAt(x, y) + .025).forward;
+  if (depth <= .15 || depth > 18) return;
+  ctx.save();
+  ctx.globalAlpha = alpha * clamp(1 - depth / 22, .18, 1);
+  ctx.strokeStyle = color;
+  ctx.shadowBlur = 13;
+  ctx.shadowColor = color;
+  ctx.lineWidth = clamp(canvas.height * .007 / Math.max(.8, depth), 1.2, 4.5);
+  ctx.lineCap = 'square';
+  ctx.lineJoin = 'miter';
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  ctx.lineTo(points[1].x, points[1].y);
+  ctx.lineTo(points[2].x, points[2].y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function missionExitShieldPosition(roomIndex) {
+  return {
+    // The shield sits on the same east/west plane as the collision barrier,
+    // rather than floating ahead of it as a camera-facing prop.
+    x: roomOffsets[roomIndex] + roomWidths[roomIndex] - .92,
+    y: roomDoorY(roomIndex) + .5,
+  };
+}
+
+function activeMissionExitShieldPlane() {
+  const roomIndex = state.room;
+  if (!directDungeonStart || roomIndex < STARTING_ROOM_INDEX || roomIndex > FINAL_ROOM_INDEX || state.securedRooms.has(roomIndex)) return null;
+  const position = missionExitShieldPosition(roomIndex);
+  return {
+    roomIndex,
+    x: position.x,
+    // Mission corridors are three cells wide. The raycaster maps this entire
+    // span to one wall texture, so there are no seam resets between rows.
+    minY: position.y - 1.5,
+    maxY: position.y + 1.5,
+  };
+}
+
 function drawWorldRoute(now) {
-  // Direct-start rooms use the authored room geometry. The removed lobby and
-  // forest corridor must never be reached from the live frame path.
+  // Goals are communicated by physical doors, scroll sprites, beacons, and
+  // enemy behavior. No route paint or warning shapes are projected on floors.
   if (state.room === FINAL_ROOM_INDEX) drawDoorOfLight(now);
   if (state.room === SANCTUARY_ROOM_INDEX) drawSanctuaryPedestal(now);
 }
@@ -8852,30 +11578,44 @@ function updateLobbyGuideHud() {
   // Keep this compatibility hook as a no-op because drawScene still calls it.
 }
 
-function elevatedBoxFaces(x1, y1, x2, y2, top, color = '#78604a') {
-  const points = [];
-  for (const x of [x1, x2]) for (const y of [y1, y2]) for (const z of [0, top]) points.push({ x, y, z });
-  const faces = [];
-  addBoxFaces(faces, points, color, 1, 'stone');
-  return faces;
-}
+/* Retired overlay renderer kept here only as a migration note. Live elevation
+   is emitted by drawFloor from ELEVATION_ROUTES, so this block is not parsed.
 function drawElevatedSetPieces() {
   const faces = [];
+  const activeRoom = renderRoomIndex();
   for (const piece of ELEVATED_SET_PIECES) {
-    if (piece.roomIndex !== state.room) continue;
+    if (piece.roomIndex !== activeRoom) continue;
+    const palette = elevationPalette(piece.roomIndex);
     if (piece.kind === 'platform') {
-      faces.push(...elevatedBoxFaces(piece.x1, piece.y1, piece.x2, piece.y2, piece.height));
+      faces.push(...elevatedBoxFaces(piece.x1, piece.y1, piece.x2, piece.y2, piece.height, palette.riser, palette.top));
+      addElevatedTopTiles(faces, piece, palette);
+      addElevatedPlatformTrim(faces, piece, palette);
       continue;
     }
-    const steps = 7;
+    const steps = 10;
     for (let index = 0; index < steps; index += 1) {
       const t0 = index / steps;
       const t1 = (index + 1) / steps;
-      faces.push(...elevatedBoxFaces(piece.x1, lerp(piece.y1, piece.y2, t0), piece.x2, lerp(piece.y1, piece.y2, t1), piece.height * t1, '#695044'));
+      const stepHeight = piece.height * (piece.reverse ? 1 - t0 : t1);
+      const treadTop = index % 2 === 0 ? palette.top : '#806548';
+      if (piece.axis === 'y') {
+        const y0 = lerp(piece.y1, piece.y2, t0);
+        const y1 = lerp(piece.y1, piece.y2, t1);
+        faces.push(...elevatedBoxFaces(piece.x1, y0, piece.x2, y1, stepHeight, palette.riser, treadTop));
+        const noseY = piece.reverse ? y0 : y1;
+        faces.push(...elevatedCuboidFaces(piece.x1, noseY - .045, piece.x2, noseY + .045, Math.max(.01, stepHeight - .035), stepHeight + .045, palette.trim, '#f0c16b', 'steel'));
+      } else {
+        const x0 = lerp(piece.x1, piece.x2, t0);
+        const x1 = lerp(piece.x1, piece.x2, t1);
+        faces.push(...elevatedBoxFaces(x0, piece.y1, x1, piece.y2, stepHeight, palette.riser, treadTop));
+        const noseX = piece.reverse ? x0 : x1;
+        faces.push(...elevatedCuboidFaces(noseX - .045, piece.y1, noseX + .045, piece.y2, Math.max(.01, stepHeight - .035), stepHeight + .045, palette.trim, '#f0c16b', 'steel'));
+      }
     }
   }
-  if (faces.length) renderFaces(faces, .98);
+  if (faces.length) renderFaces(faces, .995);
 }
+*/
 
 function drawWorldObjects(now) {
   const objects = [];
@@ -8887,7 +11627,20 @@ function drawWorldObjects(now) {
     });
   }
   const activeRoom = renderRoomIndex();
-  worldItems.forEach((item) => { if (item.roomIndex !== activeRoom || item.recovered || !objectInView(item.x, item.y)) return; objects.push({ type: 'item', ...item, distance: Math.hypot(item.x - renderCamera().x, item.y - renderCamera().y) }); });
+  worldItems.forEach((item) => {
+    if (item.roomIndex !== activeRoom || item.recovered) return;
+    // Mission terminals are wall decals emitted with the wall ray itself.
+    // Keeping them out of the billboard pass prevents a second floating copy.
+    if (item.missionReport && item.wallMount) return;
+    if (!objectInView(item.x, item.y)) return;
+    objects.push({ type: 'item', ...item, distance: Math.hypot(item.x - renderCamera().x, item.y - renderCamera().y) });
+  });
+  KEY_GATES.forEach((gate) => {
+    if (gate.roomIndex !== activeRoom || !keyGateLocked(gate)) return;
+    const x = gate.wallX - .025;
+    if (!objectInView(x, gate.centerY)) return;
+    objects.push({ type: 'key-gate', ...gate, x, y: gate.centerY, distance: Math.hypot(x - renderCamera().x, gate.centerY - renderCamera().y) });
+  });
   // Weapon keepers use a dedicated final trader-style pass below. They are
   // intentionally not depth-sorted with trees, gates, and record props.
   // The safe lobby contains the the plasma display only. Never allow a stale/legacy room-0 enemy
@@ -8904,18 +11657,30 @@ function drawWorldObjects(now) {
     else if (object.type === 'forest-ambusher') drawEnemy3D(object);
     else if (object.type === 'lobby-entrance-sign') drawLobbyEntranceSign(object, now);
     else if (object.type === 'lobby-gate') drawLobbyGate(now);
+    else if (object.type === 'key-gate') {
+      const sprite = keyGateSprite(object);
+      const baseZ = worldFloorHeightAt(object.x - .18, object.y);
+      const pulse = .94 + Math.sin(now / 180 + object.roomIndex) * .06;
+      drawBillboard(sprite, projectBillboard(object.x, object.y, baseZ + 1.08, 1.14 * pulse), .98);
+    }
     else if (object.type === 'item') {
-      if (['ammo-pickup', 'ammo-arsenal', 'ammo-shotgun', 'ammo-bfg'].includes(object.kind)) {
+      if (object.kind === OBJECTIVE_KEY_KIND) {
+        const keySprite = objectiveKeySprite(object);
+        const bob = Math.sin(now / 210 + (object.bobPhase || 0)) * .08;
+        const baseZ = worldFloorHeightAt(object.x, object.y);
+        const projection = projectBillboard(object.x, object.y, baseZ + .74 + bob, .72);
+        drawBillboard(keySprite, projection, 1);
+      } else if (object.kind === 'ammo-pickup' || object.kind?.startsWith('ammo-') || object.kind?.startsWith('health-')) {
         const pickupSprite = pickupSpriteFrame(object);
         // Pickups are physical ground loot: no hover animation and no bob.
         // Centering the billboard at half its world height makes its bottom
         // edge rest directly on the floor plane.
-        const itemZ = pickupSprite ? .23 : .21;
+        const itemZ = worldFloorHeightAt(object.x, object.y) + (pickupSprite ? .23 : .21);
         const itemSprite = pickupSprite || makeItemSprite(object);
         drawBillboard(itemSprite, projectBillboard(object.x, object.y, itemZ, pickupSprite ? .46 : .42), .9);
-        if (object.kind.endsWith('-pickup') || object.kind.startsWith('ammo-')) drawGroundGlow(object.x, object.y, object.color || '#e7ad67', now, object.dropFromEnemy ? .7 : .58, object.dropFromEnemy ? .055 : .04);
+        if (object.kind.endsWith('-pickup') || object.kind.startsWith('ammo-') || object.kind.startsWith('health-')) drawGroundGlow(object.x, object.y, object.color || '#e7ad67', now, object.dropFromEnemy ? .7 : .58, object.dropFromEnemy ? .055 : .04);
         if (state.revealTimer > 0) {
-          const projection = projectBillboard(object.x, object.y, pickupSprite ? .23 : .21, .55);
+          const projection = projectBillboard(object.x, object.y, itemZ, .55);
           if (projection) {
             ctx.save();
             ctx.globalAlpha = .55 + Math.sin(now / 120) * .15;
@@ -9338,7 +12103,9 @@ function drawWorldLabel(point, title, subtitle, color = '#fff8d6', alpha = 1) {
 function drawDoorOfLight(now) {
   const door = state.doorOfLight;
   if (!door?.active || state.room !== FINAL_ROOM_INDEX) return;
-  const yaw = Math.atan2(state.player.y - door.y, state.player.x - door.x);
+  // The Lightwell is mounted in the eastern wall. Keeping its axes fixed to
+  // that doorway stops it from swiveling toward the player like a billboard.
+  const yaw = 0;
   const pulse = 1 + Math.sin(now / 180) * .055;
   const faces = [];
   const origin = { x: door.x, y: door.y };
@@ -9350,8 +12117,6 @@ function drawDoorOfLight(now) {
   addBoxLocal(faces, origin, { side: 0, forward: .02, z: 1.37 }, [2.72 * pulse, .08, 2.46 * pulse], yaw, '#fffdf0', 1.22, 'steel');
   addBoxLocal(faces, origin, { side: 0, forward: .09, z: 1.37 }, [1.78, .1, 2.08], yaw, '#b8f0e2', 1.02, 'steel');
   renderFaces(faces, .98);
-  drawProjectedWorldRing({ x: door.x, y: door.y }, 1.72 * pulse, '#fff1b0', .72, 32, .045, Math.max(2, canvas.height * .004));
-  drawProjectedWorldRing({ x: door.x, y: door.y }, 1.3, '#b8f0e2', .56, 20, .055, Math.max(1, canvas.height * .002));
   const projection = projectVerticalBounds(door.x, door.y, 1.38, 2.9);
   if (!projection) return;
   ctx.save();
@@ -9387,7 +12152,6 @@ function drawSanctuaryPedestal(now) {
   for (let line = 0; line < 4; line += 1) addBoxLocal(faces, origin, { side: -.13, forward: .14, z: 1.43 + line * .12 }, [.26 - line * .03, .018, .024], '#397c74', .9, 'steel');
   renderFaces(faces, .98);
   drawGroundGlow(pedestal.x, pedestal.y, '#fff1b0', now, 1.1, .035);
-  drawProjectedWorldRing({ x: pedestal.x, y: pedestal.y }, 1.18, '#fff8d6', .74 + Math.sin(now / 190) * .12, 28, .045, Math.max(2, canvas.height * .004));
   const projection = projectVerticalBounds(pedestal.x, pedestal.y, 1.18, 2.18);
   if (!projection) return;
   const page = projectVerticalBounds(pedestal.x, pedestal.y, 1.62, .82);
@@ -9661,31 +12425,35 @@ function drawWand(now) {
 
 function spawnNinjaStar() {
   const direction = playerAimDirection();
-  const origin = { x: state.player.x + direction.x * .5, y: state.player.y + direction.y * .5, z: EYE_HEIGHT + direction.z * .05 };
+  const origin = { x: state.player.x + direction.x * .5, y: state.player.y + direction.y * .5, z: playerEyeHeight() + direction.z * .05 };
   makeProjectile('ninja-star', origin, { x: direction.x * 11.5, y: direction.y * 11.5, z: direction.z * 11.5 }, { color: '#e6d29a', damage: state.weapon.attackDamage || WEAPON_LOADOUTS.stars.damage, radius: .16, lifetime: 2.2, collisionHeight: .72, knockback: WEAPON_LOADOUTS.stars.knockback, critChance: WEAPON_LOADOUTS.stars.critChance + (state.weapon.comboStep === 3 ? .1 : 0), critMultiplier: WEAPON_LOADOUTS.stars.critMultiplier, source: 'player', ability: false, trailSize: .8 });
   showToast(`Ninja star thrown · combo ${state.weapon.comboStep || 1}.`, 'good');
 }
 function spawnWandFireball() {
   const direction = playerAimDirection();
   const color = wandColorForAbility();
-  const origin = { x: state.player.x + direction.x * .58, y: state.player.y + direction.y * .58, z: EYE_HEIGHT + direction.z * .1 };
+  const origin = { x: state.player.x + direction.x * .58, y: state.player.y + direction.y * .58, z: playerEyeHeight() + direction.z * .1 };
   makeProjectile('wand-fireball', origin, { x: direction.x * 7.1, y: direction.y * 7.1, z: direction.z * 7.1 }, { color, damage: state.weapon.attackDamage || WEAPON_LOADOUTS.bfg.damage, radius: .23, lifetime: 2.8, aoe: 1.55, knockback: WEAPON_LOADOUTS.bfg.knockback, stagger: .18, critChance: WEAPON_LOADOUTS.bfg.critChance + (state.weapon.comboStep === 3 ? .08 : 0), critMultiplier: WEAPON_LOADOUTS.bfg.critMultiplier, trailSize: 1, orbit: 0, collisionHeight: .88, source: 'player', ability: false });
   showToast(`${weaponDefinition().label} launched ${wandAbilityName()} fire · combo ${state.weapon.comboStep || 1}.`, 'good');
-  pushImpactBurst({ x: state.player.x + direction.x * .42, y: state.player.y + direction.y * .42, z: EYE_HEIGHT, elapsed: 0, duration: .28, color, radius: .32, style: 'weapon-cast' });
+  pushImpactBurst({ x: state.player.x + direction.x * .42, y: state.player.y + direction.y * .42, z: playerEyeHeight(), elapsed: 0, duration: .28, color, radius: .32, style: 'weapon-cast' });
 }
 
 function spawnBfgProjectile(loadout = weaponDefinition()) {
   const direction = playerAimDirection();
-  const origin = { x: state.player.x + direction.x * .58, y: state.player.y + direction.y * .58, z: EYE_HEIGHT + direction.z * .08 };
+  const origin = { x: state.player.x + direction.x * .58, y: state.player.y + direction.y * .58, z: playerEyeHeight() + direction.z * .08 };
   const definition = loadout;
-  makeProjectile('bfg-electric', origin, { x: direction.x * 8.4, y: direction.y * 8.4, z: direction.z * 8.4 }, {
-    color: definition.impactColor, damage: definition.damage, radius: .3, lifetime: 3.4, aoe: 2.7,
+  const speed = definition.projectileSpeed || 8.4;
+  const projectileKind = definition.projectileKind || 'bfg-electric';
+  const isBfg = projectileKind === 'bfg-electric';
+  makeProjectile(projectileKind, origin, { x: direction.x * speed, y: direction.y * speed, z: direction.z * speed }, {
+    color: definition.impactColor, damage: definition.damage, radius: isBfg ? .34 : .18, lifetime: 3.4, aoe: definition.aoe || 0,
     knockback: definition.knockback, stagger: definition.stagger, critChance: definition.critChance,
-    critMultiplier: definition.critMultiplier, collisionHeight: 1.2, source: 'player', trailSize: 2.2, sparks: 12,
-    spriteSheet: 'enemyPlasmaProjectile', spriteFrameCount: 8, spriteFps: 16, spriteWorldHeight: .58,
+    critMultiplier: definition.critMultiplier, collisionHeight: isBfg ? 1.2 : .72, source: 'player', trailSize: isBfg ? 2.2 : 1.05, sparks: isBfg ? 12 : 4,
+    splashMultiplier: definition.splashMultiplier,
+    spriteSheet: 'enemyPlasmaProjectile', spriteFrameCount: 8, spriteFps: 16, spriteWorldHeight: isBfg ? .58 : .34,
   });
-  pushImpactBurst({ x: origin.x, y: origin.y, z: origin.z, elapsed: 0, duration: .42, color: definition.impactColor, radius: .48, style: 'weapon-cast' });
-  showToast('Electric BFG launched.', 'good');
+  pushImpactBurst({ x: origin.x, y: origin.y, z: origin.z, elapsed: 0, duration: isBfg ? .42 : .22, color: definition.impactColor, radius: isBfg ? .48 : .24, style: 'weapon-cast' });
+  if (isBfg) showToast('Electric BFG launched.', 'good');
 }
 
 function drawSword(now) {
@@ -9902,16 +12670,16 @@ function drawDoomWeapon(now, type) {
       fill(-.22, -.35, .44, .12, '#905b35'); fill(-.1, -.76, .08, .42, '#b48a42'); fill(.02, -.76, .08, .42, '#b48a42');
       stroke(-.38, -.1, .76, .22, '#e68d5f');
     }
-  } else if (type === 'bfg') {
+  } else if (['plasma', 'rail', 'rivet', 'bfg'].includes(type)) {
     const launcherActive = state.weapon.swing > 0;
     const launcherProgress = launcherActive ? clamp(1 - state.weapon.swing / Math.max(.01, weaponDefinition().duration), 0, 1) : 0;
     const launcherFrame = reloadPose.active
-      ? weaponAtlasFrameIndex('bfg', reloadPose.progress, true)
-      : launcherActive ? weaponAtlasFrameIndex('bfg', launcherProgress) : 0;
-    const launcherSprite = weaponAtlasFrame('bfg', launcherFrame);
+      ? weaponAtlasFrameIndex(type, reloadPose.progress, true)
+      : launcherActive ? weaponAtlasFrameIndex(type, launcherProgress) : 0;
+    const launcherSprite = weaponAtlasFrame(type, launcherFrame);
     if (launcherSprite) {
       const aspect = (launcherSprite.width || 1) / (launcherSprite.height || 1);
-      const imageHeight = Math.min(h * .68, w * .90 / aspect);
+      const imageHeight = Math.min(h * (type === 'bfg' ? .68 : .66), w * .90 / aspect);
       const imageWidth = imageHeight * aspect;
       // The generated cells contain complete hands and forearms. Keep the
       // entire cell visible and place its baseline above the retro HUD.
@@ -9921,7 +12689,7 @@ function drawDoomWeapon(now, type) {
       // Keep the Electric BFG orthographic as well. Its firing poses expand
       // toward both cell edges; even a small shear makes frames 3–5 look like
       // they translate instead of recoil in place.
-      const pivotX = weaponAtlasPivotOffset('bfg', launcherFrame) * (imageWidth / 192);
+      const pivotX = weaponAtlasPivotOffset(type, launcherFrame) * (imageWidth / 192);
       const drawX = -imageWidth / 2 + pivotX;
       ctx.drawImage(launcherSprite, drawX, imageTop, imageWidth, imageHeight);
     } else {
@@ -10056,7 +12824,7 @@ function drawActiveAbilityEffects(now) {
       ctx.restore();
       continue;
     }
-    const center = { x: state.player.x, y: state.player.y, z: .52 };
+    const center = { x: state.player.x, y: state.player.y, z: state.player.floorZ + .52 };
     const point = projectCameraPoint(cameraPoint(center.x, center.y, center.z));
     if (!point) continue;
     ctx.save();
@@ -10314,12 +13082,11 @@ function drawScene(now) {
   try {
     drawBackground(width, height);
     drawRoomRoof(width, height);
-  drawWalls(width, height);
-  drawFloor(width, height);
-  drawElevatedSetPieces();
-  drawWorldRoute(worldNow);
-  drawWorldObjects(worldNow);
-  drawGroundHazards(worldNow);
+    beginWorldDepthFrame(height);
+    drawWalls(width, height);
+    drawFloor(width, height);
+    drawWorldRoute(worldNow);
+    drawWorldObjects(worldNow);
   drawWorldProjectiles(worldNow);
   drawImpactBursts(worldNow);
   drawActiveAbilityEffects(worldNow);
@@ -10361,8 +13128,15 @@ function updateCombatState(delta) {
 }
 
 function movePlayerBy(dx, dy) {
-  if (canStand(state.player.x + dx, state.player.y)) state.player.x += dx;
-  if (canStand(state.player.x, state.player.y + dy)) state.player.y += dy;
+  const nextX = state.player.x + dx;
+  const nextY = state.player.y + dy;
+  const blockedByObjective = missionExitBlocksPath(nextX, state.player.y) || missionExitBlocksPath(state.player.x, nextY) || missionExitBlocksPath(nextX, nextY);
+  if (blockedByObjective) showBlockedRouteHint(state.room);
+  const blockedGate = nearbyLockedKeyGate(nextX, nextY) || nearbyLockedKeyGate(nextX, state.player.y) || nearbyLockedKeyGate(state.player.x, nextY);
+  if (blockedGate) showKeyGateHint(blockedGate);
+  if (canStand(nextX, state.player.y) && elevationTransitionAllowed(state.player.x, state.player.y, nextX, state.player.y)) state.player.x = nextX;
+  if (canStand(state.player.x, nextY) && elevationTransitionAllowed(state.player.x, state.player.y, state.player.x, nextY)) state.player.y = nextY;
+  state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
 }
 
 function updatePlayer(delta) {
@@ -10388,6 +13162,10 @@ function updatePlayer(delta) {
   if (state.keys.has('a')) { dx += Math.cos(angle - Math.PI / 2) * speed; dy += Math.sin(angle - Math.PI / 2) * speed; }
   if (state.keys.has('d')) { dx += Math.cos(angle + Math.PI / 2) * speed; dy += Math.sin(angle + Math.PI / 2) * speed; }
   movePlayerBy(dx, dy);
+  const cameraFloor = Number.isFinite(state.player.cameraFloorZ) ? state.player.cameraFloorZ : state.player.floorZ;
+  state.player.cameraFloorZ = Math.abs(cameraFloor - state.player.floorZ) > .8
+    ? state.player.floorZ
+    : lerp(cameraFloor, state.player.floorZ, 1 - Math.exp(-delta * 12));
   state.player.angle = normalizeAngle(state.player.angle);
   state.weapon.moving = Math.abs(dx) + Math.abs(dy) > .001;
   noteLobbyPlayerMovement();
@@ -10407,6 +13185,9 @@ function damagePlayer(source, options = {}) {
   if (amount <= 0) return { blocked: true };
 
   state.player.hp -= amount;
+  state.totalDamageTaken += amount;
+  ensureRoomPerformance(state.room).damageTaken += amount;
+  breakCombatMomentum();
   state.damageDirection = source && Number.isFinite(source.x) && Number.isFinite(source.y)
     ? normalizeAngle(Math.atan2(source.y - state.player.y, source.x - state.player.x) - state.player.angle)
     : 0;
@@ -10459,15 +13240,22 @@ function damageHostile(target, amount, options = {}) {
   const critChance = clamp(Number(options.critChance || 0), 0, .85);
   const critical = !target.boss && Math.random() < critChance;
   const multiplier = critical ? Number(options.critMultiplier || 1.7) : 1;
-  const finalAmount = Math.max(1, Math.round(baseAmount * multiplier));
-  if (target.boss && target.shield > 0) {
+  let finalAmount = Math.max(1, Math.round(baseAmount * multiplier));
+  if (target.miniBoss && target.bossKit === 'seismic' && (target.vulnerableTimer || 0) <= 0) {
+    finalAmount = Math.max(1, Math.round(finalAmount * .28));
+    if (showCombatFeedback && state.now - shieldFeedbackAt > 360) {
+      showHitMarker('STONE ARMOR', 'shielded');
+      shieldFeedbackAt = state.now;
+    }
+  }
+  if ((target.boss || target.miniBoss) && target.shield > 0) {
     const shieldDamage = Math.max(1, Math.round(finalAmount * .8));
     playEnemyShieldSound();
     target.shield = Math.max(0, target.shield - shieldDamage);
     if (showCombatFeedback) {
       target.hitTime = .28;
       target.hitFlash = .34;
-      pushImpactBurst({ x: target.x, y: target.y, z: 1.4, elapsed: 0, duration: .52, color: '#c7f4e7', radius: 1.45 + (critical ? .2 : 0), style: 'shield' });
+      pushImpactBurst({ x: target.x, y: target.y, z: worldFloorHeightAt(target.x, target.y) + 1.4, elapsed: 0, duration: .52, color: '#c7f4e7', radius: 1.45 + (critical ? .2 : 0), style: 'shield' });
       if (state.now - shieldFeedbackAt > 360) { showHitMarker('SHIELDED', 'shielded'); shieldFeedbackAt = state.now; }
     } else {
       target.hitTime = 0;
@@ -10476,9 +13264,9 @@ function damageHostile(target, amount, options = {}) {
     if (target.shield <= 0) {
       if (showCombatFeedback) {
         showHitMarker('SHIELD BREAK', 'hit');
-        showToast('The Archon shield shatters.', 'good');
+        showToast(`${target.displayName || target.name} shield shattered.`, 'good');
         state.shakeTime = settings.reducedMotion ? .16 : .5;
-        spawnParticles(target.x, target.y, 1.3, ['#c7f4e7', '#fff1b0'], settings.reducedMotion ? 8 : 22, { speed: 1.8, life: .65, size: .7, upward: .55, spread: TAU, glow: 17, shape: 'rune' });
+        spawnParticles(target.x, target.y, worldFloorHeightAt(target.x, target.y) + 1.3, ['#c7f4e7', '#fff1b0'], settings.reducedMotion ? 8 : 22, { speed: 1.8, life: .65, size: .7, upward: .55, spread: TAU, glow: 17, shape: 'rune' });
       }
     }
     return false;
@@ -10497,11 +13285,14 @@ function damageHostile(target, amount, options = {}) {
   }
   target.alerted = true;
   const stagger = Number(options.stagger ?? options.stun ?? (options.source === 'ability' ? .18 : .14));
-  if (stagger > 0) target.staggerTimer = Math.max(target.staggerTimer || 0, target.boss ? stagger * .35 : stagger);
+  if (stagger > 0) {
+    const staggerScale = target.boss ? .3 : target.miniBoss ? .2 : 1;
+    target.staggerTimer = Math.max(target.staggerTimer || 0, stagger * staggerScale);
+  }
   if (options.stun) target.stunTimer = Math.max(target.stunTimer || 0, options.stun);
   const direction = options.knockbackDirection || { x: target.x - state.player.x, y: target.y - state.player.y };
   const directionLength = Math.hypot(direction.x, direction.y) || 1;
-  const knockback = target.boss ? 0 : Number(options.knockback || 0) * (critical ? 1.25 : 1);
+  const knockback = target.boss ? 0 : Number(options.knockback || 0) * (critical ? 1.25 : 1) * (target.miniBoss ? .18 : 1);
   if (knockback > 0) {
     target.knockbackX = (target.knockbackX || 0) + direction.x / directionLength * knockback * 5.2;
     target.knockbackY = (target.knockbackY || 0) + direction.y / directionLength * knockback * 5.2;
@@ -10532,8 +13323,14 @@ function damageHostile(target, amount, options = {}) {
 function collectCombatPickup(item) {
   if (!item || item.recovered) return false;
   const definition = pickupDefinition(item.kind);
-  if (item.kind === 'ammo-arsenal' || item.kind === 'ammo-shotgun' || item.kind === 'ammo-bfg') {
-    const weaponType = item.kind === 'ammo-arsenal' ? 'arsenal' : item.kind === 'ammo-shotgun' ? 'shotgun' : 'bfg';
+  if (item.kind === 'health-small' || item.kind === 'health-large') {
+    if (state.player.hp >= 100) return false;
+    const before = state.player.hp;
+    state.player.hp = Math.min(100, state.player.hp + (item.amount || definition.amount));
+    item.amount = Math.round(state.player.hp - before);
+  } else if (item.kind.startsWith('ammo-') && item.kind !== 'ammo-pickup') {
+    const weaponType = item.kind.slice('ammo-'.length);
+    if (!WEAPON_LOADOUTS[weaponType]) return false;
     state.weapon.reserveByType[weaponType] = (state.weapon.reserveByType[weaponType] || 0) + (item.amount || definition.amount);
     ensureWeaponAmmo(state.weapon.type);
   } else if (item.kind === 'ammo-pickup') {
@@ -10543,7 +13340,7 @@ function collectCombatPickup(item) {
   item.recovered = true;
   state.recoveredItems.add(item.id);
   const amount = item.amount || definition.amount;
-  spawnParticles(item.x, item.y, .42, [definition.color, '#fff1b0'], settings.reducedMotion ? 5 : 11, { speed: .9, life: .55, size: .6, upward: .55, spread: TAU, glow: 12 });
+  spawnParticles(item.x, item.y, worldFloorHeightAt(item.x, item.y) + .42, [definition.color, '#fff1b0'], settings.reducedMotion ? 5 : 11, { speed: .9, life: .55, size: .6, upward: .55, spread: TAU, glow: 12 });
   spawnPickupEffect(item.x, item.y, definition.color);
   playRecoverySound();
   showPickupFeedback(item, amount);
@@ -10551,16 +13348,54 @@ function collectCombatPickup(item) {
   updateHud();
   return true;
 }
+function collectObjectiveKey(item) {
+  if (!item || item.recovered || item.kind !== OBJECTIVE_KEY_KIND) return false;
+  item.recovered = true;
+  state.objectiveKeys.add(item.id);
+  state.recoveredItems.add(item.id);
+  const openedGates = unlockKeyGatesForKey(item.id);
+  const roomIndex = item.roomIndex;
+  const collected = collectedObjectiveKeyCount(roomIndex);
+  const total = objectiveKeysForRoom(roomIndex).length;
+  const floorZ = worldFloorHeightAt(item.x, item.y);
+  spawnParticles(item.x, item.y, floorZ + .62, [item.color || '#6ce0c2', '#fff1b0'], settings.reducedMotion ? 10 : 24, { speed: 1.35, life: .9, size: .82, upward: .8, spread: TAU, glow: 19, trail: true });
+  pushImpactBurst({ x: item.x, y: item.y, z: floorZ + .58, elapsed: 0, duration: .72, color: item.color || '#6ce0c2', radius: .72, style: 'pickup' });
+  playRecoverySound();
+  if (collected >= total) {
+    showToast(`${item.title} RECOVERED · ALL ${total} KEYS FOUND${openedGates ? ' · MATCHING WALL OPEN' : ''}.`, 'good');
+    handleSectorSecured(roomIndex, item);
+  } else {
+    const missing = objectiveKeysForRoom(roomIndex).filter((key) => !state.objectiveKeys.has(key.id));
+    showToast(`${item.title} RECOVERED · ${openedGates ? 'MATCHING WALL OPEN · ' : ''}${collected}/${total}. NEXT: ${missing[0]?.hint.toUpperCase() || 'CHECK THE SIDE BAYS'}.`, 'good');
+  }
+  state.hudSignature = '';
+  state.promptSignature = '';
+  updateHud();
+  return true;
+}
 function collectTouchItems() {
   const activeRoom = currentRoomIndex();
   for (const item of worldItems) {
-    if (item.recovered || item.roomIndex !== activeRoom || !['ammo-pickup', 'ammo-arsenal', 'ammo-shotgun', 'ammo-bfg'].includes(item.kind)) continue;
-    if (Math.hypot(item.x - state.player.x, item.y - state.player.y) <= .72) collectCombatPickup(item);
+    if (item.recovered || item.roomIndex !== activeRoom) continue;
+    if (Math.abs(worldFloorHeightAt(item.x, item.y) - state.player.floorZ) > .34) continue;
+    if (Math.hypot(item.x - state.player.x, item.y - state.player.y) > .72) continue;
+    if (item.kind === OBJECTIVE_KEY_KIND) collectObjectiveKey(item);
+    else if (item.kind === 'ammo-pickup' || item.kind.startsWith('ammo-') || item.kind.startsWith('health-')) collectCombatPickup(item);
   }
+}
+function deathRecoveryTipForRoom(roomIndex) {
+  if (roomIndex === FINAL_ROOM_INDEX) return 'Break the support wave first, use the isolated pillars to cut projectile lanes, then damage the Archon during its longer recovery.';
+  const miniBoss = objectiveBossForRoom(roomIndex);
+  if (miniBoss?.bossKit === 'burnout') return 'Keep moving sideways during the orange wind-up. The Keeper now commits to shorter lunges and pauses for a full punish window afterward.';
+  if (miniBoss?.bossKit === 'seismic') return 'Move across the projectile lanes instead of backing away. The Colossus core stays exposed after each completed seismic pattern.';
+  if (miniBoss?.bossKit === 'contract') return 'Break the audit shield, then close distance during the Warden’s slower reload instead of trading fire through the barrier.';
+  if (ELEVATION_ROUTES.some((route) => route.roomIndex === roomIndex && route.role === 'enemy-perch')) return 'Clear exposed floor threats first, then use a precise weapon on the ranged enemies stationed above the room.';
+  return 'Change your entry angle, use cover to split the group, and collect health or ammunition before pushing into the next space.';
 }
 function openDeathScreen(message) {
   if (state.deathScreen) return;
-  state.deathScreen = { elapsed: 0, message };
+  state.deaths += 1;
+  state.deathScreen = { elapsed: 0, message, restorePointerLock: document.pointerLockElement === canvas || state.pointerLocked };
   state.player.hp = 0;
   state.keys.clear();
   state.mouseAttack = false;
@@ -10570,24 +13405,39 @@ function openDeathScreen(message) {
   state.weapon.swing = 0;
   state.weapon.cooldown = 0;
   if (deathCause) deathCause.textContent = message;
+  const progress = roomObjectiveProgress(state.room);
+  if (deathRoom) deathRoom.textContent = rooms[state.room]?.shortTitle?.toUpperCase() || `SECTOR ${state.room + 1}`;
+  if (deathKills) deathKills.textContent = String(ensureRoomPerformance(state.room).kills || 0);
+  if (deathProgress) deathProgress.textContent = progress.remaining > 0 ? `${progress.remaining} REMAIN` : 'TERMINAL AUTHORIZED';
+  if (deathWeapon) deathWeapon.textContent = (WEAPON_LOADOUTS[state.weapon.type]?.category || state.weapon.type).toUpperCase();
+  if (deathAmmo) deathAmmo.textContent = `${state.unlockedWeapons.size} FULL`;
+  if (deathTip) deathTip.textContent = deathRecoveryTipForRoom(state.room);
   if (deathOverlay) { deathOverlay.hidden = false; deathOverlay.classList.add('is-visible'); }
   if (document.pointerLockElement === canvas) document.exitPointerLock?.();
   state.promptSignature = 'death';
-  showToast('You fell. Restart the level when you are ready.', 'danger');
+  window.setTimeout(() => deathRestart?.focus({ preventScroll: true }), 180);
+  showToast('You fell. Reenter the sector when you are ready.', 'danger');
   playTone(46, .55, 'sawtooth', .045);
 }
 function resetCurrentLevel() {
+  const restorePointerLock = Boolean(state.deathScreen?.restorePointerLock && settings.pointerLock);
   const roomIndex = state.room;
   const room = rooms[roomIndex];
+  // A completed terminal is durable progression. If the player dies before
+  // leaving a normal sector, keep its authorization and route state instead
+  // of recreating an already-consumed terminal with no way to re-trigger it.
+  const preserveTerminalAuthorization = roomIndex < FINAL_ROOM_INDEX && terminalAuthorizedForRoom(roomIndex);
   if (room?.id) state.miniBossIntroSeen.delete(room.id);
   state.miniBossCutscene = null;
   state.miniBossArena = null;
   const respawn = roomContentPoint(roomIndex, room.spawn.x, room.spawn.y);
   state.player.x = roomOffsets[roomIndex] + respawn.x;
   state.player.y = respawn.y;
+  state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
   state.player.angle = room.spawn.angle;
   recoverPlayerFromWall(roomIndex);
   state.player.hp = 100;
+  refillUnlockedWeaponAmmo();
   state.groundHazards = [];
   state.projectiles = [];
   state.explosionEffects = [];
@@ -10596,6 +13446,16 @@ function resetCurrentLevel() {
   state.abilityCooldown = 0;
   state.combo = 0;
   state.comboTimer = 0;
+  state.roomPerformance.delete(roomIndex);
+  state.securedRooms.delete(roomIndex);
+  if (!state.scrollSolvedRooms.has(roomIndex)) {
+    state.reportReadyRooms.delete(roomIndex);
+    state.scrollChallengeProgress.delete(roomIndex);
+    state.scrollChallengeSelection.delete(roomIndex);
+    state.scrollTourUnlocked.delete(roomIndex);
+  }
+  for (const key of objectiveKeysForRoom(roomIndex)) state.objectiveKeys.delete(key.id);
+  for (const gate of KEY_GATES) if (gate.roomIndex === roomIndex) setKeyGateLocked(gate, true);
   state.damageFlash = 0;
   state.rearHitEffect = 0;
   state.combatPulse = 0;
@@ -10633,7 +13493,9 @@ function resetCurrentLevel() {
   }
 
   for (const item of worldItems) {
-    if (item.roomIndex === roomIndex && !item.dropFromEnemy) item.recovered = false;
+    if (item.roomIndex !== roomIndex || item.dropFromEnemy) continue;
+    item.recovered = Boolean(item.terminal && preserveTerminalAuthorization);
+    if (item.recovered) state.recoveredItems.add(item.id);
   }
   for (let index = worldItems.length - 1; index >= 0; index -= 1) {
     const item = worldItems[index];
@@ -10655,6 +13517,13 @@ function resetCurrentLevel() {
     state.doorOfLight = null;
     setMusicMode('dungeon');
   }
+  if (preserveTerminalAuthorization) {
+    state.securedRooms.add(roomIndex);
+    if (miniBossRoom(roomIndex)) {
+      state.miniBossArena = { roomIndex, active: false, entranceClosed: true, exitOpen: true };
+      setMiniBossDoors(roomIndex, true, true);
+    }
+  }
   state.deathScreen = null;
   state.narratorSignal = null;
   if (narratorPanel) {
@@ -10674,6 +13543,12 @@ function resetCurrentLevel() {
   updateHud();
   showToast(`LEVEL RESTORED · ${room.title}`, 'good');
   playRecoverySound();
+  if (restorePointerLock) {
+    try {
+      const request = canvas.requestPointerLock?.();
+      if (request?.catch) request.catch(() => {});
+    } catch (error) { /* Pointer lock remains optional. */ }
+  }
 }
 function deterministicDropAngle(target) {
   // Keep the reward close to the defeated hostile while making the placement
@@ -10683,74 +13558,101 @@ function deterministicDropAngle(target) {
   for (let index = 0; index < signature.length; index += 1) hash = (hash * 31 + signature.charCodeAt(index)) >>> 0;
   return (hash / 0x100000000) * TAU;
 }
+function enemySupplyDropKind(target) {
+  if (target.miniBoss) return 'health-large';
+  const signature = String(target.id || target.name || 'hostile').split('').reduce((sum, character) => (sum * 33 + character.charCodeAt(0)) >>> 0, 5381);
+  const roll = signature % 100;
+  if (state.player.hp <= 35) {
+    if (roll < 55) return 'health-large';
+    if (roll < 75) return 'health-small';
+    if (roll >= 95) return null;
+  } else if (state.player.hp <= 70) {
+    if (roll < 34) return 'health-small';
+    if (roll < 44) return 'health-large';
+    if (roll >= 80) return null;
+  } else {
+    if (roll < 12) return 'health-small';
+    if (roll >= 56) return null;
+  }
+  const candidates = [...state.unlockedWeapons]
+    .filter((type) => WEAPON_LOADOUTS[type]?.magazineSize && (type !== 'bfg' || signature % 13 === 0))
+    .sort((a, b) => {
+      const aRatio = (state.weapon.reserveByType[a] || 0) / Math.max(1, WEAPON_LOADOUTS[a].reserveAmmo);
+      const bRatio = (state.weapon.reserveByType[b] || 0) / Math.max(1, WEAPON_LOADOUTS[b].reserveAmmo);
+      return aRatio - bRatio;
+    });
+  return `ammo-${candidates[0] || 'arsenal'}`;
+}
 
 function defeatHostile(target) {
   if (target.dead) return;
   state.kills += 1;
   state.weapon.kills = state.kills;
   target.dead = true;
+  const momentumMultiplier = registerDefeatMomentum(target);
   target.deathTime = 0;
   target.telegraph = null;
+  target.attackTelegraph = null;
   spawnParticles(target.x, target.y, hostileAimHeight(target), [target.color || '#d8c18b', '#fff1b0'], settings.reducedMotion ? 5 : 14, { speed: 1.25, life: .58, size: .62, upward: .3, spread: TAU, glow: 12, shape: 'square' });
   playEnemyDeathSound(target);
   state.groundHazards = state.groundHazards.filter((hazard) => hazard.ownerId !== target.id);
   const dropAngle = deterministicDropAngle(target);
   const scrollDropPoint = findWalkableSpawnPoint(target.x, target.y, target.roomIndex);
   if (target.boss) {
-    state.doorOfLight = { ...BOSS_EXIT_POINT, active: true, pulse: 0 };
+    // The final door is never key-gated and never opens from a kill alone.
+    // The Archon powers down first; the pre-placed Lightwell terminal then
+    // performs the final authorization.
+    state.doorOfLight = null;
     state.finalBoss.shield = 0;
     state.finalBoss.phase = 3;
     state.activeAbilityEffects.push({ kind: 'boss-death', elapsed: 0, duration: 2.2, color: '#fff4c5' });
-    earnExperience(250, 'the Archon');
+    earnExperience(Math.round(250 * momentumMultiplier), 'the Archon');
     announceNarrator(
       'archon-defeated',
-      'ROUTE SECURED',
-      'ARCHON DOWN. EXIT OPEN. MOVE EAST TO THE LIGHTWELL.',
+      'ARCHON DOWN / TERMINAL ONLINE',
+      'The Lightwell access terminal is online. Authorize the final handoff to open the door of light.',
       'expression-relieved',
       7,
       { duration: 9, priority: 12, force: true },
     );
-    showToast('THE OPERATIONS ARCHON FALLS. THE DOOR OF LIGHT OPENS.', 'good');
+    showToast('ARCHON DOWN · AUTHORIZE THE LIGHTWELL TERMINAL.', 'good');
     playLowThump(30, .72, .055);
     playNoiseSweep(.6, .03, 'lowpass', 520, 72, .12, .55);
   } else {
     if (target.miniBoss) {
-      state.miniBossArena = { roomIndex: target.roomIndex, active: false, entranceClosed: true, exitOpen: true };
+      state.miniBossArena = { roomIndex: target.roomIndex, active: false, entranceClosed: true, exitOpen: false };
       announceNarrator(
         `mini-${target.id}-defeated`,
-        'TARGET DOWN / EXIT OPEN',
-        `${target.displayName || target.name} is down. The exit is open; continue through the archive toward Liam’s Document of Truth.`,
+        'TARGET DOWN / TERMINAL ONLINE',
+        `${target.displayName || target.name} is down. The arena terminal is online; authorize it to release the eastern shield door.`,
         'expression-relieved',
         7,
         { duration: 8, priority: 11, force: true },
       );
-      setMiniBossDoors(target.roomIndex, true, true);
-      showToast(`${target.displayName || target.name} defeated. EXIT OPEN.`, 'good');
+      setMiniBossDoors(target.roomIndex, true, false);
+      showToast(`${target.displayName || target.name} defeated · AUTHORIZE THE ARENA TERMINAL.`, 'good');
     }
-    const reward = target.kind === 'warden' ? 24 : target.kind === 'beast' ? 18 : 12;
+    const baseReward = target.kind === 'warden' ? 24 : target.kind === 'beast' ? 18 : 12;
+    const reward = Math.round(baseReward * momentumMultiplier);
     earnExperience(reward, target.displayName || target.name);
     const preferredSupplyPoint = findWalkableSpawnPoint(target.x - Math.cos(dropAngle) * .72, target.y - Math.sin(dropAngle) * .72, target.roomIndex, [scrollDropPoint]);
     const supplyPoint = canStand(preferredSupplyPoint.x, preferredSupplyPoint.y)
       ? preferredSupplyPoint
       : findWalkableSpawnPoint(target.x, target.y, target.roomIndex, [scrollDropPoint]);
-    const supplySignature = String(target.id || '').split('').reduce((sum, character) => sum + character.charCodeAt(0), 0);
-    // Every ordinary hostile pays out ammunition. The old deterministic table
-    // allowed long fights to produce no visible reward at all. Rotate the
-    // reward by enemy signature so rifle and shell supplies remain common while
-    // BFG cells appear as a rarer but guaranteed periodic upgrade.
-    const dropKind = supplySignature % 11 === 0
-      ? 'ammo-bfg'
-      : supplySignature % 3 === 0 ? 'ammo-shotgun' : 'ammo-arsenal';
-    const dropAmount = dropKind === 'ammo-bfg' ? 2 : dropKind === 'ammo-shotgun' ? 10 : 45;
-    const dropId = `supply-${target.roomIndex}-${target.id || target.name || state.kills}-${state.kills}`;
-    worldItems.push(createCombatPickup(dropId, dropKind, supplyPoint.x, supplyPoint.y, target.roomIndex, {
-      dropFromEnemy: true,
-      amount: dropAmount,
-      spawnedAt: performance.now(),
-    }));
-    spawnPickupEffect(supplyPoint.x, supplyPoint.y, pickupDefinition(dropKind).color);
-    showToast(`${target.displayName || target.name} defeated · ${pickupDefinition(dropKind).title} DROPPED.`, 'good');
+    const dropKind = enemySupplyDropKind(target);
+    if (dropKind) {
+      const definition = pickupDefinition(dropKind);
+      const dropId = `supply-${target.roomIndex}-${target.id || target.name || state.kills}-${state.kills}`;
+      worldItems.push(createCombatPickup(dropId, dropKind, supplyPoint.x, supplyPoint.y, target.roomIndex, {
+        dropFromEnemy: true,
+        amount: definition.amount,
+        spawnedAt: performance.now(),
+      }));
+      spawnPickupEffect(supplyPoint.x, supplyPoint.y, definition.color);
+      showToast(`${target.displayName || target.name} defeated · ${definition.title} DROPPED.`, 'good');
+    }
   }
+  handleSectorSecured(target.roomIndex, target);
   updateHud();
 }
 
@@ -10775,7 +13677,8 @@ function enemyCanStand(enemy, x, y) {
   const bounds = enemyRoomBounds(enemy);
   const margin = .22;
   if (x < bounds.roomStart + margin || x > bounds.roomStart + (roomWidths[enemy.roomIndex] || WORLD_WIDTH) - margin || y < margin || y > bounds.maxY + 1 - margin) return false;
-  return canStand(x, y);
+  const drop = worldFloorHeightAt(enemy.x, enemy.y) - worldFloorHeightAt(x, y);
+  return canStand(x, y) && drop <= .23 && elevationTransitionAllowed(enemy.x, enemy.y, x, y);
 }
 
 function enemyPathCell(enemy, x, y) {
@@ -10794,11 +13697,27 @@ function enemyPathCellCenter(cell) {
   return { x: cell.x + .5, y: cell.y + .5 };
 }
 
-function enemyPathCellOpen(enemy, cell) {
+function enemyPathCellOpen(enemy, cell, fromCell = null) {
   const bounds = enemyRoomBounds(enemy);
   if (cell.x < bounds.minX || cell.x > bounds.maxX || cell.y < bounds.minY || cell.y > bounds.maxY) return false;
   const center = enemyPathCellCenter(cell);
-  return enemyCanStand(enemy, center.x, center.y);
+  if (!canStand(center.x, center.y)) return false;
+  if (!fromCell) return true;
+  const fromCenter = enemyPathCellCenter(fromCell);
+  const distance = Math.hypot(center.x - fromCenter.x, center.y - fromCenter.y);
+  const samples = Math.max(1, Math.ceil(distance / .2));
+  let previousX = fromCenter.x;
+  let previousY = fromCenter.y;
+  for (let sample = 1; sample <= samples; sample += 1) {
+    const progress = sample / samples;
+    const sampleX = lerp(fromCenter.x, center.x, progress);
+    const sampleY = lerp(fromCenter.y, center.y, progress);
+    if (worldFloorHeightAt(previousX, previousY) - worldFloorHeightAt(sampleX, sampleY) > .23) return false;
+    if (!elevationTransitionAllowed(previousX, previousY, sampleX, sampleY)) return false;
+    previousX = sampleX;
+    previousY = sampleY;
+  }
+  return true;
 }
 
 function nearestEnemyPathCell(enemy, x, y) {
@@ -10838,12 +13757,14 @@ function buildEnemyPath(enemy, targetX, targetY) {
   const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   let found = false;
   let head = 0;
-  while (head < queue.length && queue.length < 720) {
+  // The largest authored room contains more than 720 traversable cells. The
+  // old cap could abandon a valid path before reaching a doorway or stair.
+  while (head < queue.length && queue.length < 1800) {
     const current = queue[head++];
     for (const [dx, dy] of directions) {
       const next = { x: current.x + dx, y: current.y + dy };
       const key = enemyPathCellKey(next);
-      if (previous.has(key) || !enemyPathCellOpen(enemy, next)) continue;
+      if (previous.has(key) || !enemyPathCellOpen(enemy, next, current)) continue;
       previous.set(key, current);
       queue.push(next);
       if (key === goalKey) { found = true; break; }
@@ -10896,7 +13817,6 @@ function enemyPathWaypoint(enemy, targetX, targetY) {
   const targetCell = nearestEnemyPathCell(enemy, targetX, targetY);
   if (!targetCell) return { x: targetX, y: targetY };
   const targetKey = enemyPathCellKey(targetCell);
-  enemy.pathTimer = Math.max(0, (enemy.pathTimer || 0) - 1 / 60);
   if (!Array.isArray(enemy.path) || enemy.pathTimer <= 0 || enemy.pathTargetKey !== targetKey) {
     enemy.path = buildEnemyPath(enemy, targetX, targetY);
     enemy.pathTargetKey = targetKey;
@@ -10940,53 +13860,65 @@ function rangedProjectileSpec(enemy) {
 }
 
 function fireEnemyRangedAttack(enemy) {
-  const profile = enemyProfile(enemy);
   const dx = state.player.x - enemy.x;
   const dy = state.player.y - enemy.y;
   const distance = Math.hypot(dx, dy) || 1;
   const direction = { x: dx / distance, y: dy / distance };
   const projectile = rangedProjectileSpec(enemy);
-  const origin = { x: enemy.x + direction.x * .42, y: enemy.y + direction.y * .42, z: profile.aimHeight };
-  makeProjectile(projectile.kind, origin, {
-    x: direction.x * projectile.speed,
-    y: direction.y * projectile.speed,
-    z: (EYE_HEIGHT - profile.aimHeight) * .22,
-  }, {
-    color: projectile.color,
-    damage: enemy.damage,
-    radius: projectile.radius,
-    lifetime: 4.2,
-    collisionHeight: .9,
-    source: 'enemy',
-    sourceId: enemy.id,
-    spriteSheet: projectile.spriteSheet,
-    spriteFrameCount: 8,
-    spriteFps: projectile.spriteFps,
-    spriteWorldHeight: projectile.spriteWorldHeight,
-  });
-  pushImpactBurst({ x: enemy.x, y: enemy.y, z: profile.aimHeight, elapsed: 0, duration: .28, color: projectile.color, radius: .32, style: 'cast' });
+  const originHeight = hostileAimHeight(enemy);
+  const origin = { x: enemy.x + direction.x * .42, y: enemy.y + direction.y * .42, z: originHeight };
+  const baseAngle = Math.atan2(direction.y, direction.x);
+  const offsets = [0];
+  for (const offset of offsets) {
+    const angle = baseAngle + offset;
+    makeProjectile(projectile.kind, origin, {
+      x: Math.cos(angle) * projectile.speed,
+      y: Math.sin(angle) * projectile.speed,
+      z: (playerEyeHeight() - originHeight) * .22,
+    }, {
+      color: projectile.color,
+      damage: enemy.damage,
+      radius: projectile.radius,
+      lifetime: 4.2,
+      collisionHeight: .9,
+      source: 'enemy',
+      sourceId: enemy.id,
+      spriteSheet: projectile.spriteSheet,
+      spriteFrameCount: 8,
+      spriteFps: projectile.spriteFps,
+      spriteWorldHeight: projectile.spriteWorldHeight,
+    });
+  }
+  pushImpactBurst({ x: enemy.x, y: enemy.y, z: originHeight, elapsed: 0, duration: .28, color: projectile.color, radius: .32, style: 'cast' });
   playEnemyRangedSound(enemy);
 }
 
-function createGroundHazard(enemy) {
+function queueGroundHazard(enemy, x, y, options = {}) {
   const profile = enemyProfile(enemy);
-  const radius = enemy.kind === 'quake' ? 1.62 : enemy.kind === 'crawler' ? 1.2 : 1.38;
+  const radius = options.radius || (enemy.kind === 'quake' ? 1.62 : enemy.kind === 'crawler' ? 1.2 : 1.38);
+  const floorZ = worldFloorHeightAt(x, y);
   const hazard = {
     id: `hazard-${enemy.id}-${Math.floor(state.now)}-${Math.random().toString(16).slice(2)}`,
     ownerId: enemy.id,
-    x: state.player.x,
-    y: state.player.y,
+    x,
+    y,
+    floorZ,
     radius,
     elapsed: 0,
-    warningDuration: enemy.kind === 'quake' ? .98 : .82,
-    activeDuration: .48,
+    warningDuration: options.warningDuration || (enemy.kind === 'quake' ? .98 : .82),
+    activeDuration: options.activeDuration || .48,
     active: false,
     hit: false,
-    damage: enemy.damage,
-    color: enemy.attackColor || profile.attackColor || enemy.color || '#d76b49',
+    damage: options.damage || enemy.damage,
+    color: options.color || enemy.attackColor || profile.attackColor || enemy.color || '#d76b49',
     name: enemy.displayName || enemy.name,
   };
   state.groundHazards.push(hazard);
+  return hazard;
+}
+
+function createGroundHazard(enemy) {
+  const hazard = queueGroundHazard(enemy, state.player.x, state.player.y);
   enemy.telegraph = { type: 'ground', hazardId: hazard.id };
 }
 
@@ -10994,11 +13926,14 @@ function updateGroundHazards(delta) {
   const active = [];
   for (const hazard of state.groundHazards) {
     hazard.elapsed += delta;
+    hazard.floorZ = worldFloorHeightAt(hazard.x, hazard.y);
     if (!hazard.active && hazard.elapsed >= hazard.warningDuration) {
       hazard.active = true;
-      pushImpactBurst({ x: hazard.x, y: hazard.y, z: .045, elapsed: 0, duration: .38, color: hazard.color, radius: hazard.radius, style: 'ground-impact' });
+      pushImpactBurst({ x: hazard.x, y: hazard.y, z: hazard.floorZ + .045, elapsed: 0, duration: .38, color: hazard.color, radius: hazard.radius, style: 'ground-impact' });
     }
-    if (hazard.active && !hazard.hit && Math.hypot(state.player.x - hazard.x, state.player.y - hazard.y) <= hazard.radius + .18) {
+    const playerFloorZ = Number.isFinite(state.player.floorZ) ? state.player.floorZ : worldFloorHeightAt(state.player.x, state.player.y);
+    const sharesFloor = Math.abs(playerFloorZ - hazard.floorZ) <= .3;
+    if (hazard.active && !hazard.hit && sharesFloor && Math.hypot(state.player.x - hazard.x, state.player.y - hazard.y) <= hazard.radius + .18) {
       hazard.hit = true;
       damagePlayer({ name: hazard.name, damage: hazard.damage }, { ground: true, hazard });
     }
@@ -11010,12 +13945,14 @@ function updateGroundHazards(delta) {
   state.groundHazards = active;
 }
 
-function drawProjectedWorldRing(centerWorld, radius, color, alpha = .8, segments = 20, z = .04, lineWidth = 2, dashed = false) {
+function drawProjectedWorldRing(centerWorld, radius, color, alpha = .8, segments = 20, zOffset = .04, lineWidth = 2, dashed = false) {
   if (!centerWorld || !Number.isFinite(radius)) return;
   const points = [];
   for (let index = 0; index <= segments; index += 1) {
     const angle = index / segments * TAU;
-    const point = projectCameraPoint(cameraPoint(centerWorld.x + Math.cos(angle) * radius, centerWorld.y + Math.sin(angle) * radius, z));
+    const pointX = centerWorld.x + Math.cos(angle) * radius;
+    const pointY = centerWorld.y + Math.sin(angle) * radius;
+    const point = projectCameraPoint(cameraPoint(pointX, pointY, worldFloorHeightAt(pointX, pointY) + zOffset));
     if (point) points.push(point);
   }
   if (points.length < 2) return;
@@ -11032,11 +13969,62 @@ function drawProjectedWorldRing(centerWorld, radius, color, alpha = .8, segments
   ctx.restore();
 }
 
+function drawBossAttackTelegraphs(now) {
+  const bosses = worldEnemies.filter((enemy) => enemy.roomIndex === state.room && enemy.miniBoss && !enemy.dead);
+  if (state.room === FINAL_ROOM_INDEX && state.finalBoss && !state.finalBoss.dead) bosses.push(state.finalBoss);
+  for (const boss of bosses) {
+    const attack = boss.attackTelegraph;
+    if (!attack || !['boss-pattern', 'pattern'].includes(attack.type)) continue;
+    const progress = clamp((attack.elapsed || 0) / Math.max(.01, attack.duration || 1), 0, 1);
+    const color = boss.bossKit === 'seismic' ? '#e7ad67' : boss.bossKit === 'burnout' ? '#e85b39' : boss.boss ? '#fff1b0' : '#58d9cf';
+    const target = { x: attack.targetX ?? state.player.x, y: attack.targetY ?? state.player.y };
+    const radius = attack.label?.includes('CHARGE') || attack.label?.includes('RUSH') || attack.label?.includes('DASH') ? 1.15 : attack.label?.includes('CROSS') || attack.label?.includes('SEAL') ? 1.48 : .88;
+    drawProjectedWorldRing(target, radius, color, .42 + progress * .42, 24, .035, Math.max(1, canvas.height * .003), true);
+    drawProjectedWorldRing(target, radius * Math.max(.16, 1 - progress * .76), '#fff1b0', .32 + progress * .45, 12, .045, Math.max(1, canvas.height * .002));
+    const start = projectCameraPoint(cameraPoint(boss.x, boss.y, worldFloorHeightAt(boss.x, boss.y) + .08));
+    const end = projectCameraPoint(cameraPoint(target.x, target.y, worldFloorHeightAt(target.x, target.y) + .08));
+    if (start && end) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = .22 + progress * .32;
+      ctx.strokeStyle = color;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = color;
+      ctx.lineWidth = Math.max(1, canvas.height * .002);
+      ctx.setLineDash([Math.max(5, canvas.height * .008), Math.max(4, canvas.height * .006)]);
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+    const labelPoint = projectCameraPoint(cameraPoint(target.x, target.y, worldFloorHeightAt(target.x, target.y) + .12));
+    if (labelPoint) {
+      ctx.save();
+      ctx.globalAlpha = .55 + progress * .35;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.font = `700 ${Math.max(8, canvas.height * .012)}px "DM Mono", monospace`;
+      ctx.fillStyle = '#fff1b0';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = color;
+      ctx.fillText(attack.label || 'INCOMING', labelPoint.x, labelPoint.y - Math.max(6, canvas.height * .012));
+      ctx.restore();
+    }
+  }
+}
+
 function drawGroundHazards(now) {
   for (const hazard of state.groundHazards) {
-    const center = projectCameraPoint(cameraPoint(hazard.x, hazard.y, .05));
+    const center = projectCameraPoint(cameraPoint(hazard.x, hazard.y, worldFloorHeightAt(hazard.x, hazard.y) + .05));
     if (!center) continue;
-    if (!hazard.active) continue;
+    if (!hazard.active) {
+      const warningProgress = clamp(hazard.elapsed / Math.max(.01, hazard.warningDuration), 0, 1);
+      const warningPulse = .42 + Math.sin(now / 82) * .1;
+      drawProjectedWorldRing({ x: hazard.x, y: hazard.y }, hazard.radius, hazard.color, warningPulse + warningProgress * .34, 24, .032, Math.max(1, canvas.height * .003), true);
+      drawProjectedWorldRing({ x: hazard.x, y: hazard.y }, hazard.radius * (1 - warningProgress * .72), '#fff1b0', .38 + warningProgress * .36, 12, .04, Math.max(1, canvas.height * .002));
+      continue;
+    }
     const pulse = .86 + Math.sin(now / 100 + hazard.x) * .12;
     drawProjectedWorldRing({ x: hazard.x, y: hazard.y }, hazard.radius, hazard.color, .9 * pulse, 24, .035, Math.max(1, canvas.height * .004));
     drawProjectedWorldRing({ x: hazard.x, y: hazard.y }, hazard.radius * .9, '#f5d59b', .74, 8, .048, Math.max(1, canvas.height * .002));
@@ -11077,6 +14065,288 @@ function enemySeparationVector(enemy) {
   return { x, y };
 }
 
+const MINI_BOSS_PATTERNS = Object.freeze({
+  contract: Object.freeze([
+    Object.freeze({ label: 'LOCK-ON BURST', duration: .72 }),
+    Object.freeze({ label: 'LEDGER BARRAGE', duration: .82 }),
+    Object.freeze({ label: 'AUDIT SHIELD', duration: .92 }),
+  ]),
+  seismic: Object.freeze([
+    Object.freeze({ label: 'TECTONIC SLAM', duration: 1.08 }),
+    Object.freeze({ label: 'FAULT CORRIDOR', duration: 1.18 }),
+    Object.freeze({ label: 'AFTERSHOCK RING', duration: 1.02 }),
+  ]),
+  burnout: Object.freeze([
+    Object.freeze({ label: 'PREDATOR LUNGE', duration: 1.05 }),
+    Object.freeze({ label: 'CLAW COMBO', duration: .92 }),
+    Object.freeze({ label: 'BERSERKER LEAP', duration: 1.18 }),
+  ]),
+});
+
+function fireMiniBossProjectile(enemy, targetX, targetY, options = {}) {
+  const baseAngle = Math.atan2(targetY - enemy.y, targetX - enemy.x) + (options.angleOffset || 0);
+  const speed = options.speed || 4.8;
+  const origin = {
+    x: enemy.x + Math.cos(baseAngle) * .58,
+    y: enemy.y + Math.sin(baseAngle) * .58,
+    z: worldFloorHeightAt(enemy.x, enemy.y) + (options.z ?? Math.max(.72, enemyProfile(enemy).aimHeight)),
+  };
+  makeProjectile(options.kind || 'enemy-fireball', origin, {
+    x: Math.cos(baseAngle) * speed,
+    y: Math.sin(baseAngle) * speed,
+    z: options.vz || 0,
+  }, {
+    color: options.color || enemy.color || '#d76b49',
+    damage: options.damage || Math.max(7, Math.round(enemy.damage * .72)),
+    radius: options.radius || .19,
+    lifetime: options.lifetime || 4.1,
+    collisionHeight: options.collisionHeight || 1,
+    source: 'enemy',
+    sourceId: enemy.id,
+    sourceName: enemy.displayName || enemy.name,
+    spriteSheet: options.spriteSheet || 'enemyFireballProjectile',
+    spriteFrameCount: 8,
+    spriteFps: options.spriteFps || 12,
+    spriteWorldHeight: options.spriteWorldHeight || .72,
+  });
+}
+
+function executeMiniBossPattern(enemy, attack) {
+  const targetX = attack.targetX;
+  const targetY = attack.targetY;
+  const phaseTwo = enemy.hp / Math.max(1, enemy.maxHp) <= .5;
+  const pattern = attack.pattern;
+  const color = enemy.bossKit === 'seismic' ? '#e7ad67' : enemy.bossKit === 'burnout' ? '#e85b39' : '#58d9cf';
+  if (enemy.bossKit === 'contract') {
+    if (pattern === 0) {
+      const count = phaseTwo ? 9 : 6;
+      for (let index = 0; index < count; index += 1) fireMiniBossProjectile(enemy, targetX, targetY, { angleOffset: (index - (count - 1) / 2) * .105, speed: phaseTwo ? 6.5 : 5.7, color: '#58d9cf', damage: Math.round(enemy.damage * .74), kind: 'enemy-plasma', spriteSheet: 'enemyPlasmaProjectile', spriteWorldHeight: .66 });
+    } else if (pattern === 1) {
+      const volleys = phaseTwo ? 3 : 2;
+      for (let volley = 0; volley < volleys; volley += 1) {
+        const offset = (volley - (volleys - 1) / 2) * .24;
+        for (const angleOffset of [-.3, 0, .3]) fireMiniBossProjectile(enemy, targetX, targetY, { angleOffset: angleOffset + offset, speed: 4.9 + volley * .55, color: '#8ef5df', damage: Math.round(enemy.damage * .68), kind: 'enemy-plasma', spriteSheet: 'enemyPlasmaProjectile', spriteWorldHeight: .62 });
+      }
+      for (const angleOffset of [-.62, .62]) fireMiniBossProjectile(enemy, targetX, targetY, { angleOffset, speed: 6.2, color: '#58d9cf', damage: Math.round(enemy.damage * .78), kind: 'enemy-plasma', spriteSheet: 'enemyPlasmaProjectile', spriteWorldHeight: .66 });
+    } else {
+      enemy.shield = Math.max(enemy.shield || 0, phaseTwo ? 150 : 105);
+      enemy.guardStrafeTimer = phaseTwo ? 2.4 : 1.7;
+      showToast(`${enemy.displayName || enemy.name} raises an audit shield.`, 'danger');
+    }
+  } else if (enemy.bossKit === 'seismic') {
+    if (pattern === 0) {
+      const arms = phaseTwo ? 8 : 4;
+      for (let index = 0; index < arms; index += 1) {
+        const angle = index / arms * TAU;
+        fireMiniBossProjectile(enemy, enemy.x + Math.cos(angle) * 8, enemy.y + Math.sin(angle) * 8, { speed: phaseTwo ? 6.4 : 5.4, color, damage: Math.round(enemy.damage * .78), radius: .22 });
+      }
+    } else if (pattern === 1) {
+      const lanes = phaseTwo ? 7 : 5;
+      for (let lane = 0; lane < lanes; lane += 1) fireMiniBossProjectile(enemy, targetX, targetY, { angleOffset: (lane - (lanes - 1) / 2) * .12, speed: 6.8 - Math.abs(lane - lanes / 2) * .18, color, damage: Math.round(enemy.damage * .82), radius: .2 });
+    } else {
+      const rings = phaseTwo ? 3 : 2;
+      for (let ring = 1; ring <= rings; ring += 1) {
+        const count = 8 + ring * 4;
+        for (let index = 0; index < count; index += 1) {
+          const angle = index / count * TAU + ring * .22;
+          fireMiniBossProjectile(enemy, enemy.x + Math.cos(angle) * 8, enemy.y + Math.sin(angle) * 8, { speed: 4.4 + ring * .65, color, damage: Math.round(enemy.damage * .72), radius: .18 });
+        }
+      }
+    }
+    enemy.vulnerableTimer = phaseTwo ? 1.45 : 1.75;
+    showToast('COLOSSUS CORE EXPOSED · RETURN FIRE.', 'good');
+  } else {
+    if (pattern === 0) {
+      const angle = Math.atan2(targetY - enemy.y, targetX - enemy.x);
+      const startX = enemy.x;
+      const startY = enemy.y;
+      const distance = phaseTwo ? 4.2 : 3.5;
+      for (let step = 1; step <= 10; step += 1) {
+        const nextX = startX + Math.cos(angle) * distance * step / 10;
+        const nextY = startY + Math.sin(angle) * distance * step / 10;
+        if (!enemyCanStand(enemy, nextX, nextY)) break;
+        enemy.x = nextX;
+        enemy.y = nextY;
+      }
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) <= 1.5) damagePlayer(enemy, { damage: Math.round(enemy.damage * (phaseTwo ? .76 : .64)) });
+    } else if (pattern === 1) {
+      const angle = Math.atan2(targetY - enemy.y, targetX - enemy.x);
+      for (let step = 1; step <= 2; step += 1) {
+        const nextX = enemy.x + Math.cos(angle) * .3;
+        const nextY = enemy.y + Math.sin(angle) * .3;
+        if (enemyCanStand(enemy, nextX, nextY)) { enemy.x = nextX; enemy.y = nextY; }
+      }
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) <= 1.55) damagePlayer(enemy, { damage: Math.round(enemy.damage * .5) });
+      enemy.meleeFollowups = phaseTwo ? 1 : 0;
+      enemy.meleeFollowupTimer = .45;
+    } else {
+      const angle = Math.atan2(targetY - enemy.y, targetX - enemy.x);
+      for (let step = 1; step <= 8; step += 1) {
+        const nextX = enemy.x + Math.cos(angle) * .3;
+        const nextY = enemy.y + Math.sin(angle) * .3;
+        if (!enemyCanStand(enemy, nextX, nextY)) break;
+        enemy.x = nextX;
+        enemy.y = nextY;
+      }
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) <= 1.7) damagePlayer(enemy, { damage: Math.round(enemy.damage * (phaseTwo ? .82 : .72)) });
+    }
+  }
+  enemy.attackImpact = .14;
+  enemy.attackRecovery = enemy.bossKit === 'burnout' ? 1.05 : enemy.bossKit === 'seismic' ? .76 : .55;
+  pushImpactBurst({ x: enemy.x, y: enemy.y, z: worldFloorHeightAt(enemy.x, enemy.y) + 1, elapsed: 0, duration: .62, color, radius: 1.05, style: 'cast' });
+  state.shakeTime = Math.max(state.shakeTime, settings.reducedMotion ? .07 : .2);
+}
+
+function spawnMiniBossSupportWave(enemy, waveIndex) {
+  const livingSupport = worldEnemies.filter((candidate) => candidate.roomIndex === enemy.roomIndex && candidate.bossSupport && !candidate.dead).length;
+  if (livingSupport >= 3) return false;
+  const roomStart = roomOffsets[enemy.roomIndex];
+  const roomWidth = roomWidths[enemy.roomIndex];
+  const roomHeight = roomHeights[enemy.roomIndex];
+  const kits = {
+    contract: waveIndex === 1 ? ['soldier', 'insectoid'] : ['soldier', 'zombie'],
+    seismic: waveIndex === 1 ? ['zombie', 'insectoid'] : ['soldier', 'insectoid'],
+    burnout: waveIndex === 1 ? ['zombie'] : ['soldier'],
+  };
+  const kinds = kits[enemy.bossKit] || ['zombie'];
+  const spawnRatios = waveIndex === 1 ? [[.2, .22], [.78, .76]] : [[.78, .22], [.22, .76]];
+  let spawned = 0;
+  for (let index = 0; index < kinds.length && livingSupport + spawned < 3; index += 1) {
+    const kind = kinds[index];
+    const pointRatio = spawnRatios[index % spawnRatios.length];
+    const point = findWalkableSpawnPoint(roomStart + roomWidth * pointRatio[0], roomHeight * pointRatio[1], enemy.roomIndex, [{ x: enemy.x, y: enemy.y }, { x: state.player.x, y: state.player.y }]);
+    const profile = ENEMY_PROFILES[kind] || ENEMY_PROFILES.zombie;
+    const hp = kind === 'soldier' ? 72 : kind === 'insectoid' ? 58 : 76;
+    worldEnemies.push({
+      id: `${enemy.id}-support-${waveIndex}-${index}-${Math.floor(state.now)}`,
+      name: kind === 'soldier' ? 'Arena Rifleman' : kind === 'insectoid' ? 'Arena Stinger' : 'Arena Thrall',
+      displayName: kind === 'soldier' ? 'Arena Rifleman' : kind === 'insectoid' ? 'Arena Stinger' : 'Arena Thrall',
+      kind, archetype: kind, attackStyle: profile.attackStyle || (kind === 'zombie' ? 'melee' : 'ranged'),
+      x: point.x, y: point.y, roomIndex: enemy.roomIndex, hp, maxHp: hp,
+      speed: kind === 'zombie' ? .82 : kind === 'insectoid' ? .68 : .58,
+      damage: kind === 'zombie' ? 9 : kind === 'insectoid' ? 7 : 9,
+      color: profile.color, cooldown: .55, attackTime: 0, attackHit: false, hitTime: 0, hitFlash: 0,
+      walkPhase: Math.random() * 5, alerted: true, dead: false, deathTime: 0, dropTemplates: [],
+      bossSupport: true, bossOwnerId: enemy.id,
+    });
+    spawned += 1;
+  }
+  if (spawned) {
+    showToast(`${enemy.displayName || enemy.name} CALLS SUPPORT · ${spawned} NEW THREAT${spawned === 1 ? '' : 'S'}.`, 'danger');
+    playLowThump(44, .24, .032);
+  }
+  return spawned > 0;
+}
+
+function updateMiniBossAi(enemy, delta) {
+  if (!enemy.miniBoss) return false;
+  const patterns = MINI_BOSS_PATTERNS[enemy.bossKit] || MINI_BOSS_PATTERNS.contract;
+  const healthRatio = enemy.hp / Math.max(1, enemy.maxHp);
+  const phaseTwo = healthRatio <= .5;
+  enemy.supportWaveStage = enemy.supportWaveStage || 0;
+  if (healthRatio <= .76 && enemy.supportWaveStage < 1) {
+    enemy.supportWaveStage = 1;
+    spawnMiniBossSupportWave(enemy, 1);
+  }
+  if (healthRatio <= .38 && enemy.supportWaveStage < 2) {
+    enemy.supportWaveStage = 2;
+    spawnMiniBossSupportWave(enemy, 2);
+  }
+  if (enemy.attackRecovery > 0) return true;
+  if (enemy.bossKit === 'burnout' && enemy.meleeFollowups > 0) {
+    enemy.meleeFollowupTimer = Math.max(0, (enemy.meleeFollowupTimer || 0) - delta);
+    const dx = state.player.x - enemy.x;
+    const dy = state.player.y - enemy.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    enemy.moving = moveEnemy(enemy, dx, dy, enemy.speed * (phaseTwo ? 1.05 : .95) * delta, state.player.x, state.player.y);
+    if (enemy.meleeFollowupTimer <= 0) {
+      if (distance <= 1.65) damagePlayer(enemy, { damage: Math.round(enemy.damage * (phaseTwo ? .54 : .48)) });
+      enemy.meleeFollowups -= 1;
+      enemy.meleeFollowupTimer = .46;
+      enemy.attackImpact = .11;
+      enemy.attackRecovery = .38;
+      playEnemyMeleeSound(enemy);
+    }
+    return true;
+  }
+  if (phaseTwo && !enemy.enraged) {
+    enemy.enraged = true;
+    if (enemy.bossKit === 'contract') enemy.shield = Math.max(enemy.shield || 0, 125);
+    const phaseLines = {
+      contract: 'The Warden has overclocked its audit shield. Break the barrier, then close during the reload.',
+      seismic: 'The Colossus armor is hardening. Its core only opens after a committed slam.',
+      burnout: 'The Keeper is committing harder to each attack. Sidestep the wind-up, then punish the longer recovery.',
+    };
+    announceNarrator(`mini-${enemy.id}-phase-two`, 'TARGET ENRAGED', phaseLines[enemy.bossKit] || 'The target has changed patterns. Read the new rhythm.', 'expression-alert', 4, { duration: 5.2, priority: 9, force: true });
+    showToast(`${enemy.displayName || enemy.name} · PHASE TWO`, 'danger');
+    spawnParticles(enemy.x, enemy.y, worldFloorHeightAt(enemy.x, enemy.y) + 1, [enemy.color || '#d76b49', '#fff1b0'], settings.reducedMotion ? 10 : 26, { speed: 1.7, life: .82, size: .82, upward: .7, spread: TAU, glow: 18, trail: true });
+  }
+  const attack = enemy.attackTelegraph;
+  if (attack) {
+    attack.elapsed += delta;
+    enemy.attackTime = Math.max(0, attack.duration - attack.elapsed);
+    if (attack.elapsed >= attack.duration) {
+      executeMiniBossPattern(enemy, attack);
+      enemy.attackTelegraph = null;
+      enemy.attackTime = 0;
+      enemy.cooldown = enemy.bossKit === 'burnout'
+        ? (phaseTwo ? 1.34 : 1.58)
+        : enemy.bossKit === 'seismic'
+          ? (phaseTwo ? .72 : .96)
+          : (phaseTwo ? .48 : .7);
+    }
+    return true;
+  }
+
+  const dx = state.player.x - enemy.x;
+  const dy = state.player.y - enemy.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  const preferredDistance = enemy.bossKit === 'burnout' ? 1.55 : enemy.bossKit === 'seismic' ? 4.2 : 7.4;
+  const hasSight = hasLineOfSight(enemy.x, enemy.y, state.player.x, state.player.y);
+  if (enemy.bossKit === 'burnout') {
+    const waypoint = enemyPathWaypoint(enemy, state.player.x, state.player.y);
+    enemy.moving = moveEnemy(enemy, waypoint.x - enemy.x, waypoint.y - enemy.y, enemy.speed * (phaseTwo ? 1.72 : 1.5) * delta, waypoint.x, waypoint.y);
+    if (!enemy.moving && distance > 1.8) enemy.moving = moveEnemy(enemy, dx, dy, enemy.speed * 1.25 * delta, state.player.x, state.player.y);
+  } else if (enemy.bossKit === 'seismic') {
+    if (!hasSight || distance > preferredDistance + 1.2) {
+      const waypoint = enemyPathWaypoint(enemy, state.player.x, state.player.y);
+      enemy.moving = moveEnemy(enemy, waypoint.x - enemy.x, waypoint.y - enemy.y, enemy.speed * (phaseTwo ? .9 : .68) * delta, waypoint.x, waypoint.y);
+    } else {
+      enemy.moving = false;
+    }
+  } else if (!hasSight || Math.abs(distance - preferredDistance) > .7) {
+    const waypoint = enemyPathWaypoint(enemy, state.player.x, state.player.y);
+    const closing = distance > preferredDistance || !hasSight;
+    const directionX = closing ? waypoint.x - enemy.x : -dx;
+    const directionY = closing ? waypoint.y - enemy.y : -dy;
+    const amount = enemy.speed * (enemy.guardStrafeTimer > 0 ? 1.65 : phaseTwo ? 1.34 : 1.1) * delta;
+    enemy.moving = moveEnemy(enemy, directionX, directionY, amount, closing ? waypoint.x : enemy.x - dx, closing ? waypoint.y : enemy.y - dy);
+  } else {
+    const orbit = enemy.orbitDirection || 1;
+    enemy.moving = moveEnemy(enemy, -dy * orbit, dx * orbit, enemy.speed * (enemy.guardStrafeTimer > 0 ? .92 : .58) * delta, enemy.x - dy, enemy.y + dx);
+  }
+
+  const attackReach = enemy.bossKit === 'burnout' ? 3.15 : enemy.bossKit === 'contract' ? 18.5 : 14.5;
+  if (enemy.cooldown <= 0 && distance <= attackReach) {
+    const patternIndex = (enemy.bossPattern || 0) % patterns.length;
+    const definition = patterns[patternIndex];
+    enemy.bossPattern = patternIndex + 1;
+    enemy.attackTelegraph = {
+      type: 'boss-pattern',
+      label: definition.label,
+      pattern: patternIndex,
+      targetX: state.player.x,
+      targetY: state.player.y,
+      duration: definition.duration * (phaseTwo ? (enemy.bossKit === 'burnout' ? 1.08 : .92) : 1),
+      elapsed: 0,
+    };
+    enemy.attackTime = enemy.attackTelegraph.duration;
+    enemy.cooldown = enemy.attackTelegraph.duration + .6;
+    playEnemyGroundSound(enemy);
+  }
+  return true;
+}
+
 function updateEnemies(delta) {
   if (state.miniBossCutscene) return;
   if (state.reading || state.menuActive || state.gameComplete) return;
@@ -11094,6 +14364,10 @@ function updateEnemies(delta) {
     enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - delta);
     enemy.staggerTimer = Math.max(0, (enemy.staggerTimer || 0) - delta);
     enemy.stunTimer = Math.max(0, (enemy.stunTimer || 0) - delta);
+    enemy.attackImpact = Math.max(0, (enemy.attackImpact || 0) - delta);
+    enemy.attackRecovery = Math.max(0, (enemy.attackRecovery || 0) - delta);
+    enemy.vulnerableTimer = Math.max(0, (enemy.vulnerableTimer || 0) - delta);
+    enemy.guardStrafeTimer = Math.max(0, (enemy.guardStrafeTimer || 0) - delta);
     enemy.pathTimer = Math.max(0, (enemy.pathTimer || 0) - delta);
     if (!enemy.orbitDirection) enemy.orbitDirection = (String(enemy.id || '').charCodeAt(0) || 1) % 2 ? 1 : -1;
     enemy.repositionTimer = Math.max(0, (enemy.repositionTimer || 0) - delta);
@@ -11107,6 +14381,8 @@ function updateEnemies(delta) {
       enemy.knockbackY = recoilY * Math.pow(.035, delta);
     }
     if (enemy.stunTimer > 0 || enemy.staggerTimer > 0) continue;
+
+    if (updateMiniBossAi(enemy, delta)) continue;
 
     if (enemy.attackTime > 0) {
       const previous = enemy.attackTime;
@@ -11144,16 +14420,19 @@ function updateEnemies(delta) {
     const preferredDistance = profile.preferredDistance || reach;
     const shouldClose = attackStyle === 'melee' ? distance > reach - .12 : distance > preferredDistance + .35;
     const shouldRetreat = attackStyle !== 'melee' && distance < Math.max(2.1, preferredDistance - 1.15);
+    const movementWanted = shouldClose || shouldRetreat || (attackStyle !== 'melee' && distance > 2.4);
     if (shouldClose || shouldRetreat) {
       const waypoint = enemyPathWaypoint(enemy, state.player.x, state.player.y);
       const separation = enemySeparationVector(enemy);
-      const lateral = attackStyle === 'ranged' && !shouldRetreat
-        ? { x: -dy * enemy.orbitDirection, y: dx * enemy.orbitDirection }
+      const inverseDistance = 1 / Math.max(.001, distance);
+      const lateralWeight = attackStyle === 'ranged' ? (shouldRetreat ? .2 : .5) : 0;
+      const lateral = attackStyle === 'ranged'
+        ? { x: -dy * inverseDistance * enemy.orbitDirection * lateralWeight, y: dx * inverseDistance * enemy.orbitDirection * lateralWeight }
         : { x: 0, y: 0 };
       const baseDirection = shouldRetreat ? { x: -dx, y: -dy } : { x: waypoint.x - enemy.x, y: waypoint.y - enemy.y };
       const moveDirection = {
-        x: baseDirection.x + separation.x * .95 + lateral.x * .24,
-        y: baseDirection.y + separation.y * .95 + lateral.y * .24,
+        x: baseDirection.x + separation.x * .95 + lateral.x,
+        y: baseDirection.y + separation.y * .95 + lateral.y,
       };
       const sprint = enemy.kind === 'zombie' && distance > 3.2 ? 1.18 : 1;
       const moved = moveEnemy(enemy, moveDirection.x, moveDirection.y, enemy.speed * profile.speedMultiplier * sprint * slow * delta, shouldRetreat ? enemy.x - dx : waypoint.x, shouldRetreat ? enemy.y - dy : waypoint.y);
@@ -11163,14 +14442,33 @@ function updateEnemies(delta) {
         const sprint = enemy.kind === 'zombie' && distance > 3.2 ? 1.18 : 1;
         enemy.moving = moveEnemy(enemy, dx, dy, enemy.speed * profile.speedMultiplier * sprint * slow * delta, state.player.x, state.player.y);
       }
+    } else if (attackStyle !== 'melee' && distance > 2.4) {
+      const orbitSpeed = .3;
+      enemy.moving = moveEnemy(enemy, -dy * enemy.orbitDirection, dx * enemy.orbitDirection, enemy.speed * profile.speedMultiplier * orbitSpeed * slow * delta, enemy.x - dy, enemy.y + dx);
+    }
+
+    // If a route endpoint, narrow door, or another hostile blocks movement,
+    // invalidate the path and make a purposeful side-step instead of freezing.
+    if (movementWanted && !enemy.moving) {
+      enemy.stuckTimer = (enemy.stuckTimer || 0) + delta;
+      if (enemy.stuckTimer >= .38) {
+        enemy.path = [];
+        enemy.pathTimer = 0;
+        enemy.orbitDirection *= -1;
+        const sideX = -dy * enemy.orbitDirection;
+        const sideY = dx * enemy.orbitDirection;
+        enemy.moving = moveEnemy(enemy, sideX, sideY, enemy.speed * profile.speedMultiplier * .72 * slow * delta, enemy.x + sideX, enemy.y + sideY);
+        enemy.stuckTimer = 0;
+      }
+    } else {
+      enemy.stuckTimer = 0;
     }
 
     const distanceAfterMove = Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y);
     const canAttack = attackStyle === 'melee'
       ? distanceAfterMove <= reach
       : distanceAfterMove <= reach && hasLineOfSight(enemy.x, enemy.y, state.player.x, state.player.y);
-    const attackPhase = ((String(enemy.id || '').split('').reduce((sum, character) => sum + character.charCodeAt(0), 0) % 7) * .055);
-    if (canAttack && enemy.cooldown <= 0 && enemy.animationTime % 1.1 >= attackPhase) {
+    if (canAttack && enemy.cooldown <= 0) {
       enemy.attackTime = profile.attackDuration || (attackStyle === 'melee' ? .48 : .58);
       enemy.attackHit = false;
       enemy.attackStartX = enemy.x;
@@ -11178,10 +14476,10 @@ function updateEnemies(delta) {
       enemy.attackTargetX = state.player.x;
       enemy.attackTargetY = state.player.y;
       enemy.attackLungeDistance = attackStyle === 'melee' ? Math.min(.48, Math.max(.18, reach * .22)) : 0;
-      enemy.cooldown = (attackStyle === 'melee' ? (enemy.kind === 'zombie' ? .72 : .84) : 1.18) / enemyAttackRate(enemy);
+      enemy.cooldown = (attackStyle === 'melee' ? (enemy.kind === 'zombie' ? .68 : .78) : attackStyle === 'ground' ? 1.06 : .98) / enemyAttackRate(enemy);
       enemy.attackStyle = attackStyle;
       enemy.telegraph = attackStyle === 'ranged'
-        ? { type: 'ranged', targetX: state.player.x, targetY: state.player.y, targetZ: EYE_HEIGHT, duration: enemy.attackTime, elapsed: 0 }
+        ? { type: 'ranged', targetX: state.player.x, targetY: state.player.y, targetZ: playerEyeHeight(), duration: enemy.attackTime, elapsed: 0 }
         : attackStyle === 'ground'
           ? { type: 'ground', targetX: state.player.x, targetY: state.player.y, radius: enemy.kind === 'quake' ? 1.62 : enemy.kind === 'crawler' ? 1.2 : 1.38, duration: enemy.attackTime, elapsed: 0 }
           : { type: 'melee', targetX: state.player.x, targetY: state.player.y, duration: enemy.attackTime, elapsed: 0 };
@@ -11201,34 +14499,61 @@ function spawnBossPattern(kind, boss, count, speed, color, damage, options = {})
   const targetX = options.targetX ?? state.player.x;
   const targetY = options.targetY ?? state.player.y;
   const baseAngle = Math.atan2(targetY - boss.y, targetX - boss.x);
+  const floorZ = worldFloorHeightAt(boss.x, boss.y);
   for (let index = 0; index < count; index += 1) {
     const angle = baseAngle + (index - (count - 1) / 2) * (options.spread || .18);
-    const origin = { x: boss.x + Math.cos(angle) * .55, y: boss.y + Math.sin(angle) * .55, z: options.z || 1.15 };
-    makeProjectile(kind, origin, { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed, z: options.vz || 0 }, { color, damage, radius: options.radius || .14, lifetime: options.lifetime || 4, source: 'boss', sourceId: boss.id, collisionHeight: options.collisionHeight || 1.2, aoe: options.aoe || 0 });
+    const origin = { x: boss.x + Math.cos(angle) * .55, y: boss.y + Math.sin(angle) * .55, z: floorZ + (options.z ?? 1.15) };
+    makeProjectile(kind, origin, { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed, z: options.vz || 0 }, { color, damage, radius: options.radius || .14, lifetime: options.lifetime || 4, source: 'boss', sourceId: boss.id, sourceName: boss.displayName, collisionHeight: options.collisionHeight || 1.2, aoe: options.aoe || 0, spriteSheet: options.spriteSheet || (kind.includes('fire') ? 'enemyFireballProjectile' : 'enemyPlasmaProjectile'), spriteFrameCount: 8, spriteFps: options.spriteFps || 13, spriteWorldHeight: options.spriteWorldHeight || .76 });
   }
 }
+function queueArchonFlurry(boss, targetX, targetY, options = {}) {
+  const batches = options.batches || (boss.phase === 3 ? 4 : 3);
+  const shots = options.shots || 3;
+  for (let batch = 0; batch < batches; batch += 1) boss.flurryQueue.push({ targetX, targetY, shots, batch, spread: options.spread || .15, speed: (options.speed || 5) + batch * .18, damage: options.damage || (boss.phase === 3 ? 9 : 7) });
+  boss.flurryTimer = Math.min(boss.flurryTimer || .01, .01);
+}
+function updateArchonFlurry(delta, boss) {
+  if (!boss.flurryQueue?.length) return;
+  boss.flurryTimer -= delta;
+  if (boss.flurryTimer > 0) return;
+  const batch = boss.flurryQueue.shift();
+  const base = Math.atan2(batch.targetY - boss.y, batch.targetX - boss.x) + (batch.batch % 2 ? .045 : -.045);
+  const floorZ = worldFloorHeightAt(boss.x, boss.y);
+  for (let index = 0; index < batch.shots; index += 1) {
+    const angle = base + (index - (batch.shots - 1) / 2) * batch.spread;
+    const fireball = (index + batch.batch) % 2 === 1;
+    makeProjectile(fireball ? 'boss-fireball' : 'boss-plasma', { x: boss.x + Math.cos(angle) * .58, y: boss.y + Math.sin(angle) * .58, z: floorZ + 1.2 + (index % 2) * .24 }, { x: Math.cos(angle) * batch.speed, y: Math.sin(angle) * batch.speed, z: 0 }, { color: fireball ? '#e85b39' : '#58d9cf', damage: batch.damage, radius: fireball ? .19 : .14, lifetime: 4, source: 'boss', sourceId: boss.id, sourceName: boss.displayName, collisionHeight: 1.15, spriteSheet: fireball ? 'enemyFireballProjectile' : 'enemyPlasmaProjectile', spriteFrameCount: 8, spriteFps: fireball ? 11 : 15, spriteWorldHeight: fireball ? .86 : .7 });
+  }
+  boss.attackImpact = .13;
+  boss.flurryTimer = boss.phase === 3 ? .11 : .15;
+}
 function bossAttackDuration(boss, pattern) {
-  if (pattern === 3) return boss.phase === 3 ? 1.05 : .86;
-  return boss.phase === 3 ? .68 : .82;
+  if (pattern === 3) return boss.phase === 3 ? .72 : .84;
+  if (pattern === 5) return boss.phase === 3 ? .58 : .7;
+  return boss.phase === 3 ? .52 : .66;
 }
 function bossAttackLabel(boss, pattern) {
   if (pattern === 0) return 'ARC BOLTS';
   if (pattern === 1) return 'LATTICE RING';
   if (pattern === 2) return 'CORE DASH';
   if (pattern === 3) return 'LATTICE SHIELD';
-  return 'DELIVERY SALVO';
+  if (pattern === 4) return 'DELIVERY SALVO';
+  if (pattern === 5) return 'NULL GRID';
+  return 'CORE LANCES';
 }
 function executeBossPattern(boss, pattern, telegraph) {
   playBossAttackSound(pattern, boss.phase);
   const targetX = telegraph?.targetX ?? state.player.x;
   const targetY = telegraph?.targetY ?? state.player.y;
   if (pattern === 0) {
-    spawnBossPattern('boss-bolt', boss, boss.phase === 3 ? 7 : 4, boss.phase === 3 ? 5.35 : 4.55, boss.phase === 3 ? '#f6e3a5' : '#d99762', boss.phase === 3 ? 18 : 13, { spread: boss.phase === 3 ? .16 : .2, z: 1.22, targetX, targetY });
+    queueArchonFlurry(boss, targetX, targetY, { batches: boss.phase === 3 ? 5 : 3, shots: 3, spread: boss.phase === 3 ? .13 : .17, speed: boss.phase === 3 ? 5.35 : 4.7, damage: boss.phase === 3 ? 9 : 7 });
   } else if (pattern === 1) {
-    const count = boss.phase === 3 ? 14 : boss.phase === 2 ? 10 : 7;
+    const count = boss.phase === 3 ? 12 : boss.phase === 2 ? 9 : 7;
+    const floorZ = worldFloorHeightAt(boss.x, boss.y);
     for (let index = 0; index < count; index += 1) {
       const angle = index / count * TAU + boss.pulse * .25;
-      makeProjectile('boss-ring', { x: boss.x, y: boss.y, z: .75 }, { x: Math.cos(angle) * (boss.phase === 3 ? 5.1 : 4.05), y: Math.sin(angle) * (boss.phase === 3 ? 5.1 : 4.05), z: 0 }, { color: boss.phase === 2 ? '#77a9e8' : '#d99762', damage: boss.phase === 3 ? 15 : 10, radius: .12, lifetime: 3.3, source: 'boss', sourceId: boss.id, collisionHeight: .45 });
+      const fireball = index % 2 === 1;
+      makeProjectile(fireball ? 'boss-fireball' : 'boss-plasma', { x: boss.x, y: boss.y, z: floorZ + .75 + (index % 3) * .18 }, { x: Math.cos(angle) * (boss.phase === 3 ? 4.75 : 3.9), y: Math.sin(angle) * (boss.phase === 3 ? 4.75 : 3.9), z: 0 }, { color: fireball ? '#e85b39' : '#58d9cf', damage: boss.phase === 3 ? 10 : 7, radius: fireball ? .18 : .13, lifetime: 3.3, source: 'boss', sourceId: boss.id, sourceName: boss.displayName, collisionHeight: .65, spriteSheet: fireball ? 'enemyFireballProjectile' : 'enemyPlasmaProjectile', spriteFrameCount: 8, spriteFps: fireball ? 11 : 15, spriteWorldHeight: fireball ? .84 : .68 });
     }
   } else if (pattern === 2) {
     boss.dashTime = .7;
@@ -11236,14 +14561,14 @@ function executeBossPattern(boss, pattern, telegraph) {
     const nextX = boss.x + Math.cos(direction) * 2.2;
     const nextY = boss.y + Math.sin(direction) * 2.2;
     if (canStand(nextX, nextY)) { boss.x = nextX; boss.y = nextY; }
-    pushImpactBurst({ x: boss.x, y: boss.y, z: 1, elapsed: 0, duration: .8, color: '#e9e9e0', radius: 1.2, style: 'boss-dash' });
+    pushImpactBurst({ x: boss.x, y: boss.y, z: worldFloorHeightAt(boss.x, boss.y) + 1, elapsed: 0, duration: .8, color: '#e9e9e0', radius: 1.2, style: 'boss-dash' });
     // The dash is a committed reposition rather than a free teleport: only
     // punish the player when the landing point actually overlaps them.
     if (Math.hypot(state.player.x - boss.x, state.player.y - boss.y) <= 1.55) {
-      damagePlayer(boss, { damage: boss.phase === 3 ? 22 : 16 });
+      damagePlayer(boss, { damage: boss.phase === 3 ? 18 : 14 });
     }
   } else if (pattern === 3) {
-    boss.shield = Math.max(boss.shield, boss.phase === 3 ? 52 : 38);
+    boss.shield = Math.max(boss.shield, boss.phase === 3 ? 42 : 32);
     state.activeAbilityEffects.push({ kind: 'boss-shield', elapsed: 0, duration: 1.1, color: '#9debdc' });
     announceNarrator(
       `archon-shield-${boss.phase}`,
@@ -11254,9 +14579,32 @@ function executeBossPattern(boss, pattern, telegraph) {
       { duration: 4.2, priority: 7 },
     );
     showToast('THE ARCHON RAISES A LATTICE SHIELD.', 'danger');
+  } else if (pattern === 4) {
+    queueArchonFlurry(boss, targetX, targetY, { batches: 4, shots: boss.phase === 3 ? 4 : 3, spread: .28, speed: 4.15, damage: 8 });
+  } else if (pattern === 5) {
+    const count = boss.phase === 3 ? 15 : boss.phase === 2 ? 12 : 9;
+    const floorZ = worldFloorHeightAt(boss.x, boss.y);
+    for (let index = 0; index < count; index += 1) {
+      const angle = index / count * TAU + boss.pulse * .42;
+      const fireball = index % 2 === 0;
+      makeProjectile(fireball ? 'boss-fireball' : 'boss-plasma', { x: boss.x, y: boss.y, z: floorZ + .82 + (index % 2) * .42 }, { x: Math.cos(angle) * (boss.phase === 3 ? 5.8 : 4.9), y: Math.sin(angle) * (boss.phase === 3 ? 5.8 : 4.9), z: 0 }, { color: fireball ? '#e85b39' : '#58d9cf', damage: boss.phase === 3 ? 10 : 8, radius: fireball ? .18 : .13, lifetime: 3.8, source: 'boss', sourceId: boss.id, sourceName: boss.displayName, collisionHeight: .65, spriteSheet: fireball ? 'enemyFireballProjectile' : 'enemyPlasmaProjectile', spriteFrameCount: 8, spriteFps: fireball ? 11 : 15, spriteWorldHeight: fireball ? .84 : .68 });
+    }
+    queueArchonFlurry(boss, targetX, targetY, { batches: 3, shots: 3, spread: .13, speed: 6, damage: boss.phase === 3 ? 9 : 7 });
   } else {
-    spawnBossPattern('boss-bolt', boss, 8, 3.8, '#c58de6', 14, { spread: .42, z: 1.75, lifetime: 3.5, targetX, targetY });
+    const base = Math.atan2(targetY - boss.y, targetX - boss.x);
+    const floorZ = worldFloorHeightAt(boss.x, boss.y);
+    for (const offset of [-.24, 0, .24]) {
+      const angle = base + offset;
+      for (let lane = 0; lane < 1; lane += 1) {
+        const laneOffset = 0;
+        const origin = { x: boss.x + Math.cos(angle + Math.PI / 2) * laneOffset, y: boss.y + Math.sin(angle + Math.PI / 2) * laneOffset, z: floorZ + 1.32 };
+        const fireball = offset !== 0;
+        makeProjectile(fireball ? 'boss-fireball' : 'boss-plasma', origin, { x: Math.cos(angle) * 5.8, y: Math.sin(angle) * 5.8, z: 0 }, { color: fireball ? '#e85b39' : '#58d9cf', damage: boss.phase === 3 ? 10 : 8, radius: fireball ? .18 : .13, lifetime: 3.2, source: 'boss', sourceId: boss.id, sourceName: boss.displayName, spriteSheet: fireball ? 'enemyFireballProjectile' : 'enemyPlasmaProjectile', spriteFrameCount: 8, spriteFps: fireball ? 11 : 15, spriteWorldHeight: fireball ? .84 : .68 });
+      }
+    }
   }
+  boss.attackImpact = .16;
+  boss.attackRecovery = boss.phase === 3 ? .28 : .4;
 }
 function archonOwnedAliveCount(boss) {
   const owned = new Set(boss.summonIds || []);
@@ -11271,8 +14619,8 @@ function spawnArchonWaveUnit(boss, entry) {
   occupied.push({ x: boss.x, y: boss.y }, { x: state.player.x, y: state.player.y });
   const point = ARCHON_WAVE_SPAWN_POINTS[boss.waveSpawnCursor % ARCHON_WAVE_SPAWN_POINTS.length];
   boss.waveSpawnCursor += 1;
-  const requestedX = FINAL_ROOM_OFFSET + point.x;
-  const requestedY = point.y;
+  const requestedX = FINAL_ROOM_OFFSET + FINAL_ROOM_WIDTH * point.x;
+  const requestedY = FINAL_ROOM_HEIGHT * point.y;
   const spawnPoint = findWalkableSpawnPoint(requestedX, requestedY, FINAL_ROOM_INDEX, occupied);
   if (!isClearForSpawn(spawnPoint.x, spawnPoint.y, .34)) return false;
   const id = `archon-wave-${boss.waveIndex}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -11287,8 +14635,8 @@ function spawnArchonWaveUnit(boss, entry) {
     x: spawnPoint.x,
     y: spawnPoint.y,
     roomIndex: FINAL_ROOM_INDEX,
-    hp: Math.round(entry.hp * 1.35),
-    maxHp: Math.round(entry.hp * 1.35),
+    hp: Math.round(entry.hp * 1.18),
+    maxHp: Math.round(entry.hp * 1.18),
     speed: entry.speed,
     damage: entry.damage,
     color: entry.color,
@@ -11361,13 +14709,13 @@ function updateArchonWave(delta, boss) {
   if (boss.waveSpawnQueue.length && boss.waveSpawnTimer <= 0 && archonOwnedAliveCount(boss) < ARCHON_WAVE_MAX_ALIVE) {
     const entry = boss.waveSpawnQueue.shift();
     if (!spawnArchonWaveUnit(boss, entry)) boss.waveSpawnQueue.unshift(entry);
-    boss.waveSpawnTimer = .42;
+    boss.waveSpawnTimer = .55;
   }
   boss.waveEnemiesRemaining = archonWaveRemaining(boss) + boss.waveSpawnQueue.length;
   if (!boss.waveSpawnQueue.length && boss.waveEnemiesRemaining <= 0) {
     boss.waveState = 'cleared';
     boss.waveActive = false;
-    boss.waveCooldown = 1.35;
+    boss.waveCooldown = 1.7;
     showToast(`WAVE ${boss.waveIndex} CLEARED · THE ARCHON IS EXPOSED.`, 'good');
     playLowThump(64, .2, .026);
   }
@@ -11376,18 +14724,22 @@ function updateArchonWave(delta, boss) {
 function updateBoss(delta) {
   const boss = state.finalBoss;
   if (!boss || state.room !== FINAL_ROOM_INDEX || state.gameComplete) return;
+  boss.animationTime = (boss.animationTime || 0) + delta;
+  boss.moving = false;
   boss.pulse += delta * (boss.phase === 3 ? 2.4 : 1.4);
   if (boss.dead) { boss.deathTime += delta; return; }
   boss.hitTime = Math.max(0, boss.hitTime - delta);
   boss.hitFlash = Math.max(0, (boss.hitFlash || 0) - delta);
   boss.staggerTimer = Math.max(0, (boss.staggerTimer || 0) - delta);
   boss.stunTimer = Math.max(0, (boss.stunTimer || 0) - delta);
+  boss.attackImpact = Math.max(0, (boss.attackImpact || 0) - delta);
+  boss.attackRecovery = Math.max(0, (boss.attackRecovery || 0) - delta);
   boss.waveCooldown = Math.max(0, boss.waveCooldown - delta);
 
   const nextPhase = bossPhaseForHp(boss);
   if (nextPhase !== boss.phase) {
     boss.phase = nextPhase;
-    boss.shield = nextPhase === 2 ? 58 : nextPhase === 3 ? 76 : 0;
+    boss.shield = nextPhase === 2 ? 50 : nextPhase === 3 ? 64 : 0;
     boss.attackTelegraph = null;
     boss.cooldown = .72;
     announceNarrator(
@@ -11401,14 +14753,17 @@ function updateBoss(delta) {
       { duration: 6.5, priority: 9, force: true },
     );
     state.shakeTime = settings.reducedMotion ? .2 : .8;
-    pushImpactBurst({ x: boss.x, y: boss.y, z: 1.2, elapsed: 0, duration: 1.4, color: BOSS_PHASES[nextPhase - 1].color, radius: 2.4 });
-    spawnParticles(boss.x, boss.y, 1.15, [BOSS_PHASES[nextPhase - 1].color, '#fff1b0'], settings.reducedMotion ? 14 : 42, { speed: 2.4, life: 1.05, size: 1.05, upward: .9, glow: 18, trail: true });
+    const floorZ = worldFloorHeightAt(boss.x, boss.y);
+    pushImpactBurst({ x: boss.x, y: boss.y, z: floorZ + 1.2, elapsed: 0, duration: 1.4, color: BOSS_PHASES[nextPhase - 1].color, radius: 2.4 });
+    spawnParticles(boss.x, boss.y, floorZ + 1.15, [BOSS_PHASES[nextPhase - 1].color, '#fff1b0'], settings.reducedMotion ? 14 : 42, { speed: 2.4, life: 1.05, size: 1.05, upward: .9, glow: 18, trail: true });
     showToast(`${BOSS_PHASES[nextPhase - 1].name} — THE WARDEN RECONFIGURES.`, 'danger');
     playLowThump(nextPhase === 3 ? 38 : 48, .38, .04);
   }
 
   const waveArming = updateArchonWave(delta, boss);
-  if (waveArming || boss.stunTimer > 0 || boss.staggerTimer > 0) return;
+  updateArchonFlurry(delta, boss);
+  if (waveArming || boss.stunTimer > 0) return;
+  if (boss.attackRecovery > 0) return;
 
   // Resolve one authored pattern at a time. The telegraph is intentionally
   // updated before movement so every attack has a readable, interruptible
@@ -11419,7 +14774,7 @@ function updateBoss(delta) {
     if (attack.elapsed >= attack.duration) {
       executeBossPattern(boss, attack.pattern, attack);
       boss.attackTelegraph = null;
-      boss.cooldown = boss.phase === 3 ? .56 : boss.phase === 2 ? .68 : .78;
+      boss.cooldown = boss.phase === 3 ? .32 : boss.phase === 2 ? .42 : .52;
     }
     return;
   }
@@ -11440,16 +14795,27 @@ function updateBoss(delta) {
     return;
   }
 
-  if (distance > attackDistance - .12) {
-    const direction = { x: dx / distance, y: dy / distance };
-    const amount = (boss.phase === 3 ? .56 : .48) * (state.enemySlowTimer > 0 ? .4 : 1) * delta;
-    if (canStand(boss.x + direction.x * amount, boss.y)) boss.x += direction.x * amount;
-    if (canStand(boss.x, boss.y + direction.y * amount)) boss.y += direction.y * amount;
+  const slow = state.enemySlowTimer > 0 ? .4 : 1;
+  const orbit = (boss.attackPattern % 2 ? 1 : -1);
+  let movement = { x: dx, y: dy, targetX: state.player.x, targetY: state.player.y, speed: .82 };
+  if (boss.phase === 1) {
+    if (distance < 6.2) movement = { x: -dx, y: -dy, targetX: boss.x - dx, targetY: boss.y - dy, speed: .98 };
+    else if (distance <= 9.2) movement = { x: -dy * orbit, y: dx * orbit, targetX: boss.x - dy * orbit, targetY: boss.y + dx * orbit, speed: .9 };
+  } else if (boss.phase === 2) {
+    if (distance < 4.1) movement = { x: -dx - dy * orbit * .45, y: -dy + dx * orbit * .45, targetX: boss.x - dx, targetY: boss.y - dy, speed: 1.08 };
+    else movement = { x: dx - dy * orbit * .3, y: dy + dx * orbit * .3, targetX: state.player.x, targetY: state.player.y, speed: 1.02 };
+  } else {
+    movement.speed = distance > attackDistance ? 1.15 : .86;
   }
+  boss.moving = moveEnemy(boss, movement.x, movement.y, movement.speed * slow * delta, movement.targetX, movement.targetY);
 
-  if (boss.cooldown <= 0 && hasLineOfSight(boss.x, boss.y, state.player.x, state.player.y)) {
-    const patternPool = boss.phase === 1 ? [0, 1, 2] : boss.phase === 2 ? [0, 1, 2, 3, 1] : [0, 1, 2, 3, 4, 1];
-    const pattern = patternPool[boss.attackPattern % patternPool.length];
+  if (boss.cooldown <= 0 && distance <= 22.5) {
+    const sight = hasLineOfSight(boss.x, boss.y, state.player.x, state.player.y);
+    const patternPool = boss.phase === 1
+      ? [0, 2, 1, 6]
+      : boss.phase === 2 ? [5, 0, 3, 2, 6, 1] : [6, 5, 2, 4, 1, 0, 5];
+    let pattern = patternPool[boss.attackPattern % patternPool.length];
+    if (!sight && ![1, 5].includes(pattern)) pattern = boss.attackPattern % 2 ? 5 : 1;
     boss.attackPattern += 1;
     boss.attackTelegraph = {
       type: 'pattern',
@@ -11460,7 +14826,7 @@ function updateBoss(delta) {
       elapsed: 0,
       duration: bossAttackDuration(boss, pattern),
     };
-    boss.cooldown = boss.attackTelegraph.duration + (boss.phase === 3 ? .58 : .78);
+    boss.cooldown = boss.attackTelegraph.duration + (boss.phase === 3 ? .1 : boss.phase === 2 ? .2 : .3);
   }
 }
 function findAimTarget(range = weaponDefinition().range, aim = weaponDefinition().aim) {
@@ -11472,7 +14838,7 @@ function findAimTarget(range = weaponDefinition().range, aim = weaponDefinition(
     const dy = enemy.y - state.player.y;
     const horizontal = Math.hypot(dx, dy);
     if (horizontal > range || !hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y)) continue;
-    const camera = cameraPoint(enemy.x, enemy.y, enemyProfile(enemy).aimHeight);
+    const camera = cameraPoint(enemy.x, enemy.y, hostileAimHeight(enemy));
     if (camera.forward <= .1) continue;
     const yawError = Math.abs(Math.atan2(camera.side, camera.forward));
     if (yawError > aim) continue;
@@ -11489,7 +14855,7 @@ function findMeleeTarget() {
     if (enemy.dead) continue;
     const distance = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
     if (distance > definition.range || !hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y)) continue;
-    const camera = cameraPoint(enemy.x, enemy.y, enemyProfile(enemy).aimHeight);
+    const camera = cameraPoint(enemy.x, enemy.y, hostileAimHeight(enemy));
     if (camera.forward <= .05) continue;
     const yawError = Math.abs(Math.atan2(camera.side, camera.forward));
     if (yawError > definition.aim) continue;
@@ -11507,7 +14873,7 @@ function findHitscanTarget(range, aimWindow, shotOffset = 0, candidates = null) 
     if (enemy.dead) continue;
     const distance = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
     if (distance > range || (!candidates && !hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y))) continue;
-    const camera = cameraPoint(enemy.x, enemy.y, enemyProfile(enemy).aimHeight);
+    const camera = cameraPoint(enemy.x, enemy.y, hostileAimHeight(enemy));
     if (camera.forward <= .05) continue;
     const relativeAngle = Math.atan2(camera.side, camera.forward);
     const shotError = Math.abs(normalizeAngle(relativeAngle - shotOffset));
@@ -11520,13 +14886,37 @@ function findHitscanTarget(range, aimWindow, shotOffset = 0, candidates = null) 
 function fireHitscan(definition) {
   const pelletCount = Math.max(1, definition.pellets || 1);
   const hits = new Map();
-  const targetWindow = definition.pellets ? .055 : definition.aim;
+  const targetWindow = definition.pellets ? (definition.pelletWindow || .055) : definition.aim;
   const hitscanCandidates = allHostiles().filter((enemy) => {
     if (enemy.dead) return false;
     const distance = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
     return distance <= definition.range
       && hasLineOfSight(state.player.x, state.player.y, enemy.x, enemy.y);
   });
+  if (definition.pierce) {
+    const forward = { x: Math.cos(state.player.angle), y: Math.sin(state.player.angle) };
+    const pierced = hitscanCandidates.map((target) => {
+      const dx = target.x - state.player.x;
+      const dy = target.y - state.player.y;
+      const along = dx * forward.x + dy * forward.y;
+      const lateral = Math.abs(dx * forward.y - dy * forward.x);
+      return { target, along, lateral };
+    }).filter((entry) => entry.along > 0 && entry.lateral / entry.along <= definition.aim)
+      .sort((a, b) => a.along - b.along)
+      .slice(0, definition.pierce);
+    if (!pierced.length) {
+      state.weapon.shotTraces.push({ x0: state.player.x, y0: state.player.y, z0: playerEyeHeight(), x1: state.player.x + forward.x * definition.range, y1: state.player.y + forward.y * definition.range, z1: playerEyeHeight(), color: definition.impactColor, hit: false, life: .13, duration: .13 });
+      return false;
+    }
+    pierced.forEach(({ target }, index) => damageHostile(target, definition.damage * (1 - index * .12), {
+      source: 'weapon', label: `RAIL PIERCE ${index + 1}`, color: definition.impactColor,
+      knockback: definition.knockback, knockbackDirection: { x: target.x - state.player.x, y: target.y - state.player.y },
+      stagger: definition.stagger, critChance: definition.critChance, critMultiplier: definition.critMultiplier,
+    }));
+    const last = pierced[pierced.length - 1].target;
+    state.weapon.shotTraces.push({ x0: state.player.x, y0: state.player.y, z0: playerEyeHeight(), x1: last.x, y1: last.y, z1: hostileAimHeight(last), color: definition.impactColor, hit: true, life: .16, duration: .16 });
+    return true;
+  }
   for (let pellet = 0; pellet < pelletCount; pellet += 1) {
     const shotOffset = definition.pellets
       ? (Math.random() * 2 - 1) * definition.spread
@@ -11537,16 +14927,25 @@ function fireHitscan(definition) {
   if (!hits.size) {
     showHitMarker('MISS', 'miss');
     const angle = state.player.angle;
-    state.weapon.shotTraces.push({ x0: state.player.x, y0: state.player.y, z0: EYE_HEIGHT, x1: state.player.x + Math.cos(angle) * definition.range, y1: state.player.y + Math.sin(angle) * definition.range, z1: EYE_HEIGHT, color: definition.impactColor || '#f0d38f', hit: false, life: .06, duration: .06 });
+    state.weapon.shotTraces.push({ x0: state.player.x, y0: state.player.y, z0: playerEyeHeight(), x1: state.player.x + Math.cos(angle) * definition.range, y1: state.player.y + Math.sin(angle) * definition.range, z1: playerEyeHeight(), color: definition.impactColor || '#f0d38f', hit: false, life: .06, duration: .06 });
     return false;
   }
   for (const [target, pelletHits] of hits) {
     const direction = { x: target.x - state.player.x, y: target.y - state.player.y };
     const distance = Math.hypot(direction.x, direction.y);
     const rangeProgress = clamp(distance / Math.max(.1, definition.range), 0, 1);
-    const pelletDamage = definition.pellets
+    let pelletDamage = definition.pellets
       ? definition.damage + (definition.minDamage - definition.damage) * rangeProgress
       : definition.damage;
+    if (definition.pellets && distance <= (definition.pointBlankRange || 0)) pelletDamage *= definition.pointBlankMultiplier || 1;
+    if (state.weapon.type === 'arsenal') {
+      const now = performance.now();
+      state.weapon.focusChain = now - (state.weapon.lastConfirmedHitAt || -Infinity) <= .58
+        ? Math.min(5, (state.weapon.focusChain || 0) + 1)
+        : 1;
+      state.weapon.lastConfirmedHitAt = now;
+      pelletDamage *= 1 + Math.max(0, state.weapon.focusChain - 1) * .055;
+    }
     damageHostile(target, pelletDamage * pelletHits, {
       source: 'weapon',
       label: definition.pellets ? `SHOTGUN · ${pelletHits} PELLETS` : 'HIT',
@@ -11565,8 +14964,8 @@ function fireHitscan(definition) {
   const angle = state.player.angle;
   const traceEnd = traceTarget
     ? { x: traceTarget.x, y: traceTarget.y, z: hostileAimHeight(traceTarget) }
-    : { x: state.player.x + Math.cos(angle) * definition.range, y: state.player.y + Math.sin(angle) * definition.range, z: EYE_HEIGHT };
-  state.weapon.shotTraces.push({ x0: state.player.x, y0: state.player.y, z0: EYE_HEIGHT, x1: traceEnd.x, y1: traceEnd.y, z1: traceEnd.z, color: definition.impactColor || '#f0d38f', hit: Boolean(traceTarget), life: .085, duration: .085 });
+    : { x: state.player.x + Math.cos(angle) * definition.range, y: state.player.y + Math.sin(angle) * definition.range, z: playerEyeHeight() };
+  state.weapon.shotTraces.push({ x0: state.player.x, y0: state.player.y, z0: playerEyeHeight(), x1: traceEnd.x, y1: traceEnd.y, z1: traceEnd.z, color: definition.impactColor || '#f0d38f', hit: Boolean(traceTarget), life: .085, duration: .085 });
   return true;
 }
 
@@ -11592,7 +14991,7 @@ function projectileTargetHit(projectile, target) {
     const chained = allHostiles().filter((other) => other !== target && !other.dead && Math.hypot(other.x - target.x, other.y - target.y) < (projectile.aoe || 2.8) + .9).slice(0, projectile.chainTargets);
     for (const other of chained) damageHostile(other, projectile.damage * .5, { source: 'ability', color: projectile.color, label: 'CHAIN HIT', stagger: projectile.stagger });
   } else if (projectile.aoe > 0) {
-    for (const other of allHostiles()) if (other !== target && Math.hypot(other.x - target.x, other.y - target.y) < projectile.aoe) damageHostile(other, projectile.damage * .42, { source: projectile.ability ? 'ability' : 'weapon', color: projectile.color, label: 'SPLASH HIT' });
+    for (const other of allHostiles()) if (other !== target && Math.hypot(other.x - target.x, other.y - target.y) < projectile.aoe) damageHostile(other, projectile.damage * (projectile.splashMultiplier || .42), { source: projectile.ability ? 'ability' : 'weapon', color: projectile.color, label: 'SPLASH HIT', stagger: projectile.stagger * .7 });
   }
   if (projectile.kind === 'bfg-electric') {
     pushImpactBurst({ x: target.x, y: target.y, z: hostileAimHeight(target), elapsed: 0, duration: .72, color: projectile.color, radius: projectile.aoe || 2.7, style: 'bfg-impact' });
@@ -11621,7 +15020,7 @@ function updateProjectiles(delta) {
     }
 
     projectile.age = (projectile.age || 0) + delta;
-    const leavesTrail = projectile.ability || ['ninja-star', 'arrow', 'wand-fireball', 'bfg-electric', 'enemy-plasma', 'enemy-fireball'].includes(projectile.kind);
+    const leavesTrail = projectile.ability || ['ninja-star', 'arrow', 'wand-fireball', 'bfg-electric', 'arc-repeater', 'enemy-plasma', 'enemy-fireball'].includes(projectile.kind);
     if (leavesTrail) {
       projectile.trail.unshift({ x: projectile.x, y: projectile.y, z: projectile.z });
       if (projectile.trail.length > 12) projectile.trail.pop();
@@ -11635,13 +15034,18 @@ function updateProjectiles(delta) {
       y: projectile.y + projectile.vy * delta,
       z: projectile.z + projectile.vz * delta,
     };
-    if (isWall(next.x, next.y) || next.z < .03 || next.z > CEILING_Z - .03) {
+    const projectileFloorZ = worldFloorHeightAt(next.x, next.y) + .03;
+    if (isWall(next.x, next.y) || next.z < projectileFloorZ || next.z > CEILING_Z - .03) {
       if (projectile.ability) {
         pushImpactBurst({ x: projectile.x, y: projectile.y, z: projectile.z, elapsed: 0, duration: .35, color: projectile.color, radius: .45, style: 'projectile-impact' });
         spawnAbilityImpactParticles(projectile.abilityKind, projectile.x, projectile.y, projectile.z, projectile.color, 1.05);
       } else if (projectile.kind === 'bfg-electric') {
         pushImpactBurst({ x: projectile.x, y: projectile.y, z: projectile.z, elapsed: 0, duration: .62, color: projectile.color, radius: projectile.aoe || 2.7, style: 'bfg-impact' });
         spawnParticles(projectile.x, projectile.y, projectile.z, ['#effff7', '#58f4e4', '#2bd9d0'], settings.reducedMotion ? 10 : 24, { speed: 2.4, life: .65, size: .9, upward: .5, spread: TAU, glow: 20, trail: true });
+        for (const hostile of allHostiles()) {
+          if (Math.hypot(hostile.x - projectile.x, hostile.y - projectile.y) > (projectile.aoe || 2.7)) continue;
+          damageHostile(hostile, projectile.damage * (projectile.splashMultiplier || .42), { source: 'weapon', color: projectile.color, label: 'BFG DETONATION', stagger: projectile.stagger });
+        }
       }
       continue;
     }
@@ -11652,9 +15056,9 @@ function updateProjectiles(delta) {
 
     if (projectile.source === 'enemy' || projectile.source === 'boss') {
       if (Math.hypot(projectile.x - state.player.x, projectile.y - state.player.y) < projectile.radius + .23
-        && Math.abs(projectile.z - EYE_HEIGHT) < projectile.collisionHeight) {
+        && Math.abs(projectile.z - playerEyeHeight()) < projectile.collisionHeight) {
         damagePlayer(
-          { name: projectile.source === 'boss' ? 'The Archon' : 'Archive Warden', damage: projectile.damage },
+          { name: projectile.sourceName || (projectile.source === 'boss' ? 'The Archon' : 'Archive Warden'), damage: projectile.damage },
           { projectile },
         );
         pushImpactBurst({ x: projectile.x, y: projectile.y, z: projectile.z, elapsed: 0, duration: .26, color: projectile.color, radius: .3, style: 'telegraph-contact' });
@@ -11777,13 +15181,9 @@ function updatePrompt(delta = 0) {
     : Infinity;
   const finalDoor = finalDoorDistance <= 2.35;
   const weaponCreature = getNearestWeaponCreature();
-  const scroll = null;
+  const scroll = getNearestItem();
   const lobbyGate = state.room === 0 && !state.lobbyGateOpen && lobbyGateDistance() <= 1.65;
-  const gateAbility = state.room === 0
-    && !state.lobbyGateOpen
-    && state.tutorialAbility
-    && state.weapon.equipped
-    && lobbyGateDistance() <= LOBBY_GATE_ABILITY_RANGE;
+  const blockedMissionExit = !state.securedRooms.has(state.room) && missionExitDistance(state.room) <= 2.1;
   let nextKey = null;
   let nextText = '';
 
@@ -11794,13 +15194,24 @@ function updatePrompt(delta = 0) {
     nextText = 'INTERACT WITH FINAL DOOR';
   } else if (lobbyGate && !state.weapon.equipped) {
     nextKey = 'E';
-    nextText = 'CAST ARCHIVE KEY TO OPEN GATE';
-  } else if (gateAbility) {
-    nextKey = 'Q';
-    nextText = 'CAST ARCHIVE KEY TO OPEN GATE';
+    nextText = 'EQUIP A WEAPON BEFORE OPENING THE GATE';
+  } else if (lobbyGate) {
+    nextKey = 'E';
+    nextText = 'OPEN ARCHIVE GATE';
   } else if (weaponCreature) {
     nextKey = 'E';
     nextText = `PICK UP ${WEAPON_LOADOUTS[weaponCreature.type].label.toUpperCase()}`;
+  } else if (blockedMissionExit) {
+    const progress = roomObjectiveProgress(state.room);
+    nextKey = 'CHECK';
+    nextText = progress.detail.toUpperCase();
+  } else if (scroll) {
+    nextKey = 'E';
+    nextText = scroll.kind === OBJECTIVE_KEY_KIND
+      ? `PICK UP ${(scroll.title || 'ROUTE KEY').toUpperCase()}`
+      : scroll.missionReport
+        ? terminalPrerequisiteMet(scroll.roomIndex) ? 'USE ACCESS TERMINAL' : 'TERMINAL LOCKED · BOSS SIGNAL ACTIVE'
+        : `READ ${(scroll.title || 'FIELD RECORD').toUpperCase()}`;
   }
 
   if (!nextKey) {
@@ -11826,6 +15237,7 @@ function advanceToPortfolio() {
     const spawn = roomContentPoint(SANCTUARY_ROOM_INDEX, rooms[SANCTUARY_ROOM_INDEX].spawn.x, rooms[SANCTUARY_ROOM_INDEX].spawn.y);
     state.player.x = roomOffsets[SANCTUARY_ROOM_INDEX] + spawn.x;
     state.player.y = spawn.y;
+      state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
       state.player.angle = rooms[SANCTUARY_ROOM_INDEX].spawn.angle;
       state.room = SANCTUARY_ROOM_INDEX;
     state.sanctuaryActive = true;
@@ -11844,7 +15256,7 @@ function advanceToPortfolio() {
     state.mouseLook = false;
     setMusicMode('dungeon');
     updateHud();
-    spawnParticles(state.player.x, state.player.y, .65, ['#fff8d6', '#b8f0e2'], settings.reducedMotion ? 14 : 34, { speed: 1.1, life: 1.2, size: .9, upward: .8, spread: TAU, gravity: -.08, glow: 19, trail: true });
+    spawnParticles(state.player.x, state.player.y, state.player.floorZ + .65, ['#fff8d6', '#b8f0e2'], settings.reducedMotion ? 14 : 34, { speed: 1.1, life: 1.2, size: .9, upward: .8, spread: TAU, gravity: -.08, glow: 19, trail: true });
     showToast('ASCENSION COMPLETE · APPROACH THE RÉSUMÉ PEDESTAL.', 'good');
   }
 }
@@ -11992,10 +15404,44 @@ window.addEventListener('unhandledrejection', (event) => {
   reportRuntimeError('promise', event.reason || 'Unhandled promise rejection');
 });
 
+function skipActiveCinematic() {
+  const shot = state.levelPreview
+    || state.routeOverview
+    || state.miniBossCutscene
+    || state.transition
+    || state.forestTransition;
+  if (!shot || !Number.isFinite(shot.duration)) return false;
+  shot.elapsed = shot.duration;
+  state.keys.clear();
+  state.mouseAttack = false;
+  state.weapon.mousePressed = false;
+  showToast('CINEMATIC SKIPPED · CONTROL RETURNING.', 'good');
+  return true;
+}
+
 function setKey(event, down) {
+  if (handleTerminalGameKey(event, down)) {
+    event.preventDefault();
+    return;
+  }
+  if (handleTerminalShellKey(event, down)) {
+    event.preventDefault();
+    return;
+  }
   const rawKey = event.key;
   const key = rawKey.toLowerCase();
-  if (down && !event.repeat && (key === 'e' || key === 'enter')) { event.preventDefault(); if (state.deathScreen) resetCurrentLevel(); else recoverNearby(); return; }
+  if (state.reading?.missionReport && key !== 'escape') {
+    event.preventDefault();
+    return;
+  }
+  if (down && !event.repeat && (key === ' ' || key === 'spacebar') && skipActiveCinematic()) { event.preventDefault(); return; }
+  if (down && !event.repeat && (key === 'e' || key === 'enter')) {
+    event.preventDefault();
+    if (state.deathScreen) {
+      if (state.deathScreen.elapsed >= .3) resetCurrentLevel();
+    } else recoverNearby();
+    return;
+  }
   if (down && !event.repeat && key === 'escape') {
     if (helpDialog?.open || settingsDialog?.open) return;
     event.preventDefault();
@@ -12004,12 +15450,9 @@ function setKey(event, down) {
     return;
   }
   if (down && !event.repeat && key === 'r') { event.preventDefault(); reloadWeapon(); return; }
-  if (down && !event.repeat && key === 'q') { event.preventDefault(); castAbility(); return; }
-  if (down && !event.repeat && key === 'z') { event.preventDefault(); cycleAbility(-1); return; }
-  if (down && !event.repeat && key === 'x') { event.preventDefault(); cycleAbility(1); return; }
-  if (down && !event.repeat && ['1', '2', '3', '4'].includes(key)) {
+  if (down && !event.repeat && ['1', '2', '3', '4', '5', '6'].includes(key)) {
     event.preventDefault();
-    const nextWeapon = { '1': 'arsenal', '2': 'shotgun', '3': 'bfg' }[key];
+    const nextWeapon = { '1': 'arsenal', '2': 'shotgun', '3': 'plasma', '4': 'rail', '5': 'rivet', '6': 'bfg' }[key];
     if (nextWeapon) setWeapon(nextWeapon);
     return;
   }
@@ -12033,7 +15476,14 @@ function handleMouseMove(event) {
 }
 window.addEventListener('keydown', (event) => setKey(event, true), { passive: false });
 window.addEventListener('keyup', (event) => setKey(event, false), { passive: false });
-window.addEventListener('blur', () => { state.keys.clear(); state.mouseAttack = false; state.weapon.mousePressed = false; state.mouseLook = false; });
+window.addEventListener('blur', () => {
+  state.keys.clear();
+  state.mouseAttack = false;
+  state.weapon.mousePressed = false;
+  state.mouseLook = false;
+  state.terminalGameKeyHeld = false;
+  cancelScrollFlowHold(false);
+});
 document.addEventListener('mousemove', handleMouseMove);
 document.addEventListener('pointerlockchange', () => {
   state.pointerLocked = document.pointerLockElement === canvas;
@@ -12119,6 +15569,418 @@ document.addEventListener('focusout', (event) => {
 });
 
 closeScrollButton.addEventListener('click', closeReading);
+function executePseudoTerminalCommand(rawCommand) {
+  const item = state.reading;
+  if (!item?.missionReport) return false;
+  const command = String(rawCommand || '').trim().toLowerCase().replace(/^\$\s*/, '').replace(/^(open|run|view)\s+/, '');
+  const unlocked = unlockedScrollTourPage(item);
+  if (command === 'exit' || command === 'return' || command === 'return-to-field') {
+    closeReading();
+    return true;
+  }
+  if (command === 'status') {
+    setTerminalScreen(0, true);
+    return true;
+  }
+  if (command === 'profile') {
+    if (unlocked < 1) unlockScrollTourPage(item, 1);
+    setTerminalScreen(1, true);
+    return true;
+  }
+  if (command === 'next-profile' || command === 'next' || command === 'continue') {
+    if (!scrollBriefingComplete(item) && Number(scrollPaper?.dataset.terminalScreen || 0) !== 1) return false;
+    scrollBriefingNext?.click();
+    return true;
+  }
+  if (command === 'impact') {
+    if (!scrollBriefingComplete(item)) return false;
+    unlockScrollTourPage(item, 2);
+    setTerminalScreen(2, true);
+    return true;
+  }
+  if (command === 'case-file' || command === 'case' || command === 'cases') {
+    if (unlocked < 2) return false;
+    unlockScrollTourPage(item, 3);
+    setTerminalScreen(3, true);
+    return true;
+  }
+  if (command === 'program') {
+    if (unlocked < 3) return false;
+    unlockScrollTourPage(item, 4);
+    setTerminalScreen(4, true);
+    return true;
+  }
+  return false;
+}
+function selectPseudoTerminalOption(direction = 1) {
+  const selectable = pseudoTerminalOptions.map((option, index) => option.available ? index : -1).filter((index) => index >= 0);
+  if (!selectable.length) return null;
+  const current = selectable.indexOf(pseudoTerminalSelection);
+  const next = current < 0
+    ? 0
+    : (current + direction + selectable.length) % selectable.length;
+  pseudoTerminalSelection = selectable[next];
+  renderPseudoTerminalCompletions();
+  return pseudoTerminalOptions[pseudoTerminalSelection];
+}
+function runPseudoTerminalCommand(command) {
+  if (executePseudoTerminalCommand(command)) return true;
+  const safeCommand = String(command || '').trim() || '(blank)';
+  const normalized = safeCommand.toLowerCase().replace(/^(open|run|view)\s+/, '');
+  const knownButLocked = ['impact', 'case', 'case-file', 'program'].includes(normalized);
+  const message = knownButLocked
+    ? `${normalized}: display locked. complete the highlighted NEXT action first.`
+    : `command not found: ${safeCommand}. use ↑ ↓ to select, Enter to run, or choose 1–5.`;
+  pseudoTerminalOutput?.insertAdjacentHTML('beforeend', pseudoTerminalLine(message, 0, 'is-system'));
+  if (pseudoTerminalInput) {
+    pseudoTerminalInput.value = '';
+    pseudoTerminalInput.placeholder = 'unknown command — select an option below';
+  }
+  pseudoTerminalOutput?.scrollTo({ top: pseudoTerminalOutput.scrollHeight, behavior: settings.reducedMotion ? 'auto' : 'smooth' });
+  return false;
+}
+pseudoTerminalCompletions?.addEventListener('click', (event) => {
+  const button = event.target.closest?.('[data-terminal-command]');
+  if (!button || button.disabled) return;
+  const command = button.dataset.terminalCommand;
+  const index = pseudoTerminalOptions.findIndex((option) => option.command === command && option.available);
+  if (index >= 0) pseudoTerminalSelection = index;
+  runPseudoTerminalCommand(command);
+});
+pseudoTerminalInput?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') return;
+  event.stopPropagation();
+  if (TERMINAL_SHORTCUT_COMMANDS[event.key]) {
+    event.preventDefault();
+    runPseudoTerminalCommand(TERMINAL_SHORTCUT_COMMANDS[event.key]);
+    return;
+  }
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    selectPseudoTerminalOption(event.key === 'ArrowDown' ? 1 : -1);
+    return;
+  }
+  if (event.key === 'Tab') {
+    if (!pseudoTerminalInput.value.trim()) return;
+    event.preventDefault();
+    const option = pseudoTerminalOptions[pseudoTerminalSelection] || selectPseudoTerminalOption(1);
+    if (option?.available) {
+      pseudoTerminalInput.value = option.command;
+      pseudoTerminalInput.setSelectionRange(option.command.length, option.command.length);
+    }
+    return;
+  }
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  const command = String(pseudoTerminalInput.value || '').trim() || pseudoTerminalOptions[pseudoTerminalSelection]?.command;
+  runPseudoTerminalCommand(command);
+});
+pseudoTerminalInput?.addEventListener('input', () => {
+  const query = pseudoTerminalInput.value.trim().toLowerCase();
+  if (!query) return;
+  const index = pseudoTerminalOptions.findIndex((option) => option.available && option.command.startsWith(query));
+  if (index >= 0) {
+    pseudoTerminalSelection = index;
+    renderPseudoTerminalCompletions();
+  }
+});
+pseudoTerminalInput?.addEventListener('keyup', (event) => { if (event.key !== 'Escape') event.stopPropagation(); });
+scrollBriefingNext?.addEventListener('click', () => {
+  const item = state.reading;
+  const briefing = scrollBriefingForItem(item);
+  if (!item || !briefing) return;
+  const progress = state.scrollBriefingProgress.get(item.roomIndex) || 0;
+  const next = Math.min(briefing.slides.length, progress + 1);
+  state.scrollBriefingProgress.set(item.roomIndex, next);
+  renderScrollBriefing(item);
+  renderScrollChallenge(item);
+  playMechanicalClick(0, .014);
+  if (next < briefing.slides.length) setScrollTourStep(1, true);
+  if (next >= briefing.slides.length) {
+    showToast('ABOUT LIAM ARCHIVED · CASE SIGNAL ONLINE.', 'good');
+    unlockScrollTourPage(item, 2);
+    setScrollTourStep(2, true);
+  }
+});
+scrollTourNext?.addEventListener('click', () => {
+  advanceScrollTour(state.reading);
+  playMechanicalClick(0, .01);
+});
+let activeScrollFlowHold = null;
+let suppressFlowClickUntil = 0;
+function cancelScrollFlowHold(showFeedback = false) {
+  const hold = activeScrollFlowHold;
+  if (!hold) return;
+  cancelAnimationFrame(hold.frame);
+  hold.button.classList.remove('is-charging');
+  hold.button.style.removeProperty('--hold-progress');
+  activeScrollFlowHold = null;
+  if (showFeedback && state.reading === hold.item && !state.scrollSolvedRooms.has(hold.item.roomIndex)) {
+    if (scrollChallengeFeedback) scrollChallengeFeedback.textContent = 'Relay released early. Hold the lit control until the packet locks.';
+    playMechanicalClick(0, .008);
+  }
+}
+function startScrollFlowHold(button, pointerId = null) {
+  const item = state.reading;
+  const challenge = scrollChallengeForItem(item);
+  if (!button || !item || !challenge || !['route-flow', 'timeline-flow'].includes(challenge.type) || state.scrollSolvedRooms.has(item.roomIndex)) return;
+  const progress = state.scrollChallengeProgress.get(item.roomIndex) || [];
+  const entry = challenge.nodes[progress.length];
+  if (!entry) return;
+  cancelScrollFlowHold(false);
+  suppressFlowClickUntil = performance.now() + 920;
+  const hold = {
+    item, challenge, entry, button, pointerId,
+    startedAt: performance.now(), duration: settings.reducedMotion ? 120 : Number(button.dataset.holdMs || 680), frame: 0,
+  };
+  activeScrollFlowHold = hold;
+  button.classList.add('is-charging');
+  const tick = (now) => {
+    if (activeScrollFlowHold !== hold || state.reading !== item) return;
+    const progressValue = clamp((now - hold.startedAt) / Math.max(1, hold.duration), 0, 1);
+    button.style.setProperty('--hold-progress', String(progressValue));
+    if (progressValue >= 1) {
+      activeScrollFlowHold = null;
+      acceptScrollChallengeEntry(item, challenge, entry);
+      return;
+    }
+    hold.frame = requestAnimationFrame(tick);
+  };
+  hold.frame = requestAnimationFrame(tick);
+}
+scrollChallengeSteps?.addEventListener('pointerdown', (event) => {
+  const button = event.target.closest?.('[data-flow-hold]');
+  if (!button || button.disabled) return;
+  event.preventDefault();
+  try { button.setPointerCapture?.(event.pointerId); } catch (error) { /* Pointer capture is optional. */ }
+  startScrollFlowHold(button, event.pointerId);
+});
+scrollChallengeSteps?.addEventListener('pointerup', (event) => {
+  if (!activeScrollFlowHold || (activeScrollFlowHold.pointerId !== null && activeScrollFlowHold.pointerId !== event.pointerId)) return;
+  cancelScrollFlowHold(true);
+});
+scrollChallengeSteps?.addEventListener('pointercancel', () => cancelScrollFlowHold(false));
+scrollChallengeSteps?.addEventListener('keydown', (event) => {
+  const button = event.target.closest?.('[data-flow-hold]');
+  if (!button || (event.key !== 'Enter' && event.key !== ' ')) return;
+  if (state.reading?.missionReport) return;
+  event.preventDefault();
+  startScrollFlowHold(button);
+});
+scrollChallengeSteps?.addEventListener('keyup', (event) => {
+  if (state.reading?.missionReport) return;
+  if ((event.key === 'Enter' || event.key === ' ') && activeScrollFlowHold?.pointerId === null) cancelScrollFlowHold(true);
+});
+scrollChallengeSteps?.addEventListener('click', (event) => {
+  const button = event.target.closest?.('button');
+  const item = state.reading;
+  const challenge = scrollChallengeForItem(item);
+  if (!button || !challenge || state.scrollSolvedRooms.has(item.roomIndex)) return;
+  const keyboardControls = terminalGameButtons(challenge);
+  const pointerIndex = keyboardControls.indexOf(button);
+  if (pointerIndex >= 0) {
+    state.terminalGameCursor.set(terminalGameCursorKey(item, challenge), pointerIndex);
+    renderTerminalGameCursor(item, challenge);
+  }
+  if (!scrollBriefingComplete(item)) {
+    showToast('ARCHIVE THE PROFILE DISPLAY BEFORE RUNNING THIS PROGRAM.', 'danger');
+    return;
+  }
+  const progress = state.scrollChallengeProgress.get(item.roomIndex) || [];
+  if (button.matches('[data-circuit-tile]') && challenge.type === 'circuit-link') {
+    const index = Number(button.dataset.circuitTile);
+    const program = terminalProgramState(item.roomIndex, challenge.type, () => ({ rotations: [...challenge.circuit.start] }));
+    if (!Number.isInteger(index) || index < 0 || index >= program.rotations.length) return;
+    program.rotations[index] = (program.rotations[index] + 1) % 4;
+    playMechanicalClick(0, .012);
+    if (circuitIsLinked(challenge, program.rotations)) acceptScrollChallengeEntry(item, challenge, challenge.stages[0]);
+    else renderScrollChallenge(item);
+    return;
+  }
+  if (button.matches('[data-packet-lane]') && challenge.type === 'packet-sort') {
+    const packet = challenge.packets[progress.length];
+    if (!packet) return;
+    if (button.dataset.packetLane !== packet.target) {
+      rejectScrollChallenge(item, 'That lane rejects this packet. Follow the live header and dispatch it into the matching system lane.');
+      return;
+    }
+    acceptScrollChallengeEntry(item, challenge, packet);
+    return;
+  }
+  if (button.matches('[data-memory-replay]') && challenge.type === 'memory-relay') {
+    replayMemoryRelay(challenge);
+    return;
+  }
+  if (button.matches('[data-memory-key]') && challenge.type === 'memory-relay') {
+    const program = terminalProgramState(item.roomIndex, challenge.type, () => ({ input: [], shown: true, replaying: false }));
+    const expected = challenge.sequence[program.input.length];
+    if (button.dataset.memoryKey !== expected) {
+      program.input = [];
+      program.shown = false;
+      rejectScrollChallenge(item, 'Relay mismatch. The sequence is replaying—watch the pads, then repeat the same order.');
+      return;
+    }
+    program.input.push(expected);
+    playMechanicalClick(0, .012);
+    if (program.input.length >= challenge.sequence.length) acceptScrollChallengeEntry(item, challenge, challenge.stages[0]);
+    else renderScrollChallenge(item);
+    return;
+  }
+  if (button.matches('[data-stack-block]') && challenge.type === 'stack-order') {
+    const id = button.dataset.stackBlock;
+    const program = terminalProgramState(item.roomIndex, challenge.type, () => ({ order: [...challenge.start], selected: null }));
+    if (!program.order.includes(id)) return;
+    if (!program.selected) {
+      program.selected = id;
+      renderScrollChallenge(item);
+      playMechanicalClick(0, .01);
+      return;
+    }
+    if (program.selected === id) {
+      program.selected = null;
+      renderScrollChallenge(item);
+      return;
+    }
+    const first = program.order.indexOf(program.selected);
+    const second = program.order.indexOf(id);
+    [program.order[first], program.order[second]] = [program.order[second], program.order[first]];
+    program.selected = null;
+    if (program.order.every((blockId, index) => blockId === challenge.blocks[index].id)) acceptScrollChallengeEntry(item, challenge, challenge.stages[0]);
+    else {
+      renderScrollChallenge(item);
+      playMechanicalClick(0, .012);
+    }
+    return;
+  }
+  if (button.matches('[data-switch-cell]') && challenge.type === 'switchboard') {
+    const index = Number(button.dataset.switchCell);
+    const program = terminalProgramState(item.roomIndex, challenge.type, () => ({ cells: [...challenge.start] }));
+    if (!Number.isInteger(index) || index < 0 || index >= program.cells.length) return;
+    const x = index % 3;
+    const y = Math.floor(index / 3);
+    for (const [offsetX, offsetY] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nextX = x + offsetX;
+      const nextY = y + offsetY;
+      if (nextX < 0 || nextX >= 3 || nextY < 0 || nextY >= 3) continue;
+      const nextIndex = nextY * 3 + nextX;
+      program.cells[nextIndex] = program.cells[nextIndex] ? 0 : 1;
+    }
+    if (program.cells.every(Boolean)) acceptScrollChallengeEntry(item, challenge, challenge.stages[0]);
+    else {
+      renderScrollChallenge(item);
+      playMechanicalClick(0, .012);
+    }
+    return;
+  }
+  if (button.matches('[data-firewall-cell]') && challenge.type === 'firewall-path') {
+    const index = Number(button.dataset.firewallCell);
+    const program = terminalProgramState(item.roomIndex, challenge.type, () => ({ path: [challenge.start] }));
+    const currentNode = program.path.at(-1);
+    const columns = challenge.columns;
+    const isAdjacent = Math.abs(index % columns - currentNode % columns) + Math.abs(Math.floor(index / columns) - Math.floor(currentNode / columns)) === 1;
+    if (!isAdjacent || challenge.blocked.includes(index) || program.path.includes(index)) {
+      rejectScrollChallenge(item, 'Firewall route rejected. Select an unused safe node directly beside the active one.');
+      return;
+    }
+    program.path.push(index);
+    if (index === challenge.output) acceptScrollChallengeEntry(item, challenge, challenge.stages[0]);
+    else {
+      renderScrollChallenge(item);
+      playMechanicalClick(0, .012);
+    }
+    return;
+  }
+  if (button.matches('[data-flow-hold]') && ['route-flow', 'timeline-flow'].includes(challenge.type)) {
+    if (performance.now() < suppressFlowClickUntil) return;
+    const node = challenge.nodes[progress.length];
+    if (node) acceptScrollChallengeEntry(item, challenge, node);
+    return;
+  }
+  if (button.matches('[data-dial-confirm]') && challenge.type === 'impact-dial') {
+    const dial = challenge.dials[progress.length];
+    const input = scrollChallengeSteps.querySelector('[data-impact-dial]');
+    const value = Number(input?.value);
+    if (!dial || !Number.isFinite(value)) return;
+    if (Math.abs(value - dial.target) > (dial.tolerance || 0)) {
+      rejectScrollChallenge(item, `The dial reads ${formatScrollDialValue(dial, value)}. Bring it to ${formatScrollDialValue(dial, dial.target)}; the target is always visible beside the control.`);
+      return;
+    }
+    acceptScrollChallengeEntry(item, challenge, dial);
+    return;
+  }
+  if (!button.matches('[data-challenge-lock]') || challenge.type !== 'signal-lock') return;
+  const signal = challenge.signals[progress.length];
+  const track = scrollChallengeSteps.querySelector('[data-signal-track]');
+  const cursor = scrollChallengeSteps.querySelector('[data-signal-cursor]');
+  if (!signal || !track || !cursor) return;
+  const trackRect = track.getBoundingClientRect();
+  const cursorRect = cursor.getBoundingClientRect();
+  const position = settings.reducedMotion
+    ? (signal.target[0] + signal.target[1]) * .5
+    : (cursorRect.left + cursorRect.width * .5 - trackRect.left) / Math.max(1, trackRect.width);
+  if (position < signal.target[0] || position > signal.target[1]) {
+    rejectScrollChallenge(item, 'Signal slipped past the illuminated band. The sweep is restarting—try the lock again.');
+    return;
+  }
+  acceptScrollChallengeEntry(item, challenge, signal);
+});
+scrollChallengeSteps?.addEventListener('input', (event) => {
+  const input = event.target.closest?.('[data-impact-dial]');
+  const item = state.reading;
+  const challenge = scrollChallengeForItem(item);
+  if (!input || challenge?.type !== 'impact-dial') return;
+  const progress = state.scrollChallengeProgress.get(item.roomIndex) || [];
+  const dial = challenge.dials[progress.length];
+  const output = scrollChallengeSteps.querySelector('[data-dial-output]');
+  if (dial && output) {
+    output.textContent = formatScrollDialValue(dial, input.value);
+    state.scrollChallengeSelection.set(item.roomIndex, { dialValue: Number(input.value) });
+  }
+});
+scrollJumpButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const targetIndex = SCROLL_TOUR_SECTIONS.findIndex((section) => section.id === button.dataset.scrollJump);
+    if (targetIndex < 0) return;
+    setScrollTourStep(targetIndex, true);
+  });
+});
+let lastScrollPagerInputAt = 0;
+let scrollPagerTouchY = null;
+function moveForcedScrollPager(direction) {
+  const item = state.reading;
+  if (!scrollUsesForcedPagination(item)) return;
+  const now = performance.now();
+  if (now - lastScrollPagerInputAt < 360) return;
+  lastScrollPagerInputAt = now;
+  const current = Number(scrollPaper?.dataset.tourStep || 0);
+  if (direction > 0) advanceScrollTour(item);
+  else if (current > 0) setScrollTourStep(current - 1, true);
+}
+scrollPaper?.addEventListener('wheel', (event) => {
+  if (!scrollUsesForcedPagination(state.reading) || Math.abs(event.deltaY) < 12 || event.target.closest?.('[data-impact-dial]')) return;
+  event.preventDefault();
+  // Terminal displays are button-driven computer screens, never a disguised
+  // scroll page. Keep the wheel from navigating or revealing content.
+  if (state.reading?.missionReport) return;
+  moveForcedScrollPager(Math.sign(event.deltaY));
+}, { passive: false });
+scrollPaper?.addEventListener('touchstart', (event) => {
+  if (!scrollUsesForcedPagination(state.reading) || event.target.closest?.('[data-impact-dial]')) return;
+  if (state.reading?.missionReport) { scrollPagerTouchY = null; return; }
+  scrollPagerTouchY = event.touches[0]?.clientY ?? null;
+}, { passive: true });
+scrollPaper?.addEventListener('touchmove', (event) => {
+  if (!scrollUsesForcedPagination(state.reading) || scrollPagerTouchY === null || event.target.closest?.('[data-impact-dial]')) return;
+  event.preventDefault();
+}, { passive: false });
+scrollPaper?.addEventListener('touchend', (event) => {
+  if (!scrollUsesForcedPagination(state.reading) || scrollPagerTouchY === null) return;
+  if (state.reading?.missionReport) { scrollPagerTouchY = null; return; }
+  const endY = event.changedTouches[0]?.clientY ?? scrollPagerTouchY;
+  const delta = scrollPagerTouchY - endY;
+  scrollPagerTouchY = null;
+  if (Math.abs(delta) >= 28) moveForcedScrollPager(Math.sign(delta));
+}, { passive: true });
 deathRestart?.addEventListener('click', resetCurrentLevel);
 helpButton.addEventListener('click', () => { if (typeof helpDialog.showModal === 'function' && !helpDialog.open) helpDialog.showModal(); else helpDialog.setAttribute('open', ''); });
 settingsButton?.addEventListener('click', () => {
@@ -12165,8 +16027,11 @@ function startDirectDungeon() {
   state.room = roomIndex;
   state.player.x = roomOffsets[roomIndex] + spawn.x;
   state.player.y = spawn.y;
+  state.player.floorZ = worldFloorHeightAt(state.player.x, state.player.y);
   state.player.angle = rooms[roomIndex].spawn.angle;
   state.player.hp = 100;
+  state.roomPerformance.clear();
+  ensureRoomPerformance(roomIndex);
   state.keys.clear();
   state.mouseAttack = false;
   state.weapon.mousePressed = false;
@@ -12233,11 +16098,14 @@ try {
   textures.bone = createBoneTexture(96, 37);
   textures.steel = createSteelTexture(96, 53);
   textures.hellTech = createHellTechTexture(256, 113);
+  textures.hellTechEmber = createHellTechTexture(256, 149, 'ember');
+  textures.hellTechCold = createHellTechTexture(256, 173, 'cold');
+  textures.hellTechOlive = createHellTechTexture(256, 191, 'olive');
   textures.wood = createWoodTexture(256, 29);
   textures.leather = createLeatherTexture(96, 71);
   textures.pipSkin = createPipSkinTexture(128, 97);
   textures.dialogue = createDialogueTexture(128, 83);
-  textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat'), 'pip-skin': ctx.createPattern(textures.pipSkin, 'repeat'), dialogue: ctx.createPattern(textures.dialogue, 'repeat') };
+  textures.patterns = { stone: ctx.createPattern(textures.stone, 'repeat'), wood: ctx.createPattern(textures.wood, 'repeat'), hellTech: ctx.createPattern(textures.hellTech, 'repeat'), hellTechEmber: ctx.createPattern(textures.hellTechEmber, 'repeat'), hellTechCold: ctx.createPattern(textures.hellTechCold, 'repeat'), hellTechOlive: ctx.createPattern(textures.hellTechOlive, 'repeat'), bone: ctx.createPattern(textures.bone, 'repeat'), steel: ctx.createPattern(textures.steel, 'repeat'), leather: ctx.createPattern(textures.leather, 'repeat'), 'pip-skin': ctx.createPattern(textures.pipSkin, 'repeat'), dialogue: ctx.createPattern(textures.dialogue, 'repeat') };
   updateWeaponSelection(state.weapon.type);
   state.weapon.equipped = false;
   clearLegacyStartupOverlays();

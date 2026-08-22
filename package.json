@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Liam Hosfeld portfolio game",
   "scripts": {
+    "build": "node --check game.js && node --check server.js",
     "start": "node server.js",
     "dev": "node server.js"
   },

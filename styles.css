@@ -79,7 +79,7 @@ button { color: inherit; }
 .reading-overlay.intro-scroll .scroll-stamp { border-color: rgba(23, 108, 82, .68); color: rgba(23, 108, 82, .82); }
 .reading-overlay.intro-scroll .scroll-ability { border-color: rgba(23, 108, 82, .68); box-shadow: 0 0 18px rgba(36, 220, 160, .26), inset 0 0 15px rgba(36, 220, 160, .1); }
 
-.scroll-shell { position: relative; width: min(680px, 92vw); max-height: calc(100dvh - 100px); filter: drop-shadow(0 22px 32px rgba(0, 0, 0, .65)); transform: translateY(22px) scale(.95); opacity: 0; }
+.scroll-shell { position: relative; width: min(900px, 94vw); max-height: calc(100dvh - 100px); filter: drop-shadow(0 22px 32px rgba(0, 0, 0, .65)); transform: translateY(22px) scale(.95); opacity: 0; }
 .reading-overlay.open .scroll-shell { animation: unfurl-scroll .62s cubic-bezier(.18, .88, .25, 1) forwards; }
 .scroll-paper { position: relative; z-index: 1; min-height: 300px; max-height: calc(100dvh - 112px); overflow: auto; padding: 34px clamp(24px, 6vw, 58px) 27px; border: 1px solid #927245; background: radial-gradient(ellipse at 30% 20%, rgba(255, 246, 202, .62), transparent 45%), radial-gradient(circle at 90% 80%, rgba(139, 88, 38, .16), transparent 30%), linear-gradient(110deg, #c6a66e, #efd9a6 25%, #d7ba7e 70%, #b89459); color: var(--ink); box-shadow: inset 0 0 34px rgba(88, 51, 19, .28), inset 0 0 0 7px rgba(255, 227, 160, .1); scrollbar-color: rgba(100, 59, 24, .54) rgba(121, 76, 31, .12); }
 .scroll-paper::before, .scroll-paper::after { content: ''; position: absolute; top: 13px; bottom: 13px; width: 1px; background: rgba(86, 48, 17, .24); }
@@ -212,6 +212,69 @@ button { color: inherit; }
 .scroll-ability small { color: #8b5726; font-size: 8px; letter-spacing: .15em; }
 .scroll-ability strong { margin-top: 3px; color: #392416; font-size: 15px; letter-spacing: .04em; }
 .scroll-ability em { margin-top: 3px; color: #684522; font-size: 11px; line-height: 1.35; }
+.scroll-challenge { margin: 18px 0 12px; padding: 16px; border: 2px solid color-mix(in srgb, var(--scroll-accent) 68%, #6d3c1d); background: rgba(62, 35, 17, .1); box-shadow: inset 0 0 0 3px rgba(255, 239, 183, .17); }
+.scroll-challenge[hidden] { display: none; }
+.scroll-challenge > small { display: block; color: #8b5726; font: 800 8px/1.2 "DM Mono", monospace; letter-spacing: .16em; }
+.scroll-challenge > strong { display: block; margin-top: 5px; color: #392416; font: 900 clamp(15px, 2.6vw, 22px)/1.1 "DM Mono", monospace; }
+.scroll-challenge > p { margin: 7px 0 0; color: #684522; font-size: 12px; line-height: 1.5; }
+.scroll-challenge-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
+.scroll-challenge-steps button { min-height: 43px; border: 1px solid rgba(68, 38, 17, .56); background: rgba(255, 239, 183, .38); color: #392416; cursor: pointer; font: 900 11px/1 "DM Mono", monospace; letter-spacing: .08em; }
+.scroll-challenge-steps button:hover, .scroll-challenge-steps button:focus-visible { border-color: var(--scroll-accent); background: rgba(255, 248, 211, .72); outline: none; }
+.scroll-challenge-steps button.is-selected { border-color: #176c52; background: rgba(23, 108, 82, .18); color: #174d3e; }
+.scroll-challenge-steps button.is-active { border-color: #8b5726; background: rgba(224, 182, 109, .3); box-shadow: inset 0 0 0 2px rgba(255, 244, 197, .38); }
+.scroll-challenge-steps button:disabled { cursor: default; opacity: .72; }
+.scroll-challenge-steps.challenge-match { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.challenge-match-column { display: grid; gap: 7px; }
+.challenge-match-column small { color: #805124; font: 800 8px/1 "DM Mono", monospace; letter-spacing: .14em; }
+.challenge-match-column button { width: 100%; }
+.challenge-complete-mark { grid-column: 1 / -1; display: grid; place-items: center; min-height: 76px; color: #176c52; font: 900 42px/1 "DM Mono", monospace; }
+.scroll-challenge.is-wrong { animation: scroll-challenge-shake .28s steps(2, end); border-color: #9b3426; }
+.scroll-challenge.is-solved { border-color: #176c52; background: rgba(23, 108, 82, .12); }
+.scroll-challenge.is-locked { border-style: dashed; border-color: rgba(111, 68, 30, .56); filter: saturate(.72); }
+.scroll-challenge-feedback { min-height: 18px; font-weight: 800; }
+.scroll-challenge-steps.challenge-signal-lock { display: block; }
+.case-signal-game { display: grid; gap: 10px; }
+.case-signal-readout { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding: 10px 11px; border: 1px solid rgba(80, 46, 21, .34); background: rgba(255, 244, 199, .32); }
+.case-signal-readout small { color: #805124; font: 800 8px/1 "DM Mono", monospace; letter-spacing: .14em; }
+.case-signal-readout strong { color: #392416; font: 900 clamp(14px, 2.5vw, 21px)/1 "DM Mono", monospace; text-align: right; }
+.case-signal-track { position: relative; height: 23px; overflow: hidden; border: 2px solid #5f3c20; background: repeating-linear-gradient(90deg, rgba(84, 50, 23, .18) 0 2px, transparent 2px 13px), rgba(47, 28, 15, .15); box-shadow: inset 0 0 12px rgba(44, 23, 10, .24); }
+.case-signal-target { position: absolute; top: 2px; bottom: 2px; background: color-mix(in srgb, var(--scroll-accent) 58%, rgba(255, 240, 177, .7)); box-shadow: 0 0 13px color-mix(in srgb, var(--scroll-accent) 72%, transparent); }
+.case-signal-cursor { position: absolute; top: -2px; bottom: -2px; left: 0; width: 7px; background: #fff4c8; border: 1px solid #62381b; box-shadow: 0 0 9px #fff4c8, 0 0 15px var(--scroll-accent); animation: case-signal-sweep var(--signal-speed, 2s) linear infinite alternate; }
+.case-signal-lock { width: 100%; min-height: 46px !important; border-width: 2px !important; background: color-mix(in srgb, var(--scroll-accent) 16%, rgba(255, 239, 183, .58)) !important; }
+.case-signal-insights { display: grid; gap: 7px; margin-top: 3px; }
+.case-signal-insights article { padding: 9px 10px; border-left: 3px solid #176c52; background: rgba(23, 108, 82, .1); }
+.case-signal-insights strong { color: #174d3e; font: 900 10px/1.2 "DM Mono", monospace; letter-spacing: .06em; }
+.case-signal-insights p { margin: 5px 0 0; color: #4d3923; font-size: 10px; line-height: 1.48; }
+.case-signal-insights.is-complete { grid-column: 1 / -1; }
+@keyframes case-signal-sweep { from { left: 0; } to { left: calc(100% - 7px); } }
+@keyframes scroll-challenge-shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.scroll-briefing {
+  position: relative;
+  margin-top: 16px;
+  padding: 16px;
+  border: 2px solid color-mix(in srgb, var(--scroll-accent) 54%, #69401f);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--scroll-accent) 8%, rgba(255, 239, 183, .34)), rgba(83, 45, 18, .08)),
+    rgba(255, 239, 183, .18);
+  box-shadow: inset 0 0 0 3px rgba(255, 247, 210, .17);
+}
+.scroll-briefing[hidden] { display: none; }
+.scroll-briefing-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+.scroll-briefing-heading small, .scroll-briefing-heading strong { display: block; }
+.scroll-briefing-heading small { color: #805124; font: 800 8px/1.2 "DM Mono", monospace; letter-spacing: .14em; }
+.scroll-briefing-heading strong { margin-top: 5px; color: #392416; font: 900 clamp(16px, 2.8vw, 24px)/1.05 "DM Mono", monospace; }
+.scroll-briefing-heading b { flex: 0 0 auto; padding: 5px 7px; border: 1px solid rgba(92, 53, 24, .4); color: #684522; font: 800 8px/1 "DM Mono", monospace; }
+.scroll-briefing-page { margin-top: 13px; min-height: 148px; padding: 15px 16px 14px; border-left: 4px solid var(--scroll-accent); background: rgba(255, 248, 215, .42); }
+.scroll-briefing-page.page-enter { animation: briefing-page-enter .28s ease both; }
+.scroll-briefing-page > small { color: #805124; font: 800 8px/1 "DM Mono", monospace; letter-spacing: .15em; }
+.scroll-briefing-page h3 { margin: 7px 0 8px; color: #392416; font-size: clamp(16px, 3vw, 23px); line-height: 1.08; }
+.scroll-briefing-page p { margin: 0; color: #52351e; font-size: 12px; line-height: 1.52; }
+.scroll-briefing-page em { display: block; margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(82, 46, 20, .22); color: #684522; font-size: 10px; font-style: normal; font-weight: 700; line-height: 1.48; }
+.scroll-briefing-next { width: 100%; margin-top: 10px; padding: 11px 12px; border: 1px solid #754b25; background: rgba(255, 239, 183, .38); color: #492b16; cursor: pointer; font: 900 9px/1.2 "DM Mono", monospace; letter-spacing: .08em; }
+.scroll-briefing-next:hover, .scroll-briefing-next:focus-visible { border-color: var(--scroll-accent); background: rgba(255, 248, 211, .7); outline: none; }
+.scroll-briefing.is-complete { border-color: #176c52; }
+.scroll-briefing.is-complete .scroll-briefing-next { border-color: rgba(23, 108, 82, .5); background: rgba(23, 108, 82, .12); color: #174d3e; opacity: 1; }
+@keyframes briefing-page-enter { from { opacity: .2; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
 .scroll-progress { margin-top: 14px; padding: 10px 12px 9px; border: 1px solid rgba(111, 68, 30, .28); background: rgba(255, 239, 183, .18); opacity: 0; transform: translateY(8px); }
 .reading-overlay.open .scroll-progress { animation: ink-appears .42s ease .44s forwards; }
 .scroll-progress-copy { display: flex; justify-content: space-between; gap: 12px; color: #805024; }
@@ -300,7 +363,7 @@ button { color: inherit; }
 .menu-ability-entry small,
 .menu-scroll-ability b,
 .menu-scroll-ability small {
-  display: block;
+  display: block !important;
 }
 .menu-room-entry strong,
 .menu-scroll-entry strong,
@@ -1122,40 +1185,6 @@ button { color: inherit; }
 .boss-bottom-track { height: 11px; margin-top: 8px; overflow: hidden; border: 1px solid rgba(240, 211, 143, .55); background: rgba(12, 5, 2, .9); }
 .boss-bottom-track span { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #8e302d, #c75b46 55%, #f0d38f); box-shadow: 0 0 15px rgba(224, 119, 83, .6); transition: width .18s ease; }
 
-.death-overlay {
-  position: absolute;
-  z-index: 45;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: radial-gradient(circle at 50% 46%, rgba(132, 40, 29, .26), transparent 36%), rgba(10, 4, 2, .84);
-  backdrop-filter: blur(3px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .24s ease;
-}
-.death-overlay[hidden] { display: none; }
-.death-overlay.is-visible { opacity: 1; pointer-events: auto; }
-.death-card {
-  width: min(490px, 100%);
-  padding: 32px clamp(22px, 5vw, 46px) 29px;
-  border: 1px solid #9a4a3c;
-  border-top: 3px solid #d16f63;
-  background: linear-gradient(145deg, rgba(57, 20, 13, .98), rgba(22, 9, 5, .98));
-  box-shadow: 0 24px 90px rgba(0, 0, 0, .72), inset 0 0 0 1px rgba(255, 218, 178, .06);
-  color: #ead4a4;
-  text-align: center;
-}
-.death-mark { margin: 12px auto 9px; color: #d16f63; font-size: 34px; text-shadow: 0 0 18px rgba(209, 111, 99, .55); }
-.death-card h2 { margin: 0; color: #fff0c9; font: 400 clamp(32px, 7vw, 54px)/1 Georgia, serif; letter-spacing: .08em; }
-.death-cause { margin: 13px 0 0; color: #e0b66d; font-size: 13px; }
-.death-copy { margin: 17px auto 21px; max-width: 42ch; color: #bda579; font-size: 11px; line-height: 1.55; }
-.death-restart { width: 100%; padding: 13px 16px; border: 1px solid #e0b66d; background: linear-gradient(135deg, #8f3e31, #5b271f); color: #fff0c9; cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .1em; box-shadow: 0 0 18px rgba(209, 111, 99, .15); }
-.death-restart:hover, .death-restart:focus-visible { background: linear-gradient(135deg, #b25242, #743129); outline: none; transform: translateY(-2px); }
-.death-restart span { display: block; margin-top: 5px; color: #f2d39b; font: 9px "DM Mono", monospace; letter-spacing: .08em; }
-.death-note { margin: 15px 0 0; color: #8f7350; font: 9px "DM Mono", monospace; letter-spacing: .05em; }
-
 @media (max-width: 680px) {
   .boss-bottom-hud { bottom: 14px; width: calc(100% - 24px); }
   .boss-bottom-heading { display: grid; gap: 4px; }
@@ -1735,6 +1764,66 @@ button { color: inherit; }
   }
 }
 
+/* Opened reports prioritize scanability: a compact sticky index and three
+   immediate takeaways keep the portfolio information easy to find. */
+.scroll-index {
+  position: sticky;
+  z-index: 4;
+  top: -34px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  margin: 15px -8px 0;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--scroll-accent) 42%, rgba(75, 45, 22, .42));
+  background: color-mix(in srgb, #d7ba7e 90%, var(--scroll-accent));
+  box-shadow: 0 6px 16px rgba(72, 42, 19, .2);
+}
+.scroll-index button {
+  min-width: 0;
+  padding: 7px 5px;
+  border: 1px solid rgba(84, 49, 23, .42);
+  background: rgba(255, 242, 196, .22);
+  color: #54351d;
+  font: 700 8px/1 "DM Mono", monospace;
+  letter-spacing: .08em;
+  cursor: pointer;
+}
+.scroll-index button:hover,
+.scroll-index button:focus-visible {
+  border-color: var(--scroll-accent);
+  background: color-mix(in srgb, var(--scroll-accent) 16%, rgba(255, 242, 196, .28));
+  outline: none;
+}
+.scroll-findings { margin-top: 13px; }
+.scroll-findings .scroll-section-label { margin: 0 0 7px; }
+.scroll-findings-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.scroll-findings-grid article {
+  min-width: 0;
+  padding: 9px;
+  border-left: 3px solid var(--scroll-accent);
+  background: rgba(255, 241, 190, .22);
+}
+.scroll-findings-grid small {
+  display: block;
+  color: color-mix(in srgb, var(--scroll-accent) 52%, #6c4825);
+  font: 700 7px/1.2 "DM Mono", monospace;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.scroll-findings-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #402817;
+  font-size: 10px;
+  line-height: 1.35;
+}
+@media (max-width: 760px) {
+  .scroll-index { top: -26px; margin-right: -3px; margin-left: -3px; padding: 6px; }
+  .scroll-index button { padding: 6px 2px; font-size: 7px; letter-spacing: .04em; }
+  .scroll-findings-grid { grid-template-columns: 1fr; }
+}
+
 /* Pip's dialogue is fixed to the game HUD so it stays readable regardless of
    camera angle, depth sorting, or nearby world geometry. */
 .lobby-guide-hud {
@@ -2174,6 +2263,8 @@ button { color: inherit; }
 .weapon-slots button b { color: #db5c42; font-size: 11px; }
 .weapon-slots button span { overflow: hidden; font-size: 8px; letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
 .weapon-slots button.is-active { border-color: #36e0d0; background: rgba(54,224,208,.12); color: #fff1b0; box-shadow: inset 0 -2px #36e0d0; }
+.weapon-slots button.is-locked { opacity: .38; cursor: not-allowed; filter: grayscale(.8); }
+.weapon-slots button.is-locked span::after { content: ' · LOCKED'; color: #db5c42; }
 .combat-hud-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; margin-top: 9px; color: rgba(240,221,175,.68); font-size: 8px; letter-spacing: .07em; }
 .combat-hud-footer strong { color: #fff1b0; }
 .combat-hud-footer span:nth-child(2) strong, .combat-hud-footer span:nth-child(4) { color: #db5c42; }
@@ -2184,6 +2275,7 @@ button { color: inherit; }
   .ammo-readout strong { font-size: 28px; }
   .weapon-slots button span { font-size: 7px; }
   .combat-hud-footer { font-size: 7px; }
+  .scroll-challenge-steps { grid-template-columns: 1fr; }
 }
 
 /* Final requested combat HUD: only health/shield left and ammo right. */
@@ -3609,7 +3701,8 @@ button { color: inherit; }
 }
 .visor-selector-heading small { color: rgba(216, 255, 240, .46); font: inherit; }
 .visor-weapon-options {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   margin-top: 7px;
 }
@@ -3634,6 +3727,7 @@ button { color: inherit; }
   color: #d8fff0;
   box-shadow: inset 0 -2px rgba(184, 255, 207, .8);
 }
+.visor-weapon-options button.is-locked { opacity: .34; filter: grayscale(.85); cursor: not-allowed; }
 .visor-current-weapon {
   display: block;
   margin-top: 5px;
@@ -3707,4 +3801,1748 @@ button { color: inherit; }
   .visor-weapon-options button { padding: 3px 4px; font-size: 6px; }
   .visor-weapon-options button span { display: none; }
   .visor-current-weapon { font-size: 7px; }
+}
+
+/* Transparent combat visor: keep the center of the playfield open and use
+   restrained corner optics instead of a helmet/portrait status graphic. */
+.doom-status-bar {
+  grid-template-columns: minmax(270px, 1fr) minmax(180px, .42fr) !important;
+  column-gap: clamp(22px, 17vw, 300px) !important;
+  isolation: isolate;
+  overflow: visible !important;
+}
+.doom-status-bar > .doom-left-cluster { grid-column: 1 !important; }
+.doom-status-bar::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed;
+  inset: 16px 18px 116px;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(139,236,205,.68), transparent) left top / 150px 1px no-repeat,
+    linear-gradient(270deg, rgba(139,236,205,.68), transparent) right top / 150px 1px no-repeat,
+    linear-gradient(180deg, rgba(139,236,205,.58), transparent) left top / 1px 92px no-repeat,
+    linear-gradient(180deg, rgba(139,236,205,.58), transparent) right top / 1px 92px no-repeat,
+    linear-gradient(0deg, rgba(139,236,205,.42), transparent) left bottom / 1px 68px no-repeat,
+    linear-gradient(0deg, rgba(139,236,205,.42), transparent) right bottom / 1px 68px no-repeat;
+  filter: drop-shadow(0 0 5px rgba(80,220,190,.18));
+  opacity: .72;
+  pointer-events: none;
+}
+.doom-status-bar::after {
+  content: "COMBAT VISOR // LIVE" !important;
+  display: block !important;
+  position: fixed;
+  left: 50%;
+  bottom: 25px;
+  z-index: 1;
+  width: 138px;
+  padding: 5px 12px 4px;
+  transform: translateX(-50%);
+  border-top: 1px solid rgba(139,236,205,.34);
+  border-bottom: 1px solid rgba(139,236,205,.5);
+  background: linear-gradient(90deg, transparent, rgba(5,23,24,.62) 22%, rgba(5,23,24,.62) 78%, transparent);
+  color: rgba(181,255,226,.64);
+  font: 600 6px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .16em;
+  text-align: center;
+  pointer-events: none;
+}
+.doom-status-bar > .doom-left-cluster,
+.doom-status-bar > .doom-vitals { position: relative; z-index: 2; }
+.doom-status-bar > .doom-vitals { grid-column: 2 !important; }
+.doom-status-bar > .doom-vitals,
+.doom-status-bar .doom-ammo,
+.visor-weapon-selector {
+  border-left: 1px solid rgba(139, 236, 205, .44) !important;
+  border-right: 1px solid rgba(139, 236, 205, .2) !important;
+  background:
+    repeating-linear-gradient(0deg, rgba(139,236,205,.018) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(4, 22, 24, .7), rgba(2, 10, 13, .24)) !important;
+  box-shadow: inset 0 1px rgba(199,255,232,.08), 0 0 16px rgba(26,147,127,.08) !important;
+}
+.game-shell.damage-alert .doom-status-bar::before {
+  filter: sepia(.3) saturate(1.55) hue-rotate(292deg) drop-shadow(0 0 6px rgba(255,82,65,.2));
+}
+
+/* Guided, slide-like portfolio reading. */
+.scroll-paper {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+.scroll-header,
+.scroll-findings,
+.scroll-briefing,
+.scroll-intro-grid,
+.scroll-proof-grid,
+.scroll-challenge,
+.scroll-details-heading,
+.scroll-tags,
+.scroll-cta {
+  scroll-snap-align: start;
+  scroll-margin-top: 70px;
+}
+.scroll-tour {
+  position: sticky;
+  top: 8px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 17px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--scroll-accent, #6ce0c2) 52%, #3c2716);
+  background: rgba(38, 24, 13, .94);
+  box-shadow: 0 5px 16px rgba(35, 18, 8, .3);
+  color: #e5c998;
+  font: 700 8px/1.2 "DM Mono", monospace;
+  letter-spacing: .09em;
+}
+.scroll-tour button {
+  padding: 6px 9px;
+  border: 1px solid var(--scroll-accent, #6ce0c2);
+  background: rgba(0,0,0,.24);
+  color: #fff0c9;
+  font: 800 8px/1 "DM Mono", monospace;
+  cursor: pointer;
+}
+.scroll-tour button:disabled,
+.scroll-index button:disabled {
+  border-color: rgba(98, 68, 38, .34);
+  background: rgba(53, 33, 18, .38);
+  color: rgba(241, 213, 161, .42);
+  cursor: not-allowed;
+}
+.scroll-paper.is-forced-pager {
+  scroll-snap-type: none;
+  overscroll-behavior: contain;
+}
+.scroll-page-locked,
+.scroll-challenge-complete-gated {
+  display: none !important;
+}
+.scroll-paper.is-forced-pager .scroll-index::after {
+  content: 'PAGES RELEASE AS YOU COMPLETE THE RECORD';
+  grid-column: 1 / -1;
+  color: rgba(83, 50, 24, .76);
+  font: 700 6px/1 "DM Mono", monospace;
+  letter-spacing: .1em;
+  text-align: center;
+}
+.scroll-slide-focus { animation: scroll-slide-focus .72s ease-out; }
+@keyframes scroll-slide-focus {
+  from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--scroll-accent, #6ce0c2) 48%, transparent); transform: translateY(6px); }
+  to { box-shadow: 0 0 0 0 transparent; transform: translateY(0); }
+}
+
+.impact-dial-game,
+.case-route-game {
+  display: grid;
+  gap: 12px;
+}
+.impact-dial-value {
+  color: #fff0c9;
+  font: 900 clamp(30px, 7vw, 52px)/1 "DM Mono", monospace;
+  text-align: center;
+  text-shadow: 2px 2px #5b271f;
+}
+.impact-dial-game input[type="range"] {
+  width: 100%;
+  height: 28px;
+  accent-color: var(--scroll-accent, #6ce0c2);
+  cursor: ew-resize;
+}
+.impact-dial-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 1px dashed rgba(113, 69, 31, .5);
+  background: rgba(255, 240, 201, .28);
+}
+.impact-dial-target span { color: #775128; font: 800 8px/1 "DM Mono", monospace; letter-spacing: .12em; }
+.impact-dial-target strong { color: #4e271c; font: 900 16px/1 "DM Mono", monospace; }
+.case-route-nodes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 5px;
+}
+.case-route-nodes > i { display: none; }
+.case-route-node {
+  position: relative;
+  overflow: hidden;
+  min-height: 112px;
+  padding: 10px 8px;
+  border: 1px solid rgba(78, 39, 28, .34);
+  background: rgba(255, 242, 205, .34);
+  color: #4b2b20;
+  text-align: left;
+  touch-action: none;
+  user-select: none;
+}
+.case-route-node small,
+.case-route-node strong,
+.case-route-node span { display: block; }
+.case-route-node small { color: #9a6038; font: 800 8px/1 "DM Mono", monospace; }
+.case-route-node strong { margin-top: 10px; font: 900 11px/1.35 "DM Mono", monospace; }
+.case-route-node span { margin-top: 12px; color: #80502e; font: 800 7px/1.3 "DM Mono", monospace; letter-spacing: .08em; }
+.case-route-node.is-locked { opacity: .42; filter: grayscale(.8); }
+.case-route-node.is-complete { border-color: #51764e; background: rgba(105, 145, 85, .17); }
+.case-route-node.is-active {
+  border: 2px solid var(--scroll-accent, #6ce0c2);
+  background: #392419;
+  color: #fff0c9;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--scroll-accent, #6ce0c2) 35%, transparent);
+  cursor: pointer;
+  animation: case-node-pulse 1s steps(2, end) infinite;
+}
+.case-route-node.is-active span { color: var(--scroll-accent, #6ce0c2); }
+.case-route-charge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 5px;
+  background: color-mix(in srgb, var(--scroll-accent, #6ce0c2) 85%, #fff0c9);
+  transform: scaleX(var(--hold-progress, 0));
+  transform-origin: left center;
+  box-shadow: 0 0 10px var(--scroll-accent, #6ce0c2);
+}
+.case-route-node.is-charging {
+  animation: none;
+  filter: brightness(1.16);
+}
+.case-route-node.is-charging span { color: #fff0c9; }
+@keyframes case-node-pulse { 50% { filter: brightness(1.25); } }
+
+@media (max-width: 760px) {
+  .doom-status-bar { grid-template-columns: minmax(220px, 1fr) minmax(105px, .35fr) !important; column-gap: 12px !important; }
+  .doom-status-bar::before { inset: 10px 8px 105px; }
+  .doom-status-bar::after { display: none !important; }
+  .case-route-nodes { grid-template-columns: 1fr 1fr; }
+  .case-route-node { min-height: 94px; }
+  .scroll-tour { top: 4px; }
+}
+
+/* Compact death screen: a restrained in-world interruption matching the archive UI. */
+.death-overlay {
+  position: absolute;
+  z-index: 45;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 8, 9, .78);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+.death-overlay[hidden] { display: none; }
+.death-overlay.is-visible { opacity: 1; pointer-events: auto; }
+.death-card {
+  width: min(300px, 100%);
+  padding: 22px 20px 18px;
+  border: 1px solid rgba(139, 236, 205, .55);
+  border-top: 3px solid #df725a;
+  background: linear-gradient(160deg, rgba(13, 27, 27, .98), rgba(8, 12, 13, .98));
+  box-shadow: 0 14px 45px rgba(0, 0, 0, .62), inset 0 0 22px rgba(223, 114, 90, .08);
+  color: #d8eadb;
+  text-align: center;
+}
+.death-label {
+  margin: 0 0 8px;
+  color: #df9b73;
+  font: 700 8px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .18em;
+}
+.death-card h2 {
+  margin: 0;
+  color: #f06a52;
+  font: 900 32px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+  text-shadow: 2px 2px 0 #35120e;
+}
+.death-cause {
+  margin: 10px 0 18px;
+  color: #b6c9b9;
+  font: 10px/1.45 "DM Mono", ui-monospace, monospace;
+}
+.death-restart {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dca965;
+  background: #5b281f;
+  color: #ffe9b9;
+  cursor: pointer;
+  font: 800 10px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .1em;
+}
+.death-restart:hover,
+.death-restart:focus-visible {
+  background: #7a3427;
+  outline: 1px solid #f0c37b;
+  outline-offset: 2px;
+}
+.death-restart span {
+  display: block;
+  margin-top: 5px;
+  color: #cda878;
+  font-size: 8px;
+  letter-spacing: .08em;
+}
+
+/* -------------------------------------------------------------------------
+   Mission records are hardware terminals, not a second layer of parchment.
+   The game adds .terminal-record only for discovered reports; the intro keeps
+   its intentionally different, physical-scroll presentation above. */
+.terminal-only { display: none; }
+
+.reading-overlay.terminal-record {
+  --scroll-accent: #85ffc1;
+  --terminal-amber: #ffc169;
+  --terminal-ink: #d9f9df;
+  --terminal-muted: #92b7a1;
+  --terminal-shadow: #06100e;
+  padding: clamp(18px, 4vh, 44px) clamp(12px, 3vw, 38px);
+  background:
+    radial-gradient(ellipse at 50% 41%, rgba(71, 255, 174, .13), transparent 30%),
+    radial-gradient(ellipse at 50% 62%, rgba(255, 143, 68, .08), transparent 42%),
+    repeating-linear-gradient(90deg, rgba(136, 255, 197, .022) 0 1px, transparent 1px 5px),
+    rgba(2, 10, 10, .84);
+  backdrop-filter: blur(3px) saturate(.85);
+}
+.reading-overlay.terminal-record .scroll-shell {
+  position: relative;
+  isolation: isolate;
+  width: min(1040px, 96vw);
+  max-height: calc(100dvh - 36px);
+  padding: 14px;
+  border: 2px solid #587166;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.07) 0 1px, transparent 1px calc(100% - 1px), rgba(0,0,0,.5) calc(100% - 1px)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 4px),
+    linear-gradient(135deg, #263834 0%, #101c1b 46%, #253833 100%);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, .72),
+    0 0 0 2px rgba(4, 9, 8, .9),
+    0 0 0 5px rgba(103, 138, 118, .24),
+    inset 0 0 0 2px rgba(213, 255, 227, .1),
+    inset 0 -18px 30px rgba(0, 0, 0, .38);
+}
+.reading-overlay.terminal-record.open .scroll-shell {
+  animation: terminal-boot-in .42s cubic-bezier(.18, .88, .25, 1) forwards;
+}
+.reading-overlay.terminal-record .scroll-shell::before,
+.reading-overlay.terminal-record .scroll-shell::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 56px;
+  height: 12px;
+  border: 2px solid #587166;
+  background: #13211e;
+  box-shadow: inset 0 2px rgba(221, 255, 231, .12), 0 5px 12px rgba(0,0,0,.45);
+}
+.reading-overlay.terminal-record .scroll-shell::before { right: 54px; bottom: -12px; transform: skewX(-26deg); }
+.reading-overlay.terminal-record .scroll-shell::after { left: 54px; bottom: -12px; transform: skewX(26deg); }
+.reading-overlay.terminal-record .scroll-roller { display: none; }
+
+.reading-overlay.terminal-record .scroll-paper {
+  max-height: calc(100dvh - 64px);
+  padding: clamp(19px, 3.2vw, 34px) clamp(18px, 4.6vw, 48px) 28px;
+  border: 2px solid #84d4a5;
+  border-radius: 2px;
+  color: var(--terminal-ink);
+  background:
+    linear-gradient(90deg, rgba(14, 39, 31, .22) 0 1px, transparent 1px 100%),
+    radial-gradient(circle at 82% 12%, rgba(76, 255, 174, .12), transparent 18%),
+    radial-gradient(circle at 13% 88%, rgba(255, 152, 75, .09), transparent 20%),
+    linear-gradient(145deg, #0e211d 0%, #081512 48%, #10201a 100%);
+  box-shadow:
+    inset 0 0 0 3px rgba(184, 255, 215, .08),
+    inset 0 0 45px rgba(26, 169, 105, .1),
+    inset 0 0 0 7px rgba(0, 0, 0, .24),
+    0 0 28px rgba(86, 255, 166, .13);
+  scrollbar-color: #75e3ad #0b1714;
+}
+.reading-overlay.terminal-record .scroll-paper::before {
+  inset: 0;
+  z-index: 0;
+  width: auto;
+  height: auto;
+  background: repeating-linear-gradient(0deg, rgba(214, 255, 228, .035) 0 1px, transparent 1px 4px);
+  opacity: 1;
+  pointer-events: none;
+}
+.reading-overlay.terminal-record .scroll-paper::after {
+  inset: 0;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  background:
+    linear-gradient(90deg, rgba(107, 255, 180, .12), transparent 2px 50%, rgba(255, 185, 99, .09) calc(100% - 2px), transparent),
+    linear-gradient(180deg, rgba(232, 255, 237, .09), transparent 3px 97%, rgba(0, 0, 0, .34));
+  pointer-events: none;
+}
+.reading-overlay.terminal-record .scroll-paper > * { position: relative; z-index: 1; }
+.reading-overlay.terminal-record .scroll-paper::-webkit-scrollbar { width: 9px; }
+.reading-overlay.terminal-record .scroll-paper::-webkit-scrollbar-track { border-left: 1px solid rgba(133,255,193,.25); background: #07120f; }
+.reading-overlay.terminal-record .scroll-paper::-webkit-scrollbar-thumb { border: 2px solid #07120f; background: #5bbf8c; }
+
+.reading-overlay.terminal-record .terminal-only { display: flex; }
+.terminal-topbar {
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin: -4px -6px 16px;
+  padding: 6px 9px;
+  border: 1px solid rgba(132, 246, 185, .48);
+  background: linear-gradient(90deg, rgba(104, 255, 173, .15), rgba(4, 17, 14, .88) 32%, rgba(255, 178, 90, .09));
+  box-shadow: inset 0 1px rgba(225, 255, 233, .16), 0 5px 16px rgba(0,0,0,.18);
+  color: var(--terminal-ink);
+  font: 800 8px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .13em;
+}
+.terminal-brand { color: var(--terminal-amber); white-space: nowrap; }
+.terminal-title { overflow: hidden; color: #b9f7ce; text-overflow: ellipsis; white-space: nowrap; }
+.terminal-led { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; color: #a5f5bd; font-size: 7px; white-space: nowrap; }
+.terminal-led i { width: 6px; height: 6px; border-radius: 50%; background: #8affbb; box-shadow: 0 0 7px #8affbb; animation: terminal-link-pulse 1.3s steps(2, end) infinite; }
+
+.reading-overlay.terminal-record .scroll-header {
+  align-items: end;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(132, 246, 185, .35);
+}
+.reading-overlay.terminal-record .scroll-kicker,
+.reading-overlay.terminal-record .scroll-record-number,
+.reading-overlay.terminal-record .scroll-section-label,
+.reading-overlay.terminal-record .scroll-findings-grid small,
+.reading-overlay.terminal-record .scroll-proof-meta,
+.reading-overlay.terminal-record .scroll-details-heading > span,
+.reading-overlay.terminal-record .scroll-ability small,
+.reading-overlay.terminal-record .scroll-cta small {
+  color: #8cf4b4;
+  font-family: "DM Mono", ui-monospace, monospace;
+  text-shadow: 0 0 8px rgba(120,255,184,.22);
+}
+.reading-overlay.terminal-record .scroll-record-number { color: var(--terminal-amber); }
+.reading-overlay.terminal-record .scroll-stamp {
+  top: auto;
+  right: 0;
+  bottom: 100%;
+  display: grid;
+  width: 39px;
+  height: 21px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 188, 105, .66);
+  border-radius: 0;
+  color: var(--terminal-amber);
+  font: 800 8px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .05em;
+  transform: none;
+  opacity: 1;
+}
+.reading-overlay.terminal-record .scroll-stamp small { display: none; }
+.reading-overlay.terminal-record .scroll-paper h2 {
+  margin: 13px 0 8px;
+  color: #f0ffe9;
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: clamp(20px, 4vw, 35px);
+  font-weight: 900;
+  letter-spacing: .025em;
+  text-shadow: 0 0 12px rgba(138,255,190,.22), 2px 2px 0 #0b2920;
+}
+.reading-overlay.terminal-record .scroll-summary,
+.reading-overlay.terminal-record .scroll-positioning,
+.reading-overlay.terminal-record .scroll-proof-card p,
+.reading-overlay.terminal-record .scroll-details li,
+.reading-overlay.terminal-record .scroll-cta p,
+.reading-overlay.terminal-record .scroll-progress p,
+.reading-overlay.terminal-record .scroll-challenge > p,
+.reading-overlay.terminal-record .scroll-briefing-page p {
+  color: #c5dfcc;
+  font-family: "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-author-line { color: #b2d7bb; }
+.reading-overlay.terminal-record .scroll-author-line span:last-child {
+  border-color: rgba(132, 246, 185, .6);
+  color: var(--terminal-amber);
+  background: rgba(99,255,171,.06);
+}
+.reading-overlay.terminal-record .scroll-positioning { color: #82b694; }
+
+/* A terminal page has a visible sequence. Disabled tabs remain legible instead
+   of disappearing, and the footer states exactly what releases the next page. */
+.reading-overlay.terminal-record .scroll-index {
+  top: 0;
+  z-index: 5;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  margin: 15px 0 0;
+  padding: 6px;
+  border-color: rgba(130, 255, 191, .52);
+  background: linear-gradient(180deg, rgba(18, 53, 42, .98), rgba(5, 21, 17, .98));
+  box-shadow: 0 7px 16px rgba(0,0,0,.4), inset 0 1px rgba(220,255,230,.09);
+  counter-reset: terminal-page;
+}
+.reading-overlay.terminal-record .scroll-index button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 6px;
+  border-color: rgba(136, 248, 190, .36);
+  background: rgba(0, 8, 7, .46);
+  color: #d2f9da;
+  font-size: 7px;
+  text-align: left;
+  text-shadow: 0 0 8px rgba(135,255,190,.18);
+  counter-increment: terminal-page;
+}
+.reading-overlay.terminal-record .scroll-index button::before {
+  content: counter(terminal-page, decimal-leading-zero);
+  color: var(--terminal-amber);
+  font-weight: 900;
+}
+.reading-overlay.terminal-record .scroll-index button:hover,
+.reading-overlay.terminal-record .scroll-index button:focus-visible {
+  border-color: var(--terminal-amber);
+  background: rgba(111,255,177,.14);
+  color: #fff6d9;
+  box-shadow: inset 3px 0 var(--terminal-amber), 0 0 12px rgba(119,255,182,.16);
+}
+.reading-overlay.terminal-record .scroll-index button:disabled {
+  border-color: rgba(99, 149, 119, .24);
+  background: rgba(0, 0, 0, .26);
+  color: rgba(168, 203, 178, .48);
+  opacity: 1;
+}
+.reading-overlay.terminal-record .scroll-index button:disabled::before { color: rgba(255, 193, 105, .48); }
+.reading-overlay.terminal-record .scroll-paper.is-forced-pager .scroll-index::after {
+  content: 'UPLINK SEQUENCE // COMPLETE THE ACTIVE PROGRAM TO RELEASE THE NEXT PAGE';
+  margin-top: 2px;
+  color: #8df4b5;
+  font-size: 7px;
+  line-height: 1.4;
+  text-shadow: 0 0 8px rgba(127,255,183,.2);
+}
+.reading-overlay.terminal-record .scroll-tour {
+  top: 5px;
+  margin: 9px 0 11px;
+  padding: 8px 9px;
+  border-color: rgba(255, 192, 105, .58);
+  background: linear-gradient(90deg, rgba(255,190,100,.13), rgba(1,13,10,.94) 31%);
+  box-shadow: inset 0 1px rgba(255,247,219,.1), 0 5px 13px rgba(0,0,0,.35);
+  color: #f5e2bc;
+}
+.reading-overlay.terminal-record .scroll-tour > span::before { content: '>_ '; color: var(--terminal-amber); }
+.reading-overlay.terminal-record .scroll-tour button {
+  border-color: #85ffc1;
+  background: rgba(119,255,180,.11);
+  color: #d8ffe0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.36);
+}
+.reading-overlay.terminal-record .scroll-tour button:hover,
+.reading-overlay.terminal-record .scroll-tour button:focus-visible {
+  border-color: var(--terminal-amber);
+  background: rgba(255,187,99,.18);
+  color: #fff8df;
+}
+.reading-overlay.terminal-record .scroll-tour button:disabled { border-color: rgba(123,166,143,.42); background: rgba(0,0,0,.28); color: rgba(204,232,211,.45); }
+.terminal-route-note {
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--terminal-amber);
+  background: rgba(255, 190, 98, .08);
+  color: #bddcc5;
+  font: 700 8px/1.45 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .035em;
+}
+.terminal-route-note b { flex: 0 0 auto; color: var(--terminal-amber); font-size: 7px; letter-spacing: .12em; }
+
+.reading-overlay.terminal-record .scroll-findings-grid article,
+.reading-overlay.terminal-record .scroll-metric,
+.reading-overlay.terminal-record .scroll-proof-card {
+  border-color: rgba(129, 246, 183, .4);
+  background: linear-gradient(145deg, rgba(103,255,171,.11), rgba(4,23,17,.36));
+  box-shadow: inset 0 1px rgba(220,255,231,.06);
+}
+.reading-overlay.terminal-record .scroll-findings-grid article { border-left-color: var(--scroll-accent); }
+.reading-overlay.terminal-record .scroll-metric strong,
+.reading-overlay.terminal-record .scroll-proof-card h3,
+.reading-overlay.terminal-record .scroll-proof-card > strong,
+.reading-overlay.terminal-record .scroll-ability strong,
+.reading-overlay.terminal-record .scroll-cta strong,
+.reading-overlay.terminal-record .scroll-briefing-heading strong,
+.reading-overlay.terminal-record .scroll-briefing-page h3,
+.reading-overlay.terminal-record .scroll-challenge > strong {
+  color: #efffe9;
+  font-family: "DM Mono", ui-monospace, monospace;
+  text-shadow: 0 0 9px rgba(135,255,190,.16);
+}
+.reading-overlay.terminal-record .scroll-metric span,
+.reading-overlay.terminal-record .scroll-proof-meta small,
+.reading-overlay.terminal-record .scroll-proof-card em,
+.reading-overlay.terminal-record .scroll-tags span,
+.reading-overlay.terminal-record .scroll-progress-copy,
+.reading-overlay.terminal-record .scroll-briefing-heading small,
+.reading-overlay.terminal-record .scroll-briefing-heading b,
+.reading-overlay.terminal-record .scroll-briefing-page > small,
+.reading-overlay.terminal-record .scroll-briefing-page em {
+  color: #9ecfac;
+  font-family: "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-details-heading,
+.reading-overlay.terminal-record .scroll-details,
+.reading-overlay.terminal-record .scroll-intro-grid,
+.reading-overlay.terminal-record .scroll-briefing-page em {
+  border-color: rgba(128, 246, 183, .24);
+}
+.reading-overlay.terminal-record .scroll-details li::before { color: var(--terminal-amber); text-shadow: 0 0 8px rgba(255,193,105,.35); }
+.reading-overlay.terminal-record .scroll-tags span { border-color: rgba(132, 246, 185, .48); background: rgba(109,255,176,.08); }
+.reading-overlay.terminal-record .scroll-ability,
+.reading-overlay.terminal-record .scroll-progress,
+.reading-overlay.terminal-record .scroll-cta {
+  border-color: rgba(255, 192, 105, .52);
+  background: linear-gradient(120deg, rgba(255,190,98,.11), rgba(5,23,17,.56));
+  box-shadow: inset 0 0 0 1px rgba(241,255,228,.05);
+}
+.reading-overlay.terminal-record .scroll-ability-seal { border-color: var(--terminal-amber); color: var(--terminal-amber); box-shadow: 0 0 0 4px rgba(255,191,102,.09), 0 0 15px rgba(255,191,102,.17); }
+.reading-overlay.terminal-record .scroll-progress-track { border-color: rgba(131, 246, 185, .45); background: #07130f; }
+.reading-overlay.terminal-record .scroll-progress-track span { background: linear-gradient(90deg, #4aa876, #86ffc0, #ffe0a0); box-shadow: 0 0 9px rgba(129,255,184,.58); }
+.reading-overlay.terminal-record .scroll-cta::before { background: var(--terminal-amber); box-shadow: 0 0 12px rgba(255,190,98,.42); }
+.reading-overlay.terminal-record .scroll-actions a {
+  border-color: rgba(132, 246, 185, .58);
+  background: rgba(110,255,176,.08);
+  color: #d8f8de;
+  font-family: "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-actions a:first-child { border-color: var(--terminal-amber); background: rgba(255,190,98,.13); color: #fff0cc; }
+
+/* The case studies now read as executable programs instead of parchment games. */
+.reading-overlay.terminal-record .scroll-challenge,
+.reading-overlay.terminal-record .scroll-briefing {
+  border-color: rgba(130, 246, 184, .62);
+  background:
+    repeating-linear-gradient(90deg, rgba(127,255,182,.035) 0 1px, transparent 1px 6px),
+    linear-gradient(145deg, rgba(40,142,91,.16), rgba(2,15,11,.72));
+  box-shadow: inset 0 0 0 3px rgba(132,255,189,.07), 0 0 18px rgba(76,255,165,.08);
+}
+.reading-overlay.terminal-record .scroll-challenge > small { color: var(--terminal-amber); font-family: "DM Mono", ui-monospace, monospace; }
+.reading-overlay.terminal-record .scroll-challenge.is-locked { border-color: rgba(255,190,98,.42); }
+.reading-overlay.terminal-record .scroll-challenge.is-wrong { border-color: #ff755e; }
+.reading-overlay.terminal-record .scroll-challenge.is-solved { border-color: #8affbc; background: rgba(38,151,92,.16); }
+.reading-overlay.terminal-record .scroll-challenge-steps button,
+.reading-overlay.terminal-record .scroll-briefing-next {
+  border-color: rgba(132, 246, 185, .52);
+  background: rgba(4, 27, 19, .72);
+  color: #d8fbe0;
+  font-family: "DM Mono", ui-monospace, monospace;
+  box-shadow: inset 0 1px rgba(230,255,236,.07);
+}
+.reading-overlay.terminal-record .scroll-challenge-steps button:hover,
+.reading-overlay.terminal-record .scroll-challenge-steps button:focus-visible,
+.reading-overlay.terminal-record .scroll-briefing-next:hover,
+.reading-overlay.terminal-record .scroll-briefing-next:focus-visible {
+  border-color: var(--terminal-amber);
+  background: rgba(255,190,98,.16);
+  color: #fff5d5;
+}
+.reading-overlay.terminal-record .scroll-challenge-steps button.is-selected { border-color: #8affbc; background: rgba(78,255,153,.17); color: #efffe9; }
+.reading-overlay.terminal-record .scroll-challenge-steps button.is-active { border-color: var(--terminal-amber); background: rgba(255,190,98,.18); color: #fff5d6; box-shadow: inset 0 0 0 2px rgba(255,241,197,.13), 0 0 12px rgba(255,190,98,.16); }
+.reading-overlay.terminal-record .scroll-briefing-page { border-left-color: var(--terminal-amber); background: rgba(5, 26, 18, .55); }
+.reading-overlay.terminal-record .scroll-briefing-heading b { border-color: rgba(132,246,185,.45); }
+.reading-overlay.terminal-record .case-signal-readout,
+.reading-overlay.terminal-record .impact-dial-target,
+.reading-overlay.terminal-record .case-route-node {
+  border-color: rgba(131,246,185,.45);
+  background: rgba(4, 24, 17, .72);
+  color: #d5f7dc;
+}
+.reading-overlay.terminal-record .case-signal-readout small,
+.reading-overlay.terminal-record .impact-dial-target span,
+.reading-overlay.terminal-record .case-route-node small,
+.reading-overlay.terminal-record .case-route-node span { color: #9ed5ad; }
+.reading-overlay.terminal-record .case-signal-readout strong,
+.reading-overlay.terminal-record .impact-dial-target strong,
+.reading-overlay.terminal-record .impact-dial-value,
+.reading-overlay.terminal-record .case-route-node strong { color: #efffe9; text-shadow: 0 0 10px rgba(132,255,189,.2); }
+.reading-overlay.terminal-record .impact-dial-value { text-shadow: 2px 2px #102d22, 0 0 13px rgba(132,255,189,.28); }
+.reading-overlay.terminal-record .case-signal-track { border-color: #71d69d; background: repeating-linear-gradient(90deg, rgba(129,255,184,.15) 0 2px, transparent 2px 13px), #06130e; }
+.reading-overlay.terminal-record .case-signal-cursor { border-color: var(--terminal-amber); background: #fff2c9; box-shadow: 0 0 9px #fff2c9, 0 0 15px var(--terminal-amber); }
+.reading-overlay.terminal-record .case-route-node.is-active { border-color: var(--terminal-amber); background: #133125; color: #fff5d8; box-shadow: 0 0 18px rgba(255,190,98,.28); }
+.reading-overlay.terminal-record .case-route-node.is-active span { color: var(--terminal-amber); }
+.reading-overlay.terminal-record .case-route-node.is-complete { border-color: #8affbc; background: rgba(58,158,95,.2); }
+.reading-overlay.terminal-record .case-signal-insights article { border-left-color: var(--terminal-amber); background: rgba(255,190,98,.08); }
+.reading-overlay.terminal-record .case-signal-insights strong { color: #ffe2a8; }
+.reading-overlay.terminal-record .case-signal-insights p { color: #c7dfcc; }
+
+.terminal-command-strip {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 17px;
+  padding: 7px 8px;
+  border-top: 1px solid rgba(131,246,185,.38);
+  border-bottom: 1px solid rgba(131,246,185,.2);
+  color: #86c69a;
+  font: 700 7px/1.3 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .09em;
+}
+.terminal-command-strip span:last-child { color: var(--terminal-amber); white-space: nowrap; }
+.reading-overlay.terminal-record .close-scroll {
+  min-width: min(340px, 100%);
+  margin-top: 13px;
+  padding: 10px 13px;
+  border-color: var(--terminal-amber);
+  background: linear-gradient(90deg, rgba(255,190,98,.18), rgba(5,26,18,.78));
+  color: #fff0cc;
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-weight: 900;
+  box-shadow: inset 0 1px rgba(255,246,221,.12), 0 0 14px rgba(255,190,98,.08);
+}
+.reading-overlay.terminal-record .close-scroll span { color: #b7ddc1; }
+.reading-overlay.terminal-record .close-scroll:hover,
+.reading-overlay.terminal-record .close-scroll:focus-visible { background: rgba(255,190,98,.27); outline-color: #fff0cc; }
+
+/* Mission terminals operate as discrete CRT displays.  They deliberately
+   never become a long document: one clear computer function lives on each
+   screen and the hardware navigation is the only way forward. */
+.terminal-screen-hidden { display: none !important; }
+.game-shell.terminal-active .game-hud,
+.game-shell.terminal-active .minimal-combat-hud,
+.game-shell.terminal-active .boss-bottom-hud,
+.game-shell.terminal-active .objective-panel,
+.game-shell.terminal-active .floor-announcement,
+.game-shell.terminal-active .interaction-prompt,
+.game-shell.terminal-active .lobby-guide-hud,
+.game-shell.terminal-active .toast,
+.game-shell.terminal-active .hover-tooltip,
+.game-shell.terminal-active .control-ribbon,
+.game-shell.terminal-active .touch-controls,
+.game-shell.terminal-active .commander-overlay {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console {
+  display: flex;
+  flex-direction: column;
+  min-height: min(660px, calc(100dvh - 88px));
+  max-height: min(760px, calc(100dvh - 64px));
+  overflow: hidden;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-topbar { order: 0; flex: 0 0 auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index { order: 2; flex: 0 0 auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour { order: 3; flex: 0 0 auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-route-note { order: 4; flex: 0 0 auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-dashboard,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-header,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-stamp,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console h2,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-summary,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-author-line,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-positioning,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-intro-grid,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-grid,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-section-label,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-divider,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-ability,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-actions { order: 5; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-command-strip { order: 8; flex: 0 0 auto; margin-top: auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .close-scroll { order: 9; flex: 0 0 auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 10px 0 0;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button {
+  min-height: 30px;
+  transition: background .14s steps(2, end), border-color .14s steps(2, end), color .14s steps(2, end);
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button.is-active {
+  border-color: var(--terminal-amber);
+  background: linear-gradient(90deg, rgba(255,190,98,.28), rgba(75,255,157,.11));
+  color: #fff5d4;
+  box-shadow: inset 3px 0 var(--terminal-amber), 0 0 12px rgba(255,190,98,.13);
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour {
+  min-height: 34px;
+  margin: 8px 0 0;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-route-note {
+  margin: 8px 0 9px;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-route-note,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-author-line,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-positioning,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-stamp { display: none !important; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour {
+  border-color: rgba(132,246,185,.34);
+  background: rgba(1, 14, 10, .76);
+}
+.reading-overlay.terminal-record .terminal-dashboard {
+  display: grid;
+  grid-template-columns: 102px minmax(0, 1fr) 68px;
+  align-items: stretch;
+  min-height: 92px;
+  margin: 0 -4px 11px;
+  border: 1px solid rgba(133, 255, 193, .5);
+  background:
+    repeating-linear-gradient(0deg, rgba(215,255,230,.035) 0 1px, transparent 1px 4px),
+    linear-gradient(145deg, rgba(12,43,31,.92), rgba(1,12,9,.95));
+  box-shadow: inset 0 0 0 2px rgba(206,255,224,.05), 0 7px 15px rgba(0,0,0,.26);
+}
+.terminal-scope {
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid rgba(132,246,185,.38);
+  background:
+    linear-gradient(90deg, transparent 49%, rgba(124,255,185,.42) 50% 51%, transparent 52%),
+    linear-gradient(transparent 49%, rgba(124,255,185,.42) 50% 51%, transparent 52%),
+    repeating-radial-gradient(circle at 50% 50%, rgba(103,255,169,.13) 0 1px, transparent 1px 15px),
+    #071711;
+}
+.terminal-scope::before,
+.terminal-scope::after { content: ''; position: absolute; left: 50%; top: 50%; border: 1px solid rgba(140,255,195,.56); transform: translate(-50%, -50%); }
+.terminal-scope::before { width: 52px; height: 52px; border-radius: 50%; }
+.terminal-scope::after { width: 20px; height: 20px; border-radius: 50%; border-color: rgba(255,192,105,.82); box-shadow: 0 0 10px rgba(255,192,105,.35); }
+.terminal-scope i { position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; background: #fff0bd; box-shadow: 0 0 8px #ffcf7d; transform: translate(-50%, -50%); animation: terminal-scope-blip 1.6s steps(2, end) infinite; }
+.terminal-scope b { position: absolute; left: 20%; top: 27%; width: 5px; height: 5px; background: #8affbc; box-shadow: 0 0 8px #8affbc; animation: terminal-scope-blip 2.1s steps(2, end) infinite .4s; }
+.terminal-scope span { position: absolute; right: 17%; bottom: 24%; width: 3px; height: 3px; background: #ffc169; box-shadow: 0 0 6px #ffc169; animation: terminal-scope-blip 1.3s steps(2, end) infinite .2s; }
+.terminal-dashboard-readout { display: grid; align-content: center; gap: 7px; padding: 9px 12px; min-width: 0; }
+.terminal-dashboard-readout span { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: baseline; gap: 8px; min-width: 0; }
+.terminal-dashboard-readout small { color: #84cfa2; font: 800 7px/1 "DM Mono", ui-monospace, monospace; letter-spacing: .12em; }
+.terminal-dashboard-readout strong { overflow: hidden; color: #e9ffe9; font: 800 9px/1.15 "DM Mono", ui-monospace, monospace; letter-spacing: .065em; text-overflow: ellipsis; text-shadow: 0 0 8px rgba(128,255,184,.24); white-space: nowrap; }
+.terminal-dashboard-readout span:nth-child(2) strong { color: #8affbb; }
+.terminal-dashboard-readout span:nth-child(3) strong { color: #ffd79a; }
+.terminal-dashboard[data-state="boss-lock"] .terminal-dashboard-readout span:nth-child(2) strong,
+.terminal-dashboard[data-state="boss-lock"] .terminal-dashboard-readout span:nth-child(3) strong { color: #ff8f76; }
+.terminal-dashboard[data-state="authorized"] .terminal-dashboard-readout span:nth-child(3) strong { color: #8affbc; }
+.terminal-signal-bars { display: flex; align-items: end; justify-content: center; gap: 4px; padding: 10px 8px; border-left: 1px solid rgba(132,246,185,.3); background: rgba(0,0,0,.17); }
+.terminal-signal-bars i { width: 5px; height: var(--bar-height, 42%); background: linear-gradient(#d8ffe4, #70eaa8 45%, #276a4c); box-shadow: 0 0 7px rgba(110,255,177,.33); animation: terminal-signal-bar 1.2s steps(3, end) infinite var(--bar-delay, 0s); }
+.terminal-signal-bars i:nth-child(1) { --bar-height: 35%; --bar-delay: -.2s; }.terminal-signal-bars i:nth-child(2) { --bar-height: 76%; --bar-delay: -.6s; }.terminal-signal-bars i:nth-child(3) { --bar-height: 52%; --bar-delay: -.35s; }.terminal-signal-bars i:nth-child(4) { --bar-height: 89%; --bar-delay: -.8s; }.terminal-signal-bars i:nth-child(5) { --bar-height: 43%; --bar-delay: -.48s; }.terminal-signal-bars i:nth-child(6) { --bar-height: 66%; --bar-delay: -.12s; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-header { padding-bottom: 7px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console h2 { margin: 8px 0 6px; font-size: clamp(19px, 3.4vw, 30px); }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-summary { margin: 0; font-size: clamp(10px, 1.5vw, 13px); line-height: 1.45; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-author-line { margin: 8px 0 0; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-positioning { margin: 7px 0 0; font-size: 8px; line-height: 1.45; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings { margin-top: 10px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid article { min-height: 63px; padding: 8px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid strong { font-size: 9px; line-height: 1.28; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing { margin: 0; min-height: 230px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing-page { min-height: 145px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-intro-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; padding: 0; border: 0; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-metric { min-height: 104px; padding: 14px 11px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-card { min-height: 255px; padding: 11px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-card h3 { font-size: 12px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-card p { font-size: 9px; line-height: 1.35; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-divider { margin: 2px 0 8px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge { margin: 0; min-height: 250px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-ability { margin: 9px 0 0; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-actions { margin-top: 9px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-screen-swap > :not(.terminal-topbar):not(.scroll-index):not(.scroll-tour):not(.terminal-route-note):not(.terminal-command-strip):not(.close-scroll) { animation: terminal-screen-swap .19s steps(4, end); }
+
+/* Distinct pocket programs: familiar arcade-language interactions rendered as
+   low-resolution terminal hardware, not as another stack of document cards. */
+.circuit-link-game, .packet-sort-game, .memory-relay-game, .stack-order-game, .switchboard-game, .firewall-path-game {
+  display: grid;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.circuit-ports, .stack-order-readout, .switchboard-readout, .firewall-readout, .memory-readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #9ed5ad;
+  font: 800 8px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.circuit-ports strong, .stack-order-readout strong, .switchboard-readout strong, .firewall-readout strong, .memory-readout strong { color: #ffe2a8; font-size: 8px; }
+.circuit-ports span:first-child { color: #8affbc; }.circuit-ports span:last-child { color: #ffc46f; }
+.circuit-grid { display: grid; grid-template-columns: repeat(var(--circuit-columns), minmax(0, 1fr)); gap: 4px; width: min(100%, 260px); margin: 0 auto; padding: 6px; border: 2px solid #587b61; background: #06140e; box-shadow: inset 0 0 0 2px #102c1b; }
+.circuit-slot { position: relative; display: block; min-width: 0; }
+.circuit-slot.is-source::before, .circuit-slot.is-output::after { position: absolute; z-index: 3; top: 50%; width: 12px; height: 7px; border: 1px solid #bfe9c8; background: #1f6742; content: ''; transform: translateY(-50%); }
+.circuit-slot.is-source::before { right: calc(100% - 2px); box-shadow: -4px 0 #8affbc; }.circuit-slot.is-output::after { left: calc(100% - 2px); box-shadow: 4px 0 #ffc46f; }
+.reading-overlay.terminal-record .scroll-challenge-steps .circuit-tile { position: relative; display: block; aspect-ratio: 1; width: 100%; min-height: 0; padding: 0; overflow: hidden; border: 2px solid #476d54; background: linear-gradient(135deg, #173522 0 45%, #0b1e13 45% 55%, #173522 55%); image-rendering: pixelated; }
+.reading-overlay.terminal-record .scroll-challenge-steps .circuit-tile:hover, .reading-overlay.terminal-record .scroll-challenge-steps .circuit-tile:focus-visible { border-color: #ffc169; background: #264b2f; }
+.circuit-core { position: absolute; z-index: 2; left: 50%; top: 50%; width: 18%; height: 18%; background: #b8f5c4; box-shadow: 0 0 8px #8affbc; transform: translate(-50%, -50%); }
+.circuit-trace { position: absolute; z-index: 1; background: #76d899; box-shadow: 0 0 6px rgba(112,255,169,.65); }
+.circuit-trace.is-n, .circuit-trace.is-s { left: 45%; width: 10%; height: 50%; }.circuit-trace.is-n { top: 0; }.circuit-trace.is-s { bottom: 0; }
+.circuit-trace.is-e, .circuit-trace.is-w { top: 45%; width: 50%; height: 10%; }.circuit-trace.is-e { right: 0; }.circuit-trace.is-w { left: 0; }
+.packet-belt { position: relative; display: grid; gap: 5px; overflow: hidden; padding: 10px 13px; border: 2px solid #5c8d67; background: repeating-linear-gradient(90deg, rgba(137,255,185,.15) 0 10px, transparent 10px 18px), #092014; color: #bcebc7; }
+.packet-belt span, .packet-lane small { color: #8bbf9a; font: 800 7px/1 "DM Mono", ui-monospace, monospace; letter-spacing: .12em; }.packet-belt strong { color: #efffe9; font: 900 12px/1.1 "DM Mono", ui-monospace, monospace; letter-spacing: .06em; }.packet-belt i { position: absolute; right: -14px; top: 0; width: 28px; height: 100%; background: rgba(255,194,104,.72); box-shadow: -12px 0 0 rgba(255,194,104,.22); animation: terminal-packet-scan 1s steps(4, end) infinite; }
+.packet-metric { padding: 6px 9px; border-left: 3px solid #ffc169; color: #ffe2a8; background: rgba(255,193,105,.09); font: 900 9px/1.25 "DM Mono", ui-monospace, monospace; letter-spacing: .065em; }
+.packet-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }.reading-overlay.terminal-record .scroll-challenge-steps .packet-lane { display: grid; gap: 5px; min-height: 58px; padding: 9px; text-align: left; }.packet-lane strong { color: #efffe9; font: 900 10px/1.15 "DM Mono", ui-monospace, monospace; }
+.memory-readout { align-items: center; padding: 7px 8px; border: 1px solid rgba(132,246,185,.42); background: #071910; }.memory-readout > span { color: #9ed5ad; font: 800 7px/1 "DM Mono", ui-monospace, monospace; letter-spacing: .11em; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-replay { min-height: 0; padding: 5px 7px; color: #ffdca1; font-size: 7px; }.memory-pad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-key { display: grid; place-items: center; gap: 6px; min-height: 80px; padding: 7px 4px; border-width: 2px; text-align: center; }.memory-key small { color: #9ed5ad; font: 800 8px/1 "DM Mono", ui-monospace, monospace; }.memory-key strong { font: 900 10px/1 "DM Mono", ui-monospace, monospace; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-key.key-1 { border-color: #62ca89; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-key.key-2 { border-color: #70aee6; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-key.key-3 { border-color: #ffc169; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-key.key-4 { border-color: #e676a2; }.reading-overlay.terminal-record .scroll-challenge-steps .memory-key.is-flashing { color: #07130d; background: #efffe9; box-shadow: 0 0 0 3px #ffc169, 0 0 22px #efffe9; }
+.stack-modules { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }.reading-overlay.terminal-record .scroll-challenge-steps .stack-module { display: grid; gap: 5px; min-height: 87px; padding: 8px 5px; text-align: left; }.stack-module small { color: #8fcda0; font: 800 7px/1 "DM Mono", ui-monospace, monospace; }.stack-module strong { color: #efffe9; font: 900 8px/1.15 "DM Mono", ui-monospace, monospace; }.stack-module span { color: #ffd19a; font: 800 7px/1 "DM Mono", ui-monospace, monospace; letter-spacing: .08em; }.reading-overlay.terminal-record .scroll-challenge-steps .stack-module.is-selected { border-color: #ffc169; background: rgba(255,193,105,.2); box-shadow: inset 0 0 0 2px rgba(255,236,183,.1); }
+.switch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; width: min(100%, 258px); margin: 0 auto; }.reading-overlay.terminal-record .scroll-challenge-steps .switch-cell { position: relative; min-height: 67px; padding: 0; border: 2px solid #496e54; background: #091b11; }.switch-cell i { display: block; width: 24px; height: 24px; margin: 0 auto 7px; border: 4px solid #274f36; background: #102e1c; box-shadow: inset 0 0 0 3px #07130d; }.switch-cell span { color: #7ea78a; font: 800 7px/1 "DM Mono", ui-monospace, monospace; }.reading-overlay.terminal-record .scroll-challenge-steps .switch-cell.is-on { border-color: #91f3b5; background: #164b2a; }.switch-cell.is-on i { border-color: #d6ffe1; background: #81f0a8; box-shadow: 0 0 13px rgba(127,255,169,.8), inset 0 0 0 3px #34774b; }.switch-cell.is-on span { color: #eaffed; }
+.firewall-grid { display: grid; grid-template-columns: repeat(var(--firewall-columns), minmax(0, 1fr)); gap: 4px; width: min(100%, 270px); margin: 0 auto; padding: 6px; border: 2px solid #5d7b65; background: #06140e; }.reading-overlay.terminal-record .scroll-challenge-steps .firewall-node { min-height: 48px; padding: 4px; border-width: 2px; color: #9cd5aa; font: 900 9px/1 "DM Mono", ui-monospace, monospace; }.reading-overlay.terminal-record .scroll-challenge-steps .firewall-node.is-blocked { border-color: #5f3e3a; background: #1e1110; color: #965f54; opacity: 1; }.reading-overlay.terminal-record .scroll-challenge-steps .firewall-node.is-used { border-color: #80e7a4; background: #164728; color: #efffe9; }.reading-overlay.terminal-record .scroll-challenge-steps .firewall-node.is-current { border-color: #ffc169; background: #5a3b18; color: #fff3d2; box-shadow: 0 0 12px rgba(255,193,105,.42); }
+@keyframes terminal-packet-scan { 0%, 100% { transform: translateX(0); opacity: .16; } 48% { transform: translateX(-190px); opacity: .82; } }
+
+/* Simplified field terminal: a quiet monochrome CRT, not a futuristic
+   dashboard. The small amount of chrome that remains is functional—menu,
+   next action, and exit—so the case programs stay the visual focus. */
+.reading-overlay.terminal-record {
+  padding: clamp(12px, 3vh, 26px) clamp(8px, 2vw, 22px);
+  background: rgba(0, 0, 0, .9);
+  backdrop-filter: none;
+}
+.reading-overlay.terminal-record .scroll-shell {
+  width: min(760px, 96vw);
+  padding: 6px;
+  border: 3px solid #4d574f;
+  background: #101310;
+  box-shadow: 6px 7px 0 rgba(0, 0, 0, .72), inset 0 0 0 1px #1e2820;
+}
+.reading-overlay.terminal-record .scroll-shell::before,
+.reading-overlay.terminal-record .scroll-shell::after { display: none; }
+.reading-overlay.terminal-record .scroll-paper,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console {
+  min-height: min(540px, calc(100dvh - 58px));
+  max-height: min(680px, calc(100dvh - 42px));
+  padding: 15px 16px 13px;
+  border: 1px solid #6a7b6e;
+  border-radius: 0;
+  background: #071009;
+  box-shadow: inset 0 0 0 1px #17231a;
+}
+.reading-overlay.terminal-record .scroll-paper::before {
+  background: repeating-linear-gradient(0deg, rgba(186, 255, 201, .028) 0 1px, transparent 1px 3px);
+}
+.reading-overlay.terminal-record .scroll-paper::after {
+  background: linear-gradient(180deg, rgba(212,255,219,.05), transparent 3px 97%, rgba(0,0,0,.24));
+}
+.reading-overlay.terminal-record .terminal-topbar {
+  min-height: 22px;
+  margin: 0 0 9px;
+  padding: 5px 7px;
+  border: 0;
+  border-bottom: 1px solid #536657;
+  background: transparent;
+  box-shadow: none;
+  color: #9cceaa;
+  font-size: 7px;
+  letter-spacing: .1em;
+}
+.reading-overlay.terminal-record .terminal-brand { color: #b8f5c3; }
+.reading-overlay.terminal-record .terminal-title { color: #7fa58a; }
+.reading-overlay.terminal-record .terminal-led { color: #b8f5c3; font-size: 7px; }
+.reading-overlay.terminal-record .terminal-led i { width: 5px; height: 5px; border-radius: 0; box-shadow: none; animation: none; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index {
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #3c4e40;
+  background: transparent;
+  box-shadow: none;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button {
+  min-height: 27px;
+  padding: 4px 5px;
+  border: 0;
+  border-right: 1px solid #2a382d;
+  background: transparent;
+  box-shadow: none;
+  color: #7f9f86;
+  font-size: 6px;
+  justify-content: center;
+  text-align: center;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button::before { display: none; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button:last-child { border-right: 0; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button.is-active {
+  border-color: #2a382d;
+  background: #163220;
+  color: #dcffe4;
+  box-shadow: inset 0 -2px #b8f5c3;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button:disabled { background: transparent; color: #405747; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour {
+  min-height: 0;
+  margin: 8px 0 10px;
+  padding: 6px 0;
+  border: 0;
+  border-bottom: 1px solid #314036;
+  background: transparent;
+  box-shadow: none;
+  color: #9abca0;
+  font: 700 7px/1.35 "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour > span::before { color: #b8f5c3; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour button {
+  min-height: 24px;
+  padding: 4px 7px;
+  border: 1px solid #607565;
+  background: #102016;
+  box-shadow: none;
+  color: #d7f7dc;
+  font-size: 7px;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour button:hover,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-tour button:focus-visible { border-color: #b8f5c3; background: #183323; color: #effff1; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-header { padding: 3px 0 9px; border-bottom-color: #324438; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console h2 { margin: 9px 0 5px; color: #d7f7dc; font-size: clamp(18px, 3vw, 25px); text-shadow: none; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-summary { color: #a5c9ac; font-size: 10px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid article,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-metric,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-card,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge {
+  border-color: #3a5141;
+  background: rgba(11, 27, 16, .5);
+  box-shadow: none;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid article { min-height: 52px; padding: 7px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing-page { background: transparent; border-left-color: #6b8671; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing-next,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .close-scroll {
+  min-height: 28px;
+  margin-top: 9px;
+  border-color: #607565;
+  background: #102016;
+  box-shadow: none;
+  color: #d7f7dc;
+  font-size: 8px;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-command-strip {
+  margin-top: auto;
+  padding: 6px 0 0;
+  border-top-color: #34453a;
+  border-bottom: 0;
+  color: #789980;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .terminal-command-strip span:last-child { color: #9fbea4; }
+
+/* The portfolio terminal is intentionally a pseudo shell: amber phosphor,
+   a running transcript, and command words the player clicks. It borrows the
+   readable cadence of an old local terminal rather than dashboard chrome. */
+.reading-overlay.terminal-record {
+  --terminal-amber: #f2a72e;
+  --terminal-ink: #ffc766;
+  --terminal-muted: #a66d27;
+  background: rgba(0, 0, 0, .94);
+}
+.reading-overlay.terminal-record .scroll-shell {
+  width: min(840px, 96vw);
+  padding: 9px;
+  border-color: #322617;
+  background: #0c0804;
+  box-shadow: 0 15px 46px rgba(0,0,0,.86), inset 0 0 0 2px #4d3920;
+}
+.reading-overlay.terminal-record .scroll-paper,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console {
+  min-height: min(570px, calc(100dvh - 56px));
+  padding: 12px;
+  border: 2px solid #3e2e1a;
+  background: radial-gradient(ellipse at 50% 40%, rgba(101,62,18,.19), transparent 68%), #100b05;
+  box-shadow: inset 0 0 38px rgba(0,0,0,.72), inset 0 0 0 2px #24190d;
+}
+.reading-overlay.terminal-record .scroll-paper::before { background: repeating-linear-gradient(0deg, rgba(255,185,72,.04) 0 1px, transparent 1px 4px); }
+.reading-overlay.terminal-record .scroll-paper::after { background: linear-gradient(90deg, rgba(255,176,61,.05), transparent 3px 97%, rgba(0,0,0,.36)); }
+.reading-overlay.terminal-record .pseudo-terminal {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #5b4224;
+  background: rgba(14, 9, 4, .83);
+  color: #f2a72e;
+  font-family: "DM Mono", ui-monospace, monospace;
+  text-shadow: 0 0 7px rgba(242,167,46,.35);
+}
+.pseudo-terminal-title,
+.pseudo-terminal-prompt {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 27px;
+  padding: 0 10px;
+  border-bottom: 1px solid rgba(170,113,37,.5);
+  color: #f6b64d;
+  font: 800 8px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+}
+.pseudo-terminal-title span:nth-child(2) { color: #b7792c; }.pseudo-terminal-title span:last-child { margin-left: auto; color: #ffca64; }
+.pseudo-terminal-output {
+  min-height: 0;
+  max-height: min(372px, 53dvh);
+  overflow: auto;
+  padding: 12px 13px;
+  scrollbar-color: #84571f #150d05;
+  scrollbar-width: thin;
+}
+.pseudo-terminal-output::-webkit-scrollbar { width: 7px; }.pseudo-terminal-output::-webkit-scrollbar-track { background: #150d05; }.pseudo-terminal-output::-webkit-scrollbar-thumb { background: #84571f; }
+.pseudo-terminal-line {
+  min-height: 1.45em;
+  margin: 0;
+  color: #e99e2d;
+  font: 700 clamp(10px, 1.35vw, 13px)/1.45 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .01em;
+  opacity: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  animation: terminal-transcript-in .01s steps(1, end) forwards;
+  animation-delay: calc(var(--terminal-line, 0) * 34ms);
+}
+.pseudo-terminal-line.is-system { color: #ffc766; font-weight: 900; }
+.pseudo-terminal-prompt { border-top: 1px solid rgba(170,113,37,.38); border-bottom: 0; color: #f6b64d; }
+.pseudo-terminal-prompt input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #f2a72e; font: 700 8px/1 "DM Mono", ui-monospace, monospace; letter-spacing: .02em; }
+.pseudo-terminal-prompt input::placeholder { color: #b37528; opacity: 1; }
+.pseudo-terminal-prompt i { width: 8px; height: 13px; margin-left: 1px; background: #ffc766; box-shadow: 0 0 8px rgba(255,199,102,.72); animation: pseudo-terminal-cursor .85s steps(2, end) infinite; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal { flex: 0 0 auto; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-output { max-height: 122px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-line { font-size: 9px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge {
+  margin-top: 10px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #ffd180;
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge > small,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge > strong,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge > p { display: none; }
+
+/* Mission records are a real full-screen shell, not a document wearing a
+   terminal skin. Every way through the record lives in the command area. */
+.reading-overlay.terminal-record {
+  inset: 0;
+  display: grid;
+  place-items: stretch;
+  padding: 0;
+  background: #020100;
+  overflow: hidden;
+}
+.reading-overlay.terminal-record .scroll-shell {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  padding: 0;
+  border: 0;
+  background: #080502;
+  box-shadow: none;
+}
+.reading-overlay.terminal-record .scroll-roller { display: none; }
+.reading-overlay.terminal-record .scroll-paper,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: none;
+  padding: clamp(16px, 3.1vw, 46px) clamp(16px, 5.2vw, 88px);
+  border: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(122, 69, 15, .15), transparent 66%),
+    repeating-linear-gradient(0deg, rgba(255, 175, 53, .026) 0 1px, transparent 1px 4px),
+    #090603;
+  box-shadow: inset 0 0 92px rgba(0, 0, 0, .88);
+  overflow: hidden;
+}
+.reading-overlay.terminal-record .scroll-paper::before,
+.reading-overlay.terminal-record .scroll-paper::after { display: none; }
+.reading-overlay.terminal-record .pseudo-terminal {
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid #6f4a20;
+  background: rgba(11, 6, 2, .96);
+  box-shadow: inset 0 0 0 2px #241507, inset 0 0 54px rgba(0, 0, 0, .86), 0 0 22px rgba(237, 146, 35, .05);
+}
+.pseudo-terminal-title,
+.pseudo-terminal-prompt {
+  min-height: clamp(32px, 4.3dvh, 44px);
+  padding: 0 clamp(10px, 1.8vw, 28px);
+  border-color: rgba(193, 122, 35, .46);
+  font-size: clamp(8px, 1.1vw, 12px);
+}
+.pseudo-terminal-output {
+  max-height: none;
+  padding: clamp(17px, 3vw, 44px) clamp(14px, 3vw, 44px);
+  scrollbar-color: #985b1a #110802;
+}
+.pseudo-terminal-line {
+  min-height: 1.42em;
+  font-size: clamp(11px, 1.22vw, 15px);
+  line-height: 1.42;
+  letter-spacing: .012em;
+}
+.pseudo-terminal-completions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid rgba(193, 122, 35, .42);
+  background: rgba(29, 15, 4, .52);
+}
+.pseudo-terminal-option {
+  display: grid;
+  grid-template-columns: minmax(116px, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  min-height: clamp(30px, 4.5dvh, 42px);
+  padding: 6px clamp(10px, 1.8vw, 28px);
+  border: 0;
+  border-right: 1px solid rgba(193, 122, 35, .2);
+  border-bottom: 1px solid rgba(193, 122, 35, .18);
+  background: transparent;
+  color: #d9902c;
+  text-align: left;
+  font: 800 clamp(9px, 1.05vw, 12px)/1.25 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .045em;
+  cursor: pointer;
+}
+.pseudo-terminal-option:nth-child(2n) { border-right: 0; }
+.pseudo-terminal-option span { color: #ffc766; white-space: nowrap; }
+.pseudo-terminal-option small { min-width: 0; color: #a8702a; font: 700 .9em/1.25 "DM Mono", ui-monospace, monospace; letter-spacing: .01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pseudo-terminal-option:hover,
+.pseudo-terminal-option:focus-visible,
+.pseudo-terminal-option.is-selected { background: rgba(202, 121, 25, .15); outline: 0; box-shadow: inset 3px 0 0 #ffc766; }
+.pseudo-terminal-option.is-primary span { color: #ffce70; }
+.pseudo-terminal-option:disabled { cursor: not-allowed; background: rgba(0, 0, 0, .18); }
+.pseudo-terminal-option:disabled span,
+.pseudo-terminal-option:disabled small { color: #69451f; text-decoration: none; }
+.pseudo-terminal-prompt input { font-size: clamp(10px, 1.1vw, 13px); }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal {
+  flex: 0 0 min(37dvh, 336px);
+  height: min(37dvh, 336px);
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-output { max-height: none; padding-block: 13px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-line { font-size: clamp(10px, 1vw, 13px); }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-completions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-option { min-height: 29px; padding-block: 4px; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .scroll-challenge {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin-top: clamp(10px, 1.8dvh, 18px);
+  padding: clamp(10px, 1.8vw, 20px);
+  border: 1px solid rgba(193, 122, 35, .38);
+  background: rgba(13, 7, 2, .72);
+}
+/* One phosphor color keeps the terminal legible. The bright row is always the
+   recommended next action; the remaining rows are optional navigation. */
+.reading-overlay.terminal-record {
+  --terminal-amber: #63ff99;
+  --terminal-ink: #ddffe8;
+  --terminal-muted: #4ca46d;
+  --scroll-accent: #69ff9b !important;
+  background: #010602;
+}
+.reading-overlay.terminal-record .scroll-shell { background: #020a04; }
+.reading-overlay.terminal-record .scroll-paper,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console {
+  background:
+    radial-gradient(ellipse at center, rgba(45, 255, 121, .1), transparent 64%),
+    repeating-linear-gradient(0deg, rgba(91, 255, 145, .03) 0 1px, transparent 1px 4px),
+    #020a04;
+  filter: none;
+}
+.reading-overlay.terminal-record .pseudo-terminal {
+  border-color: #3f9b61;
+  background: rgba(2, 12, 5, .97);
+  box-shadow: inset 0 0 0 2px #0d3019, inset 0 0 54px rgba(0, 0, 0, .86), 0 0 22px rgba(79, 255, 138, .08);
+}
+.reading-overlay.terminal-record .pseudo-terminal-title,
+.reading-overlay.terminal-record .pseudo-terminal-prompt { color: #b8ffd0; border-color: rgba(89, 238, 135, .4); }
+.reading-overlay.terminal-record .pseudo-terminal-title span:nth-child(2),
+.reading-overlay.terminal-record .pseudo-terminal-title span:last-child,
+.reading-overlay.terminal-record .pseudo-terminal-line,
+.reading-overlay.terminal-record .pseudo-terminal-line.is-system,
+.reading-overlay.terminal-record .pseudo-terminal-prompt input { color: #8dffb5; }
+.reading-overlay.terminal-record .pseudo-terminal-prompt input::placeholder { color: #4c9d69; }
+.reading-overlay.terminal-record .pseudo-terminal-prompt i { background: #b9ffd1; box-shadow: 0 0 8px rgba(113, 255, 161, .72); }
+.reading-overlay.terminal-record .pseudo-terminal-completions { border-color: rgba(84, 239, 132, .38); background: rgba(7, 30, 13, .72); }
+.reading-overlay.terminal-record .pseudo-terminal-option { border-color: rgba(84, 239, 132, .18); color: #6cda91; }
+.reading-overlay.terminal-record .pseudo-terminal-option span,
+.reading-overlay.terminal-record .pseudo-terminal-option.is-primary span { color: #b4ffd0; }
+.reading-overlay.terminal-record .pseudo-terminal-option small { color: #579b6b; }
+.reading-overlay.terminal-record .pseudo-terminal-option.is-primary {
+  grid-column: 1 / -1;
+  order: -1;
+  min-height: clamp(38px, 5.4dvh, 52px);
+  background: rgba(49, 206, 96, .13);
+}
+.reading-overlay.terminal-record .pseudo-terminal-option:hover,
+.reading-overlay.terminal-record .pseudo-terminal-option:focus-visible,
+.reading-overlay.terminal-record .pseudo-terminal-option.is-selected {
+  background: rgba(67, 230, 112, .16);
+  box-shadow: inset 3px 0 0 #a8ffc6;
+}
+.reading-overlay.terminal-record .pseudo-terminal-option:disabled,
+.reading-overlay.terminal-record .pseudo-terminal-option:disabled span,
+.reading-overlay.terminal-record .pseudo-terminal-option:disabled small { color: #31583e; }
+.reading-overlay.terminal-record .scroll-challenge .is-terminal-key-selected {
+  outline: 2px solid #a7ffbf !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(49, 255, 122, .18), 0 0 16px rgba(59, 255, 131, .28) !important;
+  position: relative;
+  z-index: 2;
+}
+.reading-overlay.terminal-record .scroll-challenge .is-terminal-key-selected::after {
+  content: 'KEYBOARD';
+  position: absolute;
+  top: -9px;
+  right: 4px;
+  padding: 2px 4px;
+  background: #082211;
+  color: #a7ffbf;
+  font: 800 6px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.reading-overlay.terminal-record.terminal-booting .scroll-shell { animation: terminal-takeover-boot .82s steps(9, end) both; }
+.reading-overlay.terminal-record.terminal-booting .pseudo-terminal-output,
+.reading-overlay.terminal-record.terminal-booting .pseudo-terminal-completions,
+.reading-overlay.terminal-record.terminal-booting .pseudo-terminal-prompt { animation: terminal-content-power-up .52s steps(6, end) .26s both; }
+.reading-overlay.terminal-record.terminal-shutting-down { pointer-events: none; }
+.reading-overlay.terminal-record.terminal-shutting-down .scroll-shell { animation: terminal-takeover-shutdown .68s steps(8, end) both; }
+@keyframes terminal-takeover-boot {
+  0% { opacity: 0; clip-path: inset(50% 0 50%); filter: brightness(2.7) contrast(1.8); }
+  18% { opacity: 1; clip-path: inset(48% 0 48%); }
+  42% { clip-path: inset(1% 0 1%); filter: brightness(1.45) contrast(1.2); }
+  100% { opacity: 1; clip-path: inset(0); filter: none; }
+}
+@keyframes terminal-content-power-up { from { opacity: 0; filter: brightness(2); } to { opacity: 1; filter: none; } }
+@keyframes terminal-takeover-shutdown {
+  0% { opacity: 1; clip-path: inset(0); filter: brightness(1.1); }
+  48% { opacity: 1; clip-path: inset(48% 0 48%); filter: brightness(2.2); }
+  100% { opacity: 0; clip-path: inset(50% 0 50%); filter: brightness(.2); }
+}
+@media (max-width: 700px) {
+  .reading-overlay.terminal-record .scroll-paper,
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console { padding: 10px; }
+  .pseudo-terminal-completions { grid-template-columns: 1fr; }
+  .pseudo-terminal-option,
+  .pseudo-terminal-option:nth-child(2n) { border-right: 0; }
+  .pseudo-terminal-option { grid-template-columns: minmax(108px, auto) minmax(0, 1fr); }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console[data-terminal-screen="4"] .pseudo-terminal-completions { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading-overlay.terminal-record.terminal-booting .scroll-shell,
+  .reading-overlay.terminal-record.terminal-booting .pseudo-terminal-output,
+  .reading-overlay.terminal-record.terminal-booting .pseudo-terminal-completions,
+  .reading-overlay.terminal-record.terminal-booting .pseudo-terminal-prompt,
+  .reading-overlay.terminal-record.terminal-shutting-down .scroll-shell { animation-duration: .01ms; }
+}
+@keyframes terminal-transcript-in { to { opacity: 1; } }
+@keyframes pseudo-terminal-cursor { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+@keyframes terminal-scope-blip { 0%, 55% { opacity: .2; } 56%, 100% { opacity: 1; } }
+@keyframes terminal-signal-bar { 0%, 100% { transform: scaleY(.45); opacity: .52; } 48% { transform: scaleY(1); opacity: 1; } }
+@keyframes terminal-screen-swap { from { opacity: .15; filter: brightness(1.8); transform: translateX(7px); } to { opacity: 1; filter: none; transform: translateX(0); } }
+
+@keyframes terminal-link-pulse { 50% { opacity: .42; box-shadow: 0 0 2px #8affbb; } }
+@keyframes terminal-boot-in {
+  0% { opacity: 0; transform: translateY(15px) scale(.94); filter: brightness(.25) contrast(1.35); }
+  34% { opacity: 1; transform: translateY(0) scaleX(1.018) scaleY(.15); filter: brightness(1.6) contrast(1.22); }
+  62% { opacity: 1; transform: translateY(0) scaleX(.99) scaleY(1.025); filter: brightness(1.12); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+
+@media (max-width: 760px) {
+  .reading-overlay.terminal-record { padding: 10px 8px 16px; }
+  .reading-overlay.terminal-record .scroll-shell { width: min(100%, 96vw); padding: 8px; }
+  .reading-overlay.terminal-record .scroll-paper { max-height: calc(100dvh - 36px); padding: 17px 15px 19px; }
+  .terminal-topbar { gap: 7px; margin: -2px -2px 12px; padding: 6px 7px; font-size: 7px; letter-spacing: .08em; }
+  .terminal-led { font-size: 0; }
+  .terminal-led i { width: 7px; height: 7px; }
+  .reading-overlay.terminal-record .scroll-paper h2 { margin-top: 11px; font-size: clamp(18px, 7.4vw, 28px); }
+  .reading-overlay.terminal-record .scroll-index { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
+  .reading-overlay.terminal-record .scroll-index button { min-height: 29px; font-size: 7px; }
+  .reading-overlay.terminal-record .scroll-index button:last-child { grid-column: 1 / -1; }
+  .reading-overlay.terminal-record .scroll-tour { align-items: stretch; flex-direction: column; gap: 7px; }
+  .reading-overlay.terminal-record .scroll-tour button { width: 100%; min-height: 30px; }
+  .terminal-route-note { align-items: flex-start; flex-direction: column; gap: 3px; font-size: 7px; }
+  .terminal-command-strip { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .reading-overlay.terminal-record .close-scroll { min-width: 0; width: 100%; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console { min-height: 0; max-height: calc(100dvh - 36px); padding-bottom: 13px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-index button:last-child { grid-column: auto; }
+  .terminal-dashboard { grid-template-columns: 78px minmax(0, 1fr); min-height: 76px; margin-bottom: 8px; }
+  .terminal-signal-bars { display: none; }
+  .terminal-dashboard-readout { gap: 5px; padding: 7px 9px; }
+  .terminal-dashboard-readout span { grid-template-columns: 49px minmax(0, 1fr); gap: 5px; }
+  .terminal-dashboard-readout small { font-size: 6px; }
+  .terminal-dashboard-readout strong { font-size: 7px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid { gap: 4px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid article { min-height: 54px; padding: 6px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-findings-grid strong { font-size: 8px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing { min-height: 0; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-briefing-page { min-height: 0; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-intro-grid,
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-card:last-child { grid-column: 1 / -1; min-height: 0; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-proof-card { min-height: 0; padding: 8px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge { min-height: 0; }
+}
+
+@media (max-height: 560px) and (min-width: 761px) {
+  .reading-overlay.terminal-record .scroll-paper { padding-top: 16px; padding-bottom: 16px; }
+  .terminal-topbar { margin-bottom: 9px; }
+  .terminal-route-note { margin-bottom: 9px; }
+}
+
+/* Final terminal system ----------------------------------------------------
+   Record mode is a two-pane shell (content + commands). Program mode owns the
+   keyboard and collapses shell navigation so there is only one active target. */
+.reading-overlay.terminal-record {
+  --term-bg: #010603;
+  --term-panel: #031108;
+  --term-panel-2: #061a0d;
+  --term-rule: #1d5c33;
+  --term-dim: #4e8c62;
+  --term-text: #86e7a0;
+  --term-bright: #ceffda;
+  --term-ink: #001c09;
+  inset: 0;
+  padding: 0 !important;
+  background: #000;
+}
+.reading-overlay.terminal-record.open:not(.terminal-booting):not(.terminal-shutting-down) .scroll-shell {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0);
+  filter: none;
+}
+.reading-overlay.terminal-record .scroll-shell {
+  width: 100vw !important;
+  max-width: none;
+  height: 100dvh;
+  padding: 0 !important;
+  border: 0;
+  background: var(--term-bg);
+  box-shadow: none;
+  filter: none;
+}
+.reading-overlay.terminal-record .scroll-paper,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  padding: clamp(12px, 2vw, 26px) !important;
+  border: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(134, 231, 160, .025) 0 1px, transparent 1px 4px),
+    var(--term-bg);
+  box-shadow: inset 0 0 48px rgba(0, 20, 8, .7);
+  filter: none !important;
+  overflow: hidden;
+}
+.reading-overlay.terminal-record .pseudo-terminal {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 32%);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title title"
+    "output commands"
+    "prompt prompt";
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 2px solid var(--term-rule);
+  background: var(--term-panel);
+  color: var(--term-text);
+  box-shadow: inset 0 0 0 2px #071f10, inset 0 0 24px rgba(0, 0, 0, .72);
+  text-shadow: 0 0 3px rgba(134, 231, 160, .28);
+}
+.reading-overlay.terminal-record .pseudo-terminal-title {
+  grid-area: title;
+  min-height: 38px;
+  padding: 0 clamp(11px, 1.7vw, 22px);
+  border-bottom: 1px solid var(--term-rule);
+  color: var(--term-text);
+  background: #04150a;
+  font-size: clamp(9px, 1vw, 12px);
+}
+.reading-overlay.terminal-record .pseudo-terminal-title span:nth-child(2) { color: var(--term-dim); }
+.reading-overlay.terminal-record .pseudo-terminal-title span:last-child { color: var(--term-bright); }
+.reading-overlay.terminal-record .pseudo-terminal-output {
+  grid-area: output;
+  max-height: none;
+  padding: clamp(16px, 2.5vw, 34px);
+  border-right: 1px solid var(--term-rule);
+  color: var(--term-text);
+  scrollbar-color: var(--term-rule) var(--term-bg);
+}
+.reading-overlay.terminal-record .pseudo-terminal-output::-webkit-scrollbar-track { background: var(--term-bg); }
+.reading-overlay.terminal-record .pseudo-terminal-output::-webkit-scrollbar-thumb { background: var(--term-rule); }
+.reading-overlay.terminal-record .pseudo-terminal-line {
+  color: var(--term-text);
+  font-size: clamp(12px, 1.15vw, 15px);
+  line-height: 1.48;
+  text-shadow: none;
+}
+.reading-overlay.terminal-record .pseudo-terminal-line.is-system { color: var(--term-bright); }
+.reading-overlay.terminal-record .pseudo-terminal-completions {
+  grid-area: commands;
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+  min-height: 0;
+  overflow: auto;
+  border: 0;
+  background: #020c05;
+}
+.pseudo-terminal-command-help {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--term-rule);
+  background: var(--term-panel-2);
+  color: var(--term-text);
+  font: 800 9px/1.25 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .06em;
+}
+.pseudo-terminal-command-help strong { color: var(--term-bright); }
+.pseudo-terminal-command-help span { color: var(--term-dim); font-size: 8px; line-height: 1.45; }
+.reading-overlay.terminal-record .pseudo-terminal-option,
+.reading-overlay.terminal-record .pseudo-terminal-option:nth-child(2n) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 1px solid rgba(29, 92, 51, .7);
+  background: transparent;
+  color: var(--term-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.reading-overlay.terminal-record .pseudo-terminal-option span { display: flex; align-items: center; gap: 7px; color: var(--term-bright); }
+.reading-overlay.terminal-record .pseudo-terminal-option kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 18px;
+  padding: 2px 4px;
+  border: 1px solid var(--term-rule);
+  color: var(--term-text);
+  background: #061d0e;
+  font: inherit;
+  font-size: 8px;
+}
+.reading-overlay.terminal-record .pseudo-terminal-option small {
+  color: var(--term-dim);
+  font-size: 10px;
+  line-height: 1.38;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.reading-overlay.terminal-record .pseudo-terminal-option.is-primary { order: -1; min-height: 66px; background: #082714; }
+.reading-overlay.terminal-record .pseudo-terminal-option:hover,
+.reading-overlay.terminal-record .pseudo-terminal-option:focus-visible,
+.reading-overlay.terminal-record .pseudo-terminal-option.is-selected {
+  outline: 0;
+  background: #0c351b;
+  box-shadow: inset 5px 0 0 var(--term-bright);
+}
+.reading-overlay.terminal-record .pseudo-terminal-option.is-selected span::after {
+  content: 'NEXT';
+  margin-left: auto;
+  color: var(--term-bright);
+  font-size: 8px;
+}
+.reading-overlay.terminal-record .pseudo-terminal-prompt {
+  grid-area: prompt;
+  min-height: 42px;
+  padding: 0 clamp(11px, 1.7vw, 22px);
+  border-top: 1px solid var(--term-rule);
+  color: var(--term-bright);
+  background: #04150a;
+}
+.reading-overlay.terminal-record .pseudo-terminal-prompt input { color: var(--term-text); font-size: 12px; }
+.reading-overlay.terminal-record .pseudo-terminal-prompt input::placeholder { color: var(--term-dim); }
+.reading-overlay.terminal-record .pseudo-terminal-prompt i { background: var(--term-bright); box-shadow: 0 0 4px rgba(206, 255, 218, .5); }
+
+/* Program mode: shell output becomes a compact status strip and the game gets
+   the remaining viewport. Menu/prompt are removed so arrows have one meaning. */
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-program-active .pseudo-terminal {
+  flex: 0 0 min(27dvh, 220px) !important;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "title" "output";
+  height: min(27dvh, 220px) !important;
+}
+.reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-completions,
+.reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-prompt { display: none !important; }
+.reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-output {
+  border-right: 0;
+  padding: 10px 16px;
+}
+.reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-line { font-size: clamp(10px, 1vw, 12px); line-height: 1.35; }
+.reading-overlay.terminal-record .scroll-paper[data-terminal-screen="4"]:not(.terminal-program-active) .scroll-challenge { display: none !important; }
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-program-active .scroll-challenge {
+  display: grid !important;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  gap: 6px;
+  margin-top: 10px;
+  padding: clamp(10px, 1.6vw, 18px);
+  border: 1px solid var(--term-rule);
+  background: var(--term-panel);
+  color: var(--term-text);
+  scrollbar-color: var(--term-rule) var(--term-bg);
+}
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge > small,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge > strong,
+.reading-overlay.terminal-record .scroll-paper.is-terminal-console .scroll-challenge > p { display: block !important; }
+.reading-overlay.terminal-record .scroll-challenge > small {
+  color: var(--term-dim);
+  font: 800 9px/1.3 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.reading-overlay.terminal-record .scroll-challenge > strong {
+  color: var(--term-bright);
+  font: 900 clamp(14px, 1.8vw, 19px)/1.2 "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-challenge > p {
+  margin: 0;
+  color: var(--term-text);
+  font: 700 clamp(10px, 1vw, 12px)/1.4 "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-challenge > .scroll-challenge-feedback {
+  min-height: 31px;
+  padding: 7px 9px;
+  border-left: 3px solid var(--term-bright);
+  background: #071f10;
+  color: var(--term-bright);
+}
+.reading-overlay.terminal-record .scroll-challenge-steps { min-height: 0; overflow: auto; }
+
+/* All program states use brightness, patterns, and shape—not extra hues. */
+.reading-overlay.terminal-record .scroll-challenge button,
+.reading-overlay.terminal-record .scroll-challenge input {
+  accent-color: var(--term-bright);
+}
+.reading-overlay.terminal-record .scroll-challenge button {
+  border-color: var(--term-rule) !important;
+  background: #06170b !important;
+  color: var(--term-text) !important;
+}
+.reading-overlay.terminal-record .scroll-challenge button span,
+.reading-overlay.terminal-record .scroll-challenge button small,
+.reading-overlay.terminal-record .scroll-challenge button strong { color: inherit !important; }
+.reading-overlay.terminal-record .scroll-challenge button:hover,
+.reading-overlay.terminal-record .scroll-challenge button:focus-visible { border-color: var(--term-bright) !important; background: #0b2c17 !important; }
+.reading-overlay.terminal-record .circuit-ports,
+.reading-overlay.terminal-record .stack-order-readout,
+.reading-overlay.terminal-record .switchboard-readout,
+.reading-overlay.terminal-record .firewall-readout,
+.reading-overlay.terminal-record .memory-readout,
+.reading-overlay.terminal-record .packet-belt,
+.reading-overlay.terminal-record .packet-metric,
+.reading-overlay.terminal-record .impact-dial-target,
+.reading-overlay.terminal-record .case-signal-readout { color: var(--term-text); border-color: var(--term-rule); background: #06170b; }
+.reading-overlay.terminal-record .circuit-ports *,
+.reading-overlay.terminal-record .stack-order-readout *,
+.reading-overlay.terminal-record .switchboard-readout *,
+.reading-overlay.terminal-record .firewall-readout *,
+.reading-overlay.terminal-record .memory-readout *,
+.reading-overlay.terminal-record .packet-belt *,
+.reading-overlay.terminal-record .packet-metric,
+.reading-overlay.terminal-record .impact-dial-target *,
+.reading-overlay.terminal-record .case-signal-readout * { color: var(--term-text) !important; }
+.reading-overlay.terminal-record .circuit-grid,
+.reading-overlay.terminal-record .firewall-grid,
+.reading-overlay.terminal-record .case-signal-track { border-color: var(--term-rule); background-color: #020c05; }
+.reading-overlay.terminal-record .circuit-slot.is-source::before,
+.reading-overlay.terminal-record .circuit-slot.is-output::after { border-color: var(--term-text); background: var(--term-rule); box-shadow: 0 0 4px rgba(206, 255, 218, .36); }
+.reading-overlay.terminal-record .circuit-core,
+.reading-overlay.terminal-record .circuit-trace,
+.reading-overlay.terminal-record .switch-cell.is-on i,
+.reading-overlay.terminal-record .case-signal-target,
+.reading-overlay.terminal-record .case-signal-cursor { background: var(--term-bright) !important; box-shadow: 0 0 4px rgba(206, 255, 218, .5) !important; }
+.reading-overlay.terminal-record .packet-belt i { background: var(--term-text); box-shadow: -12px 0 0 rgba(134, 231, 160, .18); }
+.reading-overlay.terminal-record .impact-dial-value { color: var(--term-bright); text-shadow: none; }
+.reading-overlay.terminal-record .memory-key.key-1,
+.reading-overlay.terminal-record .memory-key.key-2,
+.reading-overlay.terminal-record .memory-key.key-3,
+.reading-overlay.terminal-record .memory-key.key-4 { border-color: var(--term-rule) !important; }
+.reading-overlay.terminal-record .memory-key.is-flashing { background: var(--term-bright) !important; color: var(--term-ink) !important; }
+.reading-overlay.terminal-record .stack-module.is-selected,
+.reading-overlay.terminal-record .switch-cell.is-on,
+.reading-overlay.terminal-record .firewall-node.is-used,
+.reading-overlay.terminal-record .firewall-node.is-current,
+.reading-overlay.terminal-record .case-route-node.is-active,
+.reading-overlay.terminal-record .case-route-node.is-complete { border-color: var(--term-bright) !important; background: #0c351b !important; color: var(--term-bright) !important; }
+.reading-overlay.terminal-record .firewall-node.is-blocked { border-style: dashed !important; opacity: .46 !important; background: repeating-linear-gradient(135deg, #06170b 0 4px, #020a04 4px 8px) !important; color: var(--term-dim) !important; }
+.reading-overlay.terminal-record .case-signal-insights article { border-left-color: var(--term-rule); background: #06170b; }
+.reading-overlay.terminal-record .case-signal-insights strong { color: var(--term-bright); }
+.reading-overlay.terminal-record .case-signal-insights p { color: var(--term-text); }
+.reading-overlay.terminal-record .scroll-challenge.is-wrong { border-color: var(--term-bright); background: repeating-linear-gradient(135deg, #031108 0 8px, #061a0d 8px 16px); }
+.reading-overlay.terminal-record .scroll-challenge .is-terminal-key-selected {
+  outline: 2px solid var(--term-bright) !important;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 2px var(--term-bg), 0 0 6px rgba(206, 255, 218, .35) !important;
+}
+.reading-overlay.terminal-record .scroll-challenge [data-terminal-key] { position: relative; }
+.reading-overlay.terminal-record .scroll-challenge [data-terminal-key]::before {
+  content: '[' attr(data-terminal-key) ']';
+  position: absolute;
+  z-index: 6;
+  top: 3px;
+  left: 4px;
+  color: var(--term-text);
+  font: 900 7px/1 "DM Mono", ui-monospace, monospace;
+}
+.reading-overlay.terminal-record .scroll-challenge .is-terminal-key-selected::after {
+  content: '▶';
+  top: 3px;
+  right: 5px;
+  padding: 0;
+  background: transparent;
+  color: var(--term-bright);
+  font-size: 9px;
+}
+
+@media (max-width: 760px) {
+  .reading-overlay.terminal-record { padding: 0 !important; }
+  .reading-overlay.terminal-record .scroll-shell { width: 100vw !important; height: 100dvh; padding: 0 !important; }
+  .reading-overlay.terminal-record .scroll-paper,
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console { width: 100%; height: 100dvh; min-height: 100dvh !important; max-height: none !important; padding: 8px !important; }
+  .reading-overlay.terminal-record .pseudo-terminal {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "title" "output" "commands" "prompt";
+  }
+  .reading-overlay.terminal-record .pseudo-terminal-output { border-right: 0; border-bottom: 1px solid var(--term-rule); padding: 12px; }
+  .reading-overlay.terminal-record .pseudo-terminal-completions { max-height: 38dvh; }
+  .pseudo-terminal-command-help { padding: 8px 10px; }
+  .reading-overlay.terminal-record .pseudo-terminal-option,
+  .reading-overlay.terminal-record .pseudo-terminal-option:nth-child(2n) { min-height: 42px; padding: 7px 10px; }
+  .reading-overlay.terminal-record .pseudo-terminal-option.is-primary { min-height: 50px; }
+  .reading-overlay.terminal-record .pseudo-terminal-option small { font-size: 9px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-program-active .pseudo-terminal { flex-basis: min(24dvh, 170px) !important; height: min(24dvh, 170px) !important; }
+  .reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-output { padding: 7px 10px; }
+  .reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-line { font-size: 9px; }
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-program-active .scroll-challenge { margin-top: 7px; padding: 8px; }
+}
+@media (max-height: 680px) and (min-width: 761px) {
+  .reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-program-active .pseudo-terminal { flex-basis: 150px !important; height: 150px !important; }
+  .reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-title { min-height: 28px; }
+  .reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-output { padding: 6px 12px; }
+  .reading-overlay.terminal-record .terminal-program-active .pseudo-terminal-line { font-size: 9px; line-height: 1.25; }
 }

@@ -4,69 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b2a20" />
-  <meta name="description" content="Liam Hosfeld's first-person operations, analytics, and technical delivery portfolio archive." />
-  <title>Liam Hosfeld</title>
-  <link rel="stylesheet" href="styles.css?v=20260813-mini-boss-fix-1" />
+  <meta name="description" content="Fight through Liam Hosfeld's first-person operations dungeon, recover field reports, and secure the Document of Truth." />
+  <title>Liam Hosfeld · The Operations Dungeon</title>
+  <link rel="stylesheet" href="styles.css?v=20260816-chunky-stairs-8" />
 </head>
 <body>
   <main class="game-shell" aria-label="Liam Hosfeld portfolio game">
     <canvas id="game-canvas" aria-label="First-person medieval portfolio dungeon"></canvas>
     <div class="vignette" aria-hidden="true"></div>
-
-    <aside class="visor-boot-feed" id="visor-boot-feed" hidden aria-live="polite" aria-label="Combat visor initialization feed">
-      <div class="visor-feed-header">VISOR DIAGNOSTIC FEED</div>
-      <div class="visor-feed-rule"></div>
-      <p data-visor-feed="power">&gt; POWER BUS ............ STANDBY</p>
-      <p data-visor-feed="optics">&gt; OPTICS ............... OFFLINE</p>
-      <p data-visor-feed="motion">&gt; GYRO ARRAY ........... WAITING</p>
-      <p data-visor-feed="range">&gt; RANGEFINDER .......... WAITING</p>
-      <p data-visor-feed="threat">&gt; THREAT MATRIX ........ UNLINKED</p>
-      <p data-visor-feed="combat">&gt; COMBAT LINK .......... LOCKED</p>
-      <div class="visor-feed-cursor" aria-hidden="true">_</div>
-    </aside>
-
-    <aside class="visor-training-feed" id="visor-training-feed" hidden aria-live="polite" aria-label="Combat control checks">
-      <div class="visor-feed-header">VISOR CONTROL CHECKS</div>
-      <div class="visor-feed-rule"></div>
-      <p data-visor-tutorial="look"><span aria-hidden="true">[ ]</span> LOOK ........ MOVE MOUSE</p>
-      <p data-visor-tutorial="fire"><span aria-hidden="true">[ ]</span> FIRE ........ PRIMARY CLICK</p>
-      <p data-visor-tutorial="weapon"><span aria-hidden="true">[ ]</span> LOADOUT ..... PRESS 1–3</p>
-      <div class="visor-training-hint">CONFIRM EACH CHECK TO ARM COMBAT LINK</div>
-    </aside>
-
-    <aside class="visor-tech-feed" id="visor-tech-feed" hidden aria-live="off" aria-label="Combat visor telemetry">
-      <div class="visor-feed-header">TACTICAL BUS // RAW OUTPUT</div>
-      <div class="visor-feed-rule"></div>
-      <div class="visor-tech-window">
-        <div class="visor-tech-stream">
-          <p>[00:00:01.042] KERNEL ............ v7.4.19-TACTICAL</p>
-          <p>[00:00:01.118] MEMORY MAP ........ 0x7F4A / NOMINAL</p>
-          <p>[00:00:01.204] SENSOR FUSION ...... HANDSHAKE</p>
-          <p>[00:00:01.337] OPTICAL MATRIX ..... 2048x1152 / 120Hz</p>
-          <p>[00:00:01.486] PARALLAX BUFFER .... ALLOCATED</p>
-          <p>[00:00:01.604] GYRO BIAS .......... +0.0021 / CORRECTED</p>
-          <p>[00:00:01.792] MOTION VECTOR ...... CALIBRATION PASS</p>
-          <p>[00:00:02.011] DEPTH FIELD ........ 64 SAMPLES / LOCKED</p>
-          <p>[00:00:02.244] RANGE TABLE ........ LOADED / 4096 CELLS</p>
-          <p>[00:00:02.508] THREAT INDEX ....... BUILDING SIGNATURE</p>
-          <p>[00:00:02.744] HOSTILE PROFILE .... 03 CONTACTS / UNRESOLVED</p>
-          <p>[00:00:03.016] AIM SOLVER .......... LEAD COMPENSATION ON</p>
-          <p>[00:00:03.285] RETICLE GEOMETRY .... CENTERLINE VERIFIED</p>
-          <p>[00:00:03.554] BALLISTIC MODEL ..... SEMI-AUTO / 5.56</p>
-          <p>[00:00:03.822] AMMO CACHE .......... 040 / 160</p>
-          <p>[00:00:04.106] IMPACT BUFFER ....... 128 SLOTS / READY</p>
-          <p>[00:00:04.337] DAMAGE ROUTER ....... LISTENING</p>
-          <p>[00:00:04.621] AUDIO BUS ........... LOW-LATENCY / 48KHZ</p>
-          <p>[00:00:04.908] VISOR CONTRAST ...... ADAPTIVE / 0.84</p>
-          <p>[00:00:05.194] ROOM TOPOLOGY ....... INDEXED</p>
-          <p>[00:00:05.477] NAVIGATION .......... EASTBOUND ROUTE</p>
-          <p>[00:00:05.762] COMBAT LINK ......... ENCRYPTED / ACCEPTED</p>
-          <p>[00:00:06.043] FIRE CONTROL ........ SAFETY RELEASED</p>
-          <p>[00:00:06.318] SYSTEM STATE ........ OPERATIONAL</p>
-        </div>
-      </div>
-      <div class="visor-feed-cursor" aria-hidden="true">_</div>
-    </aside>
 
     <div class="commander-overlay">
     <section class="narrator-panel" id="narrator-panel" hidden aria-live="polite">
@@ -106,12 +51,15 @@
         <div class="visor-weapon-selector" aria-label="Weapon selector">
           <div class="visor-selector-heading">
             <span>WEAPON SELECT</span>
-            <small>1–3 / CHANGE</small>
+            <small>1–6 / CHANGE</small>
           </div>
           <div class="visor-weapon-options">
             <button type="button" data-weapon-slot="arsenal" aria-label="Select Arsenal Carbine with key 1"><b>1</b><span>CARBINE</span></button>
             <button type="button" data-weapon-slot="shotgun" aria-label="Select Shotgun with key 2"><b>2</b><span>SHOTGUN</span></button>
-            <button type="button" data-weapon-slot="bfg" aria-label="Select Electric BFG with key 3"><b>3</b><span>BFG</span></button>
+            <button type="button" data-weapon-slot="plasma" aria-label="Select Arc Repeater with key 3"><b>3</b><span>ARC</span></button>
+            <button type="button" data-weapon-slot="rail" aria-label="Select Archive Railgun with key 4"><b>4</b><span>RAIL</span></button>
+            <button type="button" data-weapon-slot="rivet" aria-label="Select Rivet Cannon with key 5"><b>5</b><span>RIVET</span></button>
+            <button type="button" data-weapon-slot="bfg" aria-label="Select Electric BFG with key 6"><b>6</b><span>BFG</span></button>
           </div>
           <strong class="visor-current-weapon" id="combat-weapon-name">ASSAULT RIFLE</strong>
         </div>
@@ -163,10 +111,16 @@
     <div class="hover-tooltip" id="hover-tooltip" role="tooltip" hidden></div>
 
 
-    <section class="reading-overlay" id="reading-overlay" hidden aria-live="assertive">
+    <section class="reading-overlay" id="reading-overlay" hidden role="dialog" aria-modal="true" aria-label="Field record">
       <div class="scroll-shell">
         <div class="scroll-roller scroll-roller-top" aria-hidden="true"></div>
-        <article class="scroll-paper">
+        <article class="scroll-paper" id="scroll-paper">
+          <section class="pseudo-terminal terminal-only" id="pseudo-terminal" aria-label="Portfolio command terminal">
+            <div class="pseudo-terminal-title"><span>liam@fieldnet:~$</span><span id="pseudo-terminal-path">portfolio/status</span><span id="pseudo-terminal-state">ONLINE</span></div>
+            <div class="pseudo-terminal-output" id="pseudo-terminal-output"></div>
+            <nav class="pseudo-terminal-completions" id="pseudo-terminal-completions" aria-label="Available terminal commands"></nav>
+            <label class="pseudo-terminal-prompt"><span>liam@fieldnet:~$</span><input id="pseudo-terminal-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal command" placeholder="awaiting command" /><i aria-hidden="true"></i></label>
+          </section>
           <div class="scroll-header">
             <p class="eyebrow scroll-kicker">VERIFIED FIELD RECORD <span id="scroll-room-label"></span></p>
             <span class="scroll-record-number" id="scroll-record-number">FIELD RECORD</span>
@@ -179,27 +133,66 @@
             <span id="scroll-record-status">NEW SIGNAL</span>
           </div>
           <p class="scroll-positioning" id="scroll-positioning"></p>
+          <nav class="scroll-index" aria-label="Record navigation">
+            <button type="button" data-scroll-jump="scroll-title">STATUS</button>
+            <button type="button" data-scroll-jump="scroll-briefing">PROFILE</button>
+            <button type="button" data-scroll-jump="scroll-intro-grid">PROOF</button>
+            <button type="button" data-scroll-jump="scroll-proof-grid">CASE FILE</button>
+            <button type="button" data-scroll-jump="scroll-challenge">PROGRAM</button>
+          </nav>
+          <div class="scroll-tour" id="scroll-tour" aria-live="polite">
+            <span id="scroll-tour-status">GUIDED RECORD · 1 / 5 · OVERVIEW</span>
+            <button type="button" id="scroll-tour-next">NEXT SECTION ↓</button>
+          </div>
+          <p class="terminal-route-note terminal-only"><b>COMMAND ROUTE</b><span>Review the sector display, inspect the case file, then run the executable to authorize the shield gate.</span></p>
+          <section class="scroll-findings" aria-labelledby="scroll-findings-label">
+            <p class="scroll-section-label" id="scroll-findings-label">AT A GLANCE / KEY TAKEAWAYS</p>
+            <div class="scroll-findings-grid" id="scroll-findings"></div>
+          </section>
+          <section class="scroll-briefing" id="scroll-briefing" hidden aria-live="polite">
+            <div class="scroll-briefing-heading">
+              <span>
+                <small id="scroll-briefing-kicker">PERSONNEL FILE</small>
+                <strong id="scroll-briefing-title">MEET LIAM HOSFELD</strong>
+              </span>
+              <b id="scroll-briefing-count">1 / 3</b>
+            </div>
+            <article class="scroll-briefing-page" id="scroll-briefing-page">
+              <small id="scroll-briefing-label">ROLE</small>
+              <h3 id="scroll-briefing-page-title"></h3>
+              <p id="scroll-briefing-body"></p>
+              <em id="scroll-briefing-proof"></em>
+            </article>
+            <button type="button" class="scroll-briefing-next" id="scroll-briefing-next">NEXT PERSONNEL RECORD</button>
+          </section>
           <div class="scroll-intro-grid" id="scroll-intro-grid" hidden aria-label="Selected portfolio impact metrics"></div>
           <p class="scroll-section-label" id="scroll-proof-label" hidden>SELECTED PROOF / WHAT CHANGED</p>
           <div class="scroll-proof-grid" id="scroll-proof-grid" hidden aria-label="Selected portfolio case studies"></div>
           <div class="scroll-divider" aria-hidden="true"><span>✦</span></div>
+          <section class="scroll-challenge" id="scroll-challenge" hidden aria-live="polite">
+            <small id="scroll-challenge-guide">CASE GAME / FOLLOW THE LIT CONTROLS</small>
+            <strong id="scroll-challenge-title">TUNE THE CASE SIGNAL</strong>
+            <p id="scroll-challenge-prompt"></p>
+            <div class="scroll-challenge-steps" id="scroll-challenge-steps"></div>
+            <p class="scroll-challenge-feedback" id="scroll-challenge-feedback" role="status" aria-live="polite"></p>
+          </section>
           <div class="scroll-ability" id="scroll-ability" aria-live="polite">
             <span class="scroll-ability-seal" id="scroll-ability-seal" aria-hidden="true">✦</span>
             <span>
-              <small id="scroll-reward-kicker">XP RECOVERED</small>
+              <small id="scroll-reward-kicker">ARCHIVE REWARD</small>
               <strong id="scroll-ability-name">+25 XP</strong>
-              <em id="scroll-ability-description">Recover field records to grow stronger and unlock abilities.</em>
+              <em id="scroll-ability-description">Recover field records to improve your final field rank.</em>
             </span>
           </div>
-          <div class="scroll-progress" aria-label="Progress toward the next ability">
+          <div class="scroll-progress" aria-label="Field experience progress">
             <div class="scroll-progress-copy">
-              <small id="scroll-progress-label">PROGRESS TO NEXT ABILITY</small>
-              <strong id="scroll-progress-value">0 / 50 XP</strong>
+              <small id="scroll-progress-label">FIELD EXPERIENCE</small>
+              <strong id="scroll-progress-value">0 / 150 XP</strong>
             </div>
             <div class="scroll-progress-track"><span id="scroll-progress-bar"></span></div>
-            <p id="scroll-progress-caption">Scope Sight unlocks at 50 XP.</p>
+            <p id="scroll-progress-caption">Archive evidence and clear sectors to improve your run.</p>
           </div>
-          <div class="scroll-details-heading">
+          <div class="scroll-details-heading" id="scroll-evidence-section">
             <p class="scroll-section-label" id="scroll-details-label">FIELD NOTES / EVIDENCE</p>
             <span id="scroll-detail-count">0 EVIDENCE POINTS</span>
           </div>
@@ -211,7 +204,11 @@
             <p id="scroll-cta-copy">For TMS, operational analytics, integrations, and automation work, start with the evidence and make the next decision easier.</p>
           </div>
           <div class="scroll-actions" id="scroll-actions"></div>
-          <button type="button" id="close-scroll" class="close-scroll" data-tooltip="RETURN TO THE DUNGEON · [ESC]">RETURN TO THE DUNGEON <span>ESC / E · CLOSE RECORD</span></button>
+          <div class="terminal-command-strip terminal-only" aria-hidden="true">
+            <span>DISPLAY CONTROL // USE THE LIT COMMANDS</span>
+            <span>EXIT // ESC</span>
+          </div>
+          <button type="button" id="close-scroll" class="close-scroll" data-tooltip="RETURN TO THE FIELD · [ESC]">RETURN TO THE FIELD <span>ESC / E · CLOSE RECORD</span></button>
         </article>
         <div class="scroll-roller scroll-roller-bottom" aria-hidden="true"></div>
       </div>
@@ -221,13 +218,10 @@
 
     <section class="death-overlay" id="death-overlay" hidden aria-live="assertive">
       <div class="death-card" role="dialog" aria-modal="true" aria-labelledby="death-title">
-        <p class="eyebrow">FIELD FAILURE / LEVEL RECOVERY</p>
-        <div class="death-mark" aria-hidden="true">✦</div>
-        <h2 id="death-title">YOU FELL</h2>
+        <p class="death-label">SIGNAL LOST</p>
+        <h2 id="death-title">YOU DIED</h2>
         <p class="death-cause" id="death-cause">The archive got the better of you.</p>
-        <p class="death-copy">The room will reset from its threshold. Enemies, hazards, and dropped supplies will return, while recovered records keep their XP and progression.</p>
-        <button type="button" class="death-restart" id="death-restart">RESTART LEVEL <span>E / ENTER</span></button>
-        <p class="death-note">Return to the beginning of this level with the field restored.</p>
+        <button type="button" class="death-restart" id="death-restart">REENTER <span>E / ENTER</span></button>
       </div>
     </section>
 
@@ -242,8 +236,8 @@
     <footer class="control-ribbon">
       <span><b>WASD</b> MOVE</span>
       <span><b>MOUSE</b> LOOK / ATTACK</span>
-      <span><b>1</b> ASSAULT RIFLE · <b>2</b> SHOTGUN · <b>3</b> ELECTRIC BFG</span>
-      <span><b>R</b> RELOAD · <b>E</b> READ / OPEN</span>
+      <span><b>1–6</b> RIFLE · SHOTGUN · PLASMA · RAIL · RIVET · BFG</span>
+      <span><b>R</b> RELOAD · <b>E</b> USE TERMINAL / OPEN</span>
       <button type="button" id="settings-button" aria-label="Open accessibility and audio settings" title="Open accessibility and audio settings">⚙</button>
       <button type="button" id="music-button" class="music-button" aria-label="Mute atmospheric soundtrack" aria-pressed="true" title="Mute atmospheric soundtrack">♫</button>
       <button type="button" id="help-button" aria-label="Open controls">?</button>
@@ -259,9 +253,13 @@
         <li><strong>WASD</strong> moves through one connected dungeon. <strong>A</strong> and <strong>D</strong> strafe; hold <strong>Shift</strong> to sprint.</li>
         <li><strong>Move the mouse</strong> to look around. Click to fire with the equipped weapon. Press R to reload.</li>
         <li>Press <strong>1</strong> for the Assault Rifle, <strong>2</strong> for the Shotgun, or <strong>3</strong> for the Electric BFG; each loadout has its own ammo pool.</li>
+        <li><strong>Every normal sector has an access terminal</strong> beside its eastern shield door. Hostiles are optional there: use <strong>E</strong>, read the portfolio file, and run its computer program to authorize the route.</li>
+        <li><strong>Boss arenas are the exception.</strong> Defeat the named boss, then return to that arena’s terminal to release the exit shield. Lesser enemies can always be bypassed.</li>
+        <li>Look for the full-height security shield at a locked entrance. Its terminal tells you exactly what remains and the barrier retracts after authorization.</li>
+        <li>Press <strong>Space</strong> during a cinematic to return to the action immediately.</li>
         <li>Wardens pursue you and strike at close range. Keep moving and create distance from their melee attacks.</li>
-        <li>Start inside the dungeon with the Assault Rifle equipped. Press <strong>1</strong>, <strong>2</strong>, or <strong>3</strong> to switch loadouts; press <strong>R</strong> to reload and use <strong>Z</strong> and <strong>X</strong> to cycle learned abilities, then <strong>Q</strong> casts the selected ability.</li>
-        <li><strong>E</strong> reads the glowing portfolio scroll or a field record, or opens the archive gate. Press <strong>Q</strong> to cast the selected ability. Defeat the final warden, then enter the obvious <strong>ascension gate</strong> to reach the celestial sanctuary and approach the résumé pedestal for an automatic download.</li>
+        <li>Start inside the dungeon with the Assault Rifle equipped. Press <strong>1</strong>, <strong>2</strong>, or <strong>3</strong> to switch loadouts, and press <strong>R</strong> to reload.</li>
+        <li><strong>E</strong> uses terminals and opens doors. After the final Archon falls, authorize the Lightwell terminal, enter the ascension gate, and approach the résumé pedestal for an automatic download.</li>
       </ul>
     </form>
   </dialog>
@@ -277,7 +275,7 @@
           <input id="music-volume" type="range" min="0" max="1" step=".05" value=".72" />
         </label>
         <label class="setting-row" for="sfx-volume">
-          <span><strong>Sound effects</strong><small>Weapons, impacts, and ability cues</small></span>
+          <span><strong>Sound effects</strong><small>Weapons, impacts, and enemy warnings</small></span>
           <input id="sfx-volume" type="range" min="0" max="1" step=".05" value=".82" />
         </label>
         <label class="setting-check" for="reduced-motion">
@@ -293,6 +291,6 @@
     </form>
   </dialog>
 
-  <script src="game.js?v=20260813-boss-cutscene-music-fix-1"></script>
+  <script src="game.js?v=20260816-chunky-stairs-8"></script>
 </body>
 </html>
