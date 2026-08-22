@@ -11,6 +11,20 @@ const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.K_SERVICE ? '0.0.0.0' : (process.env.HOST || '127.0.0.1');
 const COMPRESSIBLE = /^(text\/|application\/(json|xml|javascript))/;
 const COMPRESS_MIN_BYTES = 1024;
+const LEVEL_ENDPOINTS = Object.freeze([
+  Object.freeze({ id: 'threshold', title: 'Threshold Chamber', room: 1 }),
+  Object.freeze({ id: 'trophy', title: 'Trophy Room', room: 2 }),
+  Object.freeze({ id: 'quests', title: 'Quest Board', room: 3 }),
+  Object.freeze({ id: 'chronicle', title: 'Chronicle', room: 4 }),
+  Object.freeze({ id: 'character', title: 'Character Sheet', room: 5 }),
+  Object.freeze({ id: 'campfire', title: 'Campfire', room: 6 }),
+  Object.freeze({ id: 'gate', title: 'Lightwell Sanctum', room: 7 }),
+  Object.freeze({ id: 'sanctuary', title: 'Celestial Sanctuary', room: 8 }),
+]);
+const LEVEL_ENDPOINT_BY_ALIAS = new Map(LEVEL_ENDPOINTS.flatMap((level) => [
+  [level.id, level],
+  [String(level.room), level],
+]));
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -51,8 +65,31 @@ function sendText(res, status, body) {
   res.end(body);
 }
 
+function levelEndpointFromPath(pathname) {
+  const match = /^\/level\/([^/]+)\/?$/i.exec(pathname);
+  if (!match) return null;
+  try {
+    return LEVEL_ENDPOINT_BY_ALIAS.get(decodeURIComponent(match[1]).toLowerCase()) || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function sendJson(req, res, status, value) {
+  const body = JSON.stringify(value, null, 2);
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(body),
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+  });
+  if (req.method === 'HEAD') return res.end();
+  return res.end(body);
+}
+
 function resolveStaticFile(pathname) {
   if (pathname === '/' || pathname === '/dungeon' || pathname === '/dungeon/') return path.join(ROOT, 'index.html');
+  if (levelEndpointFromPath(pathname)) return path.join(ROOT, 'index.html');
   if (PUBLIC_FILES.has(pathname)) return path.join(ROOT, pathname.slice(1));
   if (pathname.startsWith('/assets/')) {
     const resolved = path.normalize(path.join(ROOT, pathname.replace(/^\/+/, '')));
@@ -119,7 +156,16 @@ function serveStatic(req, res, pathname) {
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  if (['GET', 'HEAD'].includes(req.method)) return serveStatic(req, res, url.pathname);
+  if (['GET', 'HEAD'].includes(req.method)) {
+    if (url.pathname === '/api/levels') {
+      return sendJson(req, res, 200, LEVEL_ENDPOINTS.map((level) => ({
+        id: level.id,
+        title: level.title,
+        url: `/level/${level.id}`,
+      })));
+    }
+    return serveStatic(req, res, url.pathname);
+  }
   return sendText(res, 405, 'Method not allowed');
 });
 

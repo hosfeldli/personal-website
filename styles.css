@@ -5638,6 +5638,34 @@ button { color: inherit; }
   overflow: auto;
   overscroll-behavior: contain;
 }
+.reading-overlay.terminal-record .terminal-program-active .scroll-challenge-steps.challenge-circuit-link {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+}
+.reading-overlay.terminal-record .terminal-program-active .challenge-circuit-link .circuit-link-game {
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: center;
+  justify-items: stretch;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+}
+.reading-overlay.terminal-record .terminal-program-active .challenge-circuit-link .circuit-ports {
+  width: min(78vw, calc(100dvh - 170px), 820px);
+  margin: 0 auto 8px;
+}
+.reading-overlay.terminal-record .terminal-program-active .challenge-circuit-link .circuit-grid {
+  grid-auto-rows: 1fr;
+  align-self: center;
+  width: min(78vw, calc(100dvh - 170px), 820px);
+  max-width: none;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
 .reading-overlay.terminal-record .scroll-paper.terminal-program-complete .scroll-challenge::after {
   content: 'AUTHORIZATION ACCEPTED\\A ROUTE RELEASED';
   position: absolute;
@@ -5681,6 +5709,10 @@ button { color: inherit; }
   .reading-overlay.terminal-record .scroll-paper.is-terminal-console.terminal-program-active .scroll-challenge {
     margin: 0 !important;
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+  .reading-overlay.terminal-record .terminal-program-active .challenge-circuit-link .circuit-ports,
+  .reading-overlay.terminal-record .terminal-program-active .challenge-circuit-link .circuit-grid {
+    width: min(92vw, calc(100dvh - 210px));
   }
 }
 @media (prefers-reduced-motion: reduce) {

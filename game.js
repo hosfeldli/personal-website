@@ -7678,6 +7678,7 @@ function updateTerminalLinearAction(item = state.reading) {
 }
 function launchTerminalProgram(item = state.reading) {
   if (!item?.missionReport || terminalProgramLaunching || terminalProgramCompleting || !scrollPaper) return false;
+  ensureScrollBriefingComplete(item);
   terminalProgramLaunching = true;
   scrollPaper.classList.remove('terminal-program-active', 'terminal-program-complete');
   scrollPaper.classList.add('terminal-program-launching');
@@ -7710,8 +7711,7 @@ function advanceLinearTerminal(item = state.reading) {
     return setTerminalScreen(1, true);
   }
   if (screen === 1) {
-    const briefing = scrollBriefingForItem(item);
-    state.scrollBriefingProgress.set(item.roomIndex, briefing?.slides?.length || 0);
+    ensureScrollBriefingComplete(item);
     renderScrollBriefing(item);
     unlockScrollTourPage(item, 2);
     return setTerminalScreen(2, true);
@@ -7720,7 +7720,10 @@ function advanceLinearTerminal(item = state.reading) {
     unlockScrollTourPage(item, 3);
     return setTerminalScreen(3, true);
   }
-  if (screen === 3) return launchTerminalProgram(item);
+  if (screen === 3) {
+    ensureScrollBriefingComplete(item);
+    return launchTerminalProgram(item);
+  }
   return false;
 }
 function terminalGameControlHint(type) {
@@ -8060,7 +8063,19 @@ function advanceScrollTour(item = state.reading) {
 function scrollBriefingComplete(item) {
   const briefing = scrollBriefingForItem(item);
   if (!briefing) return true;
+  // Linear mission terminals archive the full personnel record when PROFILE
+  // advances to IMPACT. Treat that screen unlock as the durable source of
+  // truth and repair older/incomplete state when a terminal is reopened.
+  if (item?.missionReport && unlockedScrollTourPage(item) >= 2) {
+    state.scrollBriefingProgress.set(item.roomIndex, briefing.slides.length);
+    return true;
+  }
   return (state.scrollBriefingProgress.get(item.roomIndex) || 0) >= briefing.slides.length;
+}
+function ensureScrollBriefingComplete(item) {
+  const briefing = scrollBriefingForItem(item);
+  if (!briefing || !Number.isFinite(item?.roomIndex)) return;
+  state.scrollBriefingProgress.set(item.roomIndex, briefing.slides.length);
 }
 function renderTerminalDashboard(item) {
   if (!terminalDashboard || !item?.missionReport) return;
@@ -8418,6 +8433,14 @@ function openReading(item) {
   state.readingElapsed = 0;
   state.readingWorldTime = state.now;
   scrollPaper?.classList.remove('terminal-program-active', 'terminal-program-launching', 'terminal-program-complete');
+  const terminalResumeScreen = item.missionReport
+    ? Math.min(unlockedScrollTourPage(item), TERMINAL_SCREEN_GROUPS.length - 2)
+    : 0;
+  if (scrollPaper) {
+    scrollPaper.dataset.terminalScreen = String(terminalResumeScreen);
+    scrollPaper.dataset.tourStep = String(terminalResumeScreen);
+  }
+  if (item.missionReport && terminalResumeScreen >= 2) ensureScrollBriefingComplete(item);
   state.keys.clear();
   state.mouseAttack = false;
   state.mouseLook = false;
@@ -8503,13 +8526,9 @@ function openReading(item) {
   readingOverlay.classList.remove('open', 'terminal-shutting-down');
   if (scrollPaper) {
     scrollPaper.scrollTop = 0;
-    if (item.missionReport) {
-      const resumeScreen = Math.min(unlockedScrollTourPage(item), TERMINAL_SCREEN_GROUPS.length - 2);
-      scrollPaper.dataset.terminalScreen = String(resumeScreen);
-    }
   }
   configureScrollTourPages(item);
-  setScrollTourStep(item.missionReport ? Number(scrollPaper?.dataset.terminalScreen || 0) : 0, false);
+  setScrollTourStep(terminalResumeScreen, false);
   void readingOverlay.offsetWidth;
   readingOverlay.classList.add('open');
   if (item.missionReport) {
@@ -13459,6 +13478,7 @@ function resetCurrentLevel() {
   state.securedRooms.delete(roomIndex);
   if (!state.scrollSolvedRooms.has(roomIndex)) {
     state.reportReadyRooms.delete(roomIndex);
+    state.scrollBriefingProgress.delete(roomIndex);
     state.scrollChallengeProgress.delete(roomIndex);
     state.scrollChallengeSelection.delete(roomIndex);
     state.scrollTourUnlocked.delete(roomIndex);
@@ -15916,8 +15936,73 @@ if (reducedMotionInput) reducedMotionInput.checked = settings.reducedMotion;
 if (pointerLockInput) pointerLockInput.checked = settings.pointerLock;
 window.addEventListener('resize', resizeCanvas);
 
-function startDirectDungeon() {
-  const roomIndex = STARTING_ROOM_INDEX;
+const LEVEL_ENDPOINT_IDS = Object.freeze([
+  'threshold',
+  'trophy',
+  'quests',
+  'chronicle',
+  'character',
+  'campfire',
+  'gate',
+  'sanctuary',
+]);
+function requestedDirectRoomIndex() {
+  let requested = '';
+  const route = /^\/level\/([^/]+)\/?$/i.exec(window.location.pathname);
+  try {
+    requested = route?.[1]
+      ? decodeURIComponent(route[1])
+      : new URLSearchParams(window.location.search).get('level') || '';
+  } catch (error) {
+    return null;
+  }
+  const normalized = requested.trim().toLowerCase();
+  if (!normalized) return null;
+  const numericIndex = Number(normalized);
+  if (Number.isInteger(numericIndex) && numericIndex >= 1 && numericIndex <= LEVEL_ENDPOINT_IDS.length) return numericIndex - 1;
+  const roomIndex = rooms.findIndex((room) => room.id === normalized);
+  return roomIndex >= 0 ? roomIndex : null;
+}
+function prepareDirectLevelJump(roomIndex) {
+  if (roomIndex <= STARTING_ROOM_INDEX) return;
+  for (let priorRoom = STARTING_ROOM_INDEX; priorRoom < roomIndex && priorRoom <= FINAL_ROOM_INDEX; priorRoom += 1) {
+    state.securedRooms.add(priorRoom);
+    state.clearRewardRooms.add(priorRoom);
+    state.scrollSolvedRooms.add(priorRoom);
+    state.scrollTourUnlocked.set(priorRoom, TERMINAL_SCREEN_GROUPS.length - 1);
+    ensureScrollBriefingComplete(terminalForRoom(priorRoom) || { roomIndex: priorRoom, missionReport: true });
+    const terminal = terminalForRoom(priorRoom);
+    if (terminal) {
+      terminal.recovered = true;
+      state.recoveredItems.add(terminal.id);
+      state.collectedRecordIds.add(terminal.recordId || terminal.id);
+    }
+    state.reportReadyRooms.delete(priorRoom);
+    const rewardWeapon = SCROLL_CHALLENGES[rooms[priorRoom]?.id]?.rewardWeapon;
+    if (rewardWeapon) state.unlockedWeapons.add(rewardWeapon);
+    if (miniBossRoom(priorRoom)) {
+      state.miniBossIntroSeen.add(rooms[priorRoom].id);
+      setMiniBossDoors(priorRoom, true, true);
+    }
+  }
+  for (const enemy of worldEnemies) {
+    if (enemy.roomIndex >= roomIndex) continue;
+    enemy.hp = 0;
+    enemy.dead = true;
+    enemy.deathTime = 99;
+    enemy.active = false;
+  }
+  if (roomIndex === SANCTUARY_ROOM_INDEX && state.finalBoss) {
+    state.finalBoss.hp = 0;
+    state.finalBoss.dead = true;
+    state.finalBoss.deathTime = 99;
+    state.sanctuaryActive = true;
+  }
+}
+
+function startDirectDungeon(roomIndex = STARTING_ROOM_INDEX, explicitJump = false) {
+  roomIndex = clamp(roomIndex, STARTING_ROOM_INDEX, SANCTUARY_ROOM_INDEX);
+  if (explicitJump) prepareDirectLevelJump(roomIndex);
   const spawn = roomContentPoint(roomIndex, rooms[roomIndex].spawn.x, rooms[roomIndex].spawn.y);
   state.room = roomIndex;
   state.player.x = roomOffsets[roomIndex] + spawn.x;
@@ -15962,8 +16047,24 @@ function startDirectDungeon() {
   state.weapon.type = 'arsenal';
   ensureWeaponAmmo('arsenal');
   state.weapon.equipped = true;
-  setMusicMode('dungeon');
-  beginLevelPreview();
+  if (roomIndex === FINAL_ROOM_INDEX) {
+    state.finalBoss.alerted = true;
+    state.finalArenaTime = .01;
+    setMusicMode('boss');
+  } else {
+    setMusicMode('dungeon');
+  }
+  if (explicitJump) {
+    state.visitedFloors.add(roomIndex);
+    state.levelPreview = null;
+    gameShell?.classList.remove('visor-boot-active', 'hud-flicker-on');
+    if (visorBootFeed) visorBootFeed.hidden = true;
+    if (visorTechFeed) visorTechFeed.hidden = true;
+    showToast(`DIRECT ENTRY · ${rooms[roomIndex].shortTitle.toUpperCase()}`, 'good');
+  } else {
+    beginLevelPreview();
+  }
+  updateWeaponSelection(state.weapon.type);
   updateHud();
 }
 
@@ -16004,7 +16105,8 @@ try {
   updateWeaponSelection(state.weapon.type);
   state.weapon.equipped = false;
   clearLegacyStartupOverlays();
-  startDirectDungeon();
+  const directRoomIndex = requestedDirectRoomIndex();
+  startDirectDungeon(directRoomIndex ?? STARTING_ROOM_INDEX, directRoomIndex !== null);
   state.lastTime = performance.now();
   updateHud();
   requestAnimationFrame(gameLoop);

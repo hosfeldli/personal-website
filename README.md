@@ -27,7 +27,22 @@ Then open <http://127.0.0.1:4173>. No `npm install` is required; the game uses t
 * `?` — open the field manual
 * `⚙` — open audio, motion, and pointer-lock settings
 
-Inside terminals, use `1`–`5` to open available records, `0` to leave, or arrow keys plus `Enter` to select commands. Access games use arrow keys or `WASD` to select and `Enter` to act; the memory program also uses `R` to replay its sequence. Terminal rewards unlock the Breach Shotgun, Arc Repeater, Archive Railgun, Rivet Cannon, and Electric BFG alongside the starter Arsenal Carbine.
+Inside terminals, press `Enter` to advance through the linear record. Access games use arrow keys or `WASD` to select and `Enter` to act; the memory program also uses `R` to replay its sequence. Terminal rewards unlock the Breach Shotgun, Arc Repeater, Archive Railgun, Rivet Cannon, and Electric BFG alongside the starter Arsenal Carbine.
+
+## Direct level endpoints
+
+The normal run starts at `/`, while these development and review URLs start directly in a chosen sector with prior terminal rewards already unlocked:
+
+* `/level/threshold`
+* `/level/trophy`
+* `/level/quests`
+* `/level/chronicle`
+* `/level/character`
+* `/level/campfire`
+* `/level/gate`
+* `/level/sanctuary`
+
+Numeric aliases `/level/1` through `/level/8` follow that same order. `/api/levels` returns the available named endpoints as JSON.
 
 ## World and rendering
 
