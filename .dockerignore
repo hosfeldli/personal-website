@@ -9,4 +9,6 @@ account.json
 *.log
 assets/*.jpg
 assets/*.jpeg
+archive/
+assets/audio/source/
 README.md

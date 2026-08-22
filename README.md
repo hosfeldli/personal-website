@@ -47,4 +47,4 @@ The browser renders the scene with a small software 3D pipeline: vertical camera
 
 ## Deploy
 
-The current standalone game deploys to Cloud Run through GitHub Actions. Pushes to `main` trigger `.github/workflows/deploy.yml`, which builds the container with Cloud Build and updates the configured Cloud Run service.
+The current standalone game deploys to Cloud Run through GitHub Actions. After pushing `main`, manually run `.github/workflows/deploy.yml`; it builds the container with Cloud Build and updates the configured Cloud Run service.

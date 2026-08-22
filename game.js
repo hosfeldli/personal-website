@@ -146,8 +146,7 @@ const pseudoTerminal = document.getElementById('pseudo-terminal');
 const pseudoTerminalPath = document.getElementById('pseudo-terminal-path');
 const pseudoTerminalState = document.getElementById('pseudo-terminal-state');
 const pseudoTerminalOutput = document.getElementById('pseudo-terminal-output');
-const pseudoTerminalCompletions = document.getElementById('pseudo-terminal-completions');
-const pseudoTerminalInput = document.getElementById('pseudo-terminal-input');
+const pseudoTerminalNext = document.getElementById('pseudo-terminal-next');
 const scrollIndex = scrollPaper?.querySelector('.scroll-index');
 const terminalTopbar = scrollPaper?.querySelector('.terminal-topbar');
 const terminalCommandStrip = scrollPaper?.querySelector('.terminal-command-strip');
@@ -719,6 +718,14 @@ const ELEVATED_SET_PIECES = Object.freeze(ELEVATION_ROUTES.flatMap((route) => {
   });
   return pieces.map((piece) => Object.freeze(piece));
 }));
+// Height sampling is one of the renderer's hottest paths. Bucket the small
+// authored set by world-X once so each ray sample checks only nearby surfaces.
+const ELEVATED_PIECES_BY_X = Array.from({ length: WORLD_WIDTH + 1 }, () => []);
+for (const piece of ELEVATED_SET_PIECES) {
+  const start = clamp(Math.floor(piece.x1), 0, WORLD_WIDTH);
+  const end = clamp(Math.ceil(piece.x2), 0, WORLD_WIDTH);
+  for (let x = start; x <= end; x += 1) ELEVATED_PIECES_BY_X[x].push(piece);
+}
 
 function elevationPieceContains(piece, x, y) {
   return x >= piece.x1 && x < piece.x2 && y >= piece.y1 && y < piece.y2;
@@ -737,7 +744,8 @@ function elevationPieceHeightAt(piece, x, y) {
 }
 function worldFloorHeightAt(x, y) {
   let height = 0;
-  for (const piece of ELEVATED_SET_PIECES) height = Math.max(height, elevationPieceHeightAt(piece, x, y));
+  const pieces = ELEVATED_PIECES_BY_X[clamp(Math.floor(x), 0, WORLD_WIDTH)] || [];
+  for (const piece of pieces) height = Math.max(height, elevationPieceHeightAt(piece, x, y));
   return height;
 }
 function stairSideTransitionBlocked(fromX, fromY, toX, toY) {
@@ -3303,7 +3311,7 @@ function focalY() { return canvas.height / (2 * Math.tan(VERTICAL_FOV / 2)); }
 function cameraHorizon() { const camera = renderCamera(); return canvas.height * (.5 + (camera.pitch || 0) * 1.18); }
 function cameraEyeHeight() { const camera = renderCamera(); return EYE_HEIGHT + (Number.isFinite(camera.cameraFloorZ) ? camera.cameraFloorZ : (camera.floorZ || 0)); }
 function playerEyeHeight() { return EYE_HEIGHT + (state.player.floorZ || 0); }
-function projectY(z, forward) { return cameraHorizon() - Math.tan(Math.atan2(z - cameraEyeHeight(), Math.max(.01, forward))) * focalY(); }
+function projectY(z, forward) { return cameraHorizon() - ((z - cameraEyeHeight()) / Math.max(.01, forward)) * focalY(); }
 function cameraPoint(x, y, z) { const camera = renderCamera(); const dx = x - camera.x; const dy = y - camera.y; return { side: -dx * Math.sin(camera.angle) + dy * Math.cos(camera.angle), forward: dx * Math.cos(camera.angle) + dy * Math.sin(camera.angle), z }; }
 function projectCameraPoint(point) {
   if (point.forward <= .04) return null;
@@ -3357,9 +3365,11 @@ function updateSegmentBar(bar, value, maximum) {
 
     // A stable order makes the segment look like it is breaking apart rather
     // than randomly blinking. Only one piece is changed per step.
-    const removalOrder = Array.from({ length: pixelCount }, (_, pixel) => pixel)
-      .sort((a, b) => hash2(index, a, 19) - hash2(index, b, 19));
-    const rankByPixel = new Map(removalOrder.map((pixel, rank) => [pixel, rank]));
+    if (!segment._pixelRemovalOrder) {
+      segment._pixelRemovalOrder = Array.from({ length: pixelCount }, (_, pixel) => pixel)
+        .sort((a, b) => hash2(index, a, 19) - hash2(index, b, 19));
+    }
+    const removalOrder = segment._pixelRemovalOrder;
 
     if (!Number.isFinite(segment._pixelVisible)) segment._pixelVisible = targetPixels;
     if (!Number.isFinite(segment._pixelTarget)) segment._pixelTarget = targetPixels;
@@ -3368,7 +3378,7 @@ function updateSegmentBar(bar, value, maximum) {
     segment._pixelTarget = targetPixels;
     if (segment._pixelVisible !== segment._pixelTarget && now >= segment._pixelStepAt) {
       segment._pixelVisible += segment._pixelVisible < segment._pixelTarget ? 1 : -1;
-      segment._pixelStepAt = now + .075;
+      segment._pixelStepAt = now + 75;
     }
 
     const visiblePixels = clamp(segment._pixelVisible, 0, pixelCount);
@@ -3389,7 +3399,7 @@ function updateSegmentBar(bar, value, maximum) {
 
 function updateCombatHud() {
   const hudNow = state.now || performance.now();
-  if (hudNow - state.lastCombatHudAt < 0.05) return;
+  if (hudNow - state.lastCombatHudAt < 50) return;
   state.lastCombatHudAt = hudNow;
   const definition = weaponDefinition();
   const ability = selectedAbilityDefinition();
@@ -4315,9 +4325,6 @@ function loadAudioBuffer(key) {
   audioBufferPromises.set(key, promise);
   return promise;
 }
-function preloadAudioAssets() {
-  for (const key of Object.keys(AUDIO_ASSETS)) loadAudioBuffer(key);
-}
 function playAudioBuffer(key, volume = .4, options = {}) {
   const audio = ensureAudioContext();
   if (!audio) return false;
@@ -4587,7 +4594,6 @@ function startMusic() {
   window.clearTimeout(music.timer);
   music.timer = 0;
   music.usingProceduralFallback = false;
-  preloadAudioAssets();
   startAmbientTrack();
   updateMusicButton();
 }
@@ -7642,63 +7648,80 @@ function unlockScrollTourPage(item, page) {
 function pseudoTerminalLine(text, index, tone = '') {
   return `<p class="pseudo-terminal-line ${tone}" style="--terminal-line:${index}">${escapeHtml(text)}</p>`;
 }
-let pseudoTerminalOptions = [];
-let pseudoTerminalSelection = 0;
-function terminalCommandOptions(item = state.reading) {
-  if (!item?.missionReport) return [];
-  const screen = clamp(Number(scrollPaper?.dataset.terminalScreen || 0), 0, TERMINAL_SCREEN_LABELS.length - 1);
-  const unlocked = unlockedScrollTourPage(item);
-  const briefingComplete = scrollBriefingComplete(item);
-  const programComplete = state.scrollSolvedRooms.has(item.roomIndex);
-  const screens = [
-    { command: 'status', key: '1', label: 'STATUS', detail: 'sector and portfolio overview', available: true },
-    { command: 'profile', key: '2', label: 'PROFILE', detail: 'background, role, and working approach', available: true },
-    { command: 'impact', key: '3', label: 'IMPACT', detail: 'outcomes and verified evidence', available: briefingComplete },
-    { command: 'case', key: '4', label: 'CASE FILE', detail: 'case-study evidence and methods', available: unlocked >= 2 },
-    { command: 'program', key: '5', label: 'ACCESS PROGRAM', detail: programComplete ? 'route authorization complete' : 'run the active access game', available: unlocked >= 3 },
-  ];
-  let options = screens.filter((option) => option.available);
-  if (screen === 1 && !briefingComplete) {
-    options = [{ command: 'next', key: 'ENTER', label: 'ACKNOWLEDGE RECORD', detail: 'archive the active record and continue', available: true, primary: true }, ...options.filter((option) => ['status', 'profile'].includes(option.command))];
-  }
-  if (screen === 4 && programComplete) {
-    options = [{ command: 'exit', key: 'ENTER', label: 'RETURN TO FIELD', detail: 'shut down this terminal and continue', available: true, primary: true }, screens[0]];
-  } else if (screen === 4) {
-    options = [screens[4], screens[0]];
-  }
-  if (!options.some((option) => option.command === 'exit')) {
-    options.push({ command: 'exit', key: '0', label: 'EXIT', detail: 'suspend this terminal session', available: true });
-  }
-  const preferredCommand = screen === 0
-    ? 'profile'
-    : screen === 1
-      ? (briefingComplete ? 'impact' : 'next')
-      : screen === 2
-        ? 'case'
-        : screen === 3
-          ? 'program'
-          : screen === 4 && !programComplete
-            ? 'program'
-            : '';
-  const preferred = options.find((option) => option.command === preferredCommand && option.available);
-  if (preferred) {
-    preferred.primary = true;
-    options = [preferred, ...options.filter((option) => option !== preferred)];
-  }
-  return options;
+let terminalProgramLaunchTimer = 0;
+let terminalProgramCloseTimer = 0;
+let terminalProgramLaunching = false;
+let terminalProgramCompleting = false;
+function clearTerminalProgramTimers() {
+  window.clearTimeout(terminalProgramLaunchTimer);
+  window.clearTimeout(terminalProgramCloseTimer);
+  terminalProgramLaunchTimer = 0;
+  terminalProgramCloseTimer = 0;
 }
-function renderPseudoTerminalCompletions() {
-  if (!pseudoTerminalCompletions) return;
-  if (!pseudoTerminalOptions.length) {
-    pseudoTerminalCompletions.innerHTML = '';
-    return;
+function terminalLinearAction(item = state.reading) {
+  const screen = clamp(Number(scrollPaper?.dataset.terminalScreen || 0), 0, TERMINAL_SCREEN_LABELS.length - 1);
+  if (terminalProgramLaunching) return { label: 'EXECUTING ACCESS PROGRAM', disabled: true };
+  if (screen === 0) return { label: 'OPEN PROFILE RECORD', disabled: false };
+  if (screen === 1) return { label: 'ARCHIVE PROFILE / OPEN IMPACT', disabled: false };
+  if (screen === 2) return { label: 'OPEN CASE FILE', disabled: false };
+  if (screen === 3) return { label: 'EXECUTE ACCESS PROGRAM', disabled: false };
+  if (state.scrollSolvedRooms.has(item?.roomIndex)) return { label: 'AUTHORIZATION STORED', disabled: true };
+  return { label: 'PROGRAM ACCEPTING INPUT', disabled: true };
+}
+function updateTerminalLinearAction(item = state.reading) {
+  if (!pseudoTerminalNext || !item?.missionReport) return;
+  const action = terminalLinearAction(item);
+  const label = pseudoTerminalNext.querySelector('em');
+  if (label) label.textContent = action.label;
+  pseudoTerminalNext.disabled = action.disabled;
+  pseudoTerminalNext.hidden = Number(scrollPaper?.dataset.terminalScreen || 0) === TERMINAL_SCREEN_GROUPS.length - 1;
+}
+function launchTerminalProgram(item = state.reading) {
+  if (!item?.missionReport || terminalProgramLaunching || terminalProgramCompleting || !scrollPaper) return false;
+  terminalProgramLaunching = true;
+  scrollPaper.classList.remove('terminal-program-active', 'terminal-program-complete');
+  scrollPaper.classList.add('terminal-program-launching');
+  if (pseudoTerminalState) pseudoTerminalState.textContent = 'EXECUTING';
+  pseudoTerminalOutput?.insertAdjacentHTML('beforeend', pseudoTerminalLine('$ execute access-program --fullscreen', 99, 'is-system'));
+  updateTerminalLinearAction(item);
+  playMechanicalClick(0, .016);
+  terminalProgramLaunchTimer = window.setTimeout(() => {
+    if (state.reading !== item) return;
+    terminalProgramLaunching = false;
+    scrollPaper.classList.remove('terminal-program-launching');
+    unlockScrollTourPage(item, TERMINAL_SCREEN_GROUPS.length - 1);
+    setTerminalScreen(TERMINAL_SCREEN_GROUPS.length - 1, true);
+    renderScrollChallenge(item);
+    window.requestAnimationFrame(() => {
+      if (state.reading !== item) return;
+      const challenge = scrollChallengeForItem(item);
+      renderTerminalGameCursor(item, challenge);
+      const controls = terminalGameButtons(challenge);
+      controls[terminalGameCursor(item, challenge, controls.length)]?.focus({ preventScroll: true });
+    });
+  }, settings.reducedMotion ? 90 : 760);
+  return true;
+}
+function advanceLinearTerminal(item = state.reading) {
+  if (!item?.missionReport || terminalProgramLaunching || terminalProgramCompleting) return false;
+  const screen = clamp(Number(scrollPaper?.dataset.terminalScreen || 0), 0, TERMINAL_SCREEN_GROUPS.length - 1);
+  if (screen === 0) {
+    unlockScrollTourPage(item, 1);
+    return setTerminalScreen(1, true);
   }
-  pseudoTerminalSelection = clamp(pseudoTerminalSelection, 0, pseudoTerminalOptions.length - 1);
-  const options = pseudoTerminalOptions.map((option, index) => {
-    const selected = index === pseudoTerminalSelection;
-    return `<button type="button" class="pseudo-terminal-option${selected ? ' is-selected' : ''}${option.primary ? ' is-primary' : ''}" aria-current="${selected ? 'true' : 'false'}" data-terminal-command="${escapeHtml(option.command)}"><span><kbd>${escapeHtml(option.key || '')}</kbd>${selected ? '>' : ' '} ${escapeHtml(option.label || option.command)}</span><small>${escapeHtml(option.detail)}</small></button>`;
-  }).join('');
-  pseudoTerminalCompletions.innerHTML = `<div class="pseudo-terminal-command-help"><strong>NEXT ACTION / COMMANDS</strong><span>↑↓ SELECT · ENTER RUN · TAB COMPLETE · 1–5 OPEN · 0 EXIT</span></div>${options}`;
+  if (screen === 1) {
+    const briefing = scrollBriefingForItem(item);
+    state.scrollBriefingProgress.set(item.roomIndex, briefing?.slides?.length || 0);
+    renderScrollBriefing(item);
+    unlockScrollTourPage(item, 2);
+    return setTerminalScreen(2, true);
+  }
+  if (screen === 2) {
+    unlockScrollTourPage(item, 3);
+    return setTerminalScreen(3, true);
+  }
+  if (screen === 3) return launchTerminalProgram(item);
+  return false;
 }
 function terminalGameControlHint(type) {
   const hints = {
@@ -7848,121 +7871,87 @@ function handleTerminalGameKey(event, down) {
   if (button && !button.disabled) button.click();
   return true;
 }
-const TERMINAL_SHORTCUT_COMMANDS = Object.freeze({
-  '0': 'exit', '1': 'status', '2': 'profile', '3': 'impact', '4': 'case', '5': 'program',
-});
 function handleTerminalShellKey(event, down) {
   const item = state.reading;
   if (!item?.missionReport) return false;
+  const screen = Number(scrollPaper?.dataset.terminalScreen || 0);
   const programActive = !state.scrollSolvedRooms.has(item.roomIndex)
-    && Number(scrollPaper?.dataset.terminalScreen || 0) === TERMINAL_SCREEN_GROUPS.length - 1;
+    && screen === TERMINAL_SCREEN_GROUPS.length - 1;
   if (programActive) return false;
   const key = event.key.toLowerCase();
-  const commandButton = event.target.closest?.('[data-terminal-command]');
-  if (!down) return ['arrowup', 'arrowdown', 'enter', '0', '1', '2', '3', '4', '5'].includes(key);
-  if (commandButton && (key === 'enter' || key === ' ' || key === 'spacebar')) {
-    commandButton.click();
-    return true;
-  }
-  if (TERMINAL_SHORTCUT_COMMANDS[key]) {
-    runPseudoTerminalCommand(TERMINAL_SHORTCUT_COMMANDS[key]);
-    return true;
-  }
-  if (key === 'arrowdown' || key === 'arrowup') {
-    selectPseudoTerminalOption(key === 'arrowdown' ? 1 : -1);
-    return true;
-  }
-  if (key === 'enter') {
-    runPseudoTerminalCommand(pseudoTerminalOptions[pseudoTerminalSelection]?.command);
-    return true;
-  }
-  return false;
+  if (key === 'escape') return false;
+  const confirm = key === 'enter' || key === ' ' || key === 'spacebar';
+  if (!down) return confirm || terminalProgramLaunching || terminalProgramCompleting || screen === TERMINAL_SCREEN_GROUPS.length - 1;
+  if (confirm && !event.repeat) advanceLinearTerminal(item);
+  // Reading mode owns every non-Escape key so weapon and movement inputs can
+  // never leak through the full-screen terminal.
+  return true;
 }
 function renderPseudoTerminal(item = state.reading) {
-  if (!pseudoTerminal || !pseudoTerminalOutput || !pseudoTerminalInput || !item?.missionReport) return;
+  if (!pseudoTerminal || !pseudoTerminalOutput || !item?.missionReport) return;
   const room = rooms[item.roomIndex] || {};
   const briefing = scrollBriefingForItem(item);
   const screen = clamp(Number(scrollPaper?.dataset.terminalScreen || 0), 0, TERMINAL_SCREEN_LABELS.length - 1);
-  const briefingProgress = state.scrollBriefingProgress.get(item.roomIndex) || 0;
-  const briefingComplete = scrollBriefingComplete(item);
   const solved = state.scrollSolvedRooms.has(item.roomIndex);
   const program = scrollChallengeForItem(item);
   const programStage = (state.scrollChallengeProgress.get(item.roomIndex) || []).length;
-  const unlocked = unlockedScrollTourPage(item);
-  const flow = TERMINAL_SCREEN_LABELS.map((label, index) => `${index === screen ? '>' : index <= unlocked ? '✓' : '·'}${index + 1} ${label}`).join('  ');
+  const flow = TERMINAL_SCREEN_LABELS.map((label, index) => `${index === screen ? '>' : index < screen ? '✓' : '·'}${index + 1} ${label}`).join('  ');
+  const facts = [...new Set([...(briefing?.facts || []), ...(item.details || [])].filter(Boolean))];
+  const tags = [...new Set([...(briefing?.tags || []), ...(item.tags || []), item.tag].filter(Boolean))];
   const lines = [
     `LIAM HOSFELD FIELD TERMINAL // SECTOR ${String(item.roomIndex + 1).padStart(2, '0')}`,
     `HOST: ${room.shortTitle || 'UNKNOWN SECTOR'}  ·  DISPLAY ${screen + 1}/${TERMINAL_SCREEN_LABELS.length}: ${TERMINAL_SCREEN_LABELS[screen]}`,
-    `ROUTE: ${flow}`,
+    `LINEAR ARCHIVE: ${flow}`,
     '────────────────────────────────────────────────────────────────',
   ];
-  let prompt = 'type a command, or use ↑ ↓ then enter';
   if (screen === 0) {
-    lines.push('$ status --full', '', `ACCESS NODE: ${item.finalTerminal ? 'LIGHTWELL RELAY' : 'SHIELD-GATE RELAY'}`, `ROUTE STATE: ${solved ? 'AUTHORIZED' : 'PENDING ACCESS PROGRAM'}`, '', 'PORTFOLIO RECORD', briefing?.title || 'Technical consulting, analytics, integrations, and operational systems.', item.summary || 'Field record synchronized.', '', 'WHAT THIS TERMINAL CONTAINS', 'profile  — background, working style, and career focus', 'impact   — concrete results and operating evidence', 'case     — methods and case-study proof', 'program  — a short field executable that unlocks the route', '', 'Select PROFILE below. Tab completes the highlighted command; Enter runs it.');
-    prompt = 'select profile to begin';
+    lines.push('$ status --full', '', `ACCESS NODE: ${item.finalTerminal ? 'LIGHTWELL RELAY' : 'SHIELD-GATE RELAY'}`, `ROUTE STATE: ${solved ? 'AUTHORIZED' : 'PENDING ACCESS PROGRAM'}`, '', 'PORTFOLIO RECORD', briefing?.title || 'Technical consulting, analytics, integrations, and operational systems.', item.summary || 'Field record synchronized.', '', 'THIS SESSION WILL SHOW', '01  PROFILE     background, working style, and career focus', '02  IMPACT      concrete results and operating evidence', '03  CASE FILE   methods and case-study proof', '04  PROGRAM     a short field executable that opens the route', '', 'The archive advances in order. Press Enter when each display has been read.');
   } else if (screen === 1) {
     lines.push('$ cat /portfolio/profile/*', '');
     for (const [index, page] of (briefing?.slides || []).entries()) {
-      const read = index < briefingProgress;
-      const current = index === Math.min(briefingProgress, Math.max(0, (briefing?.slides.length || 1) - 1));
-      lines.push(`${read ? '[READ]' : current ? '[ACTIVE]' : '[QUEUED]'} ${String(index + 1).padStart(2, '0')} / ${page.label}`, page.title, page.body, `evidence: ${page.proof}`, '');
+      lines.push(`[PROFILE ${String(index + 1).padStart(2, '0')}] ${page.label}`, page.title, page.body, `VERIFIED: ${page.proof}`, '');
     }
-    if (briefingComplete) {
-      lines.push('PROFILE ARCHIVE COMPLETE. IMPACT DATA IS NOW AVAILABLE.', 'Select IMPACT below to review the outcomes.');
-      prompt = 'select impact';
-    } else {
-      lines.push(`RECORD ${briefingProgress + 1}/${briefing?.slides.length || 1} AWAITS ACKNOWLEDGEMENT.`, 'Select ACKNOWLEDGE RECORD below when you are ready to continue.');
-      prompt = 'select acknowledge record';
-    }
+    lines.push('All profile records are visible above. Enter archives them together and opens the impact display.');
   } else if (screen === 2) {
     lines.push('$ impact --summary', '');
     for (const metric of briefing?.metrics || []) lines.push(`${String(metric.label).padEnd(25, ' ')} ${metric.value}`);
-    lines.push('', 'OPERATING NOTES');
-    for (const fact of (briefing?.facts?.length ? briefing.facts : (item.details || []))) lines.push(`• ${fact}`);
-    lines.push('', 'These outcomes connect technical delivery to useful business action.', 'Select CASE FILE below for the work behind the numbers.');
-    prompt = 'select case';
+    lines.push('', 'OPERATING EVIDENCE');
+    for (const fact of facts) lines.push(`• ${fact}`);
+    if (tags.length) lines.push('', `SYSTEMS / METHODS: ${tags.join(' · ')}`);
+    lines.push('', 'These outcomes connect technical delivery to useful business action.', 'Press Enter for the methods and case-study evidence behind the numbers.');
   } else if (screen === 3) {
     lines.push('$ cat /portfolio/case-file/*', '');
     for (const [index, slide] of (briefing?.slides || []).entries()) {
       lines.push(`CASE ${String(index + 1).padStart(2, '0')} // ${slide.label}`, slide.title, `approach: ${slide.body}`, `result: ${slide.proof}`, '');
     }
-    lines.push('CASE EVIDENCE LOADED. Select ACCESS PROGRAM below to run the route authorization executable.');
-    prompt = 'select access program';
+    lines.push('CASE EVIDENCE LOADED.', `PROGRAM OBJECTIVE: ${program?.prompt || program?.goal || 'Complete the field executable to authorize the shield gate.'}`, `CONTROLS: ${terminalGameControlHint(program?.type)}`, '', 'Press Enter to execute the program. It will take over the full display.');
   } else {
     lines.push(`$ run ${program?.type || 'access'} --sector ${String(item.roomIndex + 1).padStart(2, '0')}`, '');
     if (solved) {
-      lines.push(item.finalTerminal ? 'LIGHTWELL AUTHORIZATION STORED.' : 'SHIELD-GATE AUTHORIZATION STORED.', 'ROUTE UNLOCKED. Select RETURN TO FIELD to shut down this terminal.', 'Other displays remain available from the command list.');
-      prompt = 'select return to field';
+      lines.push(item.finalTerminal ? 'LIGHTWELL AUTHORIZATION STORED.' : 'SHIELD-GATE AUTHORIZATION STORED.', 'ROUTE UNLOCKED. TERMINAL SHUTDOWN IN PROGRESS.');
     } else {
-      lines.push(`PROGRAM STAGE ${programStage + 1}/${Math.max(1, scrollChallengeEntries(program).length)} ACTIVE.`, 'Complete the field executable below to authorize the route.', `TERMINAL KEYS: ${terminalGameControlHint(program?.type)}`, 'The command list remains available if you need to revisit a record.');
-      prompt = 'field executable is accepting input';
+      lines.push(`PROGRAM STAGE ${programStage + 1}/${Math.max(1, scrollChallengeEntries(program).length)} ACTIVE.`, 'The executable now owns the full display.', `TERMINAL KEYS: ${terminalGameControlHint(program?.type)}`);
     }
   }
-  lines.push('', '── END OF DISPLAY ──');
+  if (screen < TERMINAL_SCREEN_GROUPS.length - 1) {
+    const action = terminalLinearAction(item);
+    lines.push('', `> [ENTER] ${action.label}`, '── END OF DISPLAY ──');
+  }
   const previousScreen = pseudoTerminal.dataset.screen;
   const screenChanged = previousScreen !== String(screen);
   const previousScroll = pseudoTerminalOutput.scrollTop;
-  const previousCommand = pseudoTerminalOptions[pseudoTerminalSelection]?.command;
   pseudoTerminal.dataset.screen = String(screen);
   pseudoTerminalOutput.innerHTML = lines.map((line, index) => pseudoTerminalLine(line || ' ', index, index === 0 ? 'is-system' : '')).join('');
-  pseudoTerminalOptions = terminalCommandOptions(item);
-  const primaryIndex = pseudoTerminalOptions.findIndex((option) => option.primary && option.available);
-  const preservedIndex = screenChanged ? -1 : pseudoTerminalOptions.findIndex((option) => option.command === previousCommand);
-  pseudoTerminalSelection = preservedIndex >= 0 ? preservedIndex
-    : primaryIndex >= 0 ? primaryIndex
-      : Math.max(0, pseudoTerminalOptions.findIndex((option) => option.available));
-  renderPseudoTerminalCompletions();
-  pseudoTerminalInput.value = '';
-  pseudoTerminalInput.placeholder = prompt;
   if (pseudoTerminalPath) pseudoTerminalPath.textContent = `portfolio/${TERMINAL_SCREEN_LABELS[screen].toLowerCase().replace(/\s+/g, '-')}`;
-  if (pseudoTerminalState) pseudoTerminalState.textContent = solved ? 'AUTHORIZED' : screen === 4 ? 'PROGRAM MODE' : 'ONLINE';
-  scrollPaper?.classList.toggle('terminal-program-active', screen === 4 && !solved);
+  if (pseudoTerminalState) pseudoTerminalState.textContent = terminalProgramCompleting ? 'AUTHORIZED' : solved ? 'AUTHORIZED' : screen === 4 ? 'PROGRAM MODE' : 'ONLINE';
+  const programVisible = screen === 4 && (!solved || terminalProgramCompleting) && !terminalProgramLaunching;
+  scrollPaper?.classList.toggle('terminal-program-active', programVisible);
+  updateTerminalLinearAction(item);
   window.requestAnimationFrame(() => {
     if (state.reading !== item) return;
     pseudoTerminalOutput.scrollTop = screenChanged ? 0 : previousScroll;
-    if (screen < TERMINAL_SCREEN_GROUPS.length - 1 || solved) pseudoTerminalInput.focus({ preventScroll: true });
-    if (screen === TERMINAL_SCREEN_GROUPS.length - 1 && !solved) {
-      pseudoTerminalInput.blur();
+    if (!programVisible) pseudoTerminalNext?.focus({ preventScroll: true });
+    if (programVisible && !solved) {
       renderTerminalGameCursor(item, program);
       const controls = terminalGameButtons(program);
       controls[terminalGameCursor(item, program, controls.length)]?.focus({ preventScroll: true });
@@ -8355,11 +8344,13 @@ function renderScrollChallenge(item) {
     }
   }
   updateScrollRewardForChallenge(item, challenge, solved);
-  if (item.missionReport) renderPseudoTerminal(item);
+  if (item.missionReport && !scrollPaper?.classList.contains('terminal-program-active')) renderPseudoTerminal(item);
 }
 function completeScrollChallenge(item, challenge) {
   const roomIndex = item.roomIndex;
+  terminalProgramCompleting = true;
   state.terminalGameKeyHeld = false;
+  state.terminalMemoryReplayToken += 1;
   cancelScrollFlowHold(false);
   state.scrollSolvedRooms.add(roomIndex);
   state.scrollChallengeSelection.delete(roomIndex);
@@ -8384,9 +8375,15 @@ function completeScrollChallenge(item, challenge) {
   renderScrollChallenge(item);
   unlockScrollTourPage(item, TERMINAL_SCREEN_GROUPS.length - 1);
   configureScrollTourPages(item);
-  setTerminalScreen(TERMINAL_SCREEN_GROUPS.length - 1, true);
+  scrollPaper?.classList.add('terminal-program-active', 'terminal-program-complete');
+  if (scrollChallengeFeedback) scrollChallengeFeedback.textContent = item.finalTerminal
+    ? 'LIGHTWELL AUTHORIZED · FINAL DOOR RELEASED · SHUTDOWN IN PROGRESS'
+    : 'SHIELD GATE AUTHORIZED · ROUTE RELEASED · SHUTDOWN IN PROGRESS';
   showToast(challenge.rewardWeapon ? `${WEAPON_LOADOUTS[challenge.rewardWeapon].label.toUpperCase()} UNLOCKED · ROUTE OPEN.` : 'FIELD RESUPPLY COMPLETE · ROUTE OPEN.', 'good');
   playTone(440, .16, 'square', .02); playTone(660, .24, 'triangle', .024, .08);
+  terminalProgramCloseTimer = window.setTimeout(() => {
+    if (state.reading === item) closeReading();
+  }, settings.reducedMotion ? 160 : 1250);
 }
 function rejectScrollChallenge(item, message) {
   scrollChallenge?.classList.remove('is-wrong');
@@ -8409,6 +8406,9 @@ function acceptScrollChallengeEntry(item, challenge, entry) {
   else renderScrollChallenge(item);
 }
 function openReading(item) {
+  clearTerminalProgramTimers();
+  terminalProgramLaunching = false;
+  terminalProgramCompleting = false;
   state.pointerWasLockedBeforeReading = document.pointerLockElement === canvas;
   if (state.pointerWasLockedBeforeReading) document.exitPointerLock?.();
   state.reading = item;
@@ -8417,7 +8417,7 @@ function openReading(item) {
   state.terminalMemoryReplayToken += 1;
   state.readingElapsed = 0;
   state.readingWorldTime = state.now;
-  scrollPaper?.classList.remove('terminal-program-active');
+  scrollPaper?.classList.remove('terminal-program-active', 'terminal-program-launching', 'terminal-program-complete');
   state.keys.clear();
   state.mouseAttack = false;
   state.mouseLook = false;
@@ -8503,10 +8503,13 @@ function openReading(item) {
   readingOverlay.classList.remove('open', 'terminal-shutting-down');
   if (scrollPaper) {
     scrollPaper.scrollTop = 0;
-    if (item.missionReport) scrollPaper.dataset.terminalScreen = '0';
+    if (item.missionReport) {
+      const resumeScreen = Math.min(unlockedScrollTourPage(item), TERMINAL_SCREEN_GROUPS.length - 2);
+      scrollPaper.dataset.terminalScreen = String(resumeScreen);
+    }
   }
   configureScrollTourPages(item);
-  setScrollTourStep(0, false);
+  setScrollTourStep(item.missionReport ? Number(scrollPaper?.dataset.terminalScreen || 0) : 0, false);
   void readingOverlay.offsetWidth;
   readingOverlay.classList.add('open');
   if (item.missionReport) {
@@ -8530,8 +8533,12 @@ function closeReading(force = false) {
     state.terminalShutdown = true;
     state.terminalGameKeyHeld = false;
     state.terminalMemoryReplayToken += 1;
+    window.clearTimeout(terminalProgramLaunchTimer);
+    window.clearTimeout(terminalProgramCloseTimer);
+    terminalProgramLaunchTimer = 0;
+    terminalProgramCloseTimer = 0;
+    terminalProgramLaunching = false;
     cancelScrollFlowHold(false);
-    pseudoTerminalInput?.blur();
     readingOverlay.classList.remove('terminal-booting');
     readingOverlay.classList.add('terminal-shutting-down');
     window.setTimeout(() => {
@@ -8551,7 +8558,10 @@ function closeReading(force = false) {
   state.pointerWasLockedBeforeReading = false;
   state.readingElapsed = 0;
   state.terminalShutdown = false;
-  scrollPaper?.classList.remove('terminal-program-active');
+  clearTerminalProgramTimers();
+  terminalProgramLaunching = false;
+  terminalProgramCompleting = false;
+  scrollPaper?.classList.remove('terminal-program-active', 'terminal-program-launching', 'terminal-program-complete');
   gameShell?.classList.remove('terminal-active');
   readingOverlay.classList.remove('open', 'intro-scroll', 'terminal-record', 'terminal-booting', 'terminal-shutting-down');
   window.setTimeout(() => { if (!state.reading) readingOverlay.hidden = true; }, 550);
@@ -9055,9 +9065,8 @@ function ensureCeilingBuffer(height) {
 }
 
 function ceilingDistanceAtScreenY(y) {
-  const verticalAngle = -Math.atan((y - cameraHorizon()) / focalY());
-  const denominator = Math.tan(verticalAngle);
-  return denominator > .01 ? (CEILING_Z - cameraEyeHeight()) / denominator : MAX_DEPTH;
+  const projectedRise = cameraHorizon() - y;
+  return projectedRise > .01 ? (CEILING_Z - cameraEyeHeight()) * focalY() / projectedRise : MAX_DEPTH;
 }
 
 function roofRoomIndexAtX(x) {
@@ -15379,21 +15388,22 @@ function updateFrameQuality(frameMs) {
   }
 }
 function gameLoop(now) {
-  const frameStart = performance.now();
   try {
     const delta = Math.min(.05, (now - state.lastTime) / 1000 || 0);
     state.lastTime = now;
     runFrameTask('update', () => tick(delta, now));
     runFrameTask('prompt', () => updatePrompt(delta));
-    if (now - state.lastRenderAt >= RENDER_INTERVAL) {
+    const terminalOccludesWorld = Boolean(state.reading?.missionReport && readingOverlay?.classList.contains('open'));
+    if (!terminalOccludesWorld && now - state.lastRenderAt >= RENDER_INTERVAL) {
       state.lastRenderAt = now;
+      const sceneStart = performance.now();
       const rendered = runFrameTask('scene', () => drawScene(now));
       if (!rendered) runFrameTask('recovery scene', () => drawRecoveryScene(now));
+      updateFrameQuality(performance.now() - sceneStart);
     }
   } catch (error) {
     reportRuntimeError('frame loop', error);
   } finally {
-    updateFrameQuality(performance.now() - frameStart);
     requestAnimationFrame(gameLoop);
   }
 }
@@ -15568,123 +15578,8 @@ document.addEventListener('focusout', (event) => {
   if (target) hideHoverTooltip(target);
 });
 
+pseudoTerminalNext?.addEventListener('click', () => advanceLinearTerminal(state.reading));
 closeScrollButton.addEventListener('click', closeReading);
-function executePseudoTerminalCommand(rawCommand) {
-  const item = state.reading;
-  if (!item?.missionReport) return false;
-  const command = String(rawCommand || '').trim().toLowerCase().replace(/^\$\s*/, '').replace(/^(open|run|view)\s+/, '');
-  const unlocked = unlockedScrollTourPage(item);
-  if (command === 'exit' || command === 'return' || command === 'return-to-field') {
-    closeReading();
-    return true;
-  }
-  if (command === 'status') {
-    setTerminalScreen(0, true);
-    return true;
-  }
-  if (command === 'profile') {
-    if (unlocked < 1) unlockScrollTourPage(item, 1);
-    setTerminalScreen(1, true);
-    return true;
-  }
-  if (command === 'next-profile' || command === 'next' || command === 'continue') {
-    if (!scrollBriefingComplete(item) && Number(scrollPaper?.dataset.terminalScreen || 0) !== 1) return false;
-    scrollBriefingNext?.click();
-    return true;
-  }
-  if (command === 'impact') {
-    if (!scrollBriefingComplete(item)) return false;
-    unlockScrollTourPage(item, 2);
-    setTerminalScreen(2, true);
-    return true;
-  }
-  if (command === 'case-file' || command === 'case' || command === 'cases') {
-    if (unlocked < 2) return false;
-    unlockScrollTourPage(item, 3);
-    setTerminalScreen(3, true);
-    return true;
-  }
-  if (command === 'program') {
-    if (unlocked < 3) return false;
-    unlockScrollTourPage(item, 4);
-    setTerminalScreen(4, true);
-    return true;
-  }
-  return false;
-}
-function selectPseudoTerminalOption(direction = 1) {
-  const selectable = pseudoTerminalOptions.map((option, index) => option.available ? index : -1).filter((index) => index >= 0);
-  if (!selectable.length) return null;
-  const current = selectable.indexOf(pseudoTerminalSelection);
-  const next = current < 0
-    ? 0
-    : (current + direction + selectable.length) % selectable.length;
-  pseudoTerminalSelection = selectable[next];
-  renderPseudoTerminalCompletions();
-  return pseudoTerminalOptions[pseudoTerminalSelection];
-}
-function runPseudoTerminalCommand(command) {
-  if (executePseudoTerminalCommand(command)) return true;
-  const safeCommand = String(command || '').trim() || '(blank)';
-  const normalized = safeCommand.toLowerCase().replace(/^(open|run|view)\s+/, '');
-  const knownButLocked = ['impact', 'case', 'case-file', 'program'].includes(normalized);
-  const message = knownButLocked
-    ? `${normalized}: display locked. complete the highlighted NEXT action first.`
-    : `command not found: ${safeCommand}. use ↑ ↓ to select, Enter to run, or choose 1–5.`;
-  pseudoTerminalOutput?.insertAdjacentHTML('beforeend', pseudoTerminalLine(message, 0, 'is-system'));
-  if (pseudoTerminalInput) {
-    pseudoTerminalInput.value = '';
-    pseudoTerminalInput.placeholder = 'unknown command — select an option below';
-  }
-  pseudoTerminalOutput?.scrollTo({ top: pseudoTerminalOutput.scrollHeight, behavior: settings.reducedMotion ? 'auto' : 'smooth' });
-  return false;
-}
-pseudoTerminalCompletions?.addEventListener('click', (event) => {
-  const button = event.target.closest?.('[data-terminal-command]');
-  if (!button || button.disabled) return;
-  const command = button.dataset.terminalCommand;
-  const index = pseudoTerminalOptions.findIndex((option) => option.command === command && option.available);
-  if (index >= 0) pseudoTerminalSelection = index;
-  runPseudoTerminalCommand(command);
-});
-pseudoTerminalInput?.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') return;
-  event.stopPropagation();
-  if (TERMINAL_SHORTCUT_COMMANDS[event.key]) {
-    event.preventDefault();
-    runPseudoTerminalCommand(TERMINAL_SHORTCUT_COMMANDS[event.key]);
-    return;
-  }
-  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-    event.preventDefault();
-    selectPseudoTerminalOption(event.key === 'ArrowDown' ? 1 : -1);
-    return;
-  }
-  if (event.key === 'Tab') {
-    if (!pseudoTerminalInput.value.trim()) return;
-    event.preventDefault();
-    const option = pseudoTerminalOptions[pseudoTerminalSelection] || selectPseudoTerminalOption(1);
-    if (option?.available) {
-      pseudoTerminalInput.value = option.command;
-      pseudoTerminalInput.setSelectionRange(option.command.length, option.command.length);
-    }
-    return;
-  }
-  if (event.key !== 'Enter') return;
-  event.preventDefault();
-  const command = String(pseudoTerminalInput.value || '').trim() || pseudoTerminalOptions[pseudoTerminalSelection]?.command;
-  runPseudoTerminalCommand(command);
-});
-pseudoTerminalInput?.addEventListener('input', () => {
-  const query = pseudoTerminalInput.value.trim().toLowerCase();
-  if (!query) return;
-  const index = pseudoTerminalOptions.findIndex((option) => option.available && option.command.startsWith(query));
-  if (index >= 0) {
-    pseudoTerminalSelection = index;
-    renderPseudoTerminalCompletions();
-  }
-});
-pseudoTerminalInput?.addEventListener('keyup', (event) => { if (event.key !== 'Escape') event.stopPropagation(); });
 scrollBriefingNext?.addEventListener('click', () => {
   const item = state.reading;
   const briefing = scrollBriefingForItem(item);
