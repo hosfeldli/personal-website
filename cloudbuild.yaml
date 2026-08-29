@@ -28,7 +28,7 @@ steps:
       - --region=${_REGION}
       - --platform=managed
       - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
-      - --ingress=internal-and-cloud-load-balancing
+      - --ingress=all
       - --allow-unauthenticated
 
 images:

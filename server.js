@@ -1,188 +1,58 @@
 'use strict';
-
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const zlib = require('node:zlib');
 const { URL } = require('node:url');
-
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.K_SERVICE ? '0.0.0.0' : (process.env.HOST || '127.0.0.1');
-const COMPRESSIBLE = /^(text\/|application\/(json|xml|javascript))/;
-const COMPRESS_MIN_BYTES = 1024;
-const LEVEL_ENDPOINTS = Object.freeze([
-  Object.freeze({ id: 'threshold', title: 'Threshold Chamber', room: 1 }),
-  Object.freeze({ id: 'trophy', title: 'Trophy Room', room: 2 }),
-  Object.freeze({ id: 'quests', title: 'Quest Board', room: 3 }),
-  Object.freeze({ id: 'chronicle', title: 'Chronicle', room: 4 }),
-  Object.freeze({ id: 'character', title: 'Character Sheet', room: 5 }),
-  Object.freeze({ id: 'campfire', title: 'Campfire', room: 6 }),
-  Object.freeze({ id: 'gate', title: 'Lightwell Sanctum', room: 7 }),
-  Object.freeze({ id: 'sanctuary', title: 'Celestial Sanctuary', room: 8 }),
-]);
-const LEVEL_ENDPOINT_BY_ALIAS = new Map(LEVEL_ENDPOINTS.flatMap((level) => [
-  [level.id, level],
-  [String(level.room), level],
-]));
-
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.avif': 'image/avif',
-  '.svg': 'image/svg+xml',
-  '.pdf': 'application/pdf',
-  '.ico': 'image/x-icon',
-  '.wav': 'audio/wav',
-  '.mp3': 'audio/mpeg',
-  '.ogg': 'audio/ogg',
-  '.txt': 'text/plain; charset=utf-8',
-  '.xml': 'application/xml; charset=utf-8',
-};
-
-const PUBLIC_FILES = new Set([
-  '/styles.css',
-  '/refined.css',
-  '/game.js',
-  '/script.js',
-  '/favicon.ico',
-  '/robots.txt',
-  '/sitemap.xml',
-]);
-
-function sendText(res, status, body) {
-  res.writeHead(status, {
-    'Content-Type': 'text/plain; charset=utf-8',
-    'Cache-Control': 'no-store',
-    'X-Content-Type-Options': 'nosniff',
-  });
-  res.end(body);
+const RELEASE_REPOSITORY = process.env.LIAMFLOW_RELEASE_REPOSITORY || 'hosfeldli/ray-placement';
+const RELEASE_API = `https://api.github.com/repos/${RELEASE_REPOSITORY}/releases/latest`;
+const RELEASE_CACHE_MS = 5 * 60 * 1000;
+let cachedRelease = null;
+let cachedAt = 0;
+const MIME_TYPES = Object.freeze({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.dmg': 'application/x-apple-diskimage' });
+const PUBLIC_FILES = new Set(['/styles.css', '/script.js', '/robots.txt', '/sitemap.xml']);
+function headers(type, cache = 'no-cache') { return { 'Content-Type': type, 'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()' }; }
+function send(res, status, body, type = 'text/plain; charset=utf-8') { res.writeHead(status, { ...headers(type), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
+function sendJSON(res, status, value) { const body = JSON.stringify(value, null, 2); res.writeHead(status, headers('application/json; charset=utf-8', 'public, max-age=300')); res.end(body); }
+async function latestRelease() {
+  if (cachedRelease && Date.now() - cachedAt < RELEASE_CACHE_MS) return cachedRelease;
+  const response = await fetch(RELEASE_API, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'liamflow-site' }, signal: AbortSignal.timeout(6000) });
+  if (!response.ok) throw new Error(`Release source returned ${response.status}`);
+  const release = await response.json();
+  const asset = (names) => release.assets?.find((item) => names.includes(item.name));
+  const dmg = asset(['LiamFlow.dmg', 'LiamFlow-Installer.dmg']);
+  const update = asset(['LiamFlow-Update.zip', 'RayPlacement-Update.zip']);
+  cachedRelease = {
+    version: release.tag_name || 'Latest release',
+    publishedAt: release.published_at,
+    releaseUrl: release.html_url,
+    dmg: dmg?.browser_download_url || release.html_url,
+    update: update?.browser_download_url || null,
+    updateDigest: update?.digest || null,
+    updateSize: update?.size || null,
+  };
+  cachedAt = Date.now();
+  return cachedRelease;
 }
-
-function levelEndpointFromPath(pathname) {
-  const match = /^\/level\/([^/]+)\/?$/i.exec(pathname);
-  if (!match) return null;
-  try {
-    return LEVEL_ENDPOINT_BY_ALIAS.get(decodeURIComponent(match[1]).toLowerCase()) || null;
-  } catch (error) {
-    return null;
-  }
-}
-
-function sendJson(req, res, status, value) {
-  const body = JSON.stringify(value, null, 2);
-  res.writeHead(status, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Content-Length': Buffer.byteLength(body),
-    'Cache-Control': 'no-store',
-    'X-Content-Type-Options': 'nosniff',
-  });
-  if (req.method === 'HEAD') return res.end();
-  return res.end(body);
-}
-
-function resolveStaticFile(pathname) {
-  if (pathname === '/' || pathname === '/dungeon' || pathname === '/dungeon/') return path.join(ROOT, 'index.html');
-  if (levelEndpointFromPath(pathname)) return path.join(ROOT, 'index.html');
-  if (PUBLIC_FILES.has(pathname)) return path.join(ROOT, pathname.slice(1));
-  if (pathname.startsWith('/assets/')) {
-    const resolved = path.normalize(path.join(ROOT, pathname.replace(/^\/+/, '')));
-    const assetsRoot = `${path.join(ROOT, 'assets')}${path.sep}`;
-    return resolved.startsWith(assetsRoot) ? resolved : null;
-  }
-  return null;
-}
-
-function cacheControlFor(pathname, isFingerprinted) {
-  if (isFingerprinted) return 'public, max-age=31536000, immutable';
-  if (pathname.startsWith('/assets/')) return 'public, max-age=604800, stale-while-revalidate=86400';
-  if (pathname.endsWith('.css') || pathname.endsWith('.js')) return 'public, max-age=3600, must-revalidate';
-  return 'no-cache';
-}
-
 function serveStatic(req, res, pathname) {
-  const filePath = resolveStaticFile(pathname);
-  if (!filePath) return sendText(res, 404, 'Not found');
-
+  const requested = pathname === '/' ? '/index.html' : pathname;
+  if (requested !== '/index.html' && !PUBLIC_FILES.has(requested)) return send(res, 404, 'Not found');
+  const filePath = path.join(ROOT, requested.slice(1));
   fs.stat(filePath, (error, stats) => {
-    if (error || !stats.isFile()) return sendText(res, 404, 'Not found');
+    if (error || !stats.isFile()) return send(res, 404, 'Not found');
     const type = MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
-    const etag = `W/"${stats.size.toString(16)}-${stats.mtimeMs.toString(36)}"`;
-    const isFingerprinted = /\.[0-9a-f]{8,}\.(css|js|png|jpg|webp|svg)$/i.test(pathname);
-    const headers = {
-      'Content-Type': type,
-      'Cache-Control': cacheControlFor(pathname, isFingerprinted),
-      'ETag': etag,
-      'Last-Modified': stats.mtime.toUTCString(),
-      'Vary': 'Accept-Encoding',
-      'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-    };
-
-    const ifNoneMatch = req.headers['if-none-match'];
-    if (ifNoneMatch && ifNoneMatch.split(',').some((value) => value.trim() === etag)) {
-      res.writeHead(304, headers);
-      return res.end();
-    }
-
-    const accepted = String(req.headers['accept-encoding'] || '');
-    const compressible = COMPRESSIBLE.test(type) && stats.size >= COMPRESS_MIN_BYTES;
-    const encoding = !compressible ? null
-      : /\bbr\b/.test(accepted) ? 'br'
-      : /\bgzip\b/.test(accepted) ? 'gzip'
-      : null;
-
-    if (!encoding) headers['Content-Length'] = stats.size;
-    else headers['Content-Encoding'] = encoding;
-
-    res.writeHead(200, headers);
+    res.writeHead(200, { ...headers(type, requested === '/index.html' ? 'no-cache' : 'public, max-age=3600'), 'Content-Length': stats.size });
     if (req.method === 'HEAD') return res.end();
-
-    const stream = fs.createReadStream(filePath);
-    stream.on('error', () => res.destroy());
-    if (!encoding) return stream.pipe(res);
-    const compressor = encoding === 'br'
-      ? zlib.createBrotliCompress({ params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } })
-      : zlib.createGzip({ level: 6 });
-    stream.pipe(compressor).pipe(res);
+    fs.createReadStream(filePath).on('error', () => res.destroy()).pipe(res);
   });
 }
-
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
+  if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, 'Method not allowed');
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  if (['GET', 'HEAD'].includes(req.method)) {
-    if (url.pathname === '/api/levels') {
-      return sendJson(req, res, 200, LEVEL_ENDPOINTS.map((level) => ({
-        id: level.id,
-        title: level.title,
-        url: `/level/${level.id}`,
-      })));
-    }
-    return serveStatic(req, res, url.pathname);
-  }
-  return sendText(res, 405, 'Method not allowed');
+  if (url.pathname === '/updates/latest.json' || url.pathname === '/api/updates/latest') { try { return sendJSON(res, 200, await latestRelease()); } catch { return sendJSON(res, 503, { error: 'Release information is temporarily unavailable.' }); } }
+  if (url.pathname === '/downloads/LiamFlow.dmg') { try { const release = await latestRelease(); res.writeHead(302, { Location: release.dmg, 'Cache-Control': 'no-store' }); return res.end(); } catch { return send(res, 503, 'The LiamFlow download is temporarily unavailable.'); } }
+  return serveStatic(req, res, url.pathname);
 });
-
-let shuttingDown = false;
-function shutdown(signal) {
-  if (shuttingDown) return;
-  shuttingDown = true;
-  console.log(`${signal} received; draining requests`);
-  server.close(() => {
-    console.log('Pending requests flushed; exiting');
-    process.exit(0);
-  });
-  setTimeout(() => process.exit(0), 10000).unref();
-}
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
-
-server.listen(PORT, HOST, () => {
-  console.log(`Portfolio running at http://${HOST}:${PORT}`);
-});
+server.listen(PORT, HOST, () => console.log(`LiamFlow site running at http://${HOST}:${PORT}`));

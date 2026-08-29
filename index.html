@@ -2,295 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b2a20" />
-  <meta name="description" content="Fight through Liam Hosfeld's first-person operations dungeon, recover field reports, and secure the Document of Truth." />
-  <title>Liam Hosfeld · The Operations Dungeon</title>
-  <link rel="stylesheet" href="styles.css?v=20260816-chunky-stairs-8" />
+  <meta name="theme-color" content="#080a12" />
+  <meta name="description" content="LiamFlow is Liam Hosfeld's private, keyboard-first macOS workbench for notes, writing, dictation, development, and daily flow." />
+  <title>LiamFlow — Work, in motion</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <main class="game-shell" aria-label="Liam Hosfeld portfolio game">
-    <canvas id="game-canvas" aria-label="First-person medieval portfolio dungeon"></canvas>
-    <div class="vignette" aria-hidden="true"></div>
+  <div class="aurora aurora-a" aria-hidden="true"></div>
+  <div class="aurora aurora-b" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
 
-    <div class="commander-overlay">
-    <section class="narrator-panel" id="narrator-panel" hidden aria-live="polite">
-            <div class="narrator-portrait expression-calm" id="narrator-portrait" aria-label="Commander portrait">
-              <canvas id="narrator-portrait-canvas" width="96" height="96"></canvas>
-            </div>
-            <div class="narrator-copy">
-              <div class="narrator-heading">
-                <span class="narrator-kicker" id="narrator-kicker">COMMANDER</span>
-                <strong id="narrator-speaker">THE COMMANDER</strong>
-              </div>
-              <p id="narrator-message"></p>
-            </div>
-          </section>
-    </div>
+  <header class="site-header shell">
+    <a class="brand" href="#top" aria-label="LiamFlow home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>Liam<span>Flow</span></span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#workbench">Workbench</a>
+      <a href="#install">Install</a>
+      <a href="#private">Private by design</a>
+    </nav>
+    <a class="header-download" id="header-download" href="/downloads/LiamFlow.dmg">Download</a>
+  </header>
 
-    <header class="game-hud">
-      <div class="room-plaque" aria-live="polite">
-        <p class="eyebrow"><span id="room-floor">LEVEL 01</span> · <span id="room-count">01 / 09</span></p>
-      </div>
-
-      <div class="boss-plaque" id="boss-plaque" hidden aria-live="polite">
-        <div class="boss-heading"><span>FINAL ENCOUNTER</span><strong id="boss-name">THE OPERATIONS ARCHON</strong></div>
-        <div class="boss-health-track"><span id="boss-health-bar"></span></div>
-        <div class="boss-phase" id="boss-phase">PHASE I · THE BRIEF</div>
-      </div>
-
-    </header>
-
-    <section class="minimal-combat-hud doom-status-bar" aria-label="Combat status">
-      <div class="doom-status-compartment doom-left-cluster">
-        <div class="doom-ammo">
-          <span class="doom-kicker">AMMO</span>
-          <strong><b id="combat-ammo">40</b><i>/</i><b id="combat-reserve">160</b></strong>
-          <span class="minimal-weapon-status" id="combat-mode">READY</span>
+  <main id="top">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> Personal macOS workbench</p>
+        <h1>Stay in <em>flow.</em><br />Keep control.</h1>
+        <p class="hero-summary">LiamFlow puts fast notes, precise writing tools, local meeting dictation, focused developer utilities, and your own extensions behind one deliberate command surface.</p>
+        <div class="hero-actions">
+          <a class="download-button" id="hero-download" href="/downloads/LiamFlow.dmg">
+            <span class="download-icon" aria-hidden="true">↓</span>
+            <span><b>Download for macOS</b><small id="release-label">Apple silicon · macOS 13+</small></span>
+          </a>
+          <a class="quiet-link" href="#workbench">Explore the workbench <span>↘</span></a>
         </div>
-        <div class="visor-weapon-selector" aria-label="Weapon selector">
-          <div class="visor-selector-heading">
-            <span>WEAPON SELECT</span>
-            <small>1–6 / CHANGE</small>
-          </div>
-          <div class="visor-weapon-options">
-            <button type="button" data-weapon-slot="arsenal" aria-label="Select Arsenal Carbine with key 1"><b>1</b><span>CARBINE</span></button>
-            <button type="button" data-weapon-slot="shotgun" aria-label="Select Shotgun with key 2"><b>2</b><span>SHOTGUN</span></button>
-            <button type="button" data-weapon-slot="plasma" aria-label="Select Arc Repeater with key 3"><b>3</b><span>ARC</span></button>
-            <button type="button" data-weapon-slot="rail" aria-label="Select Archive Railgun with key 4"><b>4</b><span>RAIL</span></button>
-            <button type="button" data-weapon-slot="rivet" aria-label="Select Rivet Cannon with key 5"><b>5</b><span>RIVET</span></button>
-            <button type="button" data-weapon-slot="bfg" aria-label="Select Electric BFG with key 6"><b>6</b><span>BFG</span></button>
-          </div>
-          <strong class="visor-current-weapon" id="combat-weapon-name">ASSAULT RIFLE</strong>
-        </div>
+        <dl class="hero-meta">
+          <div><dt>Local-first</dt><dd>Your work stays yours</dd></div>
+          <div><dt>Keyboard-first</dt><dd>Made for momentum</dd></div>
+          <div><dt>No account</dt><dd>Open and get moving</dd></div>
+        </dl>
       </div>
-      <div class="doom-status-compartment doom-vitals">
-        <div class="doom-stat-block"><span>HEALTH</span><strong id="combat-health">100</strong></div>
-        <div class="doom-stat-track health-track"><span id="combat-health-bar"></span></div>
-      </div>
-    </section>
 
-    <section class="boss-bottom-hud" id="boss-bottom-hud" hidden aria-live="polite">
-      <div class="boss-bottom-heading">
-        <strong id="boss-bottom-name">THE OPERATIONS ARCHON</strong>
-        <span id="boss-bottom-phase">PHASE I · THE BRIEF</span>
-      </div>
-      <div class="boss-bottom-track" aria-label="Operations Archon health"><span id="boss-bottom-health"></span></div>
-    </section>
-
-    <section class="objective-panel" id="objective-panel" aria-live="polite">
-      <strong id="objective-label">RECOVER PORTFOLIO RECORDS</strong>
-      <span id="objective-detail">Read the glowing records to understand the work.</span>
-    </section>
-
-    <section class="floor-announcement" id="floor-announcement" hidden aria-live="assertive">
-      <div class="floor-announcement-card">
-        <p class="eyebrow" id="floor-announcement-kicker" hidden aria-hidden="true">FIELD ARCHIVE / NEW LEVEL</p>
-        <strong id="floor-announcement-number" hidden aria-hidden="true">LEVEL 01</strong>
-        <h2 id="floor-announcement-title">THE THRESHOLD CHAMBER</h2>
-        <p id="floor-announcement-subtitle" hidden aria-hidden="true">Identity, scope, and the work behind the map.</p>
-      </div>
-    </section>
-
-
-    <div class="interaction-prompt" id="interaction-prompt" hidden aria-live="polite">
-      <span class="prompt-key" id="prompt-key">[E]</span>
-      <span id="prompt-text"></span>
-    </div>
-
-    <section class="lobby-guide-hud" id="lobby-guide-hud" hidden aria-live="polite">
-      <div class="lobby-guide-hud-seal" aria-hidden="true">✦</div>
-      <div class="lobby-guide-hud-copy">
-        <span class="lobby-guide-hud-kicker">FIELD GUIDE · PIP THE WAYFINDER</span>
-        <strong id="lobby-guide-hud-message">WASD walks. Move the mouse to look around the field.</strong>
-        <span class="lobby-guide-hud-hint" id="lobby-guide-hud-hint">E · TALK TO PIP</span>
-      </div>
-    </section>
-
-    <div class="toast" id="toast" hidden aria-live="polite"></div>
-    <div class="hover-tooltip" id="hover-tooltip" role="tooltip" hidden></div>
-
-
-    <section class="reading-overlay" id="reading-overlay" hidden role="dialog" aria-modal="true" aria-label="Field record">
-      <div class="scroll-shell">
-        <div class="scroll-roller scroll-roller-top" aria-hidden="true"></div>
-        <article class="scroll-paper" id="scroll-paper">
-          <section class="pseudo-terminal terminal-only" id="pseudo-terminal" aria-label="Portfolio command terminal">
-            <div class="pseudo-terminal-title"><span>liam@fieldnet:~$</span><span id="pseudo-terminal-path">portfolio/status</span><span id="pseudo-terminal-state">ONLINE</span></div>
-            <div class="pseudo-terminal-output" id="pseudo-terminal-output"></div>
-            <button type="button" class="pseudo-terminal-next" id="pseudo-terminal-next"><span aria-hidden="true">&gt;_</span><strong>ENTER</strong><em>CONTINUE</em></button>
-          </section>
-          <div class="scroll-header">
-            <p class="eyebrow scroll-kicker">VERIFIED FIELD RECORD <span id="scroll-room-label"></span></p>
-            <span class="scroll-record-number" id="scroll-record-number">FIELD RECORD</span>
+      <div class="hero-visual" aria-label="A preview of LiamFlow's command surface">
+        <div class="window-glow" aria-hidden="true"></div>
+        <article class="app-window">
+          <div class="window-topbar">
+            <div class="window-traffic" aria-hidden="true"><i></i><i></i><i></i></div>
+            <span class="window-title">LiamFlow</span>
+            <span class="window-status"><i></i> Ready</span>
           </div>
-          <div class="scroll-stamp" aria-hidden="true">LH<br /><small>FILED</small></div>
-          <h2 id="scroll-title">FIELD RECORD</h2>
-          <p class="scroll-summary" id="scroll-summary"></p>
-          <div class="scroll-author-line" aria-label="Record author and status">
-            <span id="scroll-author-line">LIAM HOSFELD · TECHNICAL CONSULTANT</span>
-            <span id="scroll-record-status">NEW SIGNAL</span>
-          </div>
-          <p class="scroll-positioning" id="scroll-positioning"></p>
-          <nav class="scroll-index" aria-label="Record navigation">
-            <button type="button" data-scroll-jump="scroll-title">STATUS</button>
-            <button type="button" data-scroll-jump="scroll-briefing">PROFILE</button>
-            <button type="button" data-scroll-jump="scroll-intro-grid">PROOF</button>
-            <button type="button" data-scroll-jump="scroll-proof-grid">CASE FILE</button>
-            <button type="button" data-scroll-jump="scroll-challenge">PROGRAM</button>
-          </nav>
-          <div class="scroll-tour" id="scroll-tour" aria-live="polite">
-            <span id="scroll-tour-status">GUIDED RECORD · 1 / 5 · OVERVIEW</span>
-            <button type="button" id="scroll-tour-next">NEXT SECTION ↓</button>
-          </div>
-          <p class="terminal-route-note terminal-only"><b>COMMAND ROUTE</b><span>Review the sector display, inspect the case file, then run the executable to authorize the shield gate.</span></p>
-          <section class="scroll-findings" aria-labelledby="scroll-findings-label">
-            <p class="scroll-section-label" id="scroll-findings-label">AT A GLANCE / KEY TAKEAWAYS</p>
-            <div class="scroll-findings-grid" id="scroll-findings"></div>
-          </section>
-          <section class="scroll-briefing" id="scroll-briefing" hidden aria-live="polite">
-            <div class="scroll-briefing-heading">
-              <span>
-                <small id="scroll-briefing-kicker">PERSONNEL FILE</small>
-                <strong id="scroll-briefing-title">MEET LIAM HOSFELD</strong>
-              </span>
-              <b id="scroll-briefing-count">1 / 3</b>
+          <div class="command-line"><span class="command-glyph">⌘</span><span>What do you want to do?</span><kbd>⌥ Space</kbd></div>
+          <div class="command-content">
+            <div class="command-results">
+              <p class="section-label">Suggested</p>
+              <button class="command-row selected"><span class="row-icon purple">✦</span><span><b>Quick Note</b><small>Capture an idea, then keep moving</small></span><kbd>↵</kbd></button>
+              <button class="command-row"><span class="row-icon cyan">⌁</span><span><b>Check Writing</b><small>Review selected text in place</small></span><kbd>⌃⌥G</kbd></button>
+              <button class="command-row"><span class="row-icon amber">◌</span><span><b>Meeting Dictation</b><small>Continue into your latest note</small></span><kbd>⌃⌥D</kbd></button>
+              <p class="section-label spaced">Your tools</p>
+              <div class="tool-chips"><span>HTTP Studio</span><span>Terminal</span><span>Format</span><span>Passwords</span></div>
             </div>
-            <article class="scroll-briefing-page" id="scroll-briefing-page">
-              <small id="scroll-briefing-label">ROLE</small>
-              <h3 id="scroll-briefing-page-title"></h3>
-              <p id="scroll-briefing-body"></p>
-              <em id="scroll-briefing-proof"></em>
-            </article>
-            <button type="button" class="scroll-briefing-next" id="scroll-briefing-next">NEXT PERSONNEL RECORD</button>
-          </section>
-          <div class="scroll-intro-grid" id="scroll-intro-grid" hidden aria-label="Selected portfolio impact metrics"></div>
-          <p class="scroll-section-label" id="scroll-proof-label" hidden>SELECTED PROOF / WHAT CHANGED</p>
-          <div class="scroll-proof-grid" id="scroll-proof-grid" hidden aria-label="Selected portfolio case studies"></div>
-          <div class="scroll-divider" aria-hidden="true"><span>✦</span></div>
-          <section class="scroll-challenge" id="scroll-challenge" hidden aria-live="polite">
-            <small id="scroll-challenge-guide">CASE GAME / FOLLOW THE LIT CONTROLS</small>
-            <strong id="scroll-challenge-title">TUNE THE CASE SIGNAL</strong>
-            <p id="scroll-challenge-prompt"></p>
-            <div class="scroll-challenge-steps" id="scroll-challenge-steps"></div>
-            <p class="scroll-challenge-feedback" id="scroll-challenge-feedback" role="status" aria-live="polite"></p>
-          </section>
-          <div class="scroll-ability" id="scroll-ability" aria-live="polite">
-            <span class="scroll-ability-seal" id="scroll-ability-seal" aria-hidden="true">✦</span>
-            <span>
-              <small id="scroll-reward-kicker">ARCHIVE REWARD</small>
-              <strong id="scroll-ability-name">+25 XP</strong>
-              <em id="scroll-ability-description">Recover field records to improve your final field rank.</em>
-            </span>
+            <aside class="command-aside">
+              <span class="aside-kicker">Now recording</span>
+              <div class="waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <p>Weekly planning</p>
+              <small>Local dictation · speaker-aware</small>
+            </aside>
           </div>
-          <div class="scroll-progress" aria-label="Field experience progress">
-            <div class="scroll-progress-copy">
-              <small id="scroll-progress-label">FIELD EXPERIENCE</small>
-              <strong id="scroll-progress-value">0 / 150 XP</strong>
-            </div>
-            <div class="scroll-progress-track"><span id="scroll-progress-bar"></span></div>
-            <p id="scroll-progress-caption">Archive evidence and clear sectors to improve your run.</p>
-          </div>
-          <div class="scroll-details-heading" id="scroll-evidence-section">
-            <p class="scroll-section-label" id="scroll-details-label">FIELD NOTES / EVIDENCE</p>
-            <span id="scroll-detail-count">0 EVIDENCE POINTS</span>
-          </div>
-          <ul class="scroll-details" id="scroll-details"></ul>
-          <div class="scroll-tags" id="scroll-tags"></div>
-          <div class="scroll-cta" id="scroll-cta">
-            <small>WORK WITH LIAM</small>
-            <strong id="scroll-cta-title">BUILD THE NEXT ROUTE</strong>
-            <p id="scroll-cta-copy">For TMS, operational analytics, integrations, and automation work, start with the evidence and make the next decision easier.</p>
-          </div>
-          <div class="scroll-actions" id="scroll-actions"></div>
-          <div class="terminal-command-strip terminal-only" aria-hidden="true">
-            <span>DISPLAY CONTROL // USE THE LIT COMMANDS</span>
-            <span>EXIT // ESC</span>
-          </div>
-          <button type="button" id="close-scroll" class="close-scroll" data-tooltip="RETURN TO THE FIELD · [ESC]">RETURN TO THE FIELD <span>ESC / E · CLOSE RECORD</span></button>
+          <div class="window-footer"><span><i></i> Private workspace</span><span>⌘↵ Open &nbsp; · &nbsp; ↑↓ Navigate</span></div>
         </article>
-        <div class="scroll-roller scroll-roller-bottom" aria-hidden="true"></div>
       </div>
     </section>
 
+    <section class="signal-strip" aria-label="LiamFlow principles"><div class="shell"><span>One surface</span><i></i><span>Many focused tools</span><i></i><span>Nothing between you and the work</span></div></section>
 
-
-    <section class="death-overlay" id="death-overlay" hidden aria-live="assertive">
-      <div class="death-card" role="dialog" aria-modal="true" aria-labelledby="death-title">
-        <p class="death-label">SIGNAL LOST</p>
-        <h2 id="death-title">YOU DIED</h2>
-        <p class="death-cause" id="death-cause">The archive got the better of you.</p>
-        <button type="button" class="death-restart" id="death-restart">REENTER <span>E / ENTER</span></button>
+    <section class="workbench shell" id="workbench">
+      <div class="section-heading">
+        <p class="eyebrow"><span></span> Built for the real workday</p>
+        <h2>Every tool has a place.<br />None of them gets in the way.</h2>
+        <p>Break a workflow into its own window when it deserves focus. Keep it in the command surface when it doesn't.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card feature-notes"><div class="card-top"><span class="card-index">01</span><span class="card-icon">✎</span></div><h3>Notes that feel alive</h3><p>Write in Markdown, see polished formatting in the same canvas, dock notes at either edge, pin the ones that matter, and capture meetings into the latest note.</p><div class="note-preview"><span>Friday / planning</span><b>Ship the clean path.</b><div><i></i><i></i><i></i></div></div></article>
+        <article class="feature-card feature-writing"><div class="card-top"><span class="card-index">02</span><span class="card-icon">⌁</span></div><h3>Writing, tightened</h3><p>Review a selection without leaving its context. See a clear suggestion, choose exactly what to replace, and get a quiet result—not a workflow interruption.</p><div class="rewrite-preview"><span class="strike">teh project is ready</span><span class="rewrite">the project is ready.</span></div></article>
+        <article class="feature-card feature-builder"><div class="card-top"><span class="card-index">03</span><span class="card-icon">⌘</span></div><h3>Build your own lane</h3><p>Extensions can be small commands or complete native forms—with inputs, validation, output, shortcut support, and dedicated workspaces when needed.</p><div class="extension-preview"><span>extensions/</span><b>shipment-status</b><small>form + result + shortcut</small></div></article>
+        <article class="feature-card feature-dev"><div class="card-top"><span class="card-index">04</span><span class="card-icon">›_</span></div><h3>Developer tools, kept close</h3><p>Use a stateful terminal, test requests, inspect data, open files with intent, generate passwords, and format documents without opening another pile of apps.</p><div class="terminal-preview"><span>liam@work</span><b> ~/project</b><i>$</i> git status <em>✓ clean</em></div></article>
       </div>
     </section>
 
-    <div class="touch-controls" aria-label="Touch controls">
-      <button type="button" data-control="strafe-left" aria-label="Strafe left">↶</button>
-      <button type="button" data-control="forward" aria-label="Move forward">↑</button>
-      <button type="button" data-control="back" aria-label="Move backward">↓</button>
-      <button type="button" data-control="strafe-right" aria-label="Strafe right">↷</button>
-      <button type="button" data-control="attack" aria-label="Fire equipped weapon">✦</button>
-    </div>
+    <section class="install-section shell" id="install">
+      <div class="install-copy"><p class="eyebrow"><span></span> A clean install, not a setup project</p><h2>Open the disk image.<br />Choose your path.</h2><p>The LiamFlow DMG includes the app and a guided installer. Start with the quick drag-and-drop route, or use the installer when you want local dictation prepared at the same time.</p><a class="quiet-link" id="install-download" href="/downloads/LiamFlow.dmg">Get LiamFlow <span>↓</span></a></div>
+      <ol class="install-steps"><li><span>01</span><div><b>Download the DMG</b><p>One complete, verified package for Apple silicon Macs.</p></div></li><li><span>02</span><div><b>Run the guided install</b><p>Open Install LiamFlow.command to place the app and prepare local dictation.</p></div></li><li><span>03</span><div><b>Make it yours</b><p>Choose shortcuts, approve only the permissions you use, and start working.</p></div></li></ol>
+      <aside class="release-card" aria-live="polite"><div><span class="release-pulse"></span><span>Latest release</span></div><strong id="release-version">Checking release…</strong><p id="release-date">Download includes the app and installer.</p><a id="release-notes" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Release notes <span>↗</span></a></aside>
+    </section>
 
-    <footer class="control-ribbon">
-      <span><b>WASD</b> MOVE</span>
-      <span><b>MOUSE</b> LOOK / ATTACK</span>
-      <span><b>1–6</b> RIFLE · SHOTGUN · PLASMA · RAIL · RIVET · BFG</span>
-      <span><b>R</b> RELOAD · <b>E</b> USE TERMINAL / OPEN</span>
-      <button type="button" id="settings-button" aria-label="Open accessibility and audio settings" title="Open accessibility and audio settings">⚙</button>
-      <button type="button" id="music-button" class="music-button" aria-label="Mute atmospheric soundtrack" aria-pressed="true" title="Mute atmospheric soundtrack">♫</button>
-      <button type="button" id="help-button" aria-label="Open controls">?</button>
-    </footer>
+    <section class="privacy shell" id="private"><div class="privacy-mark" aria-hidden="true"><span></span><i></i></div><div><p class="eyebrow"><span></span> Private by design</p><h2>Your workspace should not be someone else's product.</h2></div><div class="privacy-copy"><p>LiamFlow has no account, no analytics, and no cloud workspace to sell back to you. Notes and configuration stay on your Mac. Dictation is processed locally in short segments.</p><a href="#install">Start fresh <span>↘</span></a></div></section>
   </main>
 
-  <dialog id="help-dialog" class="help-dialog">
-    <form method="dialog">
-      <button class="dialog-close" aria-label="Close controls">×</button>
-      <p class="eyebrow">THE FIELD MANUAL</p>
-      <h2>Move, fight, read</h2>
-      <ul>
-        <li><strong>WASD</strong> moves through one connected dungeon. <strong>A</strong> and <strong>D</strong> strafe; hold <strong>Shift</strong> to sprint.</li>
-        <li><strong>Move the mouse</strong> to look around. Click to fire with the equipped weapon. Press R to reload.</li>
-        <li>Press <strong>1</strong> for the Assault Rifle, <strong>2</strong> for the Shotgun, or <strong>3</strong> for the Electric BFG; each loadout has its own ammo pool.</li>
-        <li><strong>Every normal sector has an access terminal</strong> beside its eastern shield door. Hostiles are optional there: use <strong>E</strong>, read the portfolio file, and run its computer program to authorize the route.</li>
-        <li><strong>Boss arenas are the exception.</strong> Defeat the named boss, then return to that arena’s terminal to release the exit shield. Lesser enemies can always be bypassed.</li>
-        <li>Look for the full-height security shield at a locked entrance. Its terminal tells you exactly what remains and the barrier retracts after authorization.</li>
-        <li>Press <strong>Space</strong> during a cinematic to return to the action immediately.</li>
-        <li>Wardens pursue you and strike at close range. Keep moving and create distance from their melee attacks.</li>
-        <li>Start inside the dungeon with the Assault Rifle equipped. Press <strong>1</strong>, <strong>2</strong>, or <strong>3</strong> to switch loadouts, and press <strong>R</strong> to reload.</li>
-        <li><strong>E</strong> uses terminals and opens doors. After the final Archon falls, authorize the Lightwell terminal, enter the ascension gate, and approach the résumé pedestal for an automatic download.</li>
-      </ul>
-    </form>
-  </dialog>
-
-  <dialog id="settings-dialog" class="help-dialog settings-dialog">
-    <form method="dialog">
-      <button class="dialog-close" aria-label="Close settings">×</button>
-      <p class="eyebrow">ACCESSIBILITY / SETTINGS</p>
-      <h2>Shape the field</h2>
-      <div class="settings-list">
-        <label class="setting-row" for="music-volume">
-          <span><strong>Music volume</strong><small>Death-metal dungeon and boss soundtrack</small></span>
-          <input id="music-volume" type="range" min="0" max="1" step=".05" value=".72" />
-        </label>
-        <label class="setting-row" for="sfx-volume">
-          <span><strong>Sound effects</strong><small>Weapons, impacts, and enemy warnings</small></span>
-          <input id="sfx-volume" type="range" min="0" max="1" step=".05" value=".82" />
-        </label>
-        <label class="setting-check" for="reduced-motion">
-          <input id="reduced-motion" type="checkbox" />
-          <span><strong>Reduce motion</strong><small>Shorter transitions, fewer particles, and softer camera shake</small></span>
-        </label>
-        <label class="setting-check" for="pointer-lock-setting">
-          <input id="pointer-lock-setting" type="checkbox" checked />
-          <span><strong>Use pointer lock</strong><small>Keep the mouse centered while looking around</small></span>
-        </label>
-      </div>
-      <button type="submit" class="settings-done">DONE</button>
-    </form>
-  </dialog>
-
-  <script src="game.js?v=20260816-chunky-stairs-8"></script>
+  <footer class="site-footer shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Liam<span>Flow</span></span></a><span>Designed by Liam Hosfeld. Built for deliberate work.</span><a href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">GitHub releases ↗</a></footer>
+  <script src="/script.js" defer></script>
 </body>
 </html>

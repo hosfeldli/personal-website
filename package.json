@@ -1,14 +1,8 @@
 {
-  "name": "liam-portfolio",
+  "name": "liamflow-site",
   "private": true,
   "version": "1.0.0",
-  "description": "Liam Hosfeld portfolio game",
-  "scripts": {
-    "build": "node --check game.js && node --check server.js",
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+  "description": "LiamFlow product and download site",
+  "scripts": { "build": "node --check server.js && node --check script.js", "start": "node server.js", "dev": "node server.js" },
+  "engines": { "node": ">=18" }
 }
