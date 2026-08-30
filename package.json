@@ -1,8 +1,8 @@
 {
-  "name": "liamflow-site",
+  "name": "lima-site",
   "private": true,
   "version": "1.0.0",
-  "description": "LiamFlow product and download site",
+  "description": "Lima product and download site",
   "scripts": { "build": "node --check server.js && node --check script.js", "start": "node server.js", "dev": "node server.js" },
   "engines": { "node": ">=18" }
 }

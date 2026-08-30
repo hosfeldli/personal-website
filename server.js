@@ -6,7 +6,7 @@ const { URL } = require('node:url');
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.K_SERVICE ? '0.0.0.0' : (process.env.HOST || '127.0.0.1');
-const RELEASE_REPOSITORY = process.env.LIAMFLOW_RELEASE_REPOSITORY || 'hosfeldli/ray-placement';
+const RELEASE_REPOSITORY = process.env.LIMA_RELEASE_REPOSITORY || 'hosfeldli/ray-placement';
 const RELEASE_API = `https://api.github.com/repos/${RELEASE_REPOSITORY}/releases/latest`;
 const RELEASE_CACHE_MS = 5 * 60 * 1000;
 let cachedRelease = null;
@@ -18,12 +18,12 @@ function send(res, status, body, type = 'text/plain; charset=utf-8') { res.write
 function sendJSON(res, status, value) { const body = JSON.stringify(value, null, 2); res.writeHead(status, headers('application/json; charset=utf-8', 'public, max-age=300')); res.end(body); }
 async function latestRelease() {
   if (cachedRelease && Date.now() - cachedAt < RELEASE_CACHE_MS) return cachedRelease;
-  const response = await fetch(RELEASE_API, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'liamflow-site' }, signal: AbortSignal.timeout(6000) });
+  const response = await fetch(RELEASE_API, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'lima-site' }, signal: AbortSignal.timeout(6000) });
   if (!response.ok) throw new Error(`Release source returned ${response.status}`);
   const release = await response.json();
   const asset = (names) => release.assets?.find((item) => names.includes(item.name));
-  const dmg = asset(['LiamFlow.dmg', 'LiamFlow-Installer.dmg']);
-  const update = asset(['LiamFlow-Update.zip', 'RayPlacement-Update.zip']);
+  const dmg = asset(['Lima.dmg', 'LiamFlow.dmg', 'LiamFlow-Installer.dmg']);
+  const update = asset(['Lima-Update.zip', 'LiamFlow-Update.zip', 'RayPlacement-Update.zip']);
   cachedRelease = {
     version: release.tag_name || 'Latest release',
     publishedAt: release.published_at,
@@ -52,7 +52,7 @@ const server = http.createServer(async (req, res) => {
   if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, 'Method not allowed');
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname === '/updates/latest.json' || url.pathname === '/api/updates/latest') { try { return sendJSON(res, 200, await latestRelease()); } catch { return sendJSON(res, 503, { error: 'Release information is temporarily unavailable.' }); } }
-  if (url.pathname === '/downloads/LiamFlow.dmg') { try { const release = await latestRelease(); res.writeHead(302, { Location: release.dmg, 'Cache-Control': 'no-store' }); return res.end(); } catch { return send(res, 503, 'The LiamFlow download is temporarily unavailable.'); } }
+  if (url.pathname === '/downloads/Lima.dmg' || url.pathname === '/downloads/LiamFlow.dmg') { try { const release = await latestRelease(); res.writeHead(302, { Location: release.dmg, 'Cache-Control': 'no-store' }); return res.end(); } catch { return send(res, 503, 'The Lima download is temporarily unavailable.'); } }
   return serveStatic(req, res, url.pathname);
 });
-server.listen(PORT, HOST, () => console.log(`LiamFlow site running at http://${HOST}:${PORT}`));
+server.listen(PORT, HOST, () => console.log(`Lima site running at http://${HOST}:${PORT}`));
