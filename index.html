@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080a12" />
   <meta name="description" content="Lima is Liam Hosfeld's private, keyboard-first macOS workbench for notes, writing, dictation, development, and daily flow." />
+  <meta property="og:title" content="Lima — A calmer command center for your Mac" />
+  <meta property="og:description" content="Notes, writing, dictation, and developer tools—available instantly, stored locally, and designed around your keyboard." />
+  <meta property="og:image" content="https://www.liamhosfeld.com/assets/og-image.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   <title>Lima — Work with clarity</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -19,9 +25,10 @@
       <span>Li<span>ma</span></span>
     </a>
     <nav aria-label="Primary navigation">
-      <a href="#workbench">Workbench</a>
+      <a href="#tour">Tour</a>
+      <a href="#workbench">Workflows</a>
       <a href="#install">Install</a>
-      <a href="#private">Private by design</a>
+      <a href="#faq">FAQ</a>
     </nav>
     <a class="header-download" id="header-download" href="/downloads/Lima.dmg">Download</a>
   </header>
@@ -29,15 +36,15 @@
   <main id="top">
     <section class="hero shell">
       <div class="hero-copy">
-        <p class="eyebrow"><span></span> Personal macOS workbench</p>
-        <h1>Work with <em>clarity.</em><br />Move with intent.</h1>
-        <p class="hero-summary">Lima puts fast notes, precise writing tools, local meeting dictation, focused developer utilities, and your own extensions behind one deliberate command surface.</p>
+        <p class="eyebrow"><span></span> Local-first · built for macOS</p>
+        <h1>A calmer command center for <em>your Mac.</em></h1>
+        <p class="hero-summary">Notes, writing, dictation, and developer tools—available instantly, stored locally, and designed around your keyboard.</p>
         <div class="hero-actions">
           <a class="download-button" id="hero-download" href="/downloads/Lima.dmg">
             <span class="download-icon" aria-hidden="true">↓</span>
             <span><b>Download for macOS</b><small id="release-label">Apple silicon · macOS 13+</small></span>
           </a>
-          <a class="quiet-link" href="#workbench">Explore the workbench <span>↘</span></a>
+          <a class="quiet-link" href="#tour">See how it works <span>↘</span></a>
         </div>
         <dl class="hero-meta">
           <div><dt>Local-first</dt><dd>Your work stays yours</dd></div>
@@ -78,6 +85,31 @@
 
     <section class="signal-strip" aria-label="Lima principles"><div class="shell"><span>One surface</span><i></i><span>Many focused tools</span><i></i><span>Nothing between you and the work</span></div></section>
 
+    <section class="tour shell" id="tour">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow"><span></span> One minute with Lima</p>
+        <h2>Open. Choose. Act.<br />Then get out of the way.</h2>
+        <p>Explore the core rhythm. Lima keeps frequent actions close without turning your desktop into another dashboard.</p>
+      </div>
+      <div class="tour-stage">
+        <div class="tour-tabs" role="tablist" aria-label="Lima product tour">
+          <button class="tour-tab active" role="tab" aria-selected="true" data-tour="capture"><b>01</b><span>Capture<small>Open a note instantly</small></span></button>
+          <button class="tour-tab" role="tab" aria-selected="false" data-tour="write"><b>02</b><span>Write<small>Fix text in place</small></span></button>
+          <button class="tour-tab" role="tab" aria-selected="false" data-tour="meet"><b>03</b><span>Meet<small>Dictate locally</small></span></button>
+          <button class="tour-tab" role="tab" aria-selected="false" data-tour="build"><b>04</b><span>Build<small>Use focused tools</small></span></button>
+        </div>
+        <div class="tour-screen" role="tabpanel" aria-live="polite">
+          <div class="tour-chrome"><span>Lima / <b id="tour-breadcrumb">Quick Note</b></span><kbd>esc</kbd></div>
+          <div class="tour-content" id="tour-content">
+            <span class="tour-kicker">Capture</span>
+            <h3>Keep the thought. Keep your place.</h3>
+            <p>Press your shortcut, write, and dismiss. The note remains local and ready when you return.</p>
+            <div class="tour-note"><span>Today, 9:42 AM</span><b>Make the common path feel effortless.</b><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="workbench shell" id="workbench">
       <div class="section-heading">
         <p class="eyebrow"><span></span> Built for the real workday</p>
@@ -92,16 +124,46 @@
       </div>
     </section>
 
+    <section class="why-section shell" id="why">
+      <div class="section-heading compact-heading"><p class="eyebrow"><span></span> Why Lima</p><h2>Less switching.<br />More finishing.</h2><p>Most utility workflows scatter attention across apps, accounts, and browser tabs. Lima gives them one consistent home.</p></div>
+      <div class="why-grid">
+        <article><span>Fragmented</span><h3>Too many tiny apps</h3><p>Notes, text cleanup, terminal work, file launching, and utilities all compete for focus.</p></article>
+        <article class="why-answer"><span>Focused</span><h3>One deliberate surface</h3><p>Search once, take action, and return to the work already in front of you.</p></article>
+        <article><span>Cloud-first</span><h3>Accounts for basic tools</h3><p>Simple personal workflows become subscriptions, sync states, and privacy tradeoffs.</p></article>
+        <article class="why-answer"><span>Local-first</span><h3>Your Mac stays the center</h3><p>No Lima account, no analytics, and no remote workspace required.</p></article>
+      </div>
+    </section>
+
     <section class="install-section shell" id="install">
       <div class="install-copy"><p class="eyebrow"><span></span> A clean install, not a setup project</p><h2>Open the disk image.<br />Drag. Drop. Done.</h2><p>The Lima DMG contains one complete, prebuilt app with local dictation and its bundled tools already inside.</p><a class="quiet-link" id="install-download" href="/downloads/Lima.dmg">Get Lima <span>↓</span></a></div>
       <ol class="install-steps"><li><span>01</span><div><b>Download the DMG</b><p>One complete, verified package for Apple silicon Macs.</p></div></li><li><span>02</span><div><b>Drag to Applications</b><p>Drop Lima.app onto the Applications folder in the disk image.</p></div></li><li><span>03</span><div><b>Make it yours</b><p>Choose shortcuts, approve only the permissions you use, and start working.</p></div></li></ol>
       <aside class="release-card" aria-live="polite"><div><span class="release-pulse"></span><span>Latest release</span></div><strong id="release-version">Checking release…</strong><p id="release-date">Download includes the ready-to-drag app.</p><a id="release-notes" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Release notes <span>↗</span></a></aside>
     </section>
 
-    <section class="privacy shell" id="private"><div class="privacy-mark" aria-hidden="true"><span></span><i></i></div><div><p class="eyebrow"><span></span> Private by design</p><h2>Your workspace should not be someone else's product.</h2></div><div class="privacy-copy"><p>Lima has no account, no analytics, and no cloud workspace to sell back to you. Notes and configuration stay on your Mac. Dictation is processed locally in short segments.</p><a href="#install">Start fresh <span>↘</span></a></div></section>
+    <section class="privacy shell" id="private"><div class="privacy-mark" aria-hidden="true"><span></span><i></i></div><div><p class="eyebrow"><span></span> Built differently</p><h2>Your workspace should not be someone else's product.</h2></div><div class="privacy-copy"><p>Lima has no account, no analytics, and no cloud workspace to sell back to you. Notes and configuration stay on your Mac. Dictation is processed locally in short segments.</p><div class="privacy-points"><span>Local notes</span><span>No analytics</span><span>No account</span><span>Keyboard-first</span></div></div></section>
+
+    <section class="direction shell">
+      <p class="eyebrow"><span></span> Product direction</p>
+      <div><h2>A focused workbench that grows with the work.</h2><p>Lima is actively evolving around a simple principle: frequent actions should become faster, calmer, and more personal—not more complicated. New tools share the same shortcuts, interaction patterns, and local-first foundation.</p></div>
+      <a href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Follow every release <span>↗</span></a>
+    </section>
+
+    <section class="faq shell" id="faq">
+      <div class="faq-intro"><p class="eyebrow"><span></span> Questions, answered</p><h2>Before you install.</h2></div>
+      <div class="faq-list">
+        <details open><summary>Is Lima free?</summary><p>Yes. Download the current macOS release directly from this site.</p></details>
+        <details><summary>Does Lima require an account?</summary><p>No. Lima opens directly into your local workspace and does not require a Lima account.</p></details>
+        <details><summary>Where is my data stored?</summary><p>Notes, settings, and workspace data are stored on your Mac. Lima does not provide a cloud workspace or analytics pipeline.</p></details>
+        <details><summary>What Mac does Lima support?</summary><p>The current build supports Apple silicon Macs running macOS 13 or newer.</p></details>
+        <details><summary>Can I create extensions?</summary><p>Yes. Lima supports configurable commands and richer extension interfaces, with an extension-development guide included in the app.</p></details>
+        <details><summary>How do updates work?</summary><p>Lima checks this release source for a newer signed build and asks before installing it. You can always download the latest DMG manually.</p></details>
+      </div>
+    </section>
+
+    <section class="final-cta shell"><p class="eyebrow"><span></span> Ready when you are</p><h2>Make space for the work.</h2><p>One local command surface. The tools you use every day. Nothing else to manage.</p><a class="download-button" id="final-download" href="/downloads/Lima.dmg"><span class="download-icon">↓</span><span><b>Download Lima</b><small>Apple silicon · macOS 13+</small></span></a></section>
   </main>
 
-  <footer class="site-footer shell"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><span>Designed by Liam Hosfeld. Built for deliberate work.</span><a href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">GitHub releases ↗</a></footer>
+  <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Designed by Liam Hosfeld.<br />Built for deliberate work.</p></div><div class="footer-links"><div><b>Product</b><a href="#tour">Tour</a><a href="#install">Download</a><a href="#faq">FAQ</a></div><div><b>Project</b><a href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Changelog ↗</a><a href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer">GitHub ↗</a><a href="mailto:liamhosfeld@gmail.com">Support</a></div></div><span class="footer-note">Local-first macOS software.</span></footer>
   <script src="/script.js" defer></script>
 </body>
 </html>
