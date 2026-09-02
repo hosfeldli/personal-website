@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050a0b" />
+  <meta name="description" content="The complete Lima extension development kit for people and coding agents." />
+  <title>Lima Extension SDK</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/extensions.css" />
+</head>
+<body class="docs-page">
+  <div class="aurora aurora-a" aria-hidden="true"></div><div class="aurora aurora-b" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+  <header class="site-header shell">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a>
+    <nav aria-label="Documentation navigation"><a href="#quickstart">Quick start</a><a href="#manual">AI manual</a><a href="#resources">Resources</a></nav>
+    <a class="header-download" href="/downloads/Lima.dmg">Download Lima</a>
+  </header>
+  <main>
+    <section class="docs-hero shell">
+      <div><p class="eyebrow"><span></span> Extension SDK · schema v2</p><h1>Build a focused tool.<br><em>Ship it with confidence.</em></h1><p>Lima extensions can be a single native action or a complete input-and-output workflow. This kit contains the exact schema, runtime rules, safe templates, debugging order, and verification contract a coding agent needs.</p></div>
+      <aside class="sdk-status"><span>PUBLIC CONTRACT</span><strong>One versioned source of truth</strong><p>The website, app bundle, JSON schema, starter, and in-app manual use the same resources.</p><button id="copy-ai-kit" type="button"><span>Copy complete AI kit<small>Manual + schema + starter + task prompt</small></span><b>⌘C</b></button><p class="copy-status" id="copy-status" aria-live="polite"></p><a href="/docs/EXTENSION_AUTHORING_FOR_AI.md" download>Download AI manual <b>↓</b></a></aside>
+    </section>
+    <section class="resource-strip shell" id="resources">
+      <a href="/docs/EXTENSION_AUTHORING_FOR_AI.md" download><span>01</span><b>AI authoring manual</b><small>Complete implementation contract · Markdown</small></a>
+      <a href="/docs/extension-manifest.schema.json" download><span>02</span><b>Manifest schema</b><small>Closed JSON Schema · v1 + v2</small></a>
+      <a href="/docs/starter-extension/manifest.json" download><span>03</span><b>Starter manifest</b><small>Copy-ready form extension · JSON</small></a>
+      <a href="/docs/EXTENSIONS.md" download><span>04</span><b>Builder guide</b><small>Human-oriented reference · Markdown</small></a>
+    </section>
+    <section class="quickstart shell" id="quickstart">
+      <div class="section-heading"><div><p class="eyebrow"><span></span> Fast path</p><h2>From empty folder<br>to visible command.</h2></div><p>Use a built-in action whenever possible. Forms are for variable input. A direct executable is the final deterministic fallback—not a shortcut around validation.</p></div>
+      <ol><li><b>Copy</b><span>Download the starter or create a folder containing <code>manifest.json</code>.</span></li><li><b>Identify</b><span>Give the extension, commands, and fields stable reverse-domain-style IDs.</span></li><li><b>Validate</b><span>Check the manifest against the bundled closed schema before loading it.</span></li><li><b>Reload</b><span>Put it in Lima’s Extensions directory, reload, search, run, and verify every failure path.</span></li></ol>
+    </section>
+    <section class="manual-shell shell" id="manual">
+      <aside class="manual-nav"><div><span>AI REFERENCE</span><strong>Complete manual</strong></div><nav id="manual-toc" aria-label="Manual sections"><span>Loading sections…</span></nav></aside>
+      <article class="manual-content" id="manual-content" aria-live="polite"><p class="loading-doc">Loading the versioned extension contract…</p></article>
+    </section>
+  </main>
+  <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Local-first extension development.<br>No hidden context required.</p></div><div class="footer-links"><div><b>SDK</b><a href="#quickstart">Quick start</a><a href="#manual">AI manual</a><a href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer">Source ↗</a></div><div><b>Product</b><a href="/">Lima home</a><a href="/downloads/Lima.dmg">Download</a></div></div></footer>
+  <script src="/extensions.js?v=2" defer></script>
+</body>
+</html>
