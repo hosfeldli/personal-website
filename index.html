@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="aurora aurora-a" aria-hidden="true"></div>
   <div class="aurora aurora-b" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
@@ -27,19 +28,19 @@
     <nav aria-label="Primary navigation">
       <a href="#tour">Tour</a>
       <a href="#workbench">Workflows</a>
+      <a href="#why">Why Lima</a>
       <a href="#install">Install</a>
-      <a href="#faq">FAQ</a>
       <a href="/extensions">Extensions</a>
     </nav>
     <a class="header-download" id="header-download" href="/downloads/Lima.dmg">Download</a>
   </header>
 
-  <main id="top">
-    <section class="hero shell">
+  <main id="main-content">
+    <section class="hero shell" id="top">
       <div class="hero-copy">
         <p class="eyebrow"><span></span> Local-first · built for macOS</p>
-        <h1>A calmer command center for <em>your Mac.</em></h1>
-        <p class="hero-summary">Notes, writing, dictation, and developer tools—available instantly, stored locally, and designed around your keyboard.</p>
+        <h1>The small command center for <em>big work.</em></h1>
+        <p class="hero-summary">Lima brings notes, writing, dictation, and developer tools into one fast surface—so you can finish the task in front of you instead of managing the apps around it.</p>
         <div class="hero-actions">
           <a class="download-button" id="hero-download" href="/downloads/Lima.dmg">
             <span class="download-icon" aria-hidden="true">↓</span>
@@ -94,14 +95,14 @@
       </div>
       <div class="tour-stage">
         <div class="tour-tabs" role="tablist" aria-label="Lima product tour">
-          <button class="tour-tab active" role="tab" aria-selected="true" data-tour="capture"><b>01</b><span>Capture<small>Open a note instantly</small></span></button>
-          <button class="tour-tab" role="tab" aria-selected="false" data-tour="write"><b>02</b><span>Write<small>Fix text in place</small></span></button>
-          <button class="tour-tab" role="tab" aria-selected="false" data-tour="meet"><b>03</b><span>Meet<small>Dictate locally</small></span></button>
-          <button class="tour-tab" role="tab" aria-selected="false" data-tour="build"><b>04</b><span>Build<small>Use focused tools</small></span></button>
+          <button class="tour-tab active" role="tab" aria-selected="true" aria-controls="tour-content" data-tour="capture"><b>01</b><span>Capture<small>Open a note instantly</small></span></button>
+          <button class="tour-tab" role="tab" aria-selected="false" aria-controls="tour-content" data-tour="write"><b>02</b><span>Write<small>Fix text in place</small></span></button>
+          <button class="tour-tab" role="tab" aria-selected="false" aria-controls="tour-content" data-tour="meet"><b>03</b><span>Meet<small>Dictate locally</small></span></button>
+          <button class="tour-tab" role="tab" aria-selected="false" aria-controls="tour-content" data-tour="build"><b>04</b><span>Build<small>Use focused tools</small></span></button>
         </div>
         <div class="tour-screen" role="tabpanel" aria-live="polite">
           <div class="tour-chrome"><span>Lima / <b id="tour-breadcrumb">Quick Note</b></span><kbd>esc</kbd></div>
-          <div class="tour-content" id="tour-content">
+          <div class="tour-content" id="tour-content" tabindex="0">
             <span class="tour-kicker">Capture</span>
             <h3>Keep the thought. Keep your place.</h3>
             <p>Press your shortcut, write, and dismiss. The note remains local and ready when you return.</p>
@@ -136,9 +137,9 @@
     </section>
 
     <section class="install-section shell" id="install">
-      <div class="install-copy"><p class="eyebrow"><span></span> A clean install, not a setup project</p><h2>Open the disk image.<br />Drag. Drop. Done.</h2><p>The Lima DMG contains one complete, prebuilt app with local dictation and its bundled tools already inside.</p><a class="quiet-link" id="install-download" href="/downloads/Lima.dmg">Get Lima <span>↓</span></a></div>
+      <div class="install-copy"><p class="eyebrow"><span></span> A clean install, not a setup project</p><h2>Open the disk image.<br />Drag. Drop. Done.</h2><p>The Lima DMG contains one complete, prebuilt app with local dictation and its bundled tools already inside. No account or subscription is required.</p><a class="quiet-link" id="install-download" href="/downloads/Lima.dmg">Get Lima <span>↓</span></a></div>
       <ol class="install-steps"><li><span>01</span><div><b>Download the DMG</b><p>One complete, verified package for Apple silicon Macs.</p></div></li><li><span>02</span><div><b>Drag to Applications</b><p>Drop Lima.app onto the Applications folder in the disk image.</p></div></li><li><span>03</span><div><b>Make it yours</b><p>Choose shortcuts, approve only the permissions you use, and start working.</p></div></li></ol>
-      <aside class="release-card" aria-live="polite"><div><span class="release-pulse"></span><span>Latest release</span></div><strong id="release-version">Checking release…</strong><p id="release-date">Download includes the ready-to-drag app.</p><a id="release-notes" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Release notes <span>↗</span></a></aside>
+      <aside class="release-card" aria-live="polite"><div><span class="release-pulse"></span><span>Latest release · Free download</span></div><strong id="release-version">Checking release…</strong><p id="release-date">Download includes the ready-to-drag app.</p><a id="release-notes" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Release notes <span>↗</span></a></aside>
     </section>
 
     <section class="privacy shell" id="private"><div class="privacy-mark" aria-hidden="true"><span></span><i></i></div><div><p class="eyebrow"><span></span> Built differently</p><h2>Your workspace should not be someone else's product.</h2></div><div class="privacy-copy"><p>Lima has no account, no analytics, and no cloud workspace to sell back to you. Notes and configuration stay on your Mac. Dictation is processed locally in short segments.</p><div class="privacy-points"><span>Local notes</span><span>No analytics</span><span>No account</span><span>Keyboard-first</span></div></div></section>
