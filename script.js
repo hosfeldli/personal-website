@@ -2,6 +2,7 @@
   const releaseLabel = document.querySelector('#release-label');
   const releaseVersion = document.querySelector('#release-version');
   const releaseDate = document.querySelector('#release-date');
+  const installReleaseLabel = document.querySelector('#install-release-label');
   const releaseNotes = document.querySelector('#release-notes');
   const downloadLinks = document.querySelectorAll('#hero-download, #header-download, #install-download, #final-download');
   const tourContent = document.querySelector('#tour-content');
@@ -31,10 +32,12 @@
       releaseVersion.textContent = version;
       releaseDate.textContent = displayDate(release.publishedAt);
       releaseLabel.textContent = `${version} · Apple silicon · macOS 13+`;
+      if (installReleaseLabel) installReleaseLabel.textContent = `${version} · Apple silicon · macOS 13+`;
       if (release.releaseUrl) releaseNotes.href = release.releaseUrl;
       if (release.dmg) downloadLinks.forEach((link) => { link.href = release.dmg; });
     })
-    .catch(() => { releaseVersion.textContent = 'Lima for macOS'; releaseDate.textContent = 'Download includes the ready-to-drag app.'; });
+    .catch(() => { releaseVersion.textContent = 'latest'; releaseDate.textContent = 'Free download · ready-to-drag app · no account required';
+      if (installReleaseLabel) installReleaseLabel.textContent = 'Apple silicon · macOS 13+'; });
   document.querySelectorAll('a[href^="#"]').forEach((link) => link.addEventListener('click', (event) => {
     const destination = document.querySelector(link.getAttribute('href'));
     if (!destination) return;

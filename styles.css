@@ -137,3 +137,32 @@ h1 em { font-family: ui-serif, Georgia, serif; font-weight: 500; color: #c7f58a;
 .guide-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 1px; border: 1px solid var(--line); border-top: 0; background: var(--line); }.guide-step { display: grid; grid-template-columns: 29px 1fr; gap: 8px; padding: 19px 16px; background: rgba(12, 24, 23, .84); }.guide-step.active { background: linear-gradient(135deg, rgba(45, 83, 64, .8), rgba(12, 24, 23, .9)); }.guide-step > span { color: var(--purple); font: 700 9px ui-monospace, monospace; }.guide-step b { font-size: 11px; }.guide-step p { margin: 5px 0 0; color: #789188; font-size: 10px; line-height: 1.4; }
 @media (max-width: 950px) { .simulator-body { grid-template-columns: 245px 1fr; }.simulator-context { display: none; } }
 @media (max-width: 650px) { .product-guide { padding: 80px 0 88px; }.simulator-body { grid-template-columns: 1fr; }.simulator-sidebar { display: none; }.simulator-bar { padding: 0 12px; }.simulator-title b { display: none; }.simulator-state { font-size: 8px; }.sim-note-header { padding-inline: 24px; }.sim-editor { margin-inline: 24px; }.guide-steps { grid-template-columns: repeat(2, 1fr); }.guide-step { padding: 15px 11px; } }
+
+/* Compact Lima home: keep the release action central and the story short. */
+.simple-home .site-header { position: relative; z-index: 3; }
+.simple-hero { position: relative; z-index: 1; display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 56px; min-height: 690px; padding: 78px 0 72px; }
+.simple-hero-copy { max-width: 560px; }
+.simple-hero h1 { max-width: 600px; margin: 0; font-size: clamp(46px, 6vw, 78px); line-height: .96; letter-spacing: -.075em; }
+.simple-hero .hero-summary { max-width: 500px; margin-top: 25px; }
+.download-button-large { margin-top: 30px; min-width: 285px; padding: 16px 20px 16px 15px; }
+.download-button-large b { font-size: 15px; }
+.download-button-large strong { font-weight: 800; }
+.download-note { margin: 12px 0 0 3px; color: var(--dim); font-size: 11px; }
+.simple-hero-visual { position: relative; min-height: 470px; perspective: 1200px; }
+.simple-features, .simple-install, .simple-final { position: relative; z-index: 1; border-top: 1px solid var(--line); }
+.simple-features { padding: 105px 0 115px; }
+.simple-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 54px; background: var(--line); }
+.simple-feature-grid article { min-height: 195px; padding: 25px; background: rgba(11, 13, 24, .72); }
+.simple-feature-grid article > span { color: #a996ff; font-size: 11px; font-weight: 750; }
+.simple-feature-grid h3 { margin: 30px 0 8px; font-size: 18px; letter-spacing: -.03em; }
+.simple-feature-grid p { max-width: 280px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.simple-install { display: grid; grid-template-columns: 1fr .8fr; gap: 90px; padding: 100px 0; }
+.simple-install h2 { max-width: 550px; margin: 0; font-size: clamp(35px, 4.8vw, 61px); line-height: .98; letter-spacing: -.07em; }
+.simple-install > div > p:not(.eyebrow) { max-width: 470px; margin: 22px 0 28px; color: var(--muted); line-height: 1.65; }
+.simple-install ol { display: grid; gap: 0; margin: 18px 0 0; padding: 0; list-style: none; counter-reset: install; }
+.simple-install li { display: grid; gap: 4px; padding: 19px 0 19px 32px; border-bottom: 1px solid var(--line); counter-increment: install; }
+.simple-install li::before { content: counter(install, decimal-leading-zero); position: absolute; margin-left: -32px; color: #a996ff; font-size: 11px; font-weight: 750; }
+.simple-install li b { font-size: 13px; }.simple-install li span { color: var(--dim); font-size: 11px; }
+.simple-final { padding: 105px 0 120px; text-align: center; }.simple-final .eyebrow { justify-content: center; }.simple-final h2 { margin: 0; font-size: clamp(45px, 6vw, 78px); letter-spacing: -.075em; }.simple-final p:not(.eyebrow) { margin: 15px 0 27px; color: var(--muted); }.simple-final .quiet-link { margin: 0 12px; }
+@media (max-width: 850px) { .simple-hero { grid-template-columns: 1fr; gap: 15px; padding-top: 68px; }.simple-hero-copy { max-width: 650px; }.simple-hero-visual { min-height: 420px; }.simple-install { grid-template-columns: 1fr; gap: 35px; } }
+@media (max-width: 600px) { .simple-hero { min-height: 0; padding: 58px 0 60px; }.simple-hero h1 { font-size: clamp(42px, 13vw, 62px); }.simple-hero-visual { min-height: 315px; }.simple-feature-grid { grid-template-columns: 1fr; }.simple-feature-grid article { min-height: 0; }.simple-features, .simple-install { padding: 75px 0; }.simple-final { padding: 75px 0 90px; }.simple-final .quiet-link { display: inline-block; margin: 7px 9px; } }
