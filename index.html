@@ -2,67 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#080a12" />
-  <meta name="description" content="Lima is a private, keyboard-first macOS workbench for notes, writing, dictation, and developer tools." />
-  <meta property="og:title" content="Lima — A focused workbench for macOS" />
-  <meta property="og:description" content="Notes, writing, dictation, and developer tools in one local-first command surface." />
+  <meta name="description" content="Download Lima, a private, keyboard-first macOS workbench." />
+  <meta property="og:title" content="Lima — Download for macOS" />
+  <meta property="og:description" content="A private, keyboard-first workbench for macOS." />
   <meta property="og:image" content="https://www.liamhosfeld.com/assets/og-image.png" />
   <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <title>Lima — A focused workbench for macOS</title>
+  <title>Lima — Download for macOS</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="simple-home">
+<body class="download-home">
   <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="aurora aurora-a" aria-hidden="true"></div>
   <div class="aurora aurora-b" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
   <header class="site-header shell">
-    <a class="brand" href="#top" aria-label="Lima home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a>
-    <nav aria-label="Primary navigation"><a href="#features">Features</a><a href="#install">Install</a><a href="/extensions">Extensions</a></nav>
-    <a class="header-download" id="header-download" href="/downloads/Lima.dmg">Download Lima</a>
+    <a class="brand" href="/" aria-label="Lima home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a>
+    <a class="header-download" id="header-download" href="/downloads/Lima.dmg">Download</a>
   </header>
 
   <main id="main-content">
-    <section class="simple-hero shell" id="top">
-      <div class="simple-hero-copy">
-        <p class="eyebrow"><span></span> Local-first · built for macOS</p>
-        <h1>One focused place for the work you do every day.</h1>
-        <p class="hero-summary">Lima puts notes, writing, dictation, terminal work, API testing, and small utilities behind one fast keyboard-first surface.</p>
-        <a class="download-button download-button-large" id="hero-download" href="/downloads/Lima.dmg" aria-label="Download the latest version of Lima for macOS">
-          <span class="download-icon" aria-hidden="true">↓</span>
-          <span><b>Download Lima <strong id="release-version">latest</strong></b><small id="release-label">Apple silicon · macOS 13+</small></span>
-        </a>
-        <p class="download-note" id="release-date">Free download · ready-to-drag app · no account required</p>
-      </div>
-      <div class="simple-hero-visual" aria-label="Lima command surface preview">
-        <div class="window-glow" aria-hidden="true"></div>
-        <article class="app-window">
-          <div class="window-topbar"><div class="window-traffic" aria-hidden="true"><i></i><i></i><i></i></div><span class="window-title">Lima</span><span class="window-status"><i></i> Local workspace</span></div>
-          <div class="command-line"><span class="command-glyph">⌘</span><span>What do you want to do?</span><kbd>⌥ Space</kbd></div>
-          <div class="command-content"><div class="command-results"><p class="section-label">Suggested</p><div class="command-row selected"><span class="row-icon purple">✦</span><span><b>Quick Note</b><small>Capture an idea, then keep moving</small></span><kbd>↵</kbd></div><div class="command-row"><span class="row-icon cyan">⌁</span><span><b>Check Writing</b><small>Review selected text in place</small></span><kbd>⌃⌥G</kbd></div><div class="command-row"><span class="row-icon amber">◌</span><span><b>Developer Terminal</b><small>Open a persistent local shell</small></span><kbd>↵</kbd></div><p class="section-label spaced">Your tools</p><div class="tool-chips"><span>HTTP Studio</span><span>Format</span><span>Passwords</span></div></div><aside class="command-aside"><span class="aside-kicker">Private by default</span><p>Notes and configuration stay on your Mac.</p><small>No account · no analytics</small></aside></div>
-          <div class="window-footer"><span><i></i> Ready when you are</span><span>⌘↵ Open &nbsp; · &nbsp; ↑↓ Navigate</span></div>
-        </article>
-      </div>
+    <section class="download-hero shell" aria-labelledby="page-title">
+      <p class="eyebrow"><span></span> Private · local-first · macOS</p>
+      <h1 id="page-title">Lima for Mac.</h1>
+      <p class="download-lede">A focused workbench for notes, writing, dictation, developer tools, and the small workflows that keep your day moving.</p>
+      <a class="download-button download-button-large" id="hero-download" href="/downloads/Lima.dmg" aria-label="Download the latest version of Lima">
+        <span class="download-icon" aria-hidden="true">↓</span>
+        <span><b>Download Lima <strong id="release-version">latest</strong></b><small id="release-label">Apple silicon · macOS 13+</small></span>
+      </a>
+      <p class="download-meta" id="release-date">Free download · ready-to-drag app · no account required</p>
     </section>
 
-    <section class="simple-features shell" id="features" aria-labelledby="features-title">
-      <div class="section-heading compact-heading"><p class="eyebrow"><span></span> What is included</p><h2 id="features-title">The tools stay close.<br />Your attention stays yours.</h2><p>Lima is a native macOS workbench for frequent personal and developer workflows. Open one surface, finish the task, and get back to what you were doing.</p></div>
-      <div class="simple-feature-grid"><article><span>01</span><h3>Capture and write</h3><p>Local Markdown notes, task lists, attachments, charts, and in-place writing review.</p></article><article><span>02</span><h3>Dictate locally</h3><p>Record structured dictation with the bundled local Whisper workflow—no cloud workspace required.</p></article><article><span>03</span><h3>Build and inspect</h3><p>Use a persistent terminal, API workspace, formatter, password generator, file launcher, and extensions.</p></article></div>
+    <section class="directory shell" aria-labelledby="directory-title">
+      <div class="directory-heading"><p class="eyebrow"><span></span> Explore Lima</p><h2 id="directory-title">Directory</h2></div>
+      <nav class="directory-grid" aria-label="Lima pages">
+        <a class="directory-card" href="/extensions"><span>01</span><strong>Extensions</strong><small>Build commands and native workflows for Lima.</small><b>Open page&nbsp; ↗</b></a>
+        <a class="directory-card" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer"><span>02</span><strong>Release notes</strong><small>See versions, fixes, and downloadable release assets.</small><b>View releases&nbsp; ↗</b></a>
+        <a class="directory-card" href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer"><span>03</span><strong>Source code</strong><small>Read the project, documentation, and development history.</small><b>Open GitHub&nbsp; ↗</b></a>
+      </nav>
     </section>
 
-    <section class="simple-install shell" id="install" aria-labelledby="install-title">
-      <div><p class="eyebrow"><span></span> Install in seconds</p><h2 id="install-title">Download. Drag to Applications. Done.</h2><p>The current release is a complete Apple-silicon app for macOS 13 or newer. No account or subscription is required.</p><a class="download-button" id="install-download" href="/downloads/Lima.dmg"><span class="download-icon" aria-hidden="true">↓</span><span><b>Download the current release</b><small id="install-release-label">Apple silicon · macOS 13+</small></span></a></div>
-      <ol><li><b>Download the DMG</b><span>Get the version shown above.</span></li><li><b>Drag Lima to Applications</b><span>Open the installed copy, not the disk image.</span></li><li><b>Choose your shortcuts</b><span>Grant only the macOS permissions you use.</span></li></ol>
+    <section class="download-install shell" aria-labelledby="install-title">
+      <div><p class="eyebrow"><span></span> Install</p><h2 id="install-title">Download, drag to Applications, and open Lima.</h2></div>
+      <p>For Apple silicon Macs running macOS 13 or newer. The DMG includes the complete app and bundled tools. Open the installed copy from Applications rather than the mounted disk image.</p>
     </section>
-
-    <section class="simple-final shell"><p class="eyebrow"><span></span> Lima</p><h2>Make space for the work.</h2><p>One local command surface. Nothing else to manage.</p><a class="quiet-link" id="final-download" href="/downloads/Lima.dmg">Download Lima <span>↓</span></a><a class="quiet-link" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">View release notes <span>↗</span></a></section>
   </main>
 
-  <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Local-first macOS software.<br />Designed by Liam Hosfeld.</p></div><div class="footer-links"><div><b>Product</b><a href="#features">Features</a><a href="#install">Download</a><a href="/extensions">Extensions</a></div><div><b>Source</b><a href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer">Releases ↗</a></div></div></footer>
+  <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Local-first macOS software.<br />Designed by Liam Hosfeld.</p></div><span class="footer-note">No account · no analytics</span></footer>
   <script src="/script.js" defer></script>
 </body>
 </html>
