@@ -57,6 +57,38 @@ storePromise.then(store => {
   grid.innerHTML = entries.map(entry => `<article class="store-card"><div class="store-icon">⌘</div><div><p class="store-meta">${escapeHTML(entry.category || 'Extension')} · v${escapeHTML(entry.version || '1.0')}</p><h3>${escapeHTML(entry.name || 'Lima extension')}</h3><p>${escapeHTML(entry.summary || '')}</p><small>by ${escapeHTML(entry.author || 'Lima')}</small></div><a href="${safeHref(entry.downloadURL)}" download>Download <b>↓</b></a></article>`).join('');
 }).catch(() => { document.querySelector('#store-grid').innerHTML = '<p class="loading-doc">The extension store is temporarily unavailable.</p>'; });
 
+const packageInput = document.querySelector('#extension-package');
+if (!packageInput) throw new Error('Extension submission form is unavailable');
+const packageLabel = document.querySelector('#extension-package-label');
+const submissionForm = document.querySelector('#extension-submit-form');
+const submissionStatus = document.querySelector('#submission-status');
+packageInput.addEventListener('change', () => {
+  const file = packageInput.files[0];
+  packageLabel.textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : 'ZIP only · 20 MB maximum';
+});
+submissionForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const file = packageInput.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.zip')) { submissionStatus.textContent = 'Choose a ZIP package.'; return; }
+  if (file.size > 20 * 1024 * 1024) { submissionStatus.textContent = 'Packages must be 20 MB or smaller.'; return; }
+  const button = submissionForm.querySelector('button');
+  button.disabled = true;
+  submissionStatus.textContent = 'Uploading and running safety checks…';
+  try {
+    const response = await fetch('/api/extensions/submit', { method: 'POST', body: new FormData(submissionForm), headers: { Accept: 'application/json' } });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Submission failed.');
+    submissionStatus.textContent = result.status === 'discarded'
+      ? 'Submission received.'
+      : `Submitted for manual review · ID ${result.submissionID}`;
+    submissionForm.reset();
+    packageLabel.textContent = 'ZIP only · 20 MB maximum';
+  } catch (error) {
+    submissionStatus.textContent = error.message || 'The submission service is unavailable.';
+  } finally { button.disabled = false; }
+});
+
 document.querySelector('#copy-ai-kit').addEventListener('click', async () => {
   const status=document.querySelector('#copy-status');const button=document.querySelector('#copy-ai-kit');button.disabled=true;status.textContent='Preparing the complete kit…';
   try{

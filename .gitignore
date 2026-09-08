@@ -5,3 +5,5 @@ node_modules
 account.json
 .env
 .env.*
+
+data/extension-submissions/

@@ -15,7 +15,7 @@
   <div class="aurora aurora-a" aria-hidden="true"></div><div class="aurora aurora-b" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
   <header class="site-header shell">
     <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a>
-    <nav aria-label="Extension navigation"><a href="#store">Store</a><a href="#quickstart">Build</a><a href="#manual">Reference</a></nav>
+    <nav aria-label="Extension navigation"><a href="#store">Store</a><a href="#submit">Submit</a><a href="#quickstart">Build</a><a href="#manual">Reference</a></nav>
     <a class="header-download" href="/downloads/Lima.dmg">Download Lima</a>
   </header>
   <main>
@@ -33,6 +33,16 @@
       <div class="section-heading"><div><p class="eyebrow"><span></span> Extension Store</p><h2 id="store-title">Useful tools.<br>Local control.</h2></div><p>Every package is versioned and inspectable. Lima checks its SHA-256 digest and manifest before installing it to your Mac.</p></div>
       <div class="store-grid" id="store-grid" aria-live="polite"><p class="loading-doc">Loading published extensions…</p></div>
       <p class="store-note">Use <strong>Lima → Extension Store</strong> for verified one-click installation, or download a package to inspect first.</p>
+    </section>
+    <section class="submit-extension shell" id="submit" aria-labelledby="submit-title">
+      <div class="section-heading"><div><p class="eyebrow"><span></span> Community submissions</p><h2 id="submit-title">Bring your own<br>extension.</h2></div><p>Submit a ZIP for review. Uploads are quarantined, never executed, and never appear in the store automatically. A human review is required before publication.</p></div>
+      <form id="extension-submit-form" class="submission-form" enctype="multipart/form-data">
+        <label class="file-drop" for="extension-package"><span class="file-drop-title">Choose an extension package</span><span class="file-drop-detail" id="extension-package-label">ZIP only · 20 MB maximum</span><input id="extension-package" name="package" type="file" accept=".zip,application/zip" required /></label>
+        <label class="submission-note">Optional note <textarea name="note" maxlength="1000" placeholder="Tell us what the extension does and where its source is hosted."></textarea></label>
+        <label class="submission-honeypot" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+        <div class="submission-actions"><button type="submit">Submit for review <b>→</b></button><span id="submission-status" aria-live="polite">Safety checks run before anything is stored.</span></div>
+      </form>
+      <div class="submission-safety"><span>SAFETY GATE</span><p>Checks include ZIP traversal, hidden files, links and special files, duplicate paths, archive bombs, nested archives, executable payloads, manifest schema, capability declarations, and package integrity. Accepted uploads remain private quarantine artifacts.</p></div>
     </section>
     <section class="quickstart shell" id="quickstart">
       <div class="section-heading"><div><p class="eyebrow"><span></span> Build an extension</p><h2>From a folder<br>to a useful command.</h2></div><p>Keep extensions small. Use a built-in action whenever possible; use a shell command only when it is the clearest local solution.</p></div>

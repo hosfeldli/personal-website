@@ -7,9 +7,15 @@
     "build": "node --check server.js && node --check script.js && node --check extensions.js",
     "start": "node server.js",
     "dev": "node server.js",
-    "validate-store": "node scripts/validate-store.js"
+    "validate-store": "node scripts/validate-store.js",
+    "test": "node --test test/*.test.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^8.1.0",
+    "busboy": "^1.6.0",
+    "yauzl": "^3.4.0"
   }
 }

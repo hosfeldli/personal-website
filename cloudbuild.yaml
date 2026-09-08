@@ -4,6 +4,7 @@ substitutions:
   _SERVICE: stem-portfolio-host
   _RUNTIME_SERVICE_ACCOUNT: portfolio-runtime@stem-471602.iam.gserviceaccount.com
   _IMAGE_TAG: latest
+  _SUBMISSION_BUCKET: stem-471602-lima-extension-submissions
 
 steps:
   - name: gcr.io/cloud-builders/docker
@@ -30,6 +31,7 @@ steps:
       - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
       - --ingress=all
       - --allow-unauthenticated
+      - --set-env-vars=LIMA_EXTENSION_SUBMISSION_BUCKET=${_SUBMISSION_BUCKET}
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}

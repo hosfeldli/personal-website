@@ -25,6 +25,7 @@ jobs:
           GCP_RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
           GCP_DEPLOYER_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_EXTENSION_SUBMISSION_BUCKET: ${{ vars.GCP_EXTENSION_SUBMISSION_BUCKET }}
         run: |
           set -euo pipefail
 
@@ -36,6 +37,7 @@ jobs:
             GCP_RUNTIME_SERVICE_ACCOUNT
             GCP_DEPLOYER_SERVICE_ACCOUNT
             GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_EXTENSION_SUBMISSION_BUCKET
           )
 
           for name in "${required[@]}"; do
@@ -70,7 +72,7 @@ jobs:
             --region=global \
             --project="${{ vars.GCP_PROJECT_ID }}" \
             --config=cloudbuild.yaml \
-            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_IMAGE_TAG="${{ github.sha }}" \
+            --substitutions=_REGION="${{ vars.GCP_REGION }}",_REPOSITORY="${{ vars.GCP_ARTIFACT_REPOSITORY }}",_SERVICE="${{ vars.GCP_CLOUD_RUN_SERVICE }}",_RUNTIME_SERVICE_ACCOUNT="${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}",_SUBMISSION_BUCKET="${{ vars.GCP_EXTENSION_SUBMISSION_BUCKET }}",_IMAGE_TAG="${{ github.sha }}" \
             --format='value(id)')"
 
           if [[ -z "$build_id" ]]; then

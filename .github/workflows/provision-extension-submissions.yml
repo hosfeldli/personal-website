@@ -1,0 +1,64 @@
+name: Provision Lima extension quarantine
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  provision:
+    name: Create private quarantine bucket
+    runs-on: ubuntu-latest
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GCP_RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+      SUBMISSION_BUCKET: stem-471602-lima-extension-submissions
+    steps:
+      - name: Validate configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "${GCP_PROJECT_ID:-}" ]] || { echo "::error::Missing GCP_PROJECT_ID"; exit 1; }
+          [[ -n "${GCP_REGION:-}" ]] || { echo "::error::Missing GCP_REGION"; exit 1; }
+          [[ -n "${GCP_RUNTIME_SERVICE_ACCOUNT:-}" ]] || { echo "::error::Missing GCP_RUNTIME_SERVICE_ACCOUNT"; exit 1; }
+          [[ -n "${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}" ]] || { echo "::error::Missing GCP_DEPLOYER_SERVICE_ACCOUNT"; exit 1; }
+          [[ -n "${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}" ]] || { echo "::error::Missing GCP_WORKLOAD_IDENTITY_PROVIDER"; exit 1; }
+          [[ "$SUBMISSION_BUCKET" =~ ^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$ ]] || { echo "::error::Invalid quarantine bucket name"; exit 1; }
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Create or harden quarantine bucket
+        shell: bash
+        run: |
+          set -euo pipefail
+          bucket="gs://${SUBMISSION_BUCKET}"
+          if ! gcloud storage buckets describe "$bucket" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+            gcloud storage buckets create "$bucket" \
+              --project="$GCP_PROJECT_ID" \
+              --location="$GCP_REGION" \
+              --uniform-bucket-level-access \
+              --public-access-prevention=enforced
+          else
+            gcloud storage buckets update "$bucket" \
+              --uniform-bucket-level-access \
+              --public-access-prevention=enforced
+          fi
+
+          gcloud storage buckets add-iam-policy-binding "$bucket" \
+            --project="$GCP_PROJECT_ID" \
+            --member="serviceAccount:${GCP_RUNTIME_SERVICE_ACCOUNT}" \
+            --role=roles/storage.objectCreator
+
+          gcloud storage buckets describe "$bucket" \
+            --project="$GCP_PROJECT_ID" \
+            --format='yaml(name,location,iamConfiguration,retentionPolicy)'
