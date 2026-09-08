@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#050a0b" />
-  <meta name="description" content="The complete Lima extension development kit for people and coding agents." />
-  <title>Lima Extension SDK</title>
+  <meta name="description" content="Browse, download, and build focused local extensions for Lima." />
+  <title>Lima Extensions</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/extensions.css" />
@@ -15,22 +15,27 @@
   <div class="aurora aurora-a" aria-hidden="true"></div><div class="aurora aurora-b" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
   <header class="site-header shell">
     <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a>
-    <nav aria-label="Documentation navigation"><a href="#quickstart">Quick start</a><a href="#manual">AI manual</a><a href="#resources">Resources</a></nav>
+    <nav aria-label="Extension navigation"><a href="#store">Store</a><a href="#quickstart">Build</a><a href="#manual">Reference</a></nav>
     <a class="header-download" href="/downloads/Lima.dmg">Download Lima</a>
   </header>
   <main>
     <section class="docs-hero shell">
-      <div><p class="eyebrow"><span></span> Extension SDK · <span id="guide-branch">GitHub main</span></p><h1>Build a focused tool.<br><em>Ship it with confidence.</em></h1><p>Lima extensions can be a single native action or a complete input-and-output workflow. This guide is read directly from the Lima repository so the website stays aligned with the app’s public contract.</p></div>
-      <aside class="sdk-status"><span id="guide-status-label">GITHUB GUIDE</span><strong>Extension guide <b id="guide-version">Loading release…</b></strong><p id="guide-source-label">Fetching the maintained guide from hosfeldli/ray-placement.</p><button id="copy-ai-kit" type="button"><span>Copy complete AI kit<small>GitHub guide + schema + starter + task prompt</small></span><b>⌘C</b></button><p class="copy-status" id="copy-status" aria-live="polite"></p><a id="guide-source-link" href="https://github.com/hosfeldli/ray-placement/blob/main/docs/EXTENSIONS.md" target="_blank" rel="noreferrer">Open guide on GitHub <b>↗</b></a></aside>
+      <div><p class="eyebrow"><span></span> Lima extensions · <span id="guide-branch">GitHub main</span></p><h1>Small tools.<br><em>Clear boundaries.</em></h1><p>Browse verified local extensions for Lima, or build one with the same concise public contract the app uses to validate every install.</p></div>
+      <aside class="sdk-status"><span id="guide-status-label">EXTENSION GUIDE</span><strong>Build for Lima <b id="guide-version">Loading release…</b></strong><p id="guide-source-label">Fetching the maintained guide from hosfeldli/ray-placement.</p><button id="copy-ai-kit" type="button"><span>Copy the build kit<small>Guide, schema, starter, and task prompt</small></span><b>⌘C</b></button><p class="copy-status" id="copy-status" aria-live="polite"></p><a id="guide-source-link" href="https://github.com/hosfeldli/ray-placement/blob/main/docs/EXTENSIONS.md" target="_blank" rel="noreferrer">Read on GitHub <b>↗</b></a></aside>
     </section>
     <section class="resource-strip shell" id="resources">
-      <a href="/docs/EXTENSION_AUTHORING_FOR_AI.md" download><span>01</span><b>AI authoring manual</b><small>Complete implementation contract · Markdown</small></a>
-      <a href="/docs/extension-manifest.schema.json" download><span>02</span><b>Manifest schema</b><small>Closed JSON Schema · v1 + v2</small></a>
-      <a href="/docs/starter-extension/manifest.json" download><span>03</span><b>Starter manifest</b><small>Copy-ready form extension · JSON</small></a>
-      <a id="guide-resource-link" data-github-guide href="https://github.com/hosfeldli/ray-placement/blob/main/docs/EXTENSIONS.md" target="_blank" rel="noreferrer"><span>04</span><b>Builder guide</b><small>Maintained on GitHub · Markdown</small></a>
+      <a href="/docs/EXTENSION_AUTHORING_FOR_AI.md" download><span>01</span><b>Authoring guide</b><small>Complete implementation contract · Markdown</small></a>
+      <a href="/docs/extension-manifest.schema.json" download><span>02</span><b>Manifest schema</b><small>Closed JSON Schema · v1</small></a>
+      <a href="/docs/starter-extension/manifest.json" download><span>03</span><b>Starter manifest</b><small>Copy-ready local extension · JSON</small></a>
+      <a id="guide-resource-link" data-github-guide href="https://github.com/hosfeldli/ray-placement/blob/main/docs/EXTENSIONS.md" target="_blank" rel="noreferrer"><span>04</span><b>Full reference</b><small>Maintained on GitHub · Markdown</small></a>
+    </section>
+    <section class="extension-store shell" id="store" aria-labelledby="store-title">
+      <div class="section-heading"><div><p class="eyebrow"><span></span> Extension Store</p><h2 id="store-title">Useful tools.<br>Local control.</h2></div><p>Every package is versioned and inspectable. Lima checks its SHA-256 digest and manifest before installing it to your Mac.</p></div>
+      <div class="store-grid" id="store-grid" aria-live="polite"><p class="loading-doc">Loading published extensions…</p></div>
+      <p class="store-note">Use <strong>Lima → Extension Store</strong> for verified one-click installation, or download a package to inspect first.</p>
     </section>
     <section class="quickstart shell" id="quickstart">
-      <div class="section-heading"><div><p class="eyebrow"><span></span> Fast path</p><h2>From empty folder<br>to visible command.</h2></div><p>Use a built-in action whenever possible. Forms are for variable input. A direct executable is the final deterministic fallback—not a shortcut around validation.</p></div>
+      <div class="section-heading"><div><p class="eyebrow"><span></span> Build an extension</p><h2>From a folder<br>to a useful command.</h2></div><p>Keep extensions small. Use a built-in action whenever possible; use a shell command only when it is the clearest local solution.</p></div>
       <ol><li><b>Copy</b><span>Download the starter or create a folder containing <code>manifest.json</code>.</span></li><li><b>Identify</b><span>Give the extension, commands, and fields stable reverse-domain-style IDs.</span></li><li><b>Validate</b><span>Check the manifest against the bundled closed schema before loading it.</span></li><li><b>Reload</b><span>Put it in Lima’s Extensions directory, reload, search, run, and verify every failure path.</span></li></ol>
     </section>
     <section class="manual-shell shell" id="manual">
@@ -39,6 +44,6 @@
     </section>
   </main>
   <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Local-first extension development.<br>No hidden context required.</p></div><div class="footer-links"><div><b>SDK</b><a href="#quickstart">Quick start</a><a href="#manual">AI manual</a><a href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer">Source ↗</a></div><div><b>Product</b><a href="/">Lima home</a><a href="/downloads/Lima.dmg">Download</a></div></div></footer>
-  <script src="/extensions.js?v=2" defer></script>
+  <script src="/extensions.js?v=3" defer></script>
 </body>
 </html>

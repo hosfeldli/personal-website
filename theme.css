@@ -1,105 +1,158 @@
 /*
- * Lima app-aligned web theme.
+ * Lima public surface
  *
- * The app uses semantic AppKit colors, continuous rounded geometry, quiet
- * hairline borders, restrained accent usage, and adaptive appearance. This
- * layer brings those same rules to the public site without duplicating SwiftUI.
+ * A compact web counterpart to the native app: neutral workspace surfaces,
+ * an accessible violet selection color, thin separators, and one elevation
+ * treatment. The component CSS in styles.css remains responsible for layout;
+ * this file gives every public page the same visual language.
  */
 :root {
-  color-scheme: light dark;
-  --lima-accent: #5571d9;
-  --lima-accent-soft: color-mix(in srgb, var(--lima-accent) 13%, transparent);
-  --lima-info: #1685ae;
-  --lima-success: #2b9a61;
-  --lima-danger: #c94e58;
-  --lima-shadow: rgba(21, 28, 42, .18);
-  --lima-border: color-mix(in srgb, currentColor 15%, transparent);
-  --lima-panel: rgba(255, 255, 255, .72);
-  --lima-panel-strong: rgba(255, 255, 255, .92);
-  --lima-recessed: rgba(236, 238, 243, .82);
-  --lima-base: #f4f5f8;
-  --lima-ink: #20232b;
-  --lima-muted: #626874;
-  --lima-dim: #858b97;
-  --lima-line: rgba(36, 40, 51, .14);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --lima-accent: #8fa7ff;
-    --lima-info: #69d4f6;
-    --lima-success: #78dca2;
-    --lima-danger: #ff8b91;
-    --lima-shadow: rgba(0, 0, 0, .34);
-    --lima-panel: rgba(29, 33, 43, .72);
-    --lima-panel-strong: rgba(30, 35, 46, .94);
-    --lima-recessed: rgba(16, 19, 26, .78);
-    --lima-base: #111318;
-    --lima-ink: #f1f3f8;
-    --lima-muted: #aeb4c0;
-    --lima-dim: #7f8796;
-    --lima-line: rgba(232, 237, 250, .14);
-  }
+  color-scheme: dark;
+  --lima-base: #101217;
+  --lima-raised: rgba(28, 32, 43, .88);
+  --lima-recessed: rgba(12, 14, 20, .82);
+  --lima-floating: rgba(36, 41, 54, .94);
+  --lima-ink: #f4f6fb;
+  --lima-muted: #b6bdca;
+  --lima-dim: #858e9e;
+  --lima-line: rgba(235, 240, 252, .16);
+  --lima-line-strong: rgba(235, 240, 252, .28);
+  --lima-accent: #91a9ff;
+  --lima-accent-strong: #708cff;
+  --lima-accent-soft: rgba(145, 169, 255, .14);
+  --lima-info: #77d8f6;
+  --lima-success: #7ce1a7;
+  --lima-shadow: rgba(0, 0, 0, .30);
 }
 
 html, body { background: var(--lima-base); color: var(--lima-ink); }
-body { background: radial-gradient(ellipse 80% 44% at 50% -14%, color-mix(in srgb, var(--lima-accent) 12%, transparent), var(--lima-base) 68%); }
-body::before { opacity: .06; background-image: linear-gradient(color-mix(in srgb, var(--lima-ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--lima-ink) 5%, transparent) 1px, transparent 1px); }
-.aurora { opacity: .06; filter: blur(100px); }
+body {
+  background:
+    radial-gradient(52rem 30rem at 20% -12%, rgba(112, 140, 255, .20), transparent 65%),
+    radial-gradient(42rem 26rem at 100% 25%, rgba(72, 196, 233, .09), transparent 65%),
+    var(--lima-base);
+}
+body::before { opacity: .055; background-image: linear-gradient(rgba(255,255,255,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); }
+.aurora { opacity: 0; }
 .grain { opacity: .012; }
 
-.site-header { border-bottom-color: var(--lima-line); background: color-mix(in srgb, var(--lima-base) 72%, transparent); }
-.brand > span:last-child > span, .eyebrow, .eyebrow span, h1 em { color: var(--lima-accent); }
-.brand-mark i { box-shadow: none; }
+/* Shared navigation and typography */
+.site-header {
+  min-height: 68px;
+  height: auto;
+  border-color: var(--lima-line);
+  background: rgba(16, 18, 23, .76);
+  backdrop-filter: blur(18px);
+}
+.brand { font-weight: 700; }
+.brand > span:last-child > span, h1 em { color: var(--lima-accent); }
+.brand-mark i { box-shadow: none; background: var(--lima-accent); }
 .brand-mark i:nth-child(1) { background: var(--lima-info); }
-.brand-mark i:nth-child(3) { background: var(--lima-accent); }
-.header-download, .download-button { clip-path: none; border: 1px solid color-mix(in srgb, var(--lima-accent) 65%, transparent); border-radius: 8px; background: var(--lima-accent); color: #fff; box-shadow: 0 8px 20px var(--lima-shadow), inset 0 1px rgba(255,255,255,.18); }
-.header-download:hover, .download-button:hover { box-shadow: 0 10px 24px var(--lima-shadow), inset 0 1px rgba(255,255,255,.22); }
-.download-icon { clip-path: none; border-radius: 6px; background: rgba(255,255,255,.14); }
+.brand-mark i:nth-child(3) { background: var(--lima-accent-strong); }
+.site-header nav { gap: 20px; }
+.site-header nav a { color: var(--lima-muted); }
+.site-header nav a:hover { color: var(--lima-ink); }
+.eyebrow { color: var(--lima-accent); }
+.eyebrow span { background: var(--lima-info); box-shadow: 0 0 10px rgba(119,216,246,.65); }
+h1, h2, h3, strong, b { color: var(--lima-ink); }
 
-.download-home .site-header, .docs-page .site-header { backdrop-filter: blur(16px); }
-.directory, .download-install, .resource-strip, .quickstart, .manual-shell, .site-footer, .docs-hero { border-color: var(--lima-line); }
-.directory-card, .simple-feature-grid article, .quickstart li, .manual-shell, .manual-content pre, .sdk-status, .manual-nav, .simulator, .feature-card { background: var(--lima-panel); }
-.directory-grid, .quickstart ol, .resource-strip, .why-grid, .feature-grid, .guide-steps { background: var(--lima-line); }
-.directory-card:hover { background: var(--lima-panel-strong); }
-.directory-card b, .quiet-link, .manual-content a, .resource-strip span { color: var(--lima-accent); }
-.directory-card strong, .directory-card small, .download-install > p, .download-lede, .download-meta { color: var(--lima-ink); }
-.download-lede, .download-install > p { opacity: .76; }
-.download-meta, .directory-card small { color: var(--lima-dim); }
+.header-download, .download-button {
+  clip-path: none;
+  border: 1px solid rgba(177, 192, 255, .72);
+  border-radius: 9px;
+  background: linear-gradient(180deg, #9eb4ff, #7894f5);
+  box-shadow: 0 8px 20px rgba(22, 28, 48, .42), inset 0 1px rgba(255,255,255,.25);
+  color: #0d1220;
+}
+.header-download:hover, .download-button:hover { transform: translateY(-1px); box-shadow: 0 12px 25px rgba(22,28,48,.52), inset 0 1px rgba(255,255,255,.3); }
+.download-icon { clip-path: none; border-radius: 6px; background: rgba(12,18,33,.14); }
 
-/* Continuous app geometry: no chamfered corners on ordinary public UI. */
-.app-window, .feature-grid, .release-card, .tour-stage, .simulator, .directory-card, .sdk-status, .sdk-status button, .manual-shell, .manual-content pre, .resource-strip, .quickstart ol, .download-button, .header-download { clip-path: none; }
-.app-window, .feature-grid, .release-card, .tour-stage, .simulator, .manual-shell { border-radius: 16px; }
-.app-window, .simulator { border-color: var(--lima-line); background: var(--lima-panel-strong); box-shadow: 0 24px 60px var(--lima-shadow); }
-.feature-grid, .quickstart ol, .resource-strip { overflow: hidden; border-radius: 12px; }
-.feature-card, .quickstart li { background: var(--lima-panel); }
-.command-row.selected, .tour-tab.active { clip-path: none; border-radius: 8px; background: var(--lima-accent-soft); border-color: color-mix(in srgb, var(--lima-accent) 42%, transparent); }
-.row-icon, .card-icon, .sim-note-icon, .sim-action strong { border-radius: 8px; }
+/* Homepage: one clear download action, followed by a compact directory. */
+.download-hero { max-width: 760px; padding: 128px 0 112px; }
+.download-hero h1 { letter-spacing: -.075em; }
+.download-lede { color: var(--lima-muted); }
+.download-meta { color: var(--lima-dim); }
+.directory, .download-install, .site-footer, .docs-hero, .extension-store { border-color: var(--lima-line); }
+.directory { padding-top: 68px; padding-bottom: 78px; }
+.directory-card, .simple-feature-grid article, .feature-card, .quickstart li, .manual-content { background: var(--lima-raised); }
+.directory-grid, .quickstart ol, .resource-strip, .why-grid, .feature-grid, .guide-steps, .store-grid { background: var(--lima-line); }
+.directory-grid, .quickstart ol, .resource-strip, .store-grid { overflow: hidden; border: 1px solid var(--lima-line); border-radius: 12px; }
+.directory-card { min-height: 178px; transition: background .16s ease, transform .16s ease; }
+.directory-card:hover { background: var(--lima-floating); transform: translateY(-2px); }
+.directory-card > span, .directory-card b, .quiet-link { color: var(--lima-accent); }
+.directory-card small, .download-install > p { color: var(--lima-muted); }
+.download-install { padding-top: 72px; padding-bottom: 86px; }
+.site-footer { color: var(--lima-dim); }
 
-.docs-page { background: radial-gradient(ellipse 74% 28% at 25% 0, color-mix(in srgb, var(--lima-accent) 14%, transparent), var(--lima-base) 68%); }
-.docs-hero { padding-top: 86px; }
-.docs-hero h1 { color: var(--lima-ink); }
-.docs-hero > div > p:last-child, .sdk-status p, .manual-content p, .manual-content li { color: var(--lima-muted); }
-.sdk-status { border: 1px solid var(--lima-line); border-radius: 16px; box-shadow: 0 18px 42px var(--lima-shadow); }
+/* Extension store and SDK: a calm native-workspace composition. */
+.docs-page { background: radial-gradient(52rem 30rem at 15% -12%, rgba(112,140,255,.20), transparent 65%), var(--lima-base); }
+.docs-hero { padding-top: 76px; padding-bottom: 68px; gap: 48px; }
+.docs-hero > div > p:last-child, .sdk-status p, .manual-content p, .manual-content li, .extension-store .section-heading > p { color: var(--lima-muted); }
+.sdk-status, .manual-shell, .simulator, .app-window {
+  clip-path: none;
+  border: 1px solid var(--lima-line);
+  border-radius: 14px;
+  background: var(--lima-raised);
+  box-shadow: 0 18px 42px var(--lima-shadow);
+}
 .sdk-status > span, .sdk-status strong b, .sdk-status a { color: var(--lima-accent); }
-.sdk-status button { border: 1px solid color-mix(in srgb, var(--lima-accent) 36%, transparent); border-radius: 8px; background: var(--lima-accent-soft); color: var(--lima-ink); }
-.sdk-status button:hover { border-color: var(--lima-accent); background: color-mix(in srgb, var(--lima-accent) 18%, transparent); }
+.sdk-status button {
+  clip-path: none;
+  border: 1px solid rgba(145,169,255,.42);
+  border-radius: 8px;
+  background: var(--lima-accent-soft);
+  color: var(--lima-ink);
+}
+.sdk-status button:hover { border-color: var(--lima-accent); background: rgba(145,169,255,.20); }
 .sdk-status button small, .sdk-status .copy-status { color: var(--lima-dim); }
-.resource-strip a { border-color: var(--lima-line); }
-.resource-strip a:hover { background: var(--lima-accent-soft); }
-.quickstart li { background: var(--lima-panel); }
-.manual-nav { border-color: var(--lima-line); background: color-mix(in srgb, var(--lima-panel) 84%, transparent); }
+.resource-strip a { border-color: var(--lima-line); background: var(--lima-raised); }
+.resource-strip a:hover { background: var(--lima-floating); }
+.resource-strip span { color: var(--lima-accent); }
+.extension-store { padding-top: 82px; padding-bottom: 86px; }
+.store-grid { margin-top: 38px; }
+.store-card { min-height: 168px; background: var(--lima-raised); }
+.store-card:hover { background: var(--lima-floating); }
+.store-icon { border-color: rgba(145,169,255,.44); border-radius: 9px; background: var(--lima-accent-soft); color: var(--lima-accent); }
+.store-card .store-meta, .store-card a { color: var(--lima-accent); }
+.store-card p { color: var(--lima-muted); }
+.store-card small, .store-note { color: var(--lima-dim); }
+.store-card a { border-color: rgba(145,169,255,.42); border-radius: 8px; }
+.store-card a:hover { border-color: var(--lima-accent); background: var(--lima-accent-soft); }
+.quickstart { padding-top: 84px; padding-bottom: 84px; }
+.quickstart li { min-height: 148px; }
+.quickstart li b, .quickstart code { color: var(--lima-accent); }
+.quickstart li span { color: var(--lima-muted); }
+.manual-shell { margin-bottom: 84px; }
+.manual-nav { border-color: var(--lima-line); background: var(--lima-recessed); }
+.manual-nav nav a { color: var(--lima-dim); }
 .manual-nav nav a:hover, .manual-nav nav a.active { border-left-color: var(--lima-accent); background: var(--lima-accent-soft); color: var(--lima-ink); }
-.manual-content { background: var(--lima-panel); }
+.manual-content { border-radius: 0 14px 14px 0; }
 .manual-content h2 { border-color: var(--lima-line); }
 .manual-content h3, .manual-content th { color: var(--lima-ink); }
-.manual-content code { background: var(--lima-recessed); color: var(--lima-accent); }
-.manual-content pre { border: 1px solid var(--lima-line); color: var(--lima-ink); }
+.manual-content a { color: var(--lima-info); }
+.manual-content code { border-radius: 5px; background: var(--lima-recessed); color: var(--lima-accent); }
+.manual-content pre { clip-path: none; border: 1px solid var(--lima-line); border-radius: 9px; background: var(--lima-recessed); color: var(--lima-ink); }
 .manual-content th, .manual-content td { border-color: var(--lima-line); }
 .manual-content th { background: var(--lima-accent-soft); }
 .manual-content blockquote { border-left-color: var(--lima-accent); }
 .manual-nav small { display: block; margin-top: 8px; overflow-wrap: anywhere; color: var(--lima-dim); font: 10px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
 
+/* Legacy visual mockups use the same elevation and readable chrome. */
+.app-window, .simulator { background: var(--lima-raised); border-color: var(--lima-line); }
+.app-window, .simulator, .manual-shell { box-shadow: 0 20px 48px var(--lima-shadow); }
+.feature-grid, .quickstart ol, .resource-strip { clip-path: none; }
+.feature-card, .quickstart li { background: var(--lima-raised); }
+.command-row.selected, .tour-tab.active { clip-path: none; border-radius: 8px; border-color: rgba(145,169,255,.48); background: var(--lima-accent-soft); }
+.row-icon, .card-icon, .sim-note-icon, .sim-action strong { border-radius: 8px; }
+
 @media (max-width: 900px) {
-  .manual-shell { border-radius: 14px; }
+  .docs-hero { padding-top: 62px; }
+  .manual-content { border-radius: 0; }
+}
+@media (max-width: 600px) {
+  .site-header { min-height: 62px; }
+  .site-header nav { display: none; }
+  .download-hero { padding: 92px 0 78px; }
+  .docs-hero { padding-bottom: 54px; }
+  .manual-shell { border-radius: 12px; }
 }

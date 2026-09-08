@@ -18,7 +18,7 @@ let cachedAt = 0;
 let cachedExtensionGuide = null;
 let cachedExtensionGuideAt = 0;
 const MIME_TYPES = Object.freeze({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.dmg': 'application/x-apple-diskimage' });
-const PUBLIC_FILES = new Set(['/styles.css', '/theme.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json']);
+const PUBLIC_FILES = new Set(['/styles.css', '/theme.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json', '/store/extensions.json']);
 function headers(type, cache = 'no-cache') { return { 'Content-Type': type, 'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()' }; }
 function send(res, status, body, type = 'text/plain; charset=utf-8') { res.writeHead(status, { ...headers(type), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
 function sendJSON(res, status, value) { const body = JSON.stringify(value, null, 2); res.writeHead(status, headers('application/json; charset=utf-8', 'public, max-age=300')); res.end(body); }
@@ -87,6 +87,18 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/updates/latest.json' || url.pathname === '/api/updates/latest') { try { return sendJSON(res, 200, await latestRelease()); } catch { return sendJSON(res, 503, { error: 'Release information is temporarily unavailable.' }); } }
   if (url.pathname === '/api/extensions/guide') { try { return sendJSON(res, 200, await extensionGuide()); } catch { return sendJSON(res, 503, { error: 'The GitHub extension guide is temporarily unavailable.', sourceUrl: EXTENSION_GUIDE_SOURCE }); } }
   if (url.pathname === '/api/extensions/guide/raw') { try { const guide = await extensionGuide(); return send(res, 200, guide.content, 'text/markdown; charset=utf-8'); } catch { return send(res, 503, 'The GitHub extension guide is temporarily unavailable.'); } }
+  if (url.pathname.startsWith('/store/packages/') && url.pathname.endsWith('.zip')) {
+    const requested = url.pathname.slice('/store/packages/'.length);
+    if (!/^[a-z0-9][a-z0-9.-]*\.zip$/i.test(requested)) return send(res, 404, 'Not found');
+    const filePath = path.join(ROOT, 'store', 'packages', requested);
+    fs.stat(filePath, (error, stats) => {
+      if (error || !stats.isFile()) return send(res, 404, 'Not found');
+      res.writeHead(200, { ...headers('application/zip', 'public, max-age=3600'), 'Content-Length': stats.size, 'Content-Disposition': `attachment; filename="${requested}"` });
+      if (req.method === 'HEAD') return res.end();
+      fs.createReadStream(filePath).on('error', () => res.destroy()).pipe(res);
+    });
+    return;
+  }
   if (url.pathname === '/downloads/Lima.dmg' || url.pathname === '/downloads/LiamFlow.dmg') { try { const release = await latestRelease(); res.writeHead(302, { Location: release.dmg, 'Cache-Control': 'no-store' }); return res.end(); } catch { return send(res, 503, 'The Lima download is temporarily unavailable.'); } }
   return serveStatic(req, res, url.pathname);
 });

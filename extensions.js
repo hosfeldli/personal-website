@@ -27,6 +27,7 @@ function renderMarkdown(source, baseURL) {
 }
 const guidePromise = fetch('/api/extensions/guide', { headers: { Accept: 'application/json' } }).then(response => response.ok ? response.json() : Promise.reject(new Error('guide unavailable')));
 const releasePromise = fetch('/updates/latest.json', { headers: { Accept: 'application/json' } }).then(response => response.ok ? response.json() : Promise.reject(new Error('release unavailable')));
+const storePromise = fetch('/store/extensions.json', { headers: { Accept: 'application/json' } }).then(response => response.ok ? response.json() : Promise.reject(new Error('store unavailable')));
 
 guidePromise.then(guide=>{
   const article=document.querySelector('#manual-content');article.innerHTML=renderMarkdown(guide.content, guide.sourceUrl);
@@ -48,6 +49,13 @@ releasePromise.then(release=>{
   document.querySelector('#guide-version').closest('strong').setAttribute('title', `Published ${release.publishedAt || 'recently'}`);
   document.querySelector('#guide-source-label').dataset.releaseUrl = release.releaseUrl || '';
 }).catch(()=>{ document.querySelector('#guide-version').textContent = 'Release unavailable'; });
+
+storePromise.then(store => {
+  const grid = document.querySelector('#store-grid');
+  const entries = Array.isArray(store.extensions) ? store.extensions : [];
+  if (!entries.length) { grid.innerHTML = '<p class="loading-doc">No extensions are published yet.</p>'; return; }
+  grid.innerHTML = entries.map(entry => `<article class="store-card"><div class="store-icon">⌘</div><div><p class="store-meta">${escapeHTML(entry.category || 'Extension')} · v${escapeHTML(entry.version || '1.0')}</p><h3>${escapeHTML(entry.name || 'Lima extension')}</h3><p>${escapeHTML(entry.summary || '')}</p><small>by ${escapeHTML(entry.author || 'Lima')}</small></div><a href="${safeHref(entry.downloadURL)}" download>Download <b>↓</b></a></article>`).join('');
+}).catch(() => { document.querySelector('#store-grid').innerHTML = '<p class="loading-doc">The extension store is temporarily unavailable.</p>'; });
 
 document.querySelector('#copy-ai-kit').addEventListener('click', async () => {
   const status=document.querySelector('#copy-status');const button=document.querySelector('#copy-ai-kit');button.disabled=true;status.textContent='Preparing the complete kit…';

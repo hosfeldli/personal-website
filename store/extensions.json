@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "extensions": [
+    {
+      "id": "local.app-management",
+      "name": "App Management",
+      "version": "1.0.0",
+      "summary": "Manage the locally installed Lima app.",
+      "author": "Lima",
+      "icon": "trash",
+      "category": "System",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/app-management.zip",
+      "sha256": "1ef1086c7b222c5a151e9b2e94f2a659a54e6243c815bd095970334beab28ecb",
+      "size": 863
+    },
+    {
+      "id": "local.document-formatter",
+      "name": "Document Formatter",
+      "version": "1.0.0",
+      "summary": "Inspect, validate, and format EDI, JSON, and XML in a dedicated workspace.",
+      "author": "Lima",
+      "icon": "curlybraces.square.fill",
+      "category": "Productivity",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/document-formatter.zip",
+      "sha256": "d6e16a5b6c4919c8398050e54b93b2bd0f323f745ff86ff1b23e1dd78505da4c",
+      "size": 956
+    },
+    {
+      "id": "local.emoji-picker",
+      "name": "Emoji Picker",
+      "version": "1.0.0",
+      "summary": "Search common emojis and paste one into the source app.",
+      "author": "Lima",
+      "icon": "face.smiling.inverse",
+      "category": "Writing",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/emoji-picker.zip",
+      "sha256": "ba1e32aa46fea9d84c3298a6c0c0b2dcb950f4e88b96ac3d641111a61f4b0534",
+      "size": 873
+    },
+    {
+      "id": "local.extension-development",
+      "name": "Extension Development",
+      "version": "1.0.0",
+      "summary": "The maintained Lima extension guide and AI-friendly starter templates.",
+      "author": "Lima",
+      "icon": "puzzlepiece.extension.fill",
+      "category": "Developer",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/extension-development.zip",
+      "sha256": "2e7ff00f1015e088998c599c2fb8ae2244f0dc93f4ac2592c48e2acab0c0e39f",
+      "size": 944
+    },
+    {
+      "id": "local.productivity-tools",
+      "name": "Productivity Tools",
+      "version": "1.0.0",
+      "summary": "Fast timezone conversion and safe force-quit controls.",
+      "author": "Lima",
+      "icon": "globe.americas.fill",
+      "category": "Productivity",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/productivity-tools.zip",
+      "sha256": "70f06ab62b911499b7f178e3fa65a951d2a2e9ed0cbe6d1fcfd7dc106f86e966",
+      "size": 1088
+    },
+    {
+      "id": "local.security-tools",
+      "name": "Security Tools",
+      "version": "1.0.0",
+      "summary": "Generate strong passwords locally without saving or logging them.",
+      "author": "Lima",
+      "icon": "key.fill",
+      "category": "Security",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/security-tools.zip",
+      "sha256": "46ec4f8b4fb724506148e3fe95d3850a0658062f8a8472033339d2fbd40a1710",
+      "size": 879
+    },
+    {
+      "id": "local.focused-file-launcher",
+      "name": "Focused File Launcher",
+      "version": "1.0.0",
+      "summary": "Choose a file or folder, then launch it in the app you choose.",
+      "author": "Lima",
+      "icon": "folder.badge.gearshape",
+      "category": "Productivity",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/vscode-directories.zip",
+      "sha256": "e30c2eb059e6c96348752b34640e3d7a7d6f47d040cc7f4c21b609f996a3f41a",
+      "size": 933
+    },
+    {
+      "id": "local.writing-tools",
+      "name": "Writing Tools",
+      "version": "1.4.0",
+      "summary": "Local plain-text paste and private spelling and grammar correction.",
+      "author": "Lima",
+      "icon": "text.badge.checkmark",
+      "category": "Writing",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/writing-tools.zip",
+      "sha256": "64472a165626e27c7a9c6d27cc1bebcc075e591f040c087616ab6ed8a2803175",
+      "size": 1010
+    }
+  ]
+}
