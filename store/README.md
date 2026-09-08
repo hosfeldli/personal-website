@@ -7,13 +7,17 @@ ZIP. A package extracts to exactly one extension folder containing
 
 To publish an extension:
 
-1. Make a directory whose `manifest.json` has the public extension id, name,
-   and version.
-2. ZIP that single directory into `store/packages/<id>.zip`.
-3. Add a catalog entry with `id`, `name`, `version`, `summary`, `author`,
-   `icon`, `category`, `downloadURL`, `sha256`, and `size`.
-4. Run `npm run build`, deploy this site, and use Lima's Extension Store to
-   verify installation from the live catalog.
+1. Add the canonical source manifest to `store/manifests/<extension-id>.json`.
+   The manifest's public `id`, `name`, and `version` must match the catalog.
+2. Create a deterministic ZIP whose root folder is the full extension ID and
+   whose direct child is `manifest.json`. Published package filenames are short
+   kebab-case names such as `app-management.zip`; they do not need to match the
+   full extension ID.
+3. Place the ZIP in `store/packages/` and add a catalog entry with `id`, `name`,
+   `version`, `summary`, `author`, `icon`, `category`, `downloadURL`, `sha256`,
+   and exact byte `size`.
+4. Run `npm run validate-store` and `npm run build`, deploy the site, and use
+   Lima's Extension Store to verify installation from the live catalog.
 
 Packages are executable local code once installed. Publish only reviewed
 extensions and increment the manifest version for every package update.

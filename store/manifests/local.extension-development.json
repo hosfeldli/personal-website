@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "id": "local.extension-development",
+  "name": "Extension Development",
+  "version": "1.0.0",
+  "description": "The maintained Lima extension guide and AI-friendly starter templates.",
+  "pack": "Extension Development",
+  "category": "Developer Tools",
+  "bundled": false,
+  "provenance": "unsigned",
+  "trust": "unsigned",
+  "capabilities": ["filesystem"],
+  "commands": [
+    {
+      "id": "guide",
+      "title": "Open Extension Development Guide",
+      "subtitle": "Reference, templates, examples, and dynamic-form guidance",
+      "keywords": ["extension", "plugin", "manifest", "api", "template", "developer"],
+      "icon": "puzzlepiece.extension.fill",
+      "action": { "type": "workspace", "operation": "extensionDevelopment" }
+    }
+  ]
+}

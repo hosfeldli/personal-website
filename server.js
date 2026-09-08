@@ -69,6 +69,7 @@ async function extensionGuide() {
   }
 }
 
+
 function serveStatic(req, res, pathname) {
   const requested = pathname === '/' ? '/index.html' : (pathname === '/extensions' || pathname === '/extensions/' ? '/extensions.html' : pathname);
   if (requested !== '/index.html' && !PUBLIC_FILES.has(requested)) return send(res, 404, 'Not found');

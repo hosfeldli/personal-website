@@ -10,20 +10,20 @@
       "icon": "trash",
       "category": "System",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/app-management.zip",
-      "sha256": "1ef1086c7b222c5a151e9b2e94f2a659a54e6243c815bd095970334beab28ecb",
-      "size": 863
+      "sha256": "4bedf617cc8c29d1128f6f213db1568861c1a2891a99e3604b26bfaad578d343",
+      "size": 619
     },
     {
       "id": "local.document-formatter",
       "name": "Document Formatter",
       "version": "1.0.0",
-      "summary": "Inspect, validate, and format EDI, JSON, and XML in a dedicated workspace.",
+      "summary": "Inspect, validate, search, pretty-print, and minify EDI, JSON, and XML in a dedicated workspace.",
       "author": "Lima",
       "icon": "curlybraces.square.fill",
       "category": "Productivity",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/document-formatter.zip",
-      "sha256": "d6e16a5b6c4919c8398050e54b93b2bd0f323f745ff86ff1b23e1dd78505da4c",
-      "size": 956
+      "sha256": "454bb53f65dee6a5d48dfba95ebdae8245f204f0593feeb8c26ff0dce85bffee",
+      "size": 709
     },
     {
       "id": "local.emoji-picker",
@@ -34,8 +34,8 @@
       "icon": "face.smiling.inverse",
       "category": "Writing",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/emoji-picker.zip",
-      "sha256": "ba1e32aa46fea9d84c3298a6c0c0b2dcb950f4e88b96ac3d641111a61f4b0534",
-      "size": 873
+      "sha256": "8829f7e874a72c4a4de55acf718a558be7b706b6c70592f34975e2b6039f264b",
+      "size": 661
     },
     {
       "id": "local.extension-development",
@@ -46,8 +46,20 @@
       "icon": "puzzlepiece.extension.fill",
       "category": "Developer",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/extension-development.zip",
-      "sha256": "2e7ff00f1015e088998c599c2fb8ae2244f0dc93f4ac2592c48e2acab0c0e39f",
-      "size": 944
+      "sha256": "6f2f659cffb3d9b129ccaad8678289f799dd4a121d7163bb5b8085d7ae246819",
+      "size": 700
+    },
+    {
+      "id": "local.focused-file-launcher",
+      "name": "Focused File Launcher",
+      "version": "1.0.0",
+      "summary": "Choose a file or folder with Finder, then launch it in the app you choose.",
+      "author": "Lima",
+      "icon": "folder.badge.gearshape",
+      "category": "Productivity",
+      "downloadURL": "https://www.liamhosfeld.com/store/packages/focused-file-launcher.zip",
+      "sha256": "5b29464c1793eaee1e730104f243386759b481c84c3279e83a186487692e3e5e",
+      "size": 697
     },
     {
       "id": "local.productivity-tools",
@@ -58,8 +70,8 @@
       "icon": "globe.americas.fill",
       "category": "Productivity",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/productivity-tools.zip",
-      "sha256": "70f06ab62b911499b7f178e3fa65a951d2a2e9ed0cbe6d1fcfd7dc106f86e966",
-      "size": 1088
+      "sha256": "e25c00492fd8d24aa1f428302b1f5795b4f7546ac7aee5150e49c9c1bdc738f5",
+      "size": 871
     },
     {
       "id": "local.security-tools",
@@ -70,32 +82,20 @@
       "icon": "key.fill",
       "category": "Security",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/security-tools.zip",
-      "sha256": "46ec4f8b4fb724506148e3fe95d3850a0658062f8a8472033339d2fbd40a1710",
-      "size": 879
-    },
-    {
-      "id": "local.focused-file-launcher",
-      "name": "Focused File Launcher",
-      "version": "1.0.0",
-      "summary": "Choose a file or folder, then launch it in the app you choose.",
-      "author": "Lima",
-      "icon": "folder.badge.gearshape",
-      "category": "Productivity",
-      "downloadURL": "https://www.liamhosfeld.com/store/packages/vscode-directories.zip",
-      "sha256": "e30c2eb059e6c96348752b34640e3d7a7d6f47d040cc7f4c21b609f996a3f41a",
-      "size": 933
+      "sha256": "3080252d26824de28c4fb13a361995cc7822c1be21a9691a9f25bbf249afb726",
+      "size": 624
     },
     {
       "id": "local.writing-tools",
       "name": "Writing Tools",
       "version": "1.4.0",
-      "summary": "Local plain-text paste and private spelling and grammar correction.",
+      "summary": "Local plain-text paste plus private rule-based spelling and grammar correction.",
       "author": "Lima",
       "icon": "text.badge.checkmark",
       "category": "Writing",
       "downloadURL": "https://www.liamhosfeld.com/store/packages/writing-tools.zip",
-      "sha256": "64472a165626e27c7a9c6d27cc1bebcc075e591f040c087616ab6ed8a2803175",
-      "size": 1010
+      "sha256": "63fe63ea4d2f0905ec3a23b9b85b80f1669ff10c1b1a60093775932a36f741ed",
+      "size": 799
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "id": "local.document-formatter",
+  "name": "Document Formatter",
+  "version": "1.0.0",
+  "description": "Inspect, validate, search, pretty-print, and minify EDI, JSON, and XML in a dedicated workspace.",
+  "pack": "Document Formatter",
+  "category": "Developer Tools",
+  "bundled": false,
+  "provenance": "unsigned",
+  "trust": "unsigned",
+  "capabilities": [],
+  "commands": [
+    {
+      "id": "open-workspace",
+      "title": "EDI / JSON / XML Formatter",
+      "subtitle": "Open a focused formatter workspace",
+      "keywords": ["edi", "204", "210", "214", "990", "997", "json", "xml", "pretty", "minify", "validate", "inspect"],
+      "icon": "curlybraces.square.fill",
+      "action": { "type": "workspace", "operation": "formatter" }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "id": "local.app-management",
+  "name": "App Management",
+  "version": "1.0.0",
+  "description": "Manage the locally installed Lima app.",
+  "pack": "App Management",
+  "category": "System",
+  "bundled": false,
+  "provenance": "unsigned",
+  "trust": "unsigned",
+  "capabilities": [],
+  "commands": [
+    {
+      "id": "uninstall-lima",
+      "title": "Uninstall Lima",
+      "subtitle": "Move Lima to Trash while preserving your notes and settings",
+      "keywords": ["uninstall", "remove", "trash", "delete", "application"],
+      "icon": "trash",
+      "action": { "type": "workspace", "operation": "uninstall" }
+    }
+  ]
+}
