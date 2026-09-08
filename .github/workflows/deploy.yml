@@ -62,6 +62,18 @@ jobs:
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
 
+      - name: Verify quarantine bucket access
+        shell: bash
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_EXTENSION_SUBMISSION_BUCKET: ${{ vars.GCP_EXTENSION_SUBMISSION_BUCKET }}
+          GCP_RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          bucket="gs://${GCP_EXTENSION_SUBMISSION_BUCKET}"
+          gcloud storage buckets describe "$bucket" --project="$GCP_PROJECT_ID" >/dev/null
+          gcloud storage buckets get-iam-policy "$bucket" --project="$GCP_PROJECT_ID" --format=json | grep -Fq "serviceAccount:${GCP_RUNTIME_SERVICE_ACCOUNT}"
+
       - name: Submit and verify Cloud Build
         run: |
           # The GitHub OIDC principal can submit and inspect a build, but cannot
