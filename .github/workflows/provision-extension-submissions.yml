@@ -47,11 +47,11 @@ jobs:
               --project="$GCP_PROJECT_ID" \
               --location="$GCP_REGION" \
               --uniform-bucket-level-access \
-              --public-access-prevention=enforced
+              --pap
           else
             gcloud storage buckets update "$bucket" \
               --uniform-bucket-level-access \
-              --public-access-prevention=enforced
+              --pap
           fi
 
           gcloud storage buckets add-iam-policy-binding "$bucket" \
