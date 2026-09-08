@@ -1,0 +1,105 @@
+/*
+ * Lima app-aligned web theme.
+ *
+ * The app uses semantic AppKit colors, continuous rounded geometry, quiet
+ * hairline borders, restrained accent usage, and adaptive appearance. This
+ * layer brings those same rules to the public site without duplicating SwiftUI.
+ */
+:root {
+  color-scheme: light dark;
+  --lima-accent: #5571d9;
+  --lima-accent-soft: color-mix(in srgb, var(--lima-accent) 13%, transparent);
+  --lima-info: #1685ae;
+  --lima-success: #2b9a61;
+  --lima-danger: #c94e58;
+  --lima-shadow: rgba(21, 28, 42, .18);
+  --lima-border: color-mix(in srgb, currentColor 15%, transparent);
+  --lima-panel: rgba(255, 255, 255, .72);
+  --lima-panel-strong: rgba(255, 255, 255, .92);
+  --lima-recessed: rgba(236, 238, 243, .82);
+  --lima-base: #f4f5f8;
+  --lima-ink: #20232b;
+  --lima-muted: #626874;
+  --lima-dim: #858b97;
+  --lima-line: rgba(36, 40, 51, .14);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lima-accent: #8fa7ff;
+    --lima-info: #69d4f6;
+    --lima-success: #78dca2;
+    --lima-danger: #ff8b91;
+    --lima-shadow: rgba(0, 0, 0, .34);
+    --lima-panel: rgba(29, 33, 43, .72);
+    --lima-panel-strong: rgba(30, 35, 46, .94);
+    --lima-recessed: rgba(16, 19, 26, .78);
+    --lima-base: #111318;
+    --lima-ink: #f1f3f8;
+    --lima-muted: #aeb4c0;
+    --lima-dim: #7f8796;
+    --lima-line: rgba(232, 237, 250, .14);
+  }
+}
+
+html, body { background: var(--lima-base); color: var(--lima-ink); }
+body { background: radial-gradient(ellipse 80% 44% at 50% -14%, color-mix(in srgb, var(--lima-accent) 12%, transparent), var(--lima-base) 68%); }
+body::before { opacity: .06; background-image: linear-gradient(color-mix(in srgb, var(--lima-ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--lima-ink) 5%, transparent) 1px, transparent 1px); }
+.aurora { opacity: .06; filter: blur(100px); }
+.grain { opacity: .012; }
+
+.site-header { border-bottom-color: var(--lima-line); background: color-mix(in srgb, var(--lima-base) 72%, transparent); }
+.brand > span:last-child > span, .eyebrow, .eyebrow span, h1 em { color: var(--lima-accent); }
+.brand-mark i { box-shadow: none; }
+.brand-mark i:nth-child(1) { background: var(--lima-info); }
+.brand-mark i:nth-child(3) { background: var(--lima-accent); }
+.header-download, .download-button { clip-path: none; border: 1px solid color-mix(in srgb, var(--lima-accent) 65%, transparent); border-radius: 8px; background: var(--lima-accent); color: #fff; box-shadow: 0 8px 20px var(--lima-shadow), inset 0 1px rgba(255,255,255,.18); }
+.header-download:hover, .download-button:hover { box-shadow: 0 10px 24px var(--lima-shadow), inset 0 1px rgba(255,255,255,.22); }
+.download-icon { clip-path: none; border-radius: 6px; background: rgba(255,255,255,.14); }
+
+.download-home .site-header, .docs-page .site-header { backdrop-filter: blur(16px); }
+.directory, .download-install, .resource-strip, .quickstart, .manual-shell, .site-footer, .docs-hero { border-color: var(--lima-line); }
+.directory-card, .simple-feature-grid article, .quickstart li, .manual-shell, .manual-content pre, .sdk-status, .manual-nav, .simulator, .feature-card { background: var(--lima-panel); }
+.directory-grid, .quickstart ol, .resource-strip, .why-grid, .feature-grid, .guide-steps { background: var(--lima-line); }
+.directory-card:hover { background: var(--lima-panel-strong); }
+.directory-card b, .quiet-link, .manual-content a, .resource-strip span { color: var(--lima-accent); }
+.directory-card strong, .directory-card small, .download-install > p, .download-lede, .download-meta { color: var(--lima-ink); }
+.download-lede, .download-install > p { opacity: .76; }
+.download-meta, .directory-card small { color: var(--lima-dim); }
+
+/* Continuous app geometry: no chamfered corners on ordinary public UI. */
+.app-window, .feature-grid, .release-card, .tour-stage, .simulator, .directory-card, .sdk-status, .sdk-status button, .manual-shell, .manual-content pre, .resource-strip, .quickstart ol, .download-button, .header-download { clip-path: none; }
+.app-window, .feature-grid, .release-card, .tour-stage, .simulator, .manual-shell { border-radius: 16px; }
+.app-window, .simulator { border-color: var(--lima-line); background: var(--lima-panel-strong); box-shadow: 0 24px 60px var(--lima-shadow); }
+.feature-grid, .quickstart ol, .resource-strip { overflow: hidden; border-radius: 12px; }
+.feature-card, .quickstart li { background: var(--lima-panel); }
+.command-row.selected, .tour-tab.active { clip-path: none; border-radius: 8px; background: var(--lima-accent-soft); border-color: color-mix(in srgb, var(--lima-accent) 42%, transparent); }
+.row-icon, .card-icon, .sim-note-icon, .sim-action strong { border-radius: 8px; }
+
+.docs-page { background: radial-gradient(ellipse 74% 28% at 25% 0, color-mix(in srgb, var(--lima-accent) 14%, transparent), var(--lima-base) 68%); }
+.docs-hero { padding-top: 86px; }
+.docs-hero h1 { color: var(--lima-ink); }
+.docs-hero > div > p:last-child, .sdk-status p, .manual-content p, .manual-content li { color: var(--lima-muted); }
+.sdk-status { border: 1px solid var(--lima-line); border-radius: 16px; box-shadow: 0 18px 42px var(--lima-shadow); }
+.sdk-status > span, .sdk-status strong b, .sdk-status a { color: var(--lima-accent); }
+.sdk-status button { border: 1px solid color-mix(in srgb, var(--lima-accent) 36%, transparent); border-radius: 8px; background: var(--lima-accent-soft); color: var(--lima-ink); }
+.sdk-status button:hover { border-color: var(--lima-accent); background: color-mix(in srgb, var(--lima-accent) 18%, transparent); }
+.sdk-status button small, .sdk-status .copy-status { color: var(--lima-dim); }
+.resource-strip a { border-color: var(--lima-line); }
+.resource-strip a:hover { background: var(--lima-accent-soft); }
+.quickstart li { background: var(--lima-panel); }
+.manual-nav { border-color: var(--lima-line); background: color-mix(in srgb, var(--lima-panel) 84%, transparent); }
+.manual-nav nav a:hover, .manual-nav nav a.active { border-left-color: var(--lima-accent); background: var(--lima-accent-soft); color: var(--lima-ink); }
+.manual-content { background: var(--lima-panel); }
+.manual-content h2 { border-color: var(--lima-line); }
+.manual-content h3, .manual-content th { color: var(--lima-ink); }
+.manual-content code { background: var(--lima-recessed); color: var(--lima-accent); }
+.manual-content pre { border: 1px solid var(--lima-line); color: var(--lima-ink); }
+.manual-content th, .manual-content td { border-color: var(--lima-line); }
+.manual-content th { background: var(--lima-accent-soft); }
+.manual-content blockquote { border-left-color: var(--lima-accent); }
+.manual-nav small { display: block; margin-top: 8px; overflow-wrap: anywhere; color: var(--lima-dim); font: 10px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+@media (max-width: 900px) {
+  .manual-shell { border-radius: 14px; }
+}

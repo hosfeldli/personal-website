@@ -8,11 +8,17 @@ const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.K_SERVICE ? '0.0.0.0' : (process.env.HOST || '127.0.0.1');
 const RELEASE_REPOSITORY = process.env.LIMA_RELEASE_REPOSITORY || 'hosfeldli/ray-placement';
 const RELEASE_API = `https://api.github.com/repos/${RELEASE_REPOSITORY}/releases/latest`;
+const GITHUB_BRANCH = process.env.LIMA_GITHUB_BRANCH || 'main';
+const EXTENSION_GUIDE_PATH = process.env.LIMA_EXTENSION_GUIDE_PATH || 'docs/EXTENSIONS.md';
+const EXTENSION_GUIDE_SOURCE = `https://github.com/${RELEASE_REPOSITORY}/blob/${GITHUB_BRANCH}/${EXTENSION_GUIDE_PATH}`;
+const EXTENSION_GUIDE_RAW = `https://raw.githubusercontent.com/${RELEASE_REPOSITORY}/${GITHUB_BRANCH}/${EXTENSION_GUIDE_PATH}`;
 const RELEASE_CACHE_MS = 5 * 60 * 1000;
 let cachedRelease = null;
 let cachedAt = 0;
+let cachedExtensionGuide = null;
+let cachedExtensionGuideAt = 0;
 const MIME_TYPES = Object.freeze({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.dmg': 'application/x-apple-diskimage' });
-const PUBLIC_FILES = new Set(['/styles.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json']);
+const PUBLIC_FILES = new Set(['/styles.css', '/theme.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json']);
 function headers(type, cache = 'no-cache') { return { 'Content-Type': type, 'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()' }; }
 function send(res, status, body, type = 'text/plain; charset=utf-8') { res.writeHead(status, { ...headers(type), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
 function sendJSON(res, status, value) { const body = JSON.stringify(value, null, 2); res.writeHead(status, headers('application/json; charset=utf-8', 'public, max-age=300')); res.end(body); }
@@ -36,6 +42,33 @@ async function latestRelease() {
   cachedAt = Date.now();
   return cachedRelease;
 }
+async function extensionGuide() {
+  if (cachedExtensionGuide && Date.now() - cachedExtensionGuideAt < RELEASE_CACHE_MS) return cachedExtensionGuide;
+  try {
+    const response = await fetch(EXTENSION_GUIDE_RAW, {
+      headers: { Accept: 'text/plain', 'User-Agent': 'lima-site' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!response.ok) throw new Error(`Guide source returned ${response.status}`);
+    const content = await response.text();
+    if (!content.trim()) throw new Error('Guide source returned an empty document');
+    cachedExtensionGuide = {
+      repository: RELEASE_REPOSITORY,
+      branch: GITHUB_BRANCH,
+      path: EXTENSION_GUIDE_PATH,
+      sourceUrl: EXTENSION_GUIDE_SOURCE,
+      rawUrl: EXTENSION_GUIDE_RAW,
+      fetchedAt: new Date().toISOString(),
+      content,
+    };
+    cachedExtensionGuideAt = Date.now();
+    return cachedExtensionGuide;
+  } catch (error) {
+    if (cachedExtensionGuide) return { ...cachedExtensionGuide, stale: true };
+    throw error;
+  }
+}
+
 function serveStatic(req, res, pathname) {
   const requested = pathname === '/' ? '/index.html' : (pathname === '/extensions' || pathname === '/extensions/' ? '/extensions.html' : pathname);
   if (requested !== '/index.html' && !PUBLIC_FILES.has(requested)) return send(res, 404, 'Not found');
@@ -52,6 +85,8 @@ const server = http.createServer(async (req, res) => {
   if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, 'Method not allowed');
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname === '/updates/latest.json' || url.pathname === '/api/updates/latest') { try { return sendJSON(res, 200, await latestRelease()); } catch { return sendJSON(res, 503, { error: 'Release information is temporarily unavailable.' }); } }
+  if (url.pathname === '/api/extensions/guide') { try { return sendJSON(res, 200, await extensionGuide()); } catch { return sendJSON(res, 503, { error: 'The GitHub extension guide is temporarily unavailable.', sourceUrl: EXTENSION_GUIDE_SOURCE }); } }
+  if (url.pathname === '/api/extensions/guide/raw') { try { const guide = await extensionGuide(); return send(res, 200, guide.content, 'text/markdown; charset=utf-8'); } catch { return send(res, 503, 'The GitHub extension guide is temporarily unavailable.'); } }
   if (url.pathname === '/downloads/Lima.dmg' || url.pathname === '/downloads/LiamFlow.dmg') { try { const release = await latestRelease(); res.writeHead(302, { Location: release.dmg, 'Cache-Control': 'no-store' }); return res.end(); } catch { return send(res, 503, 'The Lima download is temporarily unavailable.'); } }
   return serveStatic(req, res, url.pathname);
 });
