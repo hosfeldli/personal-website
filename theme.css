@@ -82,6 +82,11 @@ h1, h2, h3, strong, b { color: var(--lima-ink); }
 .directory-card > span, .directory-card b, .quiet-link { color: var(--lima-accent); }
 .directory-card small, .download-install > p { color: var(--lima-muted); }
 .download-install { padding-top: 72px; padding-bottom: 86px; }
+.product-update { border-color: var(--lima-line); }
+.update-grid { background: var(--lima-line); }
+.update-grid article { background: var(--lima-raised); }
+.update-grid article > span { color: var(--lima-accent); }
+.update-grid p, .product-update .section-heading > p { color: var(--lima-muted); }
 .site-footer { color: var(--lima-dim); }
 
 /* Extension store and SDK: a calm native-workspace composition. */
@@ -155,4 +160,9 @@ h1, h2, h3, strong, b { color: var(--lima-ink); }
   .download-hero { padding: 92px 0 78px; }
   .docs-hero { padding-bottom: 54px; }
   .manual-shell { border-radius: 12px; }
+}
+
+@media (max-width: 760px) {
+  .product-update .section-heading { grid-template-columns: 1fr; gap: 26px; }
+  .update-grid { grid-template-columns: 1fr; }
 }
