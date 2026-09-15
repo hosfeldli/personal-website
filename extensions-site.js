@@ -1,0 +1,9 @@
+'use strict';
+const escapeHTML = (value) => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const grid = document.querySelector('#store-grid');
+const search = document.querySelector('#extension-search');
+let entries = [];
+const render = () => { const query = search.value.trim().toLowerCase(); const visible = entries.filter((entry) => [entry.name, entry.summary, entry.author, entry.category, entry.id].join(' ').toLowerCase().includes(query)); grid.innerHTML = visible.length ? visible.map((entry) => `<article class="extension-tile"><div class="extension-icon">${escapeHTML((entry.name || 'L').slice(0, 1))}</div><div><span class="extension-category">${escapeHTML(entry.category || 'Extension')} · v${escapeHTML(entry.version || '1.0')}</span><h3>${escapeHTML(entry.name)}</h3><p>${escapeHTML(entry.summary)}</p><small>By ${escapeHTML(entry.author || 'Lima')} · ${escapeHTML(entry.provenance || 'Reviewed package')}</small><a href="${escapeHTML(entry.downloadURL || '#')}" download>Download <b>↓</b></a></div></article>`).join('') : '<p class="empty-result">No extensions match that search.</p>'; };
+fetch('/store/extensions.json', { headers: { Accept: 'application/json' } }).then((response) => response.ok ? response.json() : Promise.reject(new Error('unavailable'))).then((store) => { entries = Array.isArray(store.extensions) ? store.extensions : []; render(); }).catch(() => { grid.innerHTML = '<p class="empty-result">The extension catalog is temporarily unavailable.</p>'; });
+search?.addEventListener('input', render);
+const menu = document.querySelector('.mobile-menu-button'); const nav = document.querySelector('#global-nav'); menu?.addEventListener('click', () => { const open = menu.getAttribute('aria-expanded') === 'true'; menu.setAttribute('aria-expanded', String(!open)); nav?.classList.toggle('open', !open); });

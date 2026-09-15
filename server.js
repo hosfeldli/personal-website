@@ -32,7 +32,7 @@ let cachedExtensionGuide = null;
 let cachedExtensionGuideAt = 0;
 const submissionRate = new Map();
 const MIME_TYPES = Object.freeze({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.dmg': 'application/x-apple-diskimage' });
-const PUBLIC_FILES = new Set(['/index.html', '/styles.css', '/theme.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json', '/docs/extension-v3-fixture.json', '/store/extensions.json']);
+const PUBLIC_FILES = new Set(['/index.html', '/styles.css', '/theme.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/site.js', '/extensions-site.js', '/docs-site.js', '/docs.html', '/changelog.html', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json', '/docs/extension-v3-fixture.json', '/store/extensions.json']);
 function headers(type, cache = 'no-cache') { return { 'Content-Type': type, 'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'" }; }
 function send(res, status, body, type = 'text/plain; charset=utf-8') { res.writeHead(status, { ...headers(type), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
 function sendJSON(res, status, value) { const body = JSON.stringify(value, null, 2); res.writeHead(status, { ...headers('application/json; charset=utf-8'), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
@@ -75,7 +75,8 @@ async function extensionGuide() {
   }
 }
 function serveStatic(req, res, pathname) {
-  const requested = pathname === '/' ? '/index.html' : (pathname === '/extensions' || pathname === '/extensions/' ? '/extensions.html' : pathname);
+  const docsAliases = new Set(['/docs', '/docs/', '/docs/getting-started', '/docs/getting-started/install', '/docs/getting-started/permissions', '/docs/features/launcher', '/docs/features/writing', '/docs/features/dictation', '/docs/features/notes', '/docs/extensions', '/docs/extensions/', '/docs/extensions/install', '/docs/extensions/configure', '/docs/extensions/build', '/docs/extensions/manifest', '/docs/extensions/forms', '/docs/extensions/actions', '/docs/reference/shortcuts', '/docs/reference/environment', '/docs/reference/privacy', '/docs/troubleshooting']);
+  const requested = pathname === '/' ? '/index.html' : (pathname === '/extensions' || pathname === '/extensions/' ? '/extensions.html' : docsAliases.has(pathname) ? '/docs.html' : (pathname === '/changelog' || pathname === '/changelog/' ? '/changelog.html' : pathname));
   if (requested !== '/index.html' && !PUBLIC_FILES.has(requested)) return send(res, 404, 'Not found');
   const filePath = path.join(ROOT, requested.slice(1));
   fs.stat(filePath, (error, stats) => {

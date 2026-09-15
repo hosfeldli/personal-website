@@ -3,66 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#080a12" />
-  <meta name="description" content="Download Lima, a private, keyboard-first macOS workbench." />
-  <meta property="og:title" content="Lima — Download for macOS" />
-  <meta property="og:description" content="A private, keyboard-first workbench for macOS." />
+  <meta name="theme-color" content="#f7f7f5" />
+  <meta name="description" content="Lima is a fast, keyboard-first command launcher for macOS." />
+  <meta property="og:title" content="Lima — Your Mac, faster." />
+  <meta property="og:description" content="Commands, extensions, writing, dictation, and workflows in one calm macOS launcher." />
   <meta property="og:image" content="https://www.liamhosfeld.com/assets/og-image.png" />
   <meta property="og:type" content="website" />
-  <title>Lima — Download for macOS</title>
+  <title>Lima — Your Mac, faster.</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/theme.css" />
 </head>
-<body class="download-home">
+<body class="lima-site home-page">
   <a class="skip-link" href="#main-content">Skip to content</a>
-  <div class="aurora aurora-a" aria-hidden="true"></div>
-  <div class="aurora aurora-b" aria-hidden="true"></div>
-  <div class="grain" aria-hidden="true"></div>
-
   <header class="site-header shell">
     <a class="brand" href="/" aria-label="Lima home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a>
-    <nav aria-label="Lima navigation"><a href="/extensions#store">Extension Store</a><a href="/extensions">Build extensions</a></nav>
-    <a class="header-download" id="header-download" href="/downloads/Lima.dmg">Download</a>
+    <button class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="global-nav">Menu</button>
+    <nav id="global-nav" aria-label="Primary navigation">
+      <a href="#product">Product</a><a href="/extensions">Extensions</a><a href="/docs">Docs</a><a href="/changelog">Changelog</a>
+    </nav>
+    <div class="header-actions"><a class="github-link" href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer">GitHub</a><a class="header-download" href="/downloads/Lima.dmg">Download</a></div>
   </header>
 
   <main id="main-content">
-    <section class="download-hero shell" aria-labelledby="page-title">
-      <p class="eyebrow"><span></span> Private · local-first · macOS</p>
-      <h1 id="page-title">Lima for Mac.</h1>
-      <p class="download-lede">A focused workbench for notes, writing, dictation, and the small local workflows that keep your day moving.</p>
-      <a class="download-button download-button-large" id="hero-download" href="/downloads/Lima.dmg" aria-label="Download the latest version of Lima">
-        <span class="download-icon" aria-hidden="true">↓</span>
-        <span><b>Download Lima <strong id="release-version">latest</strong></b><small id="release-label">Apple silicon · macOS 13+</small></span>
-      </a>
-      <p class="download-meta" id="release-date">Free download · ready-to-drag app · no account required</p>
-    </section>
-
-    <section class="directory shell" aria-labelledby="directory-title">
-      <div class="directory-heading"><p class="eyebrow"><span></span> Explore Lima</p><h2 id="directory-title">Directory</h2></div>
-      <nav class="directory-grid" aria-label="Lima pages">
-        <a class="directory-card" href="/extensions#store"><span>01</span><strong>Extension Store</strong><small>Install reviewed local tools directly from Lima.</small><b>Browse the store&nbsp; ↗</b></a>
-        <a class="directory-card" href="https://github.com/hosfeldli/ray-placement/releases" target="_blank" rel="noreferrer"><span>02</span><strong>Release notes</strong><small>See versions, fixes, and downloadable release assets.</small><b>View releases&nbsp; ↗</b></a>
-        <a class="directory-card" href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer"><span>03</span><strong>Source code</strong><small>Read the project, documentation, and development history.</small><b>Open GitHub&nbsp; ↗</b></a>
-      </nav>
-    </section>
-
-    <section class="product-update shell" aria-labelledby="update-title">
-      <div class="section-heading"><div><p class="eyebrow"><span></span> In this build</p><h2 id="update-title">More signal.<br>Less guesswork.</h2></div><p>Lima’s local tools now expose the work behind each result: grammar traces, candidate comparisons, extension lifecycle state, and the public API contract used to build compatible commands.</p></div>
-      <div class="update-grid">
-        <article><span>01</span><h3>Grammar Debugger</h3><p>Inspect candidates, diffs, rejection reasons, request timing, reruns, and benchmark comparisons without leaving Lima.</p></article>
-        <article><span>02</span><h3>Extension control</h3><p>Review installed packages, capabilities, permissions, lifecycle state, and bundled extension restoration from Settings.</p></article>
-        <article><span>03</span><h3>API v3 surfaces</h3><p>Use aliases, contextual actions, typed outputs, action chaining, and the canonical manifest fixture when building extensions.</p></article>
+    <section class="hero-section shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> Native macOS software</p>
+        <h1 id="hero-title">Your Mac,<br><em>faster.</em></h1>
+        <p class="hero-lede">A fast command launcher for apps, files, writing, windows, workflows, and extensions—without interrupting what you are doing.</p>
+        <div class="hero-actions"><a class="primary-button" href="/downloads/Lima.dmg">Download for macOS <span>↓</span></a><a class="text-link" href="#product">Explore Lima <span>↘</span></a></div>
+        <p class="hero-meta">Free download · Apple silicon · macOS 13+</p>
+      </div>
+      <div class="product-shot" aria-label="Lima launcher interface preview" role="img">
+        <div class="shot-toolbar"><span class="traffic"><i></i><i></i><i></i></span><span>Lima</span><span class="shot-status">Ready</span></div>
+        <div class="shot-search"><span>⌕</span><strong>Fix Writing</strong><kbd>⇧⌘G</kbd></div>
+        <div class="shot-body"><div class="shot-results"><small>COMMANDS</small><div class="shot-row selected"><b>✦</b><span><strong>Fix Writing</strong><small>Correct the selected text</small></span><kbd>⇧⌘G</kbd></div><div class="shot-row"><b>⌘</b><span><strong>Open Emoji Picker</strong><small>Search and paste Unicode emoji</small></span><kbd>⌘⌘</kbd></div><div class="shot-row"><b>↔</b><span><strong>Move Window Left</strong><small>Position the focused window</small></span><kbd>⌃←</kbd></div><div class="shot-row"><b>⌁</b><span><strong>Dictate Note</strong><small>Speak without leaving your flow</small></span><kbd>—</kbd></div></div><aside class="shot-aside"><span class="shot-label">FIX WRITING</span><div class="mini-check"><span>Before</span><s>The report need review.</s><span>After</span><strong>The report needs review.</strong></div><small>AI correction · selected text only</small></aside></div>
+        <div class="shot-footer"><span><i></i> Local-first workspace</span><span>4 commands available</span></div>
       </div>
     </section>
 
-    <section class="download-install shell" aria-labelledby="install-title">
-      <div><p class="eyebrow"><span></span> Install</p><h2 id="install-title">Download, drag to Applications, and open Lima.</h2></div>
-      <p>For Apple silicon Macs running macOS 13 or newer. The DMG includes the complete app and bundled tools. Open the installed copy from Applications rather than the mounted disk image.</p>
-    </section>
-  </main>
+    <section class="fact-strip"><div class="shell"><span>Built for macOS</span><i></i><span>Keyboard first</span><i></i><span>Local where possible</span><i></i><span>Extensible by design</span></div></section>
 
-  <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Local-first macOS software.<br />Designed by Liam Hosfeld.</p></div><span class="footer-note">No account · no analytics</span></footer>
-  <script src="/script.js" defer></script>
+    <section id="product" class="feature-section shell"><div class="section-intro"><p class="eyebrow"><span></span> One place to get things done</p><h2>Everything you need.<br><em>Nothing in the way.</em></h2><p>Search once. Apps, files, commands, extensions, and workflows live in one keyboard-first launcher.</p></div><div class="feature-row"><div class="feature-visual command-visual"><div class="visual-window"><span class="visual-pill">COMMANDS</span><h3>Open anything.</h3><div class="visual-line active">⌘ &nbsp; Move Window Left <kbd>⌃←</kbd></div><div class="visual-line">⌘ &nbsp; Format JSON <kbd>⇧⌘J</kbd></div><div class="visual-line">⌘ &nbsp; Add to Shelf <kbd>—</kbd></div></div></div><div class="feature-copy"><span class="feature-number">01</span><h3>Search once.</h3><p>Launch apps, open files, run commands, manage windows, and trigger workflows from the same surface.</p><a class="text-link" href="/docs/features/launcher">Learn about the launcher <span>↗</span></a></div></div>
+      <div class="feature-row reverse"><div class="feature-visual writing-visual"><div class="settings-window"><span class="visual-pill">WRITING &amp; DICTATION</span><h3>Fix Writing</h3><div class="segmented"><b>AI</b><span>Harper</span></div><div class="settings-line"><span>Use Harper if AI is unavailable</span><i></i></div><div class="settings-line"><span>Only selected text is sent</span><i class="on"></i></div></div></div><div class="feature-copy"><span class="feature-number">02</span><h3>Write without breaking focus.</h3><p>Correct selected text instantly with your configured AI key, or switch to Harper for completely local correction.</p><a class="text-link" href="/docs/features/writing">Explore writing tools <span>↗</span></a></div></div>
+      <div class="feature-row"><div class="feature-visual dictation-visual"><div class="dictation-window"><span class="visual-pill">DICTATION</span><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>Keep talking.</strong><small>Recording locally · 00:18</small></div></div><div class="feature-copy"><span class="feature-number">03</span><h3>Speak. Keep working.</h3><p>Dictate notes and text from a focused overlay, with local transcription options and controls that stay out of your way.</p><a class="text-link" href="/docs/features/dictation">See dictation options <span>↗</span></a></div></div>
+    </section>
+
+    <section class="extensions-callout"><div class="shell callout-inner"><div><p class="eyebrow"><span></span> Extensions</p><h2>Make Lima<br><em>yours.</em></h2><p>Add small tools for writing, windows, development, files, and system controls. Browse reviewed packages or build your own command.</p><div class="hero-actions"><a class="primary-button" href="/extensions">Browse Extensions <span>↗</span></a><a class="text-link" href="/docs/extensions/build">Build an extension <span>↗</span></a></div></div><div class="extension-stack"><div class="extension-card"><span>😀</span><b>Emoji Picker</b><small>Search and paste Unicode emoji.</small><i>Included</i></div><div class="extension-card offset"><span>⌘</span><b>Window Tools</b><small>Move and arrange focused windows.</small><i>Local</i></div><div class="extension-card"><span>⌁</span><b>Writing Tools</b><small>Quick commands for everyday text.</small><i>Community</i></div></div></div></section>
+
+    <section class="customization-section shell"><div class="feature-copy"><span class="feature-number">04</span><p class="eyebrow"><span></span> Settings</p><h2>Looks and works<br><em>your way.</em></h2><p>Commands, Extensions, Writing, Appearance, and Advanced settings share one clear hierarchy—so Lima stays easy to shape as it grows.</p><a class="text-link" href="/docs/using-lima/settings">See how Settings works <span>↗</span></a></div><div class="settings-shot"><div class="settings-sidebar"><strong>Lima</strong><span class="active">⌘ Commands &amp; Shortcuts</span><span>🧩 Extensions</span><span>✍ Writing &amp; Dictation</span><span>🎨 Appearance</span><span>⚙ Advanced</span></div><div class="settings-main"><small>COMMANDS &amp; SHORTCUTS</small><h3>Global hotkeys</h3><div class="hotkey"><span>Launcher</span><kbd>⌘ Space</kbd></div><div class="hotkey"><span>Fix Writing</span><kbd>⇧⌘G</kbd></div><div class="hotkey"><span>Quick Note</span><kbd>⌥⌘N</kbd></div></div></div></section>
+
+    <section class="developer-section"><div class="shell developer-inner"><div><p class="eyebrow"><span></span> For developers</p><h2>Build your<br><em>own commands.</em></h2><p>Keep extensions small and explicit with a versioned manifest, native actions, forms, typed outputs, and a clear capability model.</p><a class="primary-button" href="/docs/extensions/build">Read the docs <span>↗</span></a></div><pre><code>{
+  "id": "tools.example",
+  "name": "Example Tools",
+  "commands": [{
+    "id": "open",
+    "title": "Open project",
+    "action": { "type": "folder" }
+  }]
+}</code></pre></div></section>
+
+    <section class="final-cta shell"><p class="eyebrow"><span></span> Ready when you are</p><h2>Do more without<br><em>breaking your flow.</em></h2><p>Download Lima and make your Mac feel a little more like yours.</p><a class="primary-button" href="/downloads/Lima.dmg">Download Lima <span>↓</span></a></section>
+  </main>
+  <footer class="site-footer shell"><div class="footer-brand"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Li<span>ma</span></span></a><p>Local-first macOS software.<br>Designed for clear workflows.</p></div><div class="footer-links"><div><b>Product</b><a href="/">Home</a><a href="/extensions">Extensions</a><a href="/changelog">Changelog</a></div><div><b>Resources</b><a href="/docs">Documentation</a><a href="/docs/getting-started/install">Getting Started</a><a href="/docs/troubleshooting">Troubleshooting</a></div><div><b>Project</b><a href="https://github.com/hosfeldli/ray-placement" target="_blank" rel="noreferrer">GitHub</a><a href="/docs/raw/EXTENSIONS.md">Raw extension guide</a><a href="/downloads/Lima.dmg">Download</a></div></div></footer>
+  <script src="/site.js" defer></script>
 </body>
 </html>
