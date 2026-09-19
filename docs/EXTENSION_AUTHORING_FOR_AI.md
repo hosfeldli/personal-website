@@ -8,7 +8,7 @@ Use this document when an AI or automation creates, repairs, or reviews a Lima e
 2. Read `docs/EXTENSIONS.md` and `docs/starter-extension/manifest.json`.
 3. Treat those files as the complete public manifest contract; never assume an unlisted field or action exists.
 4. Choose the smallest generic native action that satisfies the request.
-5. Use a schema-v2 form only when the command needs variable input or output.
+5. Use a form described by the public manifest schema only when the command needs variable input or output.
 6. Add an executable only when the public native actions cannot express the deterministic behavior.
 7. Preserve stable extension, command, and field IDs.
 8. Validate JSON, then verify loading, search, execution, cancellation, and failure feedback in Lima.
@@ -34,8 +34,8 @@ Use reverse-domain-style IDs. Shortcut and enablement settings are keyed by `<ex
 Does the command have fixed input?
 ├─ Yes → use a generic native action
 └─ No
-   ├─ Can a reusable picker or form solve it? → schema-v2 form or picker action
-   ├─ Can a direct executable solve it safely? → schema-v2 shell form
+   ├─ Can a reusable picker or form solve it? → public form or picker action
+   ├─ Can a direct executable solve it safely? → public shell form
    └─ Does it require a large persistent surface? → propose a reviewed native host capability
 ```
 
@@ -45,7 +45,7 @@ Do not recreate the removed tab system or force an ordinary instant action into 
 
 Supported action types are:
 
-`application`, `clipboard`, `file`, `form`, `picker`, `shell`, `system`, `url`, `window`, and `workspace`.
+`application`, `clipboard`, `file`, `form`, `picker`, `shell`, `system`, `url`, `window`, `workspace`, and `generator`.
 
 Important operations include:
 
@@ -64,7 +64,7 @@ Supported field types are `text`, `secure`, `multiline`, `number`, `toggle`, `pi
 
 Use `visibleWhen` to remove irrelevant fields. Mark only truly mandatory fields as `required`. Use `secure` for secrets and never substitute secret values into visible output.
 
-The only form execution type is direct `shell` execution:
+For schema version 3, the only form execution type is direct `shell` execution:
 
 ```json
 "execution": {
@@ -96,7 +96,7 @@ A `chain` contains no more than eight approved native actions. It cannot contain
 
 Request the smallest manifest capability set. Native action requirements are checked when the extension loads. User extensions requesting capabilities require explicit approval, and changed manifests require re-approval.
 
-Never use `externalExecution` unless the command truly invokes an executable outside the extension directory. Prefer a reviewed extension-relative executable when practical.
+Never use `externalExecution` unless the command truly invokes an executable outside the extension directory. Prefer a reviewed extension-relative executable when practical. Request `contextShelf` only when the command accepts Context Shelf content.
 
 ## Search, arguments, and feedback
 
