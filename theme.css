@@ -167,6 +167,111 @@ h1, h2, h3, strong, b { color: var(--lima-ink); }
   .update-grid { grid-template-columns: 1fr; }
 }
 
+/* Streamlined Apple-inspired product surface */
+:root {
+  color-scheme: light;
+  --lima-background: #f5f5f7;
+  --lima-surface: #ffffff;
+  --lima-solid: #ffffff;
+  --lima-secondary: #fbfbfd;
+  --lima-text: #1d1d1f;
+  --lima-muted: #6e6e73;
+  --lima-tertiary: #86868b;
+  --lima-border: rgba(0, 0, 0, .08);
+  --lima-border-strong: rgba(0, 0, 0, .14);
+  --lima-accent: #0071e3;
+  --lima-accent-soft: #e8f2fc;
+  --lima-shadow: 0 18px 45px rgba(0, 0, 0, .08);
+}
+
+html, body { background: var(--lima-background); color: var(--lima-text); }
+body { background: var(--lima-background); }
+.shell { width: min(1180px, calc(100% - 48px)); }
+
+.site-header {
+  min-height: 64px;
+  border-bottom: 1px solid var(--lima-border);
+  background: rgba(245, 245, 247, .88);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.brand { font-size: 18px; letter-spacing: -.04em; }
+.brand > span:last-child > span, h1 em, .eyebrow, .text-link { color: var(--lima-accent); }
+.brand-mark i { box-shadow: none; }
+.site-header nav { gap: 28px; }
+.site-header nav a, .github-link { color: var(--lima-muted); font-size: 12px; }
+.site-header nav a:hover, .github-link:hover { color: var(--lima-text); }
+.header-actions { gap: 22px; }
+
+.header-download, .primary-button, .download-button {
+  border: 0;
+  border-radius: 980px;
+  background: var(--lima-accent);
+  box-shadow: none;
+  color: #fff;
+}
+.header-download:hover, .primary-button:hover, .download-button:hover {
+  background: #0077ed;
+  box-shadow: none;
+  transform: none;
+}
+.primary-button { padding: 13px 20px; font-size: 14px; }
+.text-link { font-size: 14px; }
+
+.hero-section {
+  grid-template-columns: .82fr 1.18fr;
+  gap: 72px;
+  padding: 132px 0 126px;
+  background: transparent;
+}
+.hero-copy h1 { color: var(--lima-text); font-size: clamp(58px, 8vw, 108px); letter-spacing: -.085em; }
+.hero-lede { color: var(--lima-muted); font-size: 18px; line-height: 1.55; }
+.hero-meta { color: var(--lima-tertiary); }
+.eyebrow { letter-spacing: .12em; }
+.eyebrow span { background: var(--lima-accent); box-shadow: none; }
+
+.product-shot {
+  border: 1px solid var(--lima-border-strong);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .12);
+  transform: none;
+}
+.shot-search { border-color: #d6d6dc; background: #fbfbfd; }
+.shot-row.selected { background: var(--lima-accent-soft); }
+.shot-aside { background: #fbfbfd; }
+
+.fact-strip { background: #fff; }
+.fact-strip>div { padding: 24px 0; color: var(--lima-muted); }
+.fact-strip i { background: var(--lima-accent); }
+.feature-section, .customization-section { padding: 140px 0; }
+.section-intro h2, .feature-copy h2, .callout-inner h2, .developer-inner h2, .final-cta h2, .page-hero h1 {
+  color: var(--lima-text);
+  letter-spacing: -.075em;
+}
+.section-intro>p:last-child, .feature-copy>p:not(.eyebrow), .callout-inner>div>p:not(.eyebrow), .developer-inner>div>p:not(.eyebrow) { color: var(--lima-muted); }
+.feature-row { gap: 110px; margin-top: 135px; }
+.feature-visual { border: 0; border-radius: 22px; background: #e9e9ee; box-shadow: none; }
+.visual-window, .settings-window, .dictation-window, .settings-shot, .developer-inner pre, .extension-card, .changelog article { box-shadow: 0 12px 35px rgba(0,0,0,.07); }
+
+.extensions-callout, .developer-section { border-block: 0; background: #fff; }
+.callout-inner, .developer-inner { padding: 140px 0; }
+.extension-card { border-radius: 16px; }
+.extension-card.offset { transform: none; }
+.settings-shot { border-radius: 16px; }
+.final-cta { padding: 150px 0; }
+.site-footer { background: #f5f5f7; }
+
+@media (max-width: 850px) {
+  .hero-section { padding: 92px 0 90px; }
+  .feature-section, .customization-section { padding: 90px 0; }
+  .feature-row { margin-top: 90px; }
+}
+@media (max-width: 600px) {
+  .shell { width: calc(100% - 36px); }
+  .hero-section { padding: 74px 0; }
+  .hero-copy h1 { font-size: clamp(54px, 17vw, 78px); }
+  .hero-lede { font-size: 16px; }
+}
+
 /* Lima design language: light, calm, product-first public surface. */
 :root { color-scheme: light; --lima-background:#f7f7f5; --lima-surface:rgba(255,255,255,.84); --lima-solid:#fff; --lima-secondary:#f1f1ef; --lima-text:#1d1d1f; --lima-muted:#6e6e73; --lima-tertiary:#98989d; --lima-border:rgba(0,0,0,.08); --lima-border-strong:rgba(0,0,0,.12); --lima-accent:#6577d9; --lima-accent-soft:#eef0ff; --lima-shadow:0 10px 40px rgba(0,0,0,.08); }
 html,body { background:var(--lima-background); color:var(--lima-text); }
