@@ -25,16 +25,25 @@ if (launcher) {
       selected = -1;
       empty.hidden = false;
       open.hidden = true;
+      results.forEach((result) => {
+        result.classList.remove('selected');
+        result.removeAttribute('aria-current');
+      });
       count.textContent = 'No results';
       return;
     }
 
     selected = (index + visible.length) % visible.length;
     const active = visible[selected];
-    results.forEach((result) => result.classList.toggle('selected', result === active));
+    results.forEach((result) => {
+      const isActive = result === active;
+      result.classList.toggle('selected', isActive);
+      result.toggleAttribute('aria-current', isActive);
+    });
     previewIcon.textContent = active.dataset.icon || '⌕';
     previewTitle.textContent = active.dataset.title || '';
     previewDetail.textContent = active.dataset.detail || '';
+    open.setAttribute('aria-label', `Open ${active.dataset.title || 'selected page'}`);
     empty.hidden = true;
     open.hidden = false;
     count.textContent = `${visible.length} result${visible.length === 1 ? '' : 's'}`;
@@ -76,5 +85,19 @@ if (launcher) {
   });
 
   open.addEventListener('click', () => navigate(visibleResults()[selected]));
+
+  document.addEventListener('keydown', (event) => {
+    const commandSearch = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
+    const slashSearch = event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey;
+    const activeElement = document.activeElement;
+    const isEditing = activeElement instanceof HTMLElement && (
+      activeElement.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName)
+    );
+    if (!commandSearch && (!slashSearch || isEditing)) return;
+    event.preventDefault();
+    query.focus();
+    query.select();
+  });
+
   select(0);
 }
