@@ -1,0 +1,66 @@
+/* Readability baseline for every non-homepage public page. */
+.lima-site:not(.home-page) {
+  background: #ffffff !important;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+.lima-site:not(.home-page)::before { display: none !important; }
+.lima-site:not(.home-page) .site-header {
+  width: min(1120px, calc(100% - 48px));
+  min-height: 64px;
+  border-bottom: 0;
+  background: transparent;
+}
+.lima-site:not(.home-page) .brand, .lima-site:not(.home-page) .site-header nav a { color: #1d1d1f; }
+.lima-site:not(.home-page) .site-header nav a, .lima-site:not(.home-page) .github-link { color: #6e6e73; font-size: 12px; }
+.lima-site:not(.home-page) .site-header nav a:hover, .lima-site:not(.home-page) .site-header nav a.current { color: #1d1d1f; }
+.lima-site:not(.home-page) .header-download, .lima-site:not(.home-page) .primary-button {
+  border: 0;
+  border-radius: 980px;
+  background: #0071e3;
+  box-shadow: none;
+  color: #fff;
+}
+.lima-site:not(.home-page) .header-download:hover, .lima-site:not(.home-page) .primary-button:hover { background: #0077ed; box-shadow: none; transform: none; }
+.lima-site:not(.home-page) .text-link, .lima-site:not(.home-page) a:hover { color: #0071e3; }
+.lima-site:not(.home-page) p, .lima-site:not(.home-page) li, .lima-site:not(.home-page) small, .lima-site:not(.home-page) .page-lede { color: #424245; }
+.lima-site:not(.home-page) h1, .lima-site:not(.home-page) h2, .lima-site:not(.home-page) h3, .lima-site:not(.home-page) b, .lima-site:not(.home-page) strong { color: #1d1d1f; }
+.lima-site:not(.home-page) .site-footer { width: min(1120px, calc(100% - 48px)); min-height: 0; padding: 48px 0; border-top: 1px solid #e5e5e7; background: #fff; }
+.lima-site:not(.home-page) .footer-brand p, .lima-site:not(.home-page) .footer-links a { color: #6e6e73; }
+
+.docs-layout { grid-template-columns: 190px minmax(0, 680px); justify-content: center; gap: 64px; padding: 64px 0 112px; }
+.docs-sidebar { color: #6e6e73; font-size: 13px; }
+.docs-sidebar > b { color: #6e6e73; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.docs-sidebar strong { color: #1d1d1f; font-size: 12px; }
+.docs-sidebar a { color: #6e6e73; border-radius: 6px; padding: 6px 8px; }
+.docs-sidebar a:hover, .docs-sidebar a.active { background: #e8f2fc; color: #0071e3; }
+.docs-search { border-color: #d2d2d7; border-radius: 10px; background: #fff; box-shadow: none; color: #6e6e73; }
+.docs-search input { color: #1d1d1f; }
+.docs-search kbd { color: #6e6e73; background: #f5f5f7; }
+.docs-results a { border-color: #d2d2d7; background: #fff; }
+.docs-results a span, .docs-empty { color: #424245; }
+.docs-content article { padding-top: 54px; }
+.docs-kicker { margin: 0 0 16px; color: #6e6e73 !important; font-size: 14px; font-weight: 600; }
+.docs-content h1 { color: #1d1d1f; font-size: clamp(44px, 6vw, 72px); }
+.docs-lede { color: #424245 !important; font-size: 19px; line-height: 1.5; }
+.docs-body { margin-top: 52px; color: #424245; font-size: 16px; line-height: 1.65; }
+.docs-body h2 { margin: 42px 0 12px; color: #1d1d1f; font-size: 26px; letter-spacing: -.03em; }
+.docs-body p, .docs-body li { color: #424245; }
+.docs-body a { color: #0071e3; font-weight: 500; }
+.docs-body ul, .docs-body ol { padding-left: 22px; }
+.docs-body li + li { margin-top: 8px; }
+
+.extensions-page .page-hero, .changelog { max-width: 900px; padding-top: 96px; }
+.extensions-page .page-hero h1, .changelog h1 { color: #1d1d1f; }
+.extensions-page .page-hero > p:last-child, .changelog .page-lede { color: #424245; }
+.extensions-page .store-toolbar, .extensions-page .extension-tile, .extensions-page .resource-links a, .changelog article { border-color: #d2d2d7; background: #fff; box-shadow: none; }
+.extensions-page .store-toolbar p, .extensions-page .extension-tile p, .extensions-page .extension-tile small, .extensions-page .resource-links span, .changelog article p { color: #424245; }
+.extensions-page .build-banner { background: #f5f5f7; border: 0; }
+.extensions-page .build-banner p { color: #424245; }
+
+@media (max-width: 760px) {
+  .lima-site:not(.home-page) .site-header, .lima-site:not(.home-page) .site-footer { width: calc(100% - 36px); }
+  .docs-layout { display: block; padding: 42px 0 80px; }
+  .docs-sidebar { display: none; }
+  .docs-content article { padding-top: 42px; }
+}
