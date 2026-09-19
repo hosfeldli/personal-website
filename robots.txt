@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://www.liamhosfeld.com/sitemap.xml
+Sitemap: https://lima.liamhosfeld.com/sitemap.xml

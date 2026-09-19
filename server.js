@@ -22,6 +22,8 @@ const GITHUB_BRANCH = process.env.LIMA_GITHUB_BRANCH || 'main';
 const EXTENSION_GUIDE_PATH = process.env.LIMA_EXTENSION_GUIDE_PATH || 'docs/EXTENSIONS.md';
 const EXTENSION_GUIDE_SOURCE = `https://github.com/${RELEASE_REPOSITORY}/blob/${GITHUB_BRANCH}/${EXTENSION_GUIDE_PATH}`;
 const EXTENSION_GUIDE_RAW = `https://raw.githubusercontent.com/${RELEASE_REPOSITORY}/${GITHUB_BRANCH}/${EXTENSION_GUIDE_PATH}`;
+const CANONICAL_HOST = 'lima.liamhosfeld.com';
+const LEGACY_HOSTS = new Set(['www.liamhosfeld.com']);
 const RELEASE_CACHE_MS = 5 * 60 * 1000;
 const SUBMISSION_LIMIT = LIMITS.compressedBytes + 1 * 1024 * 1024;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -162,6 +164,11 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url?.split('?')[0] === '/api/extensions/submit') return submitExtension(req, res);
   if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, 'Method not allowed');
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const requestHost = String(req.headers.host || '').split(':')[0].toLowerCase();
+  if (LEGACY_HOSTS.has(requestHost)) {
+    res.writeHead(308, { Location: `https://${CANONICAL_HOST}${url.pathname}${url.search}`, 'Cache-Control': 'public, max-age=31536000' });
+    return res.end();
+  }
   if (url.pathname === '/updates/latest.json' || url.pathname === '/api/updates/latest') { try { return sendJSON(res, 200, await latestRelease()); } catch { return sendJSON(res, 503, { error: 'Release information is temporarily unavailable.' }); } }
   if (url.pathname === '/api/extensions/guide') { try { return sendJSON(res, 200, await extensionGuide()); } catch { return sendJSON(res, 503, { error: 'The GitHub extension guide is temporarily unavailable.', sourceUrl: EXTENSION_GUIDE_SOURCE }); } }
   if (url.pathname === '/api/extensions/guide/raw') { try { const guide = await extensionGuide(); return send(res, 200, guide.content, 'text/markdown; charset=utf-8'); } catch { return send(res, 503, 'The GitHub extension guide is temporarily unavailable.'); } }
