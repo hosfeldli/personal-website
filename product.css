@@ -1,0 +1,122 @@
+/* Focused public homepage — deliberately isolated from the wider documentation theme. */
+.home-page {
+  background: #fff !important;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+.home-page::before { display: none !important; }
+.home-page .site-header {
+  position: relative;
+  z-index: 2;
+  min-height: 64px;
+  width: min(1120px, calc(100% - 48px));
+  border-bottom: 0;
+  background: transparent;
+  color: #1d1d1f;
+}
+.home-page .brand, .home-page .site-header nav a, .home-page .github-link { color: #1d1d1f; }
+.home-page .brand > span:last-child > span { color: #0071e3; }
+.home-page .brand-mark i { background: #0071e3; box-shadow: none; }
+.home-page .brand-mark i:nth-child(1) { background: #90c5ff; }
+.home-page .brand-mark i:nth-child(3) { background: #0071e3; }
+.home-page .site-header nav { gap: 26px; }
+.home-page .site-header nav a, .home-page .github-link { color: #6e6e73; font-size: 12px; }
+.home-page .site-header nav a:hover, .home-page .github-link:hover { color: #1d1d1f; }
+.home-page .header-actions { gap: 22px; }
+.home-page .header-download, .home-page .primary-button {
+  border: 0;
+  border-radius: 980px;
+  background: #0071e3;
+  box-shadow: none;
+  color: #fff;
+}
+.home-page .header-download:hover, .home-page .primary-button:hover { background: #0077ed; box-shadow: none; transform: none; }
+.home-page .primary-button { display: inline-flex; align-items: center; gap: 16px; padding: 12px 19px; font-size: 14px; }
+.home-page .text-link { color: #0071e3; font-size: 14px; font-weight: 500; }
+.home-page .text-link span { margin-left: 4px; }
+
+.lima-hero { max-width: 760px; padding: 132px 0 116px; text-align: center; }
+.product-kicker { margin: 0 0 18px; color: #6e6e73; font-size: 15px; font-weight: 600; }
+.lima-hero h1 { margin: 0; color: #1d1d1f; font-size: clamp(64px, 10vw, 112px); font-weight: 700; letter-spacing: -.085em; line-height: .91; }
+.lima-hero .hero-lede { max-width: 540px; margin: 26px auto 0; color: #6e6e73; font-size: 20px; line-height: 1.45; }
+.lima-hero .hero-actions { justify-content: center; gap: 24px; margin-top: 30px; }
+.lima-hero .hero-meta { margin: 17px 0 0; color: #86868b; font-size: 13px; }
+
+.launcher-section { padding: 0 0 132px; background: #fff; }
+.launcher-heading { max-width: 620px; margin: 0 auto 46px; text-align: center; }
+.launcher-heading h2, .capabilities h2, .download-section h2 {
+  margin: 0;
+  color: #1d1d1f;
+  font-size: clamp(36px, 5vw, 58px);
+  letter-spacing: -.065em;
+  line-height: 1.05;
+}
+.launcher-heading p { margin: 15px 0 0; color: #6e6e73; font-size: 17px; line-height: 1.45; }
+
+.launcher-window {
+  max-width: 760px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,.14);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 75px rgba(0,0,0,.14);
+  color: #1d1d1f;
+}
+.launcher-titlebar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 38px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.09); background: #f7f7f8; color: #86868b; font-size: 12px; }
+.launcher-titlebar > :last-child { justify-self: end; }
+.traffic { display: flex; gap: 6px; }
+.traffic i { width: 10px; height: 10px; border-radius: 50%; background: #d1d1d6; }
+.traffic i:first-child { background: #ff5f57; }
+.traffic i:nth-child(2) { background: #febc2e; }
+.traffic i:nth-child(3) { background: #28c840; }
+.launcher-search { display: flex; align-items: center; gap: 11px; margin: 18px; padding: 14px 16px; border: 1px solid #0071e3; border-radius: 10px; background: #fff; box-shadow: 0 0 0 3px rgba(0,113,227,.12); font-size: 17px; }
+.launcher-search > span { color: #0071e3; font-size: 21px; }
+.launcher-search kbd { margin-left: auto; color: #86868b; font: 12px -apple-system, BlinkMacSystemFont, sans-serif; }
+.launcher-list { padding: 0 10px 12px; }
+.launcher-result { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; width: 100%; gap: 10px; padding: 11px 10px; border: 0; border-radius: 9px; background: transparent; color: #1d1d1f; text-align: left; font: inherit; }
+.launcher-result.selected { background: #e8f2fc; }
+.launcher-result .result-icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: #f1f1f3; color: #0071e3; font-size: 15px; }
+.launcher-result.selected .result-icon { background: #fff; }
+.launcher-result b, .launcher-result small { display: block; }
+.launcher-result b { font-size: 14px; font-weight: 600; }
+.launcher-result small { margin-top: 2px; color: #6e6e73; font-size: 12px; }
+.launcher-result kbd { color: #86868b; font: 13px -apple-system, BlinkMacSystemFont, sans-serif; }
+.launcher-footer { display: flex; justify-content: space-between; padding: 12px 16px; border-top: 1px solid rgba(0,0,0,.09); background: #fafafa; color: #86868b; font-size: 11px; }
+
+.capabilities { padding: 120px 0 136px; }
+.capabilities > h2 { max-width: 550px; margin: 0 auto 54px; text-align: center; }
+.capability-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.capability-grid article { padding: 30px; border: 1px solid rgba(0,0,0,.1); border-radius: 18px; background: #fbfbfd; }
+.capability-grid article > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 10px; background: #e8f2fc; color: #0071e3; font-size: 17px; }
+.capability-grid h3 { margin: 30px 0 9px; color: #1d1d1f; font-size: 21px; letter-spacing: -.04em; }
+.capability-grid p { margin: 0; color: #6e6e73; font-size: 14px; line-height: 1.55; }
+.capability-grid a { display: inline-block; margin-top: 22px; color: #0071e3; font-size: 14px; font-weight: 500; }
+.capability-grid a span { margin-left: 4px; }
+
+.download-section { padding: 108px 0 114px; background: #f5f5f7; text-align: center; }
+.download-section h2 { font-size: clamp(40px, 5vw, 64px); }
+.download-section p { margin: 16px auto 28px; color: #6e6e73; font-size: 17px; }
+.home-page .site-footer { width: min(1120px, calc(100% - 48px)); min-height: 0; padding: 54px 0; border-top: 0; background: #fff; }
+.home-page .site-footer .brand, .home-page .footer-links b { color: #1d1d1f; }
+.home-page .footer-brand p, .home-page .footer-links a { color: #6e6e73; }
+
+@media (max-width: 760px) {
+  .home-page .site-header { width: calc(100% - 36px); }
+  .lima-hero { padding: 88px 0 78px; }
+  .launcher-section { padding-bottom: 88px; }
+  .launcher-heading { margin-bottom: 30px; }
+  .launcher-window { border-radius: 12px; }
+  .capabilities { padding: 88px 0; }
+  .capability-grid { grid-template-columns: 1fr; }
+  .capability-grid article { padding: 25px; }
+  .download-section { padding: 82px 0; }
+  .home-page .site-footer { width: calc(100% - 36px); }
+}
+@media (max-width: 600px) {
+  .home-page .site-header nav { top: 58px; right: 0; left: 0; }
+  .lima-hero .hero-lede { font-size: 17px; }
+  .lima-hero .hero-actions { gap: 18px; }
+  .launcher-search { margin: 12px; padding: 12px; }
+  .launcher-footer { gap: 8px; font-size: 10px; }
+}
