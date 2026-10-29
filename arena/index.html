@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0f1c">
+  <meta name="description" content="A high-speed multiplayer arena shooter built into the Lima site.">
+  <title>Lima Arena — Multiplayer movement shooter</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/arena/style.css">
+</head>
+<body>
+  <div id="viewport" aria-label="3D multiplayer arena"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="crosshair" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <header class="topbar">
+    <a href="/" class="brand">LIMA<span>//</span>ARENA</a>
+    <div id="connection" class="connection">Offline</div>
+    <button id="menu-button" type="button" class="quiet-button" hidden>Menu <kbd>Esc</kbd></button>
+  </header>
+
+  <main>
+    <div id="hud" class="hud" hidden>
+      <div class="hud-left">
+        <div class="health-label">HEALTH</div>
+        <div class="health-value"><strong id="health">100</strong><span>/ 100</span></div>
+        <div class="meter"><i id="health-meter"></i></div>
+        <div class="movement"><span id="speed">0</span> <small>m/s</small><span id="movement-mode">GROUND</span></div>
+      </div>
+      <div class="hud-right">
+        <div class="arena-name" id="arena-name">ARENA</div>
+        <div class="score">FRAGS <strong id="frags">0</strong> <span>·</span> DEATHS <strong id="deaths">0</strong></div>
+        <div id="leaderboard" class="leaderboard"></div>
+      </div>
+      <div class="hud-bottom">
+        <div class="weapon-info"><span>WEAPON</span><strong id="weapon-name">PULSE BLASTER</strong><small id="weapon-help">1 · rapid fire</small></div>
+        <div class="movement-help">WASD MOVE <span>·</span> SPACE JUMP / DOUBLE JUMP <span>·</span> HOLD SPACE B-HOP <span>·</span> WALL RUN <span>·</span> 1 / 2 WEAPONS</div>
+      </div>
+      <div id="kill-feed" class="kill-feed" aria-live="polite"></div>
+      <div id="hit-marker" class="hit-marker" aria-hidden="true">×</div>
+      <div id="damage-flash" class="damage-flash" aria-hidden="true"></div>
+    </div>
+
+    <section id="browser" class="overlay browser-overlay" aria-labelledby="browser-title">
+      <div class="browser-panel">
+        <div class="eyebrow">HIGH SPEED · HIGH FOV · ALL SKILL</div>
+        <h1 id="browser-title">Enter the <em>arena.</em></h1>
+        <p class="lede">Frag your friends in fast 3D matches. Chain bunny hops, double jumps, wall runs, and jump pads to own the map.</p>
+        <label class="field">CALLSIGN
+          <input id="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Runner">
+        </label>
+        <div class="browser-heading"><h2>Server browser</h2><button id="refresh-rooms" type="button" class="quiet-button">Refresh ↻</button></div>
+        <div id="room-list" class="room-list" aria-live="polite">Loading rooms…</div>
+        <div class="host-panel">
+          <h2>Host a match</h2>
+          <div class="host-fields">
+            <label class="field">ROOM NAME<input id="room-name" type="text" maxlength="24" placeholder="My arena"></label>
+            <label class="field">MAP<select id="map-select"></select></label>
+            <label class="field small-field">SLOTS<select id="max-players"><option value="4">4</option><option value="6">6</option><option value="8" selected>8</option><option value="10">10</option></select></label>
+          </div>
+          <button id="host-room" type="button" class="primary-button">Host server →</button>
+        </div>
+        <p class="browser-note">Rooms are hosted on this site's server and are temporary. Share a room link with friends. Mouse and keyboard required.</p>
+        <p id="browser-error" class="browser-error" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <section id="pause" class="overlay pause-overlay" aria-labelledby="pause-title" hidden>
+      <div class="pause-panel">
+        <div class="eyebrow">MATCH PAUSED</div>
+        <h2 id="pause-title">Back in the fight?</h2>
+        <p id="pause-room-name"></p>
+        <label class="fov-label" for="fov">HORIZONTAL FOV <strong id="fov-value">110°</strong></label>
+        <input id="fov" type="range" min="90" max="125" value="110">
+        <div class="pause-actions">
+          <button id="resume" type="button" class="primary-button">Resume match →</button>
+          <button id="copy-link" type="button" class="quiet-button">Copy room link</button>
+          <button id="leave" type="button" class="quiet-button">Leave match</button>
+        </div>
+        <p class="pause-hint">Click Resume for mouse lock. Press Esc to pause.</p>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </main>
+  <script src="/arena/physics.js"></script>
+  <script type="module" src="/arena/client.js"></script>
+</body>
+</html>

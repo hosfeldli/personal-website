@@ -31,6 +31,11 @@ steps:
       - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
       - --ingress=all
       - --allow-unauthenticated
+      # Hosted rooms are in memory: one warm instance keeps every WebSocket in the same match process.
+      - --min-instances=1
+      - --max-instances=1
+      - --concurrency=80
+      - --timeout=3600
       - --set-env-vars=LIMA_EXTENSION_SUBMISSION_BUCKET=${_SUBMISSION_BUCKET}
 
 images:

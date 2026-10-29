@@ -10,5 +10,7 @@ account.json
 assets/*.jpg
 assets/*.jpeg
 archive/
-assets/audio/source/
+game.js
+assets/sprites/
+assets/audio/
 README.md

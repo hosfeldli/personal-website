@@ -2,20 +2,22 @@
   "name": "lima-site",
   "private": true,
   "version": "1.0.0",
-  "description": "Lima product and download site",
+  "description": "Lima product site and multiplayer arena shooter",
   "scripts": {
-    "build": "node --check server.js && node --check script.js && node --check extensions.js",
+    "build": "node --check server.js && node --check script.js && node --check extensions.js && node --check lib/arena-server.js && node --check arena/physics.js && node --check arena/client.js && node scripts/validate-arena.js",
     "start": "node server.js",
     "dev": "node server.js",
     "validate-store": "node scripts/validate-store.js",
     "test": "node --test test/*.test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "@google-cloud/storage": "^8.1.0",
     "busboy": "^1.6.0",
+    "three": "^0.186.1",
+    "ws": "^8.22.0",
     "yauzl": "^3.4.0"
   }
 }
