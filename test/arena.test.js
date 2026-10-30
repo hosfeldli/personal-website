@@ -7,11 +7,24 @@ const { once } = require('node:events');
 const { WebSocket } = require('ws');
 const maps = require('../arena/maps.json');
 const physics = require('../arena/physics.js');
-const { createArenaService, safeName } = require('../lib/arena-server.js');
+const { createArenaService, safeName, directionFromAngles } = require('../lib/arena-server.js');
 
 function tick(player, input, map, count) {
   for (let i = 0; i < count; i++) physics.step(player, input, map, physics.TICK);
 }
+
+test('Three.js view yaw matches the authoritative shot and movement direction', async () => {
+  const THREE = await import('three');
+  for (const [yaw, pitch] of [[0, 0], [Math.PI / 2, .2], [-Math.PI / 3, -.4]]) {
+    const camera = new THREE.PerspectiveCamera();
+    camera.rotation.set(pitch, -yaw, 0, 'YXZ');
+    const visual = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const shot = directionFromAngles(yaw, pitch);
+    assert.ok(Math.abs(visual.x - shot.x) < 1e-10);
+    assert.ok(Math.abs(visual.y - shot.y) < 1e-10);
+    assert.ok(Math.abs(visual.z - shot.z) < 1e-10);
+  }
+});
 
 test('arena physics accelerates quickly and respects world bounds', () => {
   const map = maps[0];
@@ -145,16 +158,41 @@ test('room API and WebSocket server host a multiplayer match', async t => {
   const welcomeBob = await bob.waitFor('welcome');
   assert.equal(welcomeAlice.map.id, 'foundry');
   assert.ok(welcomeAlice.self);
+  const spawn = welcomeAlice.self;
+  assert.ok(Math.sin(spawn.yaw) * -spawn.x + -Math.cos(spawn.yaw) * -spawn.z > 0,
+    'new players should face toward the arena center');
   assert.notEqual(welcomeAlice.id, welcomeBob.id);
+  alice.socket.send(JSON.stringify({ t: 'ready' }));
+  bob.socket.send(JSON.stringify({ t: 'ready' }));
+  assert.equal((await alice.waitFor('ready')).shieldMs, 2000);
+  assert.equal((await bob.waitFor('ready')).shieldMs, 2000);
 
   const players = [...service.rooms.get(created.id).players.values()];
   players[0].physics = physics.makePlayer([25, 0, 5]);
   players[1].physics = physics.makePlayer([25, 0, -5]);
+  players[0].invulnerableUntil = 0;
+  players[1].invulnerableUntil = Date.now() + 5000;
+  alice.socket.send(JSON.stringify({ t: 'fire', weapon: 'pulse', yaw: 0, pitch: 0 }));
+  assert.equal((await alice.waitFor('shot')).hit, null);
+  assert.equal(players[1].health, 100, 'spawn shield should prevent damage');
+  players[0].nextFireAt = 0;
+  players[1].invulnerableUntil = 0;
   alice.socket.send(JSON.stringify({ t: 'fire', weapon: 'pulse', yaw: 0, pitch: 0 }));
   const damage = await bob.waitFor('damage');
   assert.equal(damage.health, 80);
   const shot = await alice.waitFor('shot');
   assert.equal(shot.hit, welcomeBob.id);
+
+  players[0].health = 50;
+  players[0].nextFireAt = 0;
+  alice.socket.send(JSON.stringify({ t: 'fire', weapon: 'rail', yaw: 0, pitch: 0 }));
+  const frag = await alice.waitFor('frag');
+  const heal = await alice.waitFor('heal');
+  assert.equal(frag.killerId, welcomeAlice.id);
+  assert.equal(frag.victimId, welcomeBob.id);
+  assert.equal(frag.streak, 1);
+  assert.equal(heal.health, 75);
+  assert.equal(players[1].alive, false);
 
   const listing = await (await fetch(base + '/api/arena/rooms')).json();
   assert.equal(listing.rooms.find(item => item.id === created.id).players, 2);

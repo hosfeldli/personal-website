@@ -5,7 +5,6 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { execFile } = require('node:child_process');
-const { Buffer } = require('node:buffer');
 const { promisify } = require('node:util');
 const { inspectExtensionArchive, SubmissionValidationError } = require('../lib/extension-submissions');
 const run = promisify(execFile);
@@ -21,17 +20,11 @@ const validManifest = {
 
 async function makeZip(entries, root = 'community.example') {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'lima-test-'));
-  const source = path.join(directory, root);
   const archive = path.join(directory, 'extension.zip');
-  await fs.mkdir(source, { recursive: true });
-  for (const [relative, content] of Object.entries(entries)) {
-    const target = path.join(source, relative);
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(target, typeof content === 'string' ? content : JSON.stringify(content));
-  }
-  const payload = Buffer.from(JSON.stringify(entries)).toString('base64');
-  const python = `import base64,json,sys,zipfile; entries=json.loads(base64.b64decode(sys.argv[3])); z=zipfile.ZipFile(sys.argv[2],'w',zipfile.ZIP_DEFLATED); [z.writestr(sys.argv[4]+'/'+name, value if isinstance(value,str) else json.dumps(value)) for name,value in entries.items()]; z.close()`;
-  await run('/usr/bin/python3', ['-c', python, directory, archive, payload, root]);
+  const payloadPath = path.join(directory, 'entries.json');
+  await fs.writeFile(payloadPath, JSON.stringify(entries));
+  const python = `import json,sys,zipfile; entries=json.load(open(sys.argv[2],encoding='utf-8')); z=zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED); [z.writestr(sys.argv[3]+'/'+name, value if isinstance(value,str) else json.dumps(value)) for name,value in entries.items()]; z.close()`;
+  await run('/usr/bin/python3', ['-c', python, archive, payloadPath, root]);
   return { directory, archive };
 }
 

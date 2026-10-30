@@ -19,6 +19,7 @@ const movementMode = $('movement-mode');
 const arenaName = $('arena-name');
 const frags = $('frags');
 const deaths = $('deaths');
+const streakLabel = $('streak');
 const leaderboard = $('leaderboard');
 const killFeed = $('kill-feed');
 const hitMarker = $('hit-marker');
@@ -47,6 +48,8 @@ let inputSendAt = 0;
 let fireSendAt = 0;
 let roomRefreshTimer;
 let recoil = 0;
+let muzzleUntil = 0;
+let audioContext;
 let fov = 110;
 const keys = new Set();
 const avatars = new Map();
@@ -71,6 +74,34 @@ function toast(message) {
   element.hidden = false;
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => { element.hidden = true; }, 2500);
+}
+function playSound(kind) {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    if (!audioContext) audioContext = new AudioContextClass();
+    if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+    const profiles = {
+      pulse: [180, 72, .12, .045, 'sawtooth'],
+      rail: [620, 95, .32, .085, 'sawtooth'],
+      hit: [720, 1150, .075, .034, 'triangle'],
+      frag: [420, 850, .22, .07, 'triangle'],
+      death: [190, 60, .36, .08, 'sawtooth'],
+      start: [310, 620, .12, .025, 'sine']
+    };
+    const [from, to, duration, volume, type] = profiles[kind] || profiles.start;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(from, now);
+    oscillator.frequency.exponentialRampToValueAtTime(to, now + duration);
+    gain.gain.setValueAtTime(Math.max(.0001, volume), now);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + duration);
+  } catch {}
 }
 function setConnection(text, online = false) {
   connection.textContent = text;
@@ -108,7 +139,7 @@ async function refreshRooms() {
       const title = document.createElement('strong');
       title.textContent = item.name;
       const detail = document.createElement('small');
-      detail.textContent = item.mapName + ' · hosted by ' + item.hostName;
+      detail.textContent = item.mapName + ' · hosted by ' + item.hostName + (item.bots ? ' · ' + item.bots + ' bots' : '');
       summary.append(title, detail);
       const count = document.createElement('span');
       count.className = 'room-count';
@@ -136,7 +167,7 @@ async function hostRoom() {
       body: JSON.stringify({
         name: roomName.value.trim() || rememberName() + "'s match",
         hostName: rememberName(), mapId: mapSelect.value,
-        maxPlayers: Number($('max-players').value)
+        maxPlayers: Number($('max-players').value), bots: Number($('bot-count').value)
       })
     });
     const data = await response.json();
@@ -144,6 +175,20 @@ async function hostRoom() {
     joinRoom(data.room.id);
   } catch (error) { showError(error.message); }
   finally { button.disabled = false; }
+}
+
+function disposeAvatar(avatar) {
+  scene.remove(avatar.group);
+  avatar.group.traverse(object => {
+    object.geometry?.dispose();
+    if (object.material) {
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of materials) {
+        material.map?.dispose();
+        material.dispose();
+      }
+    }
+  });
 }
 
 function disposeWorld() {
@@ -204,7 +249,7 @@ function boxGeometryMesh(box, material) {
 function buildMap(nextMap) {
   initRenderer();
   disposeWorld();
-  for (const avatar of avatars.values()) scene.remove(avatar.group);
+  for (const avatar of avatars.values()) disposeAvatar(avatar);
   avatars.clear();
   map = nextMap;
   world = new THREE.Group();
@@ -213,7 +258,7 @@ function buildMap(nextMap) {
   scene.background = new THREE.Color(map.sky);
   scene.fog = new THREE.Fog(map.sky, 55, 105);
 
-  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1b2638, roughness: .84, metalness: .22 });
+  const floorMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x1b2638).lerp(accent, .09), roughness: .8, metalness: .25 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(map.bounds.width, map.bounds.depth), floorMaterial);
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -.035;
@@ -232,7 +277,17 @@ function buildMap(nextMap) {
     { x: 0, z: -bounds.depth / 2 - .5, w: bounds.width + 2, d: 1, y: 0, h: 6 },
     { x: 0, z: bounds.depth / 2 + .5, w: bounds.width + 2, d: 1, y: 0, h: 6 }
   ];
-  for (const border of borders) world.add(boxGeometryMesh(border, wallMaterial));
+  for (const border of borders) {
+    world.add(boxGeometryMesh(border, wallMaterial));
+    const trim = boxGeometryMesh({ ...border, y: 4.85, h: .1 },
+      new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: .85 }));
+    world.add(trim);
+  }
+  const floorGlow = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: .16, depthWrite: false });
+  for (const lane of [
+    { x: 0, z: 0, w: map.bounds.width - 6, d: .1, y: 0, h: .018 },
+    { x: 0, z: 0, w: .1, d: map.bounds.depth - 6, y: 0, h: .018 }
+  ]) world.add(boxGeometryMesh(lane, floorGlow));
 
   const palette = {
     core: 0x41536a, wall: 0x34475d, cover: 0x50667b,
@@ -240,11 +295,19 @@ function buildMap(nextMap) {
   };
   for (const box of map.boxes) {
     const material = new THREE.MeshStandardMaterial({
-      color: palette[box.m] || palette.cover,
+      color: new THREE.Color(palette[box.m] || palette.cover).lerp(accent, .13),
       metalness: box.m === 'pillar' ? .65 : .44, roughness: .48
     });
     const mesh = boxGeometryMesh(box, material);
     world.add(mesh);
+    if (box.y === 0 && box.h > 1.3) {
+      const inset = new THREE.Mesh(
+        new THREE.BoxGeometry(Math.max(.3, box.w - .18), .07, Math.max(.3, box.d - .18)),
+        new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: .32 })
+      );
+      inset.position.set(box.x, box.y + box.h + .035, box.z);
+      world.add(inset);
+    }
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(mesh.geometry),
       new THREE.LineBasicMaterial({ color: accent.clone().multiplyScalar(.62), transparent: true, opacity: .64 })
@@ -287,6 +350,24 @@ function buildMap(nextMap) {
     marker.position.set(spawn[0], .012, spawn[2]);
     world.add(marker);
   }
+  const core = map.boxes.find(box => box.m === 'core');
+  if (core) {
+    const beacon = new THREE.Group();
+    beacon.position.set(core.x, core.y + core.h + 1.55, core.z);
+    const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(.68, 1),
+      new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 2.2, metalness: .4, roughness: .22 }));
+    beacon.add(orb);
+    for (const rotation of [0, Math.PI / 2]) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, .055, 8, 48),
+        new THREE.MeshBasicMaterial({ color: accent }));
+      ring.rotation.y = rotation;
+      beacon.add(ring);
+    }
+    const light = new THREE.PointLight(accent, 15, 20, 2);
+    beacon.add(light);
+    world.add(beacon);
+    world.userData.beacon = beacon;
+  }
   arenaName.textContent = map.name.toUpperCase();
 }
 
@@ -309,19 +390,28 @@ function buildViewGun() {
   piece(viewGun, new THREE.CylinderGeometry(.07, .09, .43, 10), body, 0, .025, -.53).rotation.x = Math.PI / 2;
   piece(viewGun, new THREE.BoxGeometry(.13, .035, .19), glow, 0, .105, -.21);
   piece(viewGun, new THREE.BoxGeometry(.24, .11, .22), dark, 0, -.12, .15);
+  const muzzle = piece(viewGun, new THREE.SphereGeometry(.14, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0x9ef7ff, transparent: true, opacity: .9, depthTest: false }), 0, .02, -.8);
+  muzzle.visible = false;
+  const muzzleLight = new THREE.PointLight(0x86e5ff, 0, 3);
+  muzzleLight.position.set(0, .02, -.8);
+  viewGun.add(muzzleLight);
   viewGun.userData.glow = glow;
+  viewGun.userData.muzzle = muzzle;
+  viewGun.userData.muzzleLight = muzzleLight;
 }
 
-function avatarColor(id) {
+function avatarColor(id, explicit) {
+  if (explicit) return new THREE.Color(explicit);
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   const color = new THREE.Color().setHSL((hash % 360) / 360, .72, .56);
   return color;
 }
 
-function makeAvatar(id) {
+function makeAvatar(id, color, name) {
   const group = new THREE.Group();
-  const armor = new THREE.MeshStandardMaterial({ color: avatarColor(id), metalness: .48, roughness: .4 });
+  const armor = new THREE.MeshStandardMaterial({ color: avatarColor(id, color), metalness: .48, roughness: .4 });
   const trim = new THREE.MeshStandardMaterial({ color: 0x17263a, metalness: .62, roughness: .4 });
   const visor = new THREE.MeshBasicMaterial({ color: 0x9bf5ff });
   const body = new THREE.Group();
@@ -336,6 +426,25 @@ function makeAvatar(id) {
   const rightLeg = piece(body, new THREE.BoxGeometry(.26, .72, .31), trim, .22, .36, 0);
   piece(body, new THREE.BoxGeometry(.14, .14, .55), trim, .44, 1.14, -.35);
   piece(body, new THREE.BoxGeometry(.11, .06, .16), visor, .44, 1.14, -.68);
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 256;
+  labelCanvas.height = 64;
+  const labelContext = labelCanvas.getContext('2d');
+  labelContext.fillStyle = 'rgba(4, 13, 25, .8)';
+  labelContext.fillRect(0, 6, 256, 50);
+  labelContext.strokeStyle = color || '#72dcff';
+  labelContext.lineWidth = 3;
+  labelContext.strokeRect(2, 8, 252, 46);
+  labelContext.fillStyle = '#f6fbff';
+  labelContext.font = 'bold 25px system-ui';
+  labelContext.textAlign = 'center';
+  labelContext.textBaseline = 'middle';
+  labelContext.fillText(name, 128, 32, 234);
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture, transparent: true, depthWrite: false }));
+  label.position.set(0, 2.34, 0);
+  label.scale.set(2.8, .7, 1);
+  group.add(label);
   scene.add(group);
   return { group, body, leftArm, rightArm, leftLeg, rightLeg, target: null };
 }
@@ -347,7 +456,7 @@ function updateAvatars(delta, time) {
     avatar.group.visible = target.alive;
     const amount = 1 - Math.exp(-delta * 14);
     avatar.group.position.lerp(new THREE.Vector3(target.x, target.y, target.z), amount);
-    let difference = (target.yaw - avatar.group.rotation.y + Math.PI) % (Math.PI * 2) - Math.PI;
+    let difference = (-target.yaw - avatar.group.rotation.y + Math.PI) % (Math.PI * 2) - Math.PI;
     if (difference < -Math.PI) difference += Math.PI * 2;
     avatar.group.rotation.y += difference * amount;
     const gait = Math.min(1, Math.hypot(target.vx, target.vz) / 10);
@@ -380,27 +489,28 @@ function syncSnapshot(players) {
       healthMeter.style.width = player.health + '%';
       frags.textContent = String(player.kills);
       deaths.textContent = String(player.deaths);
+      streakLabel.textContent = String(player.streak || 0);
       continue;
     }
     seen.add(player.id);
     let avatar = avatars.get(player.id);
     if (!avatar) {
-      avatar = makeAvatar(player.id);
+      avatar = makeAvatar(player.id, player.color, player.name + (player.bot ? ' [BOT]' : ''));
       avatar.group.position.set(player.x, player.y, player.z);
-      avatar.group.rotation.y = player.yaw;
+      avatar.group.rotation.y = -player.yaw;
       avatars.set(player.id, avatar);
     }
     avatar.target = player;
   }
   for (const [id, avatar] of avatars) {
-    if (!seen.has(id)) { scene.remove(avatar.group); avatars.delete(id); }
+    if (!seen.has(id)) { disposeAvatar(avatar); avatars.delete(id); }
   }
   leaderboard.replaceChildren();
   for (const player of [...players].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths).slice(0, 8)) {
     const row = document.createElement('div');
     row.className = 'leader-row' + (player.id === selfId ? ' self' : '');
     const name = document.createElement('span');
-    name.textContent = player.name;
+    name.textContent = player.name + (player.bot ? ' · BOT' : '');
     const score = document.createElement('span');
     score.textContent = player.kills + ' / ' + player.deaths;
     row.append(name, score);
@@ -418,10 +528,17 @@ function addShot(message) {
   });
   const line = new THREE.Line(geometry, material);
   scene.add(line);
-  shotLines.push({ line, time: performance.now() + (message.weapon === 'rail' ? 260 : 115) });
+  const spark = new THREE.Mesh(new THREE.IcosahedronGeometry(message.weapon === 'rail' ? .21 : .13, 0),
+    new THREE.MeshBasicMaterial({ color: message.weapon === 'rail' ? 0xcbb8ff : 0x8df8ff, transparent: true, opacity: .8 }));
+  spark.position.copy(to);
+  scene.add(spark);
+  shotLines.push({ line, spark, time: performance.now() + (message.weapon === 'rail' ? 260 : 115) });
   if (message.id === selfId) {
     recoil = message.weapon === 'rail' ? .13 : .065;
+    muzzleUntil = performance.now() + (message.weapon === 'rail' ? 110 : 75);
+    playSound(message.weapon);
     if (message.hit) {
+      playSound('hit');
       hitMarker.classList.add('visible');
       clearTimeout(addShot.hitTimer);
       addShot.hitTimer = setTimeout(() => hitMarker.classList.remove('visible'), 100);
@@ -446,6 +563,9 @@ function leaveMatch() {
   local = null;
   selfAlive = false;
   map = null;
+  disposeWorld();
+  for (const avatar of avatars.values()) disposeAvatar(avatar);
+  avatars.clear();
   resetControls();
   browser.hidden = false;
   pause.hidden = true;
@@ -492,14 +612,15 @@ function joinRoom(id) {
       hud.hidden = false;
       $('menu-button').hidden = false;
       $('pause-room-name').textContent = room.name + ' · ' + room.mapName;
-      setConnection(room.players + ' / ' + room.maxPlayers + ' online', true);
+      setConnection(room.players + ' / ' + room.maxPlayers + ' players · ' + (room.bots || 0) + ' bots', true);
       history.replaceState(null, '', '/arena?room=' + encodeURIComponent(room.id));
       toast('Connected. Click Resume and move with WASD.');
     } else if (message.t === 'snapshot') {
       if (scene) syncSnapshot(message.players);
       if (room) {
-        room.players = message.players.length;
-        setConnection(room.players + ' / ' + room.maxPlayers + ' online', true);
+        room.players = message.players.filter(player => !player.bot).length;
+        room.bots = message.players.length - room.players;
+        setConnection(room.players + ' / ' + room.maxPlayers + ' players · ' + room.bots + ' bots', true);
       }
     } else if (message.t === 'respawn' && message.state.id === selfId) {
       const state = message.state;
@@ -511,7 +632,13 @@ function joinRoom(id) {
     } else if (message.t === 'shot' && scene) addShot(message);
     else if (message.t === 'frag') {
       addKill(message);
-      if (message.victim === name) toast('Fragged by ' + message.killer + ' — respawning');
+      if (message.victimId === selfId) { toast('Fragged by ' + message.killer + ' — respawning'); playSound('death'); }
+      else if (message.killerId === selfId) { toast(message.streak > 1 ? message.streak + ' FRAG STREAK · +25 HEALTH' : 'FRAG · +25 HEALTH'); playSound('frag'); }
+    } else if (message.t === 'ready') {
+      toast('Spawn shield for 2 seconds');
+    } else if (message.t === 'heal') {
+      health.textContent = String(message.health);
+      healthMeter.style.width = message.health + '%';
     } else if (message.t === 'damage') {
       health.textContent = String(message.health);
       healthMeter.style.width = message.health + '%';
@@ -563,12 +690,16 @@ function frame(now) {
       send({ t: 'fire', weapon: currentWeapon, yaw, pitch });
       fireSendAt = now;
     }
-    camera.position.set(local.x, local.y + Physics.EYE, local.z);
-    camera.rotation.set(pitch, yaw, 0, 'YXZ');
+    const speed = Math.hypot(local.vx, local.vz);
+    const bob = local.grounded ? Math.sin(now * .016 * Math.max(2, speed)) * Math.min(.026, speed * .0016) : 0;
+    camera.position.set(local.x, local.y + Physics.EYE + bob, local.z);
+    const targetRoll = local.wallRunning ? (local.wallNormalX * .09 + local.wallNormalZ * .035) : 0;
+    camera.rotation.set(pitch, -yaw, targetRoll, 'YXZ');
     speedLabel.textContent = Math.round(Math.hypot(local.vx, local.vz)).toString();
     movementMode.textContent = local.wallRunning ? 'WALL RUN' : !local.grounded ? (local.jumpsUsed > 1 ? 'DOUBLE JUMP' : 'AIRBORNE') : 'GROUND';
   }
   const time = now / 1000;
+  if (world?.userData.beacon) world.userData.beacon.rotation.y = time * .5;
   updateAvatars(delta, time);
   for (let index = shotLines.length - 1; index >= 0; index--) {
     const shot = shotLines[index];
@@ -576,6 +707,9 @@ function frame(now) {
       scene.remove(shot.line);
       shot.line.geometry.dispose();
       shot.line.material.dispose();
+      scene.remove(shot.spark);
+      shot.spark.geometry.dispose();
+      shot.spark.material.dispose();
       shotLines.splice(index, 1);
     } else {
       shot.line.material.opacity = Math.min(1, (shot.time - now) / 90);
@@ -586,6 +720,8 @@ function frame(now) {
     viewGun.position.z = -.67 + recoil;
     viewGun.visible = Boolean(map && browser.hidden);
     viewGun.userData.glow.color.setHex(currentWeapon === 'rail' ? 0xb8a8ff : 0x64dffd);
+    viewGun.userData.muzzle.visible = now < muzzleUntil;
+    viewGun.userData.muzzleLight.intensity = now < muzzleUntil ? 4 : 0;
   }
   renderer.render(scene, camera);
 }
@@ -615,6 +751,7 @@ document.addEventListener('pointerlockchange', () => {
   const active = document.pointerLockElement === renderer?.domElement;
   document.body.classList.toggle('playing', active);
   if (!room) return;
+  if (active) send({ t: 'ready' });
   pause.hidden = active;
   if (!active) resetControls();
 });
@@ -624,7 +761,7 @@ document.addEventListener('mousedown', event => {
 document.addEventListener('mouseup', event => { if (event.button === 0) mouseDown = false; });
 document.addEventListener('contextmenu', event => { if (room) event.preventDefault(); });
 window.addEventListener('blur', resetControls);
-$('resume').addEventListener('click', () => renderer?.domElement.requestPointerLock());
+$('resume').addEventListener('click', () => { playSound('start'); renderer?.domElement.requestPointerLock(); });
 $('menu-button').addEventListener('click', () => {
   if (document.pointerLockElement) document.exitPointerLock();
   else if (room) pause.hidden = false;

@@ -11,13 +11,13 @@ Requires Node.js 22 or newer.
     npm test
     npm start
 
-Open <http://127.0.0.1:4173/arena> in two browser windows to play together.
+Open <http://127.0.0.1:4173/arena> to practice against bots or join with friends in a second browser. Run `npm run test:visual` to capture and verify the desktop/mobile lobby and all three 3D maps in isolated headless Chrome; the script prints its temporary screenshot directory.
 
 ## Arena
 
 - Three redesigned maps: The Foundry, Skybridge, and The Citadel.
 - Adjustable 90–125° horizontal FOV, fast air-controlled movement, double jumps, wall running and wall jumps, hold-to-bunny-hop, and jump pads.
-- Two hitscan weapons, server-authoritative damage and respawns, frag/death scoreboard, and fully 3D armored player models. There are no enemy sprites or PvE enemies in the new Arena. Legacy game and sprite files are excluded from the deployment image.
+- Two hitscan weapons, server-authoritative damage and respawns, frag/death/streak scoreboard, heal-on-frag rewards, and fully 3D armored player models. Quickplay includes two 3D training bots so solo matches are playable; hosted rooms can choose zero to three bots. Legacy enemy sprites are not served or included in the deployment image.
 - Public server browser with hosted room creation, 2–10 player slots, and shareable room URLs. Quickplay is always available.
 
 **Controls:** WASD to move, mouse to aim, left click to fire, Space to jump/double jump, hold Space to bunny-hop, 1/2 or Q to switch weapons, and Esc to pause. Move along a wall while airborne to wall run; jump again to kick off it.

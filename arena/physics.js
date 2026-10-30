@@ -74,6 +74,34 @@
     return [normalX, normalZ];
   }
 
+  function nearbyWall(player, map) {
+    let nearest = RADIUS + 0.14;
+    let normalX = 0;
+    let normalZ = 0;
+    const halfW = map.bounds.width / 2 - RADIUS;
+    const halfD = map.bounds.depth / 2 - RADIUS;
+    for (const [gap, x, z] of [
+      [player.x + halfW, 1, 0], [halfW - player.x, -1, 0],
+      [player.z + halfD, 0, 1], [halfD - player.z, 0, -1]
+    ]) {
+      if (gap <= 0.14 && gap < nearest) { nearest = gap; normalX = x; normalZ = z; }
+    }
+    for (const box of map.boxes) {
+      if (!solidAtHeight(player, box)) continue;
+      const closestX = clamp(player.x, box.x - box.w / 2, box.x + box.w / 2);
+      const closestZ = clamp(player.z, box.z - box.d / 2, box.z + box.d / 2);
+      const dx = player.x - closestX;
+      const dz = player.z - closestZ;
+      const distance = Math.hypot(dx, dz);
+      if (distance > 0.001 && distance < nearest) {
+        nearest = distance;
+        normalX = dx / distance;
+        normalZ = dz / distance;
+      }
+    }
+    return { x: normalX, z: normalZ };
+  }
+
   function accelerate(player, wishX, wishZ, wishSpeed, acceleration, dt) {
     const current = player.vx * wishX + player.vz * wishZ;
     const add = Math.min(Math.max(0, wishSpeed - current), acceleration * dt);
@@ -128,9 +156,9 @@
     const previousY = player.y;
     player.vy -= (player.wallRunning ? 6 : GRAVITY) * dt;
     player.x += player.vx * dt;
-    const nx = resolveHorizontal(player, map, 'x');
+    resolveHorizontal(player, map, 'x');
     player.z += player.vz * dt;
-    const nz = resolveHorizontal(player, map, 'z');
+    resolveHorizontal(player, map, 'z');
     player.y += player.vy * dt;
 
     let floor = 0;
@@ -153,13 +181,12 @@
       player.wallTime = 0;
     } else {
       player.grounded = false;
-      const normalX = nx[0] || nz[0];
-      const normalZ = nx[1] || nz[1];
-      const speed = Math.hypot(player.vx, player.vz);
-      if ((normalX || normalZ) && speed > 3.5 && player.y > 0.2 && player.wallTime < 1.25) {
+      const wall = nearbyWall(player, map);
+      const alongWall = Math.abs(player.vx * -wall.z + player.vz * wall.x);
+      if ((wall.x || wall.z) && alongWall > 3.5 && player.y > 0.2 && player.wallTime < 1.25) {
         player.wallRunning = true;
-        player.wallNormalX = normalX;
-        player.wallNormalZ = normalZ;
+        player.wallNormalX = wall.x;
+        player.wallNormalZ = wall.z;
         player.wallTime += dt;
         player.vy = Math.max(player.vy, -1.5);
       } else {

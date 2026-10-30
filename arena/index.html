@@ -30,7 +30,7 @@
       </div>
       <div class="hud-right">
         <div class="arena-name" id="arena-name">ARENA</div>
-        <div class="score">FRAGS <strong id="frags">0</strong> <span>·</span> DEATHS <strong id="deaths">0</strong></div>
+        <div class="score">FRAGS <strong id="frags">0</strong> <span>·</span> DEATHS <strong id="deaths">0</strong> <span>·</span> STREAK <strong id="streak">0</strong></div>
         <div id="leaderboard" class="leaderboard"></div>
       </div>
       <div class="hud-bottom">
@@ -46,7 +46,7 @@
       <div class="browser-panel">
         <div class="eyebrow">HIGH SPEED · HIGH FOV · ALL SKILL</div>
         <h1 id="browser-title">Enter the <em>arena.</em></h1>
-        <p class="lede">Frag your friends in fast 3D matches. Chain bunny hops, double jumps, wall runs, and jump pads to own the map.</p>
+        <p class="lede">Frag your friends—or warm up against 3D training bots—in fast arena matches. Chain bunny hops, double jumps, wall runs, and jump pads to own the map.</p>
         <label class="field">CALLSIGN
           <input id="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Runner">
         </label>
@@ -58,10 +58,11 @@
             <label class="field">ROOM NAME<input id="room-name" type="text" maxlength="24" placeholder="My arena"></label>
             <label class="field">MAP<select id="map-select"></select></label>
             <label class="field small-field">SLOTS<select id="max-players"><option value="4">4</option><option value="6">6</option><option value="8" selected>8</option><option value="10">10</option></select></label>
+            <label class="field small-field">BOTS<select id="bot-count"><option value="0">None</option><option value="2" selected>2 bots</option><option value="3">3 bots</option></select></label>
           </div>
           <button id="host-room" type="button" class="primary-button">Host server →</button>
         </div>
-        <p class="browser-note">Rooms are hosted on this site's server and are temporary. Share a room link with friends. Mouse and keyboard required.</p>
+        <p class="browser-note">Quickplay includes two training bots. Hosted rooms can add bots, too. Rooms are temporary; share a link with friends. Mouse and keyboard required.</p>
         <p id="browser-error" class="browser-error" role="alert" hidden></p>
       </div>
     </section>
