@@ -94,7 +94,7 @@ async function main() {
   try {
     site = spawn(process.execPath, ['server.js'], {
       cwd: path.join(__dirname, '..'),
-      env: { ...process.env, PORT: String(port), HOST: '127.0.0.1' },
+      env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', SITE_MODE: 'arena' },
       stdio: ['ignore', 'pipe', 'pipe']
     });
     await waitUntil(async () => {
@@ -144,7 +144,7 @@ async function main() {
     };
     const navigate = async url => { await command('Page.navigate', { url }); };
 
-    await navigate(origin + '/arena');
+    await navigate(origin + '/');
     await waitForPage('document.querySelector("#room-list")?.textContent.includes("Quickplay")', 'Quickplay server listing');
     const screenshots = [await screenshot('browser-desktop')];
     await command('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
@@ -162,7 +162,7 @@ async function main() {
         if (!response.ok) throw new Error('Could not host ' + mapId + ': ' + response.status);
         roomId = (await response.json()).room.id;
       }
-      await navigate(origin + '/arena?room=' + roomId);
+      await navigate(origin + '/?room=' + roomId);
       await waitForPage('Boolean(document.querySelector("#viewport canvas")) && document.querySelector("#arena-name")?.textContent !== "ARENA"', mapId + ' 3D canvas');
       await waitForPage('document.querySelector("#leaderboard")?.textContent.includes("BOT")', mapId + ' training bots');
       await click('#resume');

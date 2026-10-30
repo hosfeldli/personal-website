@@ -573,7 +573,7 @@ function leaveMatch() {
   $('menu-button').hidden = true;
   document.body.classList.remove('playing');
   setConnection('Offline');
-  history.replaceState(null, '', '/arena');
+  history.replaceState(null, '', location.pathname);
   refreshRooms();
 }
 
@@ -613,7 +613,7 @@ function joinRoom(id) {
       $('menu-button').hidden = false;
       $('pause-room-name').textContent = room.name + ' · ' + room.mapName;
       setConnection(room.players + ' / ' + room.maxPlayers + ' players · ' + (room.bots || 0) + ' bots', true);
-      history.replaceState(null, '', '/arena?room=' + encodeURIComponent(room.id));
+      history.replaceState(null, '', location.pathname + '?room=' + encodeURIComponent(room.id));
       toast('Connected. Click Resume and move with WASD.');
     } else if (message.t === 'snapshot') {
       if (scene) syncSnapshot(message.players);

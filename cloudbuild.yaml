@@ -2,6 +2,7 @@ substitutions:
   _REGION: us-east1
   _REPOSITORY: stem-portfolio
   _SERVICE: stem-portfolio-host
+  _ARENA_SERVICE: arena-game
   _RUNTIME_SERVICE_ACCOUNT: portfolio-runtime@stem-471602.iam.gserviceaccount.com
   _IMAGE_TAG: latest
   _SUBMISSION_BUCKET: stem-471602-lima-extension-submissions
@@ -19,6 +20,7 @@ steps:
       - push
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}
 
+  # Lima site (lima.liamhosfeld.com): original scaling, no arena routes.
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     args:
@@ -31,12 +33,31 @@ steps:
       - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
       - --ingress=all
       - --allow-unauthenticated
-      # Hosted rooms are in memory: one warm instance keeps every WebSocket in the same match process.
+      - --min-instances=0
+      - --max-instances=3
+      - --concurrency=80
+      - --timeout=300
+      - --set-env-vars=LIMA_EXTENSION_SUBMISSION_BUCKET=${_SUBMISSION_BUCKET}
+
+  # Multiplayer Arena (game.liamhosfeld.com): same image, separate service.
+  # Rooms are in memory, so one warm instance keeps every WebSocket in the same match process.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_ARENA_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}
+      - --region=${_REGION}
+      - --platform=managed
+      - --service-account=${_RUNTIME_SERVICE_ACCOUNT}
+      - --ingress=all
+      - --allow-unauthenticated
       - --min-instances=1
       - --max-instances=1
       - --concurrency=80
       - --timeout=3600
-      - --set-env-vars=LIMA_EXTENSION_SUBMISSION_BUCKET=${_SUBMISSION_BUCKET}
+      - --set-env-vars=SITE_MODE=arena
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_IMAGE_TAG}

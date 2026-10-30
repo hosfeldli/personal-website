@@ -34,9 +34,12 @@ let cachedAt = 0;
 let cachedExtensionGuide = null;
 let cachedExtensionGuideAt = 0;
 const submissionRate = new Map();
-const arena = createArenaService();
+// SITE_MODE=arena runs the standalone multiplayer game (game.liamhosfeld.com); the default is the Lima site with no arena routes.
+const ARENA_MODE = process.env.SITE_MODE === 'arena';
+const arena = ARENA_MODE ? createArenaService() : null;
 const MIME_TYPES = Object.freeze({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.dmg': 'application/x-apple-diskimage' });
-const PUBLIC_FILES = new Set(['/index.html', '/styles.css', '/theme.css', '/surface.css', '/product.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/site.js', '/product.js', '/extensions-site.js', '/docs-site.js', '/docs.html', '/changelog.html', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json', '/docs/extension-v3-fixture.json', '/store/extensions.json', '/arena/index.html', '/arena/style.css', '/arena/client.js', '/arena/physics.js', '/vendor/three.module.js', '/vendor/three.core.js']);
+const PUBLIC_FILES = new Set(['/index.html', '/styles.css', '/theme.css', '/surface.css', '/product.css', '/script.js', '/extensions.html', '/extensions.css', '/extensions.js', '/robots.txt', '/sitemap.xml', '/assets/favicon.svg', '/assets/og-image.png', '/site.js', '/product.js', '/extensions-site.js', '/docs-site.js', '/docs.html', '/changelog.html', '/docs/EXTENSION_AUTHORING_FOR_AI.md', '/docs/EXTENSIONS.md', '/docs/extension-manifest.schema.json', '/docs/starter-extension/manifest.json', '/docs/extension-v3-fixture.json', '/store/extensions.json']);
+const ARENA_FILES = new Set(['/arena/index.html', '/arena/style.css', '/arena/client.js', '/arena/physics.js', '/vendor/three.module.js', '/vendor/three.core.js', '/assets/favicon.svg']);
 function headers(type, cache = 'no-cache') { return { 'Content-Type': type, 'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws: wss:; base-uri 'none'; frame-ancestors 'none'" }; }
 function send(res, status, body, type = 'text/plain; charset=utf-8') { res.writeHead(status, { ...headers(type), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
 function sendJSON(res, status, value) { const body = JSON.stringify(value, null, 2); res.writeHead(status, { ...headers('application/json; charset=utf-8'), 'Content-Length': Buffer.byteLength(body) }); res.end(body); }
@@ -80,8 +83,9 @@ async function extensionGuide() {
 }
 function serveStatic(req, res, pathname) {
   const docsAliases = new Set(['/docs', '/docs/', '/docs/getting-started', '/docs/getting-started/install', '/docs/getting-started/permissions', '/docs/features/launcher', '/docs/features/writing', '/docs/features/dictation', '/docs/features/notes', '/docs/extensions', '/docs/extensions/', '/docs/extensions/install', '/docs/extensions/configure', '/docs/extensions/build', '/docs/extensions/manifest', '/docs/extensions/forms', '/docs/extensions/actions', '/docs/reference/shortcuts', '/docs/reference/environment', '/docs/reference/privacy', '/docs/troubleshooting']);
-  const requested = pathname === '/' ? '/index.html' : (pathname === '/arena' || pathname === '/arena/' ? '/arena/index.html' : pathname === '/extensions' || pathname === '/extensions/' ? '/extensions.html' : docsAliases.has(pathname) ? '/docs.html' : (pathname === '/changelog' || pathname === '/changelog/' ? '/changelog.html' : pathname));
-  if (requested !== '/index.html' && !PUBLIC_FILES.has(requested)) return send(res, 404, 'Not found');
+  const requested = ARENA_MODE ? (pathname === '/' || pathname === '/arena' || pathname === '/arena/' ? '/arena/index.html' : pathname) : pathname === '/' ? '/index.html' : (pathname === '/extensions' || pathname === '/extensions/' ? '/extensions.html' : docsAliases.has(pathname) ? '/docs.html' : (pathname === '/changelog' || pathname === '/changelog/' ? '/changelog.html' : pathname));
+  const allowed = ARENA_MODE ? ARENA_FILES.has(requested) : (requested === '/index.html' || PUBLIC_FILES.has(requested));
+  if (!allowed) return send(res, 404, 'Not found');
   const filePath = requested.startsWith('/vendor/three.') ? path.join(ROOT, 'node_modules', 'three', 'build', path.basename(requested)) : path.join(ROOT, requested.slice(1));
   fs.stat(filePath, (error, stats) => {
     if (error || !stats.isFile()) return send(res, 404, 'Not found');
@@ -163,6 +167,11 @@ async function submitExtension(req, res) {
   }
 }
 const server = http.createServer(async (req, res) => {
+  if (ARENA_MODE) {
+    if (await arena.handleHttp(req, res, sendJSON)) return;
+    if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, 'Method not allowed');
+    return serveStatic(req, res, new URL(req.url, 'http://localhost').pathname);
+  }
   if (req.method === 'POST' && req.url?.split('?')[0] === '/api/extensions/submit') return submitExtension(req, res);
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const requestHost = String(req.headers.host || '').split(':')[0].toLowerCase();
@@ -170,7 +179,6 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(308, { Location: `https://${CANONICAL_HOST}${url.pathname}${url.search}`, 'Cache-Control': 'public, max-age=31536000' });
     return res.end();
   }
-  if (await arena.handleHttp(req, res, sendJSON)) return;
   if (!['GET', 'HEAD'].includes(req.method)) return send(res, 405, 'Method not allowed');
   if (url.pathname === '/updates/latest.json' || url.pathname === '/api/updates/latest') { try { return sendJSON(res, 200, await latestRelease()); } catch { return sendJSON(res, 503, { error: 'Release information is temporarily unavailable.' }); } }
   if (url.pathname === '/api/extensions/guide') { try { return sendJSON(res, 200, await extensionGuide()); } catch { return sendJSON(res, 503, { error: 'The GitHub extension guide is temporarily unavailable.', sourceUrl: EXTENSION_GUIDE_SOURCE }); } }
@@ -190,5 +198,5 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/downloads/Lima.dmg' || url.pathname === '/downloads/LiamFlow.dmg') { try { const release = await latestRelease(); res.writeHead(302, { Location: release.dmg, 'Cache-Control': 'no-store' }); return res.end(); } catch { return send(res, 503, 'The Lima download is temporarily unavailable.'); } }
   return serveStatic(req, res, url.pathname);
 });
-arena.attach(server);
-server.listen(PORT, HOST, () => console.log(`Lima site and Arena running at http://${HOST}:${PORT}`));
+if (arena) arena.attach(server);
+server.listen(PORT, HOST, () => console.log(`${ARENA_MODE ? 'Arena' : 'Lima site'} running at http://${HOST}:${PORT}`));
